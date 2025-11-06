@@ -1,35 +1,115 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
+
+<!-- Dark Mode Support CSS -->
+<style>
+body.dark { background:#121212; color:#e8e8e8; }
+body.dark .card { background:#1e1e1e; border-color:#555; }
+body.dark input { background:#333; border-color:#666; color:#eee; }
+body.dark table, body.dark th, body.dark td { background:#222; border-color:#666; color:#eee; }
+body.dark a.btn, body.dark button.btn { background:#444; }
+body.dark a.btn:hover, body.dark button.btn:hover { background:#666; }
+body.dark h1 { color:#ffd27f; }
+
+.theme-toggle{
+  position:fixed; top:12px; right:12px;
+  background:#ff8800; color:#fff; border:none;
+  padding:8px 12px; border-radius:6px; font-size:14px; z-index:9999;
+}
+</style>
+
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Rent Split Calculator — Maanasikam</title>
+<title>Rent Split Calculator — KharchaSaathi</title>
 <meta name="description" content="Split house rent among roommates equally or by custom shares.">
+
 <style>
-  :root{--bg:#fff8ee;--card:#fff;--text:#333;--muted:#777;--line:#eee;--brand:#ff7a1a;--brand2:#ff9b4d}
-  *{box-sizing:border-box}
-  body{font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;background:var(--bg);margin:0;padding:24px;color:var(--text)}
-  .wrap{max-width:780px;margin:auto}
-  h1{text-align:center;margin:6px 0 14px}
-  .card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px;box-shadow:0 1px 4px rgba(0,0,0,.04)}
-  label{display:block;margin:10px 0 6px}
-  input{width:100%;padding:10px;border:1px solid #ccc;border-radius:10px}
-  .row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-  button{padding:10px 14px;border-radius:10px;border:1px solid #ddd;background:#fff;cursor:pointer}
-  .btn{background:var(--brand);border:0;color:#fff}
-  .btn:hover{background:var(--brand2)}
-  table{width:100%;border-collapse:collapse;margin-top:14px}
-  th,td{border:1px solid var(--line);padding:10px;text-align:center}
-  th{background:#fafafa}
-  .muted{color:var(--muted);font-size:13px}
-  .mono{font-variant-numeric:tabular-nums}
+  :root{
+    --bg:#FAFAFA;
+    --card:#fff;
+    --text:#222;
+    --muted:#777;
+    --line:#ddd;
+    --brand:#ff7a00;
+    --brand2:#cc6300;
+  }
+
+  body{
+    font-family: Arial, sans-serif;
+    background:var(--bg);
+    margin:0;
+    padding:24px;
+    color:var(--text);
+    text-align:center;
+  }
+
+  .wrap{ max-width:780px; margin:auto; }
+
+  h1{
+    font-size:34px;
+    font-weight:800;
+    margin-top:6px;
+    margin-bottom:18px;
+  }
+
+  .card{
+    background:var(--card);
+    border:1px solid var(--line);
+    border-radius:12px;
+    padding:18px;
+    box-shadow:0 2px 8px rgba(0,0,0,.06);
+    text-align:left;
+  }
+
+  label{ display:block; margin-top:10px; margin-bottom:6px; }
+  input{
+    width:100%;
+    padding:10px;
+    border-radius:10px;
+    border:1px solid #aaa;
+  }
+
+  .row{ display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+
+  button, .btn{
+    padding:10px 14px;
+    border-radius:10px;
+    border:none;
+    cursor:pointer;
+    font-weight:600;
+    background:var(--brand);
+    color:#fff;
+    transition:.25s;
+  }
+  button:hover, .btn:hover{ background:var(--brand2); transform:translateY(-2px); }
+
+  table{
+    width:100%;
+    border-collapse:collapse;
+    margin-top:16px;
+  }
+  th,td{
+    border:1px solid var(--line);
+    padding:10px;
+    text-align:center;
+  }
+
+  .muted{ color:var(--muted); font-size:13px; }
+
 </style>
+
 </head>
 <body>
+
+<button class="theme-toggle" onclick="toggleTheme()">🌙</button>
+
 <div class="wrap">
   <h1>🏠 Rent Split Calculator</h1>
+
   <div class="card">
-    <label>Total Rent (<span id="cur">₹</span>)</label>
+
+    <label>Total Rent (₹)</label>
     <input id="rent" type="number" placeholder="e.g., 12000">
 
     <div class="row">
@@ -39,29 +119,26 @@
       </div>
       <div>
         <label>Custom shares (optional)</label>
-        <input id="shares" type="text" placeholder="e.g., 2,1,1 (by room/size)">
+        <input id="shares" type="text" placeholder="e.g., 2,1,1">
       </div>
     </div>
 
-    <div class="row" style="margin-top:8px">
-      <div>
-        <label>Currency</label>
-        <input id="currency" type="text" value="₹" maxlength="3" placeholder="₹ / $ / €">
-      </div>
-      <div></div>
-    </div>
+    <label style="margin-top:12px;">Currency</label>
+    <input id="currency" type="text" value="₹" maxlength="3">
 
-    <div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap">
+    <div style="margin-top:15px; display:flex; gap:8px; flex-wrap:wrap;">
       <button class="btn" onclick="calc()">Calculate</button>
       <button onclick="resetAll()">Reset</button>
     </div>
 
     <div id="out"></div>
-    <p class="muted">Tip: If you enter custom shares like <b>3,2,1</b>, amounts will be split in that ratio.</p>
+
+    <p class="muted">Tip: If you enter custom shares like <b>3,2,1</b>, split will match room sizes.</p>
+
   </div>
 
-  <p style="text-align:center;margin-top:18px">
-    <a href="../index.html">← Back to Home</a>
+  <p style="margin-top:20px;">
+    <a class="btn" href="../index.html">← Back to Home</a>
   </p>
 </div>
 
@@ -76,7 +153,7 @@ function calc(){
   const cur = (curEl.value||'₹').trim() || '₹';
 
   if(!rent || !n || n<=0){
-    out.innerHTML = note('Please enter valid values.');
+    out.innerHTML = `<p style="color:#d33">Enter valid values.</p>`;
     return;
   }
 
@@ -84,7 +161,7 @@ function calc(){
   if(sharesStr){
     const arr = sharesStr.split(',').map(s=>parseFloat(s.trim())).filter(x=>isFinite(x));
     if(arr.length!==n || arr.some(x=>x<=0)){
-      out.innerHTML = note('Custom shares must match people count. Example: 2,1,1');
+      out.innerHTML = `<p style="color:#d33">Shares must match count. Example: 2,1,1</p>`;
       return;
     }
     shares = arr;
@@ -93,27 +170,39 @@ function calc(){
   const sum = shares.reduce((a,b)=>a+b,0);
   const rows = shares.map((w,i)=>{
     const amt = rent * (w/sum);
-    return `<tr><td>Person ${i+1}</td><td>${w}</td><td class="mono">${cur} ${amt.toFixed(2)}</td></tr>`;
+    return `<tr><td>Person ${i+1}</td><td>${w}</td><td>${cur} ${amt.toFixed(2)}</td></tr>`;
   }).join('');
 
   out.innerHTML = `
     <table>
       <thead><tr><th>Person</th><th>Share</th><th>Amount</th></tr></thead>
       <tbody>${rows}</tbody>
-      <tfoot><tr><th colspan="2">Total</th><th class="mono">${cur} ${rent.toFixed(2)}</th></tr></tfoot>
+      <tfoot><tr><th colspan="2">Total</th><th>${cur} ${rent.toFixed(2)}</th></tr></tfoot>
     </table>
   `;
 }
 
 function resetAll(){
-  document.getElementById('rent').value='';
-  document.getElementById('people').value='';
-  document.getElementById('shares').value='';
-  document.getElementById('currency').value='₹';
-  out.innerHTML='';
+  rent.value = people.value = shares.value = "";
+  currency.value = "₹";
+  out.innerHTML = "";
 }
-
-function note(t){ return `<p style="color:#c00">${t}</p>`; }
 </script>
+
+<script>
+(function(){
+  const t = localStorage.getItem('ks-theme');
+  if(t==='dark'){
+    document.body.classList.add('dark');
+    document.querySelector('.theme-toggle').textContent='☀️';
+  }
+})();
+function toggleTheme(){
+  const d = document.body.classList.toggle('dark');
+  localStorage.setItem('ks-theme', d?'dark':'light');
+  document.querySelector('.theme-toggle').textContent = d?'☀️':'🌙';
+}
+</script>
+
 </body>
 </html>
