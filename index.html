@@ -10,7 +10,7 @@
   <style>
     /* Light theme (default) */
     body { font-family: Arial, sans-serif; background:#FAFAFA; margin:0; padding:40px; text-align:center; color:#222; }
-    h1 { color:#222; margin-bottom:10px; }
+    h1 { color:#222; margin-bottom:12px; font-size:36px; font-weight:800; }
     p  { color:#444; margin:6px 0; }
 
     a.btn{
@@ -22,9 +22,10 @@
 
     /* Dark theme */
     body.dark{ background:#121212; color:#e8e8e8; }
+    body.dark h1 { color:#ffd27f; } /* Title glow */
     body.dark p{ color:#cfcfcf; }
     body.dark a.btn{ background:#444; }
-    body.dark a.btn:hover{ background:#555; }
+    body.dark a.btn:hover{ background:#666; }
 
     /* Toggle button */
     .theme-toggle{
@@ -37,7 +38,7 @@
 <body>
   <button class="theme-toggle" onclick="toggleTheme()">🌙</button>
 
-  <h1 style="font-size:32px; font-weight:700;">
+  <h1>
     🧠 KharchaSaathi 💰
   </h1>
 
@@ -45,34 +46,16 @@
     Smart Tools for Shared Expenses
   </p>
 
-  <p style="margin-top:22px">
-    <a class="btn" href="tools/rent-split.html">🏠 Open Rent Split Calculator</a>
-  </p>
-  <p style="margin-top:10px">
-    <a class="btn" href="tools/trip-expense-splitter.html">🚗 Trip Expense Splitter</a>
-  </p>
-  <p style="margin-top:10px">
-    <a class="btn" href="tools/water-bill-split.html">💧 Water Bill Splitter</a>
-  </p>
-  <p style="margin-top:10px">
-    <a class="btn" href="tools/grocery-split.html">🛒 Grocery Split Calculator</a>
-  </p>
-  <p style="margin-top:10px">
-    <a class="btn" href="tools/grocery-split-pro.html">🛒 Grocery Split (Pro)</a>
-  </p>
-  <p style="margin-top:10px;">
-    <a class="btn" href="about-rent-split.html">📘 How to split rent fairly?</a>
-  </p>
-  <p style="margin-top:10px;">
-    <a class="btn" href="about-water-bill-split.html">📘 How to split water bill fairly?</a>
-  </p>
-  <p style="margin-top:10px;">
-    <a class="btn" href="about-grocery-split.html">📘 How to split grocery expenses fairly?</a>
-  </p>
+  <p><a class="btn" href="tools/rent-split.html">🏠 Open Rent Split Calculator</a></p>
+  <p><a class="btn" href="tools/trip-expense-splitter.html">🚗 Trip Expense Splitter</a></p>
+  <p><a class="btn" href="tools/water-bill-split.html">💧 Water Bill Splitter</a></p>
+  <p><a class="btn" href="tools/grocery-split.html">🛒 Grocery Split Calculator</a></p>
+  <p><a class="btn" href="tools/grocery-split-pro.html">🛒 Grocery Split (Pro)</a></p>
+  <p><a class="btn" href="about-rent-split.html">📘 How to split rent fairly?</a></p>
+  <p><a class="btn" href="about-water-bill-split.html">📘 How to split water bill fairly?</a></p>
+  <p><a class="btn" href="about-grocery-split.html">📘 How to split grocery expenses fairly?</a></p>
 
-  <p style="margin-top:24px; color:#777; font-size:13px;">
-    © 2025 KharchaSaathi • Tools by Abid Ali
-  </p>
+  <p style="margin-top:24px; color:#777; font-size:13px;">© 2025 KharchaSaathi • Tools by Abid Ali</p>
 
   <script>
     // Load saved theme on first paint
@@ -80,15 +63,14 @@
       const saved = localStorage.getItem('ks-theme');
       if(saved === 'dark'){ 
         document.body.classList.add('dark');
-        const b = document.querySelector('.theme-toggle'); if(b) b.textContent = '☀️';
+        document.querySelector('.theme-toggle').textContent = '☀️';
       }
     })();
 
     function toggleTheme(){
-      const isDark = document.body.classList.toggle('dark');
-      localStorage.setItem('ks-theme', isDark ? 'dark' : 'light');
-      const b = document.querySelector('.theme-toggle');
-      if(b) b.textContent = isDark ? '☀️' : '🌙';
+      const dark = document.body.classList.toggle('dark');
+      localStorage.setItem('ks-theme', dark ? 'dark' : 'light');
+      document.querySelector('.theme-toggle').textContent = dark ? '☀️' : '🌙';
     }
   </script>
 </body>
