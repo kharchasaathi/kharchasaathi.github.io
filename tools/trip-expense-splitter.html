@@ -1,0 +1,188 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Trip Expense Splitter — Maanasikam</title>
+<meta name="description" content="Split trip expenses among friends fairly. Enter who paid how much and get the exact settlements.">
+<style>
+  :root{
+    --bg:#fff8ee;--card:#ffffff;--text:#343434;--sub:#666;
+    --brand:#ff7a1a;--brand2:#ff9b4d;--line:#eee;
+  }
+  *{box-sizing:border-box}
+  body{font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;background:var(--bg);margin:0;padding:22px;color:var(--text)}
+  .wrap{max-width:880px;margin:auto}
+  h1{margin:8px 0 14px;text-align:center}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px;box-shadow:0 1px 4px rgba(0,0,0,.04)}
+  .row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .controls{display:flex;gap:8px;flex-wrap:wrap;margin:10px 0}
+  input,select,button{padding:10px 12px;border:1px solid #ccc;border-radius:10px;font-size:15px}
+  input[type="number"]{appearance:textfield}
+  button{cursor:pointer}
+  .btn{background:var(--brand);color:#fff;border:0}
+  .btn:hover{background:var(--brand2)}
+  .btn-ghost{background:#fff;border:1px solid #ddd}
+  table{width:100%;border-collapse:collapse;margin-top:12px}
+  th,td{border:1px solid var(--line);padding:10px;text-align:left}
+  th{background:#fafafa}
+  .muted{color:var(--sub);font-size:13px}
+  .pill{display:inline-block;background:#fff2e6;border:1px solid #ffd6b0;color:#7a3f00;padding:6px 10px;border-radius:999px;font-size:13px}
+  .result{margin-top:14px}
+  .flex{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+  .right{margin-left:auto}
+  .mono{font-variant-numeric:tabular-nums}
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <h1>🚗 Trip Expense Splitter <span class="pill">Chai-orange theme</span></h1>
+    <div class="card">
+      <div class="controls">
+        <label class="flex">Currency
+          <select id="currency">
+            <option value="₹">₹ INR</option>
+            <option value="$">$ USD</option>
+            <option value="€">€ EUR</option>
+            <option value="£">£ GBP</option>
+          </select>
+        </label>
+        <button class="btn right" onclick="addRow()">+ Add Member</button>
+        <button class="btn-ghost" onclick="loadSample()">Demo data</button>
+      </div>
+
+      <div class="muted">Enter each friend and how much they <b>paid</b> during the trip. We’ll compute who should pay whom.</div>
+
+      <table id="tbl">
+        <thead>
+          <tr><th style="width:46%">Name</th><th style="width:32%">Amount paid</th><th style="width:22%">Actions</th></tr>
+        </thead>
+        <tbody id="rows"></tbody>
+        <tfoot>
+          <tr>
+            <th>Total</th>
+            <th colspan="2" class="mono" id="total">—</th>
+          </tr>
+        </tfoot>
+      </table>
+
+      <div class="controls">
+        <button class="btn" onclick="calculate()">Calculate settlements</button>
+        <button class="btn-ghost" onclick="share()">Copy result</button>
+        <button class="btn-ghost" onclick="resetAll()">Reset</button>
+      </div>
+
+      <div id="out" class="result"></div>
+      <p class="muted">Fair-split logic: everyone should end up paying the same share. We compute balances and minimize transfers.</p>
+    </div>
+
+    <p style="text-align:center;margin-top:18px">
+      <a href="../index.html">← Back to Maanasikam</a>
+    </p>
+  </div>
+
+<script>
+const rowsEl = document.getElementById('rows');
+const totalEl = document.getElementById('total');
+const outEl = document.getElementById('out');
+const curEl = document.getElementById('currency');
+
+function addRow(name='', paid=''){
+  const tr = document.createElement('tr');
+  tr.innerHTML = `
+    <td><input placeholder="Name (e.g., Ravi)" value="${escapeHtml(name)}"></td>
+    <td><input type="number" step="0.01" min="0" placeholder="0.00" value="${paid}"></td>
+    <td>
+      <button class="btn-ghost" onclick="dupRow(this)">Duplicate</button>
+      <button class="btn-ghost" onclick="delRow(this)">Delete</button>
+    </td>`;
+  rowsEl.appendChild(tr);
+  recalcTotal();
+}
+function dupRow(btn){
+  const tr = btn.closest('tr');
+  const [name, amt] = [...tr.querySelectorAll('input')].map(i=>i.value);
+  addRow(name, amt);
+}
+function delRow(btn){
+  btn.closest('tr').remove();
+  recalcTotal();
+}
+function recalcTotal(){
+  const total = [...rowsEl.querySelectorAll('tr')].reduce((s,tr)=>{
+    const amt = parseFloat(tr.querySelectorAll('input')[1]?.value||0);
+    return s + (isFinite(amt)?amt:0);
+  },0);
+  totalEl.textContent = curEl.value + ' ' + total.toFixed(2);
+}
+rowsEl.addEventListener('input', recalcTotal);
+curEl.addEventListener('change', recalcTotal);
+
+function calculate(){
+  const members = [...rowsEl.querySelectorAll('tr')].map(tr=>{
+    const name = (tr.querySelectorAll('input')[0]?.value||'').trim() || 'Friend';
+    const paid = parseFloat(tr.querySelectorAll('input')[1]?.value||0);
+    return {name, paid: isFinite(paid)?paid:0};
+  }).filter(m=>m.name);
+
+  if(members.length===0){ outEl.innerHTML = note('Add at least one member.'); return; }
+
+  const total = members.reduce((s,m)=>s+m.paid,0);
+  const per = total / members.length;
+
+  // balances: +ve = should receive, -ve = should pay
+  const bal = members.map(m=>({name:m.name, bal: +(m.paid - per).toFixed(2)}));
+
+  // two lists
+  let owes = bal.filter(x=>x.bal < -0.009).map(x=>({name:x.name, amt: -x.bal}));
+  let gets = bal.filter(x=>x.bal > 0.009).map(x=>({name:x.name, amt: x.bal}));
+
+  const transfers = [];
+  let i=0,j=0;
+  while(i<owes.length && j<gets.length){
+    const pay = Math.min(owes[i].amt, gets[j].amt);
+    transfers.push({from: owes[i].name, to: gets[j].name, amt: pay});
+    owes[i].amt -= pay;
+    gets[j].amt -= pay;
+    if(owes[i].amt <= 0.009) i++;
+    if(gets[j].amt <= 0.009) j++;
+  }
+
+  const cur = curEl.value;
+  const summary = `
+    <div class="card" style="margin-top:8px">
+      <div class="flex"><div>Total spent:</div><strong class="mono">${cur} ${total.toFixed(2)}</strong></div>
+      <div class="flex"><div>People:</div><strong>${members.length}</strong></div>
+      <div class="flex"><div>Per person share:</div><strong class="mono">${cur} ${per.toFixed(2)}</strong></div>
+    </div>`;
+
+  const lines = transfers.length
+    ? transfers.map(t=>`<li>${t.from} → <b>${t.to}</b> : <b class="mono">${cur} ${t.amt.toFixed(2)}</b></li>`).join('')
+    : `<li>All settled. No transfers needed.</li>`;
+
+  outEl.innerHTML = summary + `
+    <h3 style="margin:14px 0 8px">Settlements</h3>
+    <ul>${lines}</ul>
+    <p class="muted">Tip: share this list on WhatsApp so everyone can settle instantly.</p>`;
+}
+
+function share(){
+  const text = outEl.innerText.trim();
+  if(!text){ alert('Calculate first.'); return; }
+  if(navigator.clipboard){ navigator.clipboard.writeText(text); alert('Copied to clipboard ✅'); }
+  else { alert('Copy failed. Select text manually.'); }
+}
+
+function resetAll(){ rowsEl.innerHTML=''; outEl.innerHTML=''; addRow(); recalcTotal(); }
+function loadSample(){
+  rowsEl.innerHTML='';
+  [['Ravi',2000],['Kishore',500],['Abid',1500],['Imran',0]].forEach(([n,a])=>addRow(n,a));
+  calculate();
+}
+function escapeHtml(s){return s.replace(/[&<>"']/g, m=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));}
+
+// init
+addRow(); addRow(); recalcTotal();
+</script>
+</body>
+</html>
