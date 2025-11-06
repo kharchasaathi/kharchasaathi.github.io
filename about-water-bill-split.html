@@ -1,57 +1,138 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+
+<!-- Dark Mode -->
+<style>
+body.dark { background:#121212; color:#e8e8e8; }
+body.dark h1, body.dark h2, body.dark p, body.dark li { color:#e8e8e8; }
+body.dark a.btn { background:#444; }
+body.dark a.btn:hover { background:#666; }
+.theme-toggle {
+  position:fixed; top:12px; right:12px;
+  background:#ff8800; color:#fff; border:none;
+  padding:8px 12px; border-radius:6px; font-size:14px; z-index:9999;
+}
+</style>
+
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>How to Split Water Bill Fairly | KharchaSaathi Guide</title>
+
 <style>
-body { font-family: Arial, sans-serif; background:#fffaf0; padding:25px; line-height:1.7; }
-h1 { color:#0077aa; }
+body {
+  font-family: Arial, sans-serif;
+  background:#FAFAFA;
+  padding:25px;
+  line-height:1.75;
+  color:#222;
+  max-width:800px;
+  margin:auto;
+}
+
+h1 {
+  font-size:32px;
+  font-weight:800;
+  color:#0077aa;
+  margin-bottom:18px;
+}
+
+h2 {
+  margin-top:32px;
+  font-size:22px;
+  color:#444;
+}
+
+pre {
+  background:#e9f8ff;
+  padding:12px;
+  border-radius:8px;
+  border:1px solid #b7e8ff;
+  font-size:15px;
+}
+
+ul { margin-top:10px; padding-left:20px; }
+
+a.btn{
+  display:inline-block;
+  margin-top:22px;
+  padding:12px 20px;
+  border-radius:8px;
+  background:#ff7a00;
+  color:#fff;
+  font-weight:600;
+  text-decoration:none;
+  transition:0.25s;
+}
+a.btn:hover{
+  background:#cc6300;
+  transform:translateY(-2px);
+}
 </style>
+
 </head>
 <body>
+
+<button class="theme-toggle" onclick="toggleTheme()">🌙</button>
 
 <h1>💧 How to Split Water Bill Fairly?</h1>
 
 <p>
-When living with friends or roommates, water bill is usually paid together.  
-But splitting it fairly avoids confusion and arguments.
+In shared living (PG, hostel, flatmates), **water bill** is usually paid together —
+but everyone may not use the same amount. So fair calculation avoids arguments and confusion.
 </p>
 
-<h2>✅ Simple Method</h2>
+<h2>✅ Simple Equal Split Method</h2>
 
-<p>
-If all members use water equally, just divide:
-</p>
+<p>If everyone uses water almost equally:</p>
 
-<pre>Total Bill ÷ Number of People</pre>
+<pre>Total Water Bill ÷ Number of People</pre>
 
-<h2>⚖️ When usage is different?</h2>
+<h2>⚖️ When Usage is Different?</h2>
 
-<p>
-Someone may use more water if they:
-</p>
+<p>Some people use more water if they:</p>
 
 <ul>
-<li>Take long showers</li>
-<li>Wash clothes more frequently</li>
-<li>Use the kitchen more</li>
+<li>Take long showers 🚿</li>
+<li>Wash clothes frequently 👕</li>
+<li>Cook more in the kitchen 🍳</li>
 </ul>
 
 <p>
-In such cases use our calculator to calculate equal share and friendly settlement.
+In such cases, splitting equally is **not fair**.  
+You should use **weights (usage or days stayed)** for fair calculation.
 </p>
 
-<h2>🧮 Open the Water Bill Split Calculator</h2>
+<h2>🧮 Use Our Water Bill Split Calculator</h2>
 
 <p>
-<a href="tools/water-bill-split.html">➡️ Water Bill Split Tool</a>
+It calculates share **based on equal use or weighted use**:
+</p>
+
+<p>
+<a class="btn" href="tools/water-bill-split.html">➡️ Open Water Bill Split Calculator</a>
 </p>
 
 <p><b>Fair sharing = Peace + Transparency ✅</b></p>
-  
+
 <p style="margin-top:40px;">
   <a class="btn" href="index.html">← Back to Home</a>
 </p>
+
+<script>
+(function(){
+  const t=localStorage.getItem('ks-theme');
+  if(t==='dark'){
+    document.body.classList.add('dark');
+    document.querySelector('.theme-toggle').textContent='☀️';
+  }
+})();
+function toggleTheme(){
+  const d=document.body.classList.toggle('dark');
+  localStorage.setItem('ks-theme',d?'dark':'light');
+  document.querySelector('.theme-toggle').textContent=d?'☀️':'🌙';
+}
+</script>
+
 </body>
 </html>
