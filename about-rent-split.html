@@ -1,50 +1,133 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+
+<!-- Dark Mode -->
+<style>
+body.dark { background:#121212; color:#e8e8e8; }
+body.dark h1, body.dark h2, body.dark p, body.dark li { color:#e8e8e8; }
+body.dark a.btn { background:#444; }
+body.dark a.btn:hover { background:#666; }
+.theme-toggle {
+  position:fixed; top:12px; right:12px;
+  background:#ff8800; color:#fff; border:none;
+  padding:8px 12px; border-radius:6px; font-size:14px; z-index:9999;
+}
+</style>
+
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>How to Split Rent Fairly | KharchaSaathi Guide</title>
+
 <style>
-body { font-family: Arial, sans-serif; background: #fffaf0; padding: 25px; line-height: 1.7; }
-h1 { color: #e67300; }
+body {
+  font-family: Arial, sans-serif;
+  background:#FAFAFA;
+  padding:25px;
+  line-height:1.75;
+  color:#222;
+  max-width:800px;
+  margin:auto;
+}
+
+h1 {
+  font-size:32px;
+  font-weight:800;
+  color:#ff7a00;
+  margin-bottom:18px;
+}
+
+h2 {
+  margin-top:32px;
+  font-size:22px;
+  color:#444;
+}
+
+pre {
+  background:#fff3e6;
+  padding:12px;
+  border-radius:8px;
+  border:1px solid #ffd4b3;
+  font-size:15px;
+}
+
+ul { margin-top:10px; padding-left:20px; }
+
+a.btn{
+  display:inline-block;
+  margin-top:22px;
+  padding:12px 20px;
+  border-radius:8px;
+  background:#ff7a00;
+  color:#fff;
+  font-weight:600;
+  text-decoration:none;
+  transition:0.25s;
+}
+a.btn:hover{
+  background:#cc6300;
+  transform:translateY(-2px);
+}
 </style>
+
 </head>
 <body>
+
+<button class="theme-toggle" onclick="toggleTheme()">🌙</button>
 
 <h1>🏠 How to Split Rent Fairly Among Roommates</h1>
 
 <p>
-Sharing rent with roommates is common — but dividing it fairly can be confusing.  
-Instead of splitting equally, sometimes one person may have a bigger room, attached bathroom, better sunlight, or more privacy.
+When multiple people share a house/flat, rent must be divided in a way that feels **fair** to everyone.
+Sometimes equal split works, but sometimes **rooms are different sizes** or one person gets more privacy.
 </p>
 
-<h2>✅ Methods to Split Rent</h2>
+<h2>✅ Common Ways to Split Rent</h2>
 
 <ul>
 <li><b>Equal Split:</b> Total rent ÷ number of people.</li>
-<li><b>Room Size Based:</b> Larger room = higher share.</li>
-<li><b>Custom Ratio:</b> Example → 3:2:1 shares.</li>
+<li><b>Room Size Based:</b> Bigger room → higher share.</li>
+<li><b>Custom Ratio Method:</b> Example sharing → <pre>3,2,1</pre></li>
 </ul>
 
-<h2>🧮 Use our Rent Split Calculator</h2>
 <p>
-Just enter the total rent and how many people are sharing.  
-If rooms are different sizes, you can add custom share values like:
-</p>
-<pre>3,2,1</pre>
-
-<p><a href="tools/rent-split.html">➡️ Open Rent Split Tool</a></p>
-
-<p>
-This ensures everyone pays fairly without arguments.
+This ensures that everyone pays according to what they get.
 </p>
 
-<p><b>Smart way to split rent = Peace + Transparency ✅</b></p>
-  
+<h2>🧮 Use Our Rent Split Calculator</h2>
+
+<p>
+It automatically calculates fair shares — including custom room sizes / usage:
+</p>
+
+<p>
+<a class="btn" href="tools/rent-split.html">➡️ Open Rent Split Calculator</a>
+</p>
+
+<p>
+No fights. No confusion. <b>Only fairness.</b>
+</p>
+
+<p><b>Fair rent = Peace + Transparency ✅</b></p>
+
 <p style="margin-top:40px;">
   <a class="btn" href="index.html">← Back to Home</a>
 </p>
-  <p style="margin-top:40px;">
-  
+
+<script>
+(function(){
+  const t=localStorage.getItem('ks-theme');
+  if(t==='dark'){
+    document.body.classList.add('dark');
+    document.querySelector('.theme-toggle').textContent='☀️';
+  }
+})();
+function toggleTheme(){
+  const d=document.body.classList.toggle('dark');
+  localStorage.setItem('ks-theme',d?'dark':'light');
+  document.querySelector('.theme-toggle').textContent=d?'☀️':'🌙';
+}
+</script>
+
 </body>
 </html>
