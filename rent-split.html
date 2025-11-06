@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="te">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Rent Split Calculator — Maanasikam</title>
+  <meta name="description" content="రూమ్మేట్స్ మధ్య రెంట్‌ని సమానంగా లేదా కస్టమ్ షేర్లతో పంచండి.">
+  <style>
+    body{font-family:Arial, sans-serif;background:#fffaf0;margin:0;padding:24px}
+    .wrap{max-width:720px;margin:auto}
+    h1{margin:8px 0;color:#444;text-align:center}
+    .card{background:#fff;border:1px solid #eee;border-radius:10px;padding:16px;box-shadow:0 1px 3px rgba(0,0,0,.05)}
+    label{display:block;margin:10px 0 6px}
+    input{width:100%;padding:10px;border:1px solid #ccc;border-radius:8px}
+    .row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+    button{margin-top:14px;padding:10px 14px;border:0;border-radius:8px;background:#4caf50;color:#fff;cursor:pointer}
+    table{width:100%;border-collapse:collapse;margin-top:16px}
+    th,td{border:1px solid #eee;padding:10px;text-align:center}
+    .muted{color:#777;font-size:14px}
+    a{color:#333}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <h1>🏠 Rent Split Calculator</h1>
+    <div class="card">
+      <label>మొత్తం రెంట్ (₹)</label>
+      <input id="rent" type="number" placeholder="ఉదా: 12000">
+
+      <div class="row">
+        <div>
+          <label>వ్యక్తుల సంఖ్య</label>
+          <input id="people" type="number" placeholder="ఉదా: 3">
+        </div>
+        <div>
+          <label>కస్టమ్ షేర్లు? (ఐచ్చికం)</label>
+          <input id="shares" type="text" placeholder="ఉదా: 2,1,1  (రూమ్ సైజ్ ప్రకారం)">
+        </div>
+      </div>
+
+      <button onclick="calc()">లెక్కించు</button>
+      <div id="out"></div>
+      <p class="muted">Tip: కస్టమ్ షేర్లు భిన్నంగా ఇస్తే (ఉదా: 3,2,1) వాటి నిష్పత్తి ప్రకారం పంచుతాం.</p>
+    </div>
+
+    <p style="text-align:center;margin-top:18px">
+      <a href="../index.html">← Back to Maanasikam</a>
+    </p>
+  </div>
+
+  <script>
+    function calc(){
+      const rent = parseFloat(document.getElementById('rent').value||'0');
+      const n = parseInt(document.getElementById('people').value||'0');
+      const sharesStr = document.getElementById('shares').value.trim();
+
+      const out = document.getElementById('out');
+      if(!rent || !n || n<=0){ out.innerHTML = "<p style='color:#c00'>విలువలు సరిగా ఇవ్వండి.</p>"; return; }
+
+      let shares = Array(n).fill(1);
+      if(sharesStr){
+        const arr = sharesStr.split(',').map(s=>parseFloat(s.trim())).filter(Boolean);
+        if(arr.length!==n || arr.some(x=>x<=0)){ out.innerHTML = "<p style='color:#c00'>షేర్లు ఫార్మాట్: ఉదా 2,1,1 (పర్సన్ల సంఖ్యకి సమానంగా).</p>"; return; }
+        shares = arr;
+      }
+
+      const sum = shares.reduce((a,b)=>a+b,0);
+      const rows = shares.map((w,i)=>{
+        const amt = (rent * (w/sum));
+        return `<tr><td>వ్యక్తి ${i+1}</td><td>${w}</td><td>₹ ${amt.toFixed(2)}</td></tr>`;
+      }).join('');
+
+      out.innerHTML = `
+        <table>
+          <thead><tr><th>వ్యక్తి</th><th>షేర్</th><th>చెల్లించవలసినది</th></tr></thead>
+          <tbody>${rows}</tbody>
+          <tfoot><tr><th colspan="2">మొత్తం</th><th>₹ ${rent.toFixed(2)}</th></tr></tfoot>
+        </table>
+      `;
+    }
+  </script>
+</body>
+</html>
