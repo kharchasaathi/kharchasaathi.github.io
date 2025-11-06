@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Grocery Expense Split</title>
+<style>
+  body { font-family: Arial, sans-serif; background:#fffaf0; margin:0; padding:40px; text-align:center; }
+  input, button { padding:10px; margin:6px; border-radius:6px; border:1px solid #888; width:80%; max-width:260px; }
+  table { margin:auto; border-collapse:collapse; margin-top:20px; }
+  th, td { border:1px solid #aaa; padding:8px 14px; }
+  .btn { background:#ff7a00; color:#fff; border:none; cursor:pointer; }
+</style>
+</head>
+
+<body>
+<h2>🛒 Grocery Expense Split Calculator</h2>
+
+<input type="number" id="total" placeholder="Total Grocery Bill (₹)">
+<input type="number" id="members" placeholder="Number of People">
+
+<br>
+<button class="btn" onclick="calculate()">Calculate</button>
+
+<div id="result"></div>
+
+<p style="margin-top:25px;">
+  <a href="../index.html">← Back to Home</a>
+</p>
+
+<script>
+function calculate() {
+  let total = document.getElementById("total").value;
+  let members = document.getElementById("members").value;
+
+  if(total=="" || members=="" || members==0){
+    alert("Enter valid inputs");
+    return;
+  }
+
+  let share = (total / members).toFixed(2);
+  let html = "<table><tr><th>Person</th><th>Share (₹)</th></tr>";
+
+  for(let i=1; i<=members; i++){
+    html += `<tr><td>Person ${i}</td><td>₹ ${share}</td></tr>`;
+  }
+
+  html += "</table>";
+  document.getElementById("result").innerHTML = html;
+}
+</script>
+
+</body>
+</html>
