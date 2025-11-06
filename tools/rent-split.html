@@ -1,0 +1,119 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Rent Split Calculator — Maanasikam</title>
+<meta name="description" content="Split house rent among roommates equally or by custom shares.">
+<style>
+  :root{--bg:#fff8ee;--card:#fff;--text:#333;--muted:#777;--line:#eee;--brand:#ff7a1a;--brand2:#ff9b4d}
+  *{box-sizing:border-box}
+  body{font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;background:var(--bg);margin:0;padding:24px;color:var(--text)}
+  .wrap{max-width:780px;margin:auto}
+  h1{text-align:center;margin:6px 0 14px}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px;box-shadow:0 1px 4px rgba(0,0,0,.04)}
+  label{display:block;margin:10px 0 6px}
+  input{width:100%;padding:10px;border:1px solid #ccc;border-radius:10px}
+  .row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  button{padding:10px 14px;border-radius:10px;border:1px solid #ddd;background:#fff;cursor:pointer}
+  .btn{background:var(--brand);border:0;color:#fff}
+  .btn:hover{background:var(--brand2)}
+  table{width:100%;border-collapse:collapse;margin-top:14px}
+  th,td{border:1px solid var(--line);padding:10px;text-align:center}
+  th{background:#fafafa}
+  .muted{color:var(--muted);font-size:13px}
+  .mono{font-variant-numeric:tabular-nums}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>🏠 Rent Split Calculator</h1>
+  <div class="card">
+    <label>Total Rent (<span id="cur">₹</span>)</label>
+    <input id="rent" type="number" placeholder="e.g., 12000">
+
+    <div class="row">
+      <div>
+        <label>Number of people</label>
+        <input id="people" type="number" placeholder="e.g., 3">
+      </div>
+      <div>
+        <label>Custom shares (optional)</label>
+        <input id="shares" type="text" placeholder="e.g., 2,1,1 (by room/size)">
+      </div>
+    </div>
+
+    <div class="row" style="margin-top:8px">
+      <div>
+        <label>Currency</label>
+        <input id="currency" type="text" value="₹" maxlength="3" placeholder="₹ / $ / €">
+      </div>
+      <div></div>
+    </div>
+
+    <div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap">
+      <button class="btn" onclick="calc()">Calculate</button>
+      <button onclick="resetAll()">Reset</button>
+    </div>
+
+    <div id="out"></div>
+    <p class="muted">Tip: If you enter custom shares like <b>3,2,1</b>, amounts will be split in that ratio.</p>
+  </div>
+
+  <p style="text-align:center;margin-top:18px">
+    <a href="../index.html">← Back to Maanasikam</a>
+  </p>
+</div>
+
+<script>
+const out = document.getElementById('out');
+const curEl = document.getElementById('currency');
+
+function calc(){
+  const rent = parseFloat(document.getElementById('rent').value||'0');
+  const n = parseInt(document.getElementById('people').value||'0');
+  const sharesStr = document.getElementById('shares').value.trim();
+  const cur = (curEl.value||'₹').trim() || '₹';
+
+  if(!rent || !n || n<=0){
+    out.innerHTML = note('Please enter valid values.');
+    return;
+  }
+
+  let shares = Array(n).fill(1);
+  if(sharesStr){
+    const arr = sharesStr.split(',').map(s=>parseFloat(s.trim())).filter(x=>isFinite(x));
+    if(arr.length!==n || arr.some(x=>x<=0)){
+      out.innerHTML = note('Custom shares must match people count. Example: 2,1,1');
+      return;
+    }
+    shares = arr;
+  }
+
+  const sum = shares.reduce((a,b)=>a+b,0);
+  const rows = shares.map((w,i)=>{
+    const amt = rent * (w/sum);
+    return `<tr><td>Person ${i+1}</td><td>${w}</td><td class="mono">${cur} ${amt.toFixed(2)}</td></tr>`;
+  }).join('');
+
+  out.innerHTML = `
+    <table>
+      <thead><tr><th>Person</th><th>Share</th><th>Amount</th></tr></thead>
+      <tbody>${rows}</tbody>
+      <tfoot><tr><th colspan="2">Total</th><th class="mono">${cur} ${rent.toFixed(2)}</th></tr></tfoot>
+    </table>
+  `;
+}
+
+function resetAll(){
+  document.getElementById('rent').value='';
+  document.getElementById('people').value='';
+  document.getElementById('shares').value='';
+  document.getElementById('currency').value='₹';
+  out.innerHTML='';
+}
+
+function note(t){ return `<p style="color:#c00">${t}</p>`; }
+</script>
+</body>
+</html>
