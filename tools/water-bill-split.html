@@ -1,46 +1,118 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
+
+<!-- Dark Mode Support -->
+<style>
+body.dark { background:#121212; color:#e8e8e8; }
+body.dark .card { background:#1e1e1e; border-color:#555; }
+body.dark input, body.dark select {
+  background:#333; border-color:#666; color:#eee;
+}
+body.dark table, body.dark th, body.dark td {
+  background:#222; border-color:#555; color:#eee;
+}
+body.dark .pill { background:#333; border-color:#777; color:#ffb84d; }
+body.dark h1 { color:#ffd27f; }
+body.dark .btn { background:#444; }
+body.dark .btn:hover { background:#666; }
+.theme-toggle {
+  position:fixed; top:12px; right:12px;
+  background:#ff8800; color:#fff; border:none;
+  padding:8px 12px; border-radius:6px; font-size:14px; z-index:9999;
+}
+</style>
+
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Water Bill Splitter — Maanasikam</title>
-<meta name="description" content="Split the monthly water bill among flatmates equally or by custom weights (days stayed / usage).">
+<title>Water Bill Splitter — KharchaSaathi</title>
+
 <style>
   :root{
-    --bg:#fff8ee;--card:#fff;--text:#343434;--muted:#666;--line:#eee;
-    --brand:#ff7a1a;--brand2:#ff9b4d;
+    --bg:#FAFAFA; --card:#fff; --text:#222; --muted:#666;
+    --brand:#ff7a00; --brand2:#cc6300; --line:#ddd;
   }
-  *{box-sizing:border-box}
-  body{font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;background:var(--bg);margin:0;padding:22px;color:var(--text)}
-  .wrap{max-width:840px;margin:auto}
-  h1{margin:8px 0 14px;text-align:center}
-  .card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px;box-shadow:0 1px 4px rgba(0,0,0,.04)}
-  .row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-  label{display:block;margin:8px 0 6px}
-  input,select,button{padding:10px 12px;border:1px solid #ccc;border-radius:10px;font-size:15px}
-  input[type="number"]{appearance:textfield}
-  .muted{color:var(--muted);font-size:13px}
-  .btn{background:var(--brand);color:#fff;border:0;cursor:pointer}
-  .btn:hover{background:var(--brand2)}
-  .btn-ghost{background:#fff;border:1px solid #ddd;cursor:pointer}
+
+  body{
+    font-family: Arial, sans-serif;
+    background:var(--bg);
+    margin:0;
+    padding:22px;
+    color:var(--text);
+  }
+
+  .wrap{ max-width:840px; margin:auto; }
+  h1{ font-size:32px; font-weight:800; text-align:center; margin:8px 0 14px; }
+
+  .pill{
+    display:inline-block;
+    background:#fff2e6;
+    border:1px solid #ffd6b0;
+    color:#7a3f00;
+    padding:6px 10px;
+    border-radius:999px;
+    font-size:13px;
+  }
+
+  .card{
+    background:var(--card);
+    border:1px solid var(--line);
+    border-radius:12px;
+    padding:16px;
+    box-shadow:0 2px 8px rgba(0,0,0,.06);
+  }
+
+  .row{ display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+  label{ display:block; margin:8px 0 6px; }
+
+  input, select, button{
+    padding:10px 12px;
+    border:1px solid #ccc;
+    border-radius:10px;
+    font-size:15px;
+  }
+  button{ cursor:pointer; }
+
+  .btn{
+    background:var(--brand);
+    color:#fff;
+    border:none;
+    font-weight:600;
+    transition:0.25s;
+  }
+  .btn:hover{ background:var(--brand2); transform:translateY(-2px); }
+
+  .btn-ghost{
+    background:#fff;
+    border:1px solid #ccc;
+    cursor:pointer;
+    border-radius:10px;
+  }
+
+  .controls{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
   table{width:100%;border-collapse:collapse;margin-top:14px}
   th,td{border:1px solid var(--line);padding:10px;text-align:center}
   th{background:#fafafa}
-  .pill{display:inline-block;background:#fff2e6;border:1px solid #ffd6b0;color:#7a3f00;padding:6px 10px;border-radius:999px;font-size:13px}
   .mono{font-variant-numeric:tabular-nums}
-  .controls{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+  .muted{color:var(--muted);font-size:13px}
 </style>
 </head>
+
 <body>
+
+<button class="theme-toggle" onclick="toggleTheme()">🌙</button>
+
 <div class="wrap">
-  <h1>💧 Water Bill Splitter <span class="pill">Chai-orange theme</span></h1>
+  <h1>💧 Water Bill Splitter <span class="pill">Smart Fair Split</span></h1>
 
   <div class="card">
+
     <div class="row">
       <div>
-        <label>Total bill amount</label>
+        <label>Total Bill Amount</label>
         <input id="bill" type="number" placeholder="e.g., 1200">
       </div>
+
       <div>
         <label>Currency</label>
         <select id="cur">
@@ -54,11 +126,12 @@
 
     <div class="row" style="margin-top:6px">
       <div>
-        <label>People count</label>
+        <label>People Count</label>
         <input id="people" type="number" placeholder="e.g., 3">
       </div>
+
       <div>
-        <label>Split mode</label>
+        <label>Split Mode</label>
         <select id="mode" onchange="toggleWeights()">
           <option value="equal">Equal shares</option>
           <option value="weights">By weights (days/usage)</option>
@@ -68,8 +141,8 @@
 
     <div id="weightsBox" style="display:none">
       <label>Weights (comma-separated)</label>
-      <input id="weights" type="text" placeholder="e.g., 30,20,10  (days stayed / usage)">
-      <div class="muted">Tip: The bill will be split in this ratio. Count must match people.</div>
+      <input id="weights" type="text" placeholder="e.g., 30,20,10">
+      <div class="muted">Count must match number of people.</div>
     </div>
 
     <div class="controls">
@@ -79,63 +152,44 @@
     </div>
 
     <div id="out"></div>
-    <p class="muted">Use weights when roommates stayed for different days or have different usage.</p>
+    <p class="muted">Use weights if roommates stayed different number of days.</p>
   </div>
 
   <p style="text-align:center;margin-top:18px">
-    <a href="../index.html">← Back to Home</a>
+    <a class="btn" href="../index.html">← Back to Home</a>
   </p>
 </div>
 
+
 <script>
-const billEl=document.getElementById('bill');
-const peopleEl=document.getElementById('people');
-const modeEl=document.getElementById('mode');
-const weightsBox=document.getElementById('weightsBox');
-const weightsEl=document.getElementById('weights');
-const curEl=document.getElementById('cur');
-const out=document.getElementById('out');
-
-function toggleWeights(){ weightsBox.style.display = modeEl.value==='weights' ? 'block' : 'none'; }
-
+const billEl=document.getElementById('bill'),peopleEl=document.getElementById('people'),modeEl=document.getElementById('mode'),weightsBox=document.getElementById('weightsBox'),weightsEl=document.getElementById('weights'),curEl=document.getElementById('cur'),out=document.getElementById('out');
+function toggleWeights(){weightsBox.style.display=modeEl.value==='weights'?'block':'none'}
 function calc(){
-  const bill = +billEl.value;
-  const n = parseInt(peopleEl.value||'0');
-  const cur = curEl.value;
-
-  if(!bill || !isFinite(bill) || bill<=0){ out.innerHTML=note('Enter a valid bill amount.'); return; }
-  if(!n || n<=0){ out.innerHTML=note('Enter a valid people count.'); return; }
-
-  let shares = [];
-  if(modeEl.value==='equal'){
-    shares = Array(n).fill(1);
-  }else{
-    const arr = (weightsEl.value||'').split(',').map(s=>+s.trim()).filter(x=>isFinite(x)&&x>0);
-    if(arr.length!==n){ out.innerHTML=note('Weights must match people count. Example: 30,20,10'); return; }
-    shares = arr;
+  const bill=+billEl.value,n=+peopleEl.value,cur=curEl.value;
+  if(!bill||bill<=0)return out.innerHTML=note('Enter valid bill.');
+  if(!n||n<=0)return out.innerHTML=note('Enter valid people count.');
+  let shares=[];
+  if(modeEl.value==='equal'){shares=Array(n).fill(1);}
+  else{
+    const arr=(weightsEl.value||'').split(',').map(s=>+s.trim()).filter(x=>x>0);
+    if(arr.length!==n)return out.innerHTML=note('Weights count mismatch.');
+    shares=arr;
   }
-
-  const sum = shares.reduce((a,b)=>a+b,0);
-  const rows = shares.map((w,i)=>{
-    const amt = bill*(w/sum);
-    return `<tr><td>Person ${i+1}</td><td>${w}</td><td class="mono">${cur} ${amt.toFixed(2)}</td></tr>`;
-  }).join('');
-
-  out.innerHTML = `
-    <table>
-      <thead><tr><th>Person</th><th>${modeEl.value==='equal'?'Share':'Weight'}</th><th>Amount</th></tr></thead>
-      <tbody>${rows}</tbody>
-      <tfoot><tr><th colspan="2">Total</th><th class="mono">${cur} ${bill.toFixed(2)}</th></tr></tfoot>
-    </table>`;
+  const sum=shares.reduce((a,b)=>a+b,0);
+  out.innerHTML=`<table>
+    <thead><tr><th>Person</th><th>${modeEl.value==='equal'?'Share':'Weight'}</th><th>Amount</th></tr></thead>
+    <tbody>${shares.map((w,i)=>`<tr><td>${i+1}</td><td>${w}</td><td class="mono">${cur} ${(bill*(w/sum)).toFixed(2)}</td></tr>`).join('')}</tbody>
+    <tfoot><tr><th colspan="2">Total</th><th class="mono">${cur} ${bill.toFixed(2)}</th></tr></tfoot>
+  </table>`;
 }
+function demo(){billEl.value=1200;peopleEl.value=3;modeEl.value='weights';toggleWeights();weightsEl.value='30,20,10';calc()}
+function resetAll(){billEl.value='';peopleEl.value='';modeEl.value='equal';toggleWeights();weightsEl.value='';out.innerHTML=''}
+function note(t){return`<p style="color:#d33">${t}</p>`}
 
-function demo(){
-  billEl.value=1200; peopleEl.value=3; modeEl.value='weights'; toggleWeights(); weightsEl.value='30,20,10'; calc();
-}
-function resetAll(){
-  billEl.value=''; peopleEl.value=''; modeEl.value='equal'; toggleWeights(); weightsEl.value=''; out.innerHTML='';
-}
-function note(t){ return `<p style="color:#c00">${t}</p>`; }
+/* Dark Mode Restore + Toggle */
+(function(){const t=localStorage.getItem('ks-theme');if(t==='dark'){document.body.classList.add('dark');document.querySelector('.theme-toggle').textContent='☀️';}})();
+function toggleTheme(){const d=document.body.classList.toggle('dark');localStorage.setItem('ks-theme',d?'dark':'light');document.querySelector('.theme-toggle').textContent=d?'☀️':'🌙'}
 </script>
+
 </body>
 </html>
