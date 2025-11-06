@@ -1,114 +1,390 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Invoice Pro — KharchaSaathi</title>
 
+<!-- THEME -->
 <style>
-body{font-family: Arial, sans-serif; background:#fafafa; margin:0; padding:20px; text-align:center;}
-body.dark{background:#121212; color:#e8e8e8;}
-button.theme-toggle{position:fixed; top:12px; right:12px; padding:8px 12px; background:#ff8800; color:#fff; border:none; border-radius:6px;}
+:root{
+  --bg:#FAFAFA; --card:#fff; --text:#222; --muted:#777; --line:#e6e6e6;
+  --brand:#ff7a00; --brand2:#cc6300; --ink:#111;
+}
+*{box-sizing:border-box}
+body{font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;background:var(--bg);margin:0;color:var(--text)}
+.container{max-width:980px;margin:auto;padding:20px}
+h1{font-size:28px;font-weight:800;margin:6px 0 12px;text-align:center}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px;box-shadow:0 1px 6px rgba(0,0,0,.05);margin-top:14px}
+label{display:block;margin:8px 0 6px;font-weight:600}
+input,select,textarea{width:100%;padding:10px;border:1px solid #aaa;border-radius:8px;font-size:15px}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+@media (max-width:640px){ .row{grid-template-columns:1fr} }
+.btn{display:inline-block;padding:10px 14px;border-radius:10px;border:none;cursor:pointer;background:var(--brand);color:#fff;font-weight:700;transition:.2s}
+.btn:hover{background:var(--brand2);transform:translateY(-2px)}
+.btn-ghost{background:#fff;border:1px solid #ccc;color:#333}
+.btn-red{background:#e63946}.btn-red:hover{background:#c62836}
 
-.container{max-width:780px; margin:auto;}
-.card{background:#fff; border:1px solid #ccc; border-radius:10px; padding:18px; margin-top:15px;}
-body.dark .card{background:#1e1e1e; border-color:#555;}
+/* Table */
+table{width:100%;border-collapse:collapse;margin-top:10px}
+th,td{border:1px solid var(--line);padding:8px;text-align:center}
+th{background:#fafafa}
 
-input{padding:8px; border-radius:6px; border:1px solid #888; width:100%; margin:4px 0;}
-body.dark input{background:#222; border-color:#555; color:#eee;}
+/* Dark mode */
+body.dark{background:#121212;color:#e8e8e8}
+body.dark .card{background:#1e1e1e;border-color:#555}
+body.dark input, body.dark select, body.dark textarea{background:#222;border-color:#555;color:#eee}
+body.dark table, body.dark th, body.dark td{border-color:#555}
+body.dark .btn-ghost{background:#222;border-color:#555;color:#eee}
+.theme-toggle{position:fixed;top:12px;right:12px;background:#ff8800;color:#fff;border:none;padding:8px 12px;border-radius:6px;font-size:14px;z-index:9999}
 
-table{width:100%; border-collapse:collapse; margin-top:12px;}
-th,td{border:1px solid #bbb; padding:8px; text-align:center;}
-body.dark th, body.dark td{border-color:#666;}
-
-.btn{background:#ff7a00; color:white; border:none; padding:10px 16px; border-radius:8px; margin-top:10px; cursor:pointer; font-weight:600;}
-.btn:hover{background:#cc6300; transform:translateY(-2px);}
-.btn-red{background:#d33;}
-.btn-red:hover{background:#b22;}
+/* PRINT STYLES (A4 Professional) */
+@media print{
+  @page { size: A4; margin: 14mm; }
+  body{background:#fff}
+  .no-print, .theme-toggle{display:none !important}
+  #printable{box-shadow:none;border:none;margin:0;padding:0}
+  #billHeader h2{margin:0}
+  #billHeader, #billMeta, #billItems, #billTotals, #billFooter{break-inside:avoid}
+  a{color:inherit;text-decoration:none}
+}
 </style>
 </head>
-
 <body>
 
-<button class="theme-toggle" onclick="toggleTheme()">🌙</button>
+<button class="theme-toggle no-print" onclick="toggleTheme()">🌙</button>
 
 <div class="container">
-<h1>🧾 Invoice Pro (Item Wise Billing)</h1>
+  <h1>🧾 Invoice Pro (Supermarket Style)</h1>
 
-<div class="card">
-<label>Shop Name (optional)</label><input id="shop">
-<label>Address (optional)</label><input id="address">
-<label>GST Number (optional)</label><input id="gstin">
-</div>
+  <!-- Shop & Customer -->
+  <div class="card" id="inputsBox">
+    <div class="row">
+      <div>
+        <label>Shop Name (optional)</label>
+        <input id="shop" placeholder="e.g., Ali Super Market">
+      </div>
+      <div>
+        <label>GSTIN (optional)</label>
+        <input id="gstin" placeholder="e.g., 37ABCDE1234Z5Z">
+      </div>
+    </div>
+    <label>Shop Address (optional)</label>
+    <textarea id="address" rows="2" placeholder="Door No, Street, City, State, PIN"></textarea>
 
-<div class="card">
-<h3>Add Items</h3>
-<div style="display:flex; gap:8px; flex-wrap:wrap;">
-<input id="itemName" placeholder="Item Name" style="flex:2;">
-<input id="price" placeholder="Price (with GST)" type="number" style="flex:1;">
-<input id="gst" placeholder="GST %" type="number" style="flex:1;">
-<button class="btn" onclick="addItem()">Add</button>
-</div>
+    <div class="row">
+      <div>
+        <label>Customer Name (optional)</label>
+        <input id="customer" placeholder="e.g., Imran Khan">
+      </div>
+      <div>
+        <label>Invoice Date</label>
+        <input id="invDate" type="date">
+      </div>
+    </div>
+    <div class="row">
+      <div>
+        <label>Invoice No.</label>
+        <input id="invNo" placeholder="#INV-0001">
+      </div>
+      <div>
+        <label>Round Off</label>
+        <select id="roundMode">
+          <option value="nearest">Nearest ₹</option>
+          <option value="none">No Round</option>
+          <option value="down">Round Down</option>
+          <option value="up">Round Up</option>
+        </select>
+      </div>
+    </div>
+  </div>
 
-<table id="billTbl">
-<thead><tr><th>Item</th><th>Base</th><th>GST</th><th>Total</th><th></th></tr></thead>
-<tbody></tbody>
-</table>
+  <!-- Items -->
+  <div class="card">
+    <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:end">
+      <div style="flex:2">
+        <label>Item</label>
+        <input id="i_name" placeholder="e.g., Basmati Rice 5kg">
+      </div>
+      <div style="flex:1">
+        <label>Qty</label>
+        <input id="i_qty" type="number" min="1" step="1" value="1">
+      </div>
+      <div style="flex:1">
+        <label>Rate</label>
+        <input id="i_rate" type="number" step="0.01" placeholder="e.g., 599">
+      </div>
+      <div style="flex:1">
+        <label>Price Mode</label>
+        <select id="i_mode">
+          <option value="inclusive">Inclusive (Rate has GST)</option>
+          <option value="exclusive">Exclusive (GST extra)</option>
+        </select>
+      </div>
+      <div style="flex:1">
+        <label>GST %</label>
+        <input id="i_gst" type="number" step="0.01" placeholder="e.g., 5 / 12 / 18 / 28">
+      </div>
+      <button class="btn no-print" onclick="addItem()">+ Add Item</button>
+    </div>
 
-<h3 style="margin-top:10px;">Net Payable: ₹ <span id="netTotal">0.00</span></h3>
-<button class="btn" onclick="printBill()">🖨️ Print / Save PDF</button>
-<button class="btn" onclick="shareBill()">📲 Share via WhatsApp</button>
-</div>
+    <table id="tbl">
+      <thead>
+        <tr>
+          <th style="text-align:left">Item</th>
+          <th>Qty</th>
+          <th>Base (₹)</th>
+          <th>SGST (₹)</th>
+          <th>CGST (₹)</th>
+          <th>Total (₹)</th>
+          <th class="no-print">—</th>
+        </tr>
+      </thead>
+      <tbody id="rows"></tbody>
+      <tfoot>
+        <tr>
+          <th colspan="2" style="text-align:right">Subtotals</th>
+          <th id="t_base">0.00</th>
+          <th id="t_sgst">0.00</th>
+          <th id="t_cgst">0.00</th>
+          <th id="t_total">0.00</th>
+          <th class="no-print"></th>
+        </tr>
+      </tfoot>
+    </table>
+
+    <div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap">
+      <button class="btn no-print" onclick="recalc()">Recalculate</button>
+      <button class="btn-ghost no-print" onclick="resetBill()">Reset</button>
+    </div>
+  </div>
+
+  <!-- Actions -->
+  <div class="card no-print" style="display:flex;gap:8px;flex-wrap:wrap">
+    <button class="btn" onclick="preparePrint()">🖨️ Print / Save as PDF</button>
+    <button class="btn" onclick="shareWhatsApp()">📲 Share on WhatsApp (summary)</button>
+    <a class="btn-ghost" href="../index.html">← Back to Home</a>
+  </div>
+
+  <!-- Printable Invoice -->
+  <div class="card" id="printable" style="display:none">
+    <div id="billHeader" style="text-align:center">
+      <h2 id="p_shop">SHOP NAME</h2>
+      <div id="p_addr" style="white-space:pre-line"></div>
+      <div id="p_gstin" style="margin-top:3px"></div>
+      <hr>
+    </div>
+    <div id="billMeta" style="display:flex;justify-content:space-between;gap:12px">
+      <div>
+        <div><b>Invoice No:</b> <span id="p_invno"></span></div>
+        <div><b>Date:</b> <span id="p_date"></span></div>
+      </div>
+      <div style="text-align:right">
+        <div><b>Customer:</b> <span id="p_cust"></span></div>
+      </div>
+    </div>
+
+    <div id="billItems" style="margin-top:10px">
+      <table>
+        <thead>
+          <tr>
+            <th style="text-align:left">Item</th>
+            <th>Qty</th>
+            <th>Base (₹)</th>
+            <th>SGST (₹)</th>
+            <th>CGST (₹)</th>
+            <th>Total (₹)</th>
+          </tr>
+        </thead>
+        <tbody id="p_body"></tbody>
+      </table>
+    </div>
+
+    <div id="billTotals" style="margin-top:10px;display:flex;justify-content:flex-end">
+      <table style="width:360px;max-width:100%">
+        <tr><th style="text-align:left">Total Base</th><td id="p_tbase" style="text-align:right">0.00</td></tr>
+        <tr><th style="text-align:left">Total SGST</th><td id="p_tsgst" style="text-align:right">0.00</td></tr>
+        <tr><th style="text-align:left">Total CGST</th><td id="p_tcgst" style="text-align:right">0.00</td></tr>
+        <tr><th style="text-align:left">Round Off</th><td id="p_round" style="text-align:right">0.00</td></tr>
+        <tr><th style="text-align:left">Grand Total</th><td id="p_gtotal" style="text-align:right"><b>0.00</b></td></tr>
+      </table>
+    </div>
+
+    <div id="billFooter" style="text-align:center;margin-top:10px;color:#555">
+      Thank you! Visit again.
+    </div>
+  </div>
 </div>
 
 <script>
-function addItem(){
- let name=document.getElementById("itemName").value;
- let total=parseFloat(document.getElementById("price").value);
- let gst=parseFloat(document.getElementById("gst").value);
+const rowsEl = document.getElementById('rows');
 
- if(!name||!total||!gst){alert("Enter item, price, gst"); return;}
-
- let base = total/(1+gst/100);
- let gstAmt = total-base;
-
- let row = `<tr>
-   <td>${name}</td>
-   <td>₹ ${base.toFixed(2)}</td>
-   <td>₹ ${gstAmt.toFixed(2)} (${gst}%)</td>
-   <td>₹ ${total.toFixed(2)}</td>
-   <td><button class="btn-red" onclick="this.parentNode.parentNode.remove(); updateTotal();">X</button></td>
- </tr>`;
-
- document.querySelector("#billTbl tbody").insertAdjacentHTML("beforeend",row);
- updateTotal();
+function toggleTheme(){
+  const d=document.body.classList.toggle('dark');
+  localStorage.setItem('ks-theme', d?'dark':'light');
+  document.querySelector('.theme-toggle').textContent = d?'☀️':'🌙';
 }
-
-function updateTotal(){
- let total=0;
- document.querySelectorAll("#billTbl tbody tr").forEach(r=>{
-  total += parseFloat(r.children[3].innerText.replace("₹",""));
- });
- document.getElementById("netTotal").innerText = total.toFixed(2);
-}
-
-function printBill(){
- let shop=document.getElementById("shop").value||"SHOP NAME";
- let addr=document.getElementById("address").value||"";
- let gstin=document.getElementById("gstin").value?"GSTIN: "+document.getElementById("gstin").value:"";
- let win=window.open("","_blank");
- win.document.write(`<pre style="font-family:monospace;">${shop}\n${addr}\n${gstin}\n\n${document.getElementById("billTbl").outerHTML}\n\nTotal: ₹ ${document.getElementById("netTotal").innerText}</pre>`);
- win.print();
-}
-
-function shareBill(){
- let text = `Invoice:\nTotal: ₹ ${document.getElementById("netTotal").innerText}`;
- window.open(`https://wa.me/?text=${encodeURIComponent(text)}`);
-}
-
 (function(){const t=localStorage.getItem('ks-theme');if(t==='dark'){document.body.classList.add('dark');document.querySelector('.theme-toggle').textContent='☀️';}})();
-function toggleTheme(){const d=document.body.classList.toggle('dark');localStorage.setItem('ks-theme',d?'dark':'light');document.querySelector('.theme-toggle').textContent=d?'☀️':'🌙';}
-</script>
 
+function addItem(){
+  const name = document.getElementById('i_name').value.trim();
+  const qty  = +document.getElementById('i_qty').value||0;
+  const rate = +document.getElementById('i_rate').value||0;
+  const mode = document.getElementById('i_mode').value;
+  const gst  = +document.getElementById('i_gst').value||0;
+  if(!name || !qty || !rate || gst<0){ alert('Enter item, qty, rate, GST%'); return; }
+
+  let basePer = 0, sgstPer=0, cgstPer=0, totalPer=0;
+  if(mode==='inclusive'){
+    basePer  = rate / (1 + gst/100);
+    sgstPer  = basePer * (gst/2)/100;
+    cgstPer  = basePer * (gst/2)/100;
+    totalPer = rate;
+  }else{
+    basePer  = rate;
+    sgstPer  = basePer * (gst/2)/100;
+    cgstPer  = basePer * (gst/2)/100;
+    totalPer = basePer + sgstPer + cgstPer;
+  }
+
+  const base = basePer * qty;
+  const sgst = sgstPer * qty;
+  const cgst = cgstPer * qty;
+  const tot  = totalPer * qty;
+
+  const tr = document.createElement('tr');
+  tr.innerHTML = `
+    <td style="text-align:left">${escapeHtml(name)} <div style="color:#888;font-size:12px">${mode==='inclusive'?'Incl.':''} GST ${gst}%</div></td>
+    <td>${qty}</td>
+    <td>${base.toFixed(2)}</td>
+    <td>${sgst.toFixed(2)}</td>
+    <td>${cgst.toFixed(2)}</td>
+    <td>${tot.toFixed(2)}</td>
+    <td class="no-print"><button class="btn-red" onclick="this.closest('tr').remove(); recalc();">Remove</button></td>`;
+  rowsEl.appendChild(tr);
+  recalc();
+
+  // clear quick add
+  document.getElementById('i_name').value='';
+  document.getElementById('i_qty').value='1';
+  document.getElementById('i_rate').value='';
+  document.getElementById('i_gst').value='';
+  document.getElementById('i_mode').value='inclusive';
+}
+
+function recalc(){
+  let tBase=0,tSGST=0,tCGST=0,tTotal=0;
+  [...rowsEl.querySelectorAll('tr')].forEach(tr=>{
+    tBase  += +tr.children[2].textContent||0;
+    tSGST  += +tr.children[3].textContent||0;
+    tCGST  += +tr.children[4].textContent||0;
+    tTotal += +tr.children[5].textContent||0;
+  });
+
+  // Round mode
+  const mode = document.getElementById('roundMode').value;
+  let roundAdj=0, grand=tTotal;
+  if(mode!=='none'){
+    const target = mode==='nearest' ? Math.round(grand) : (mode==='down'?Math.floor(grand):Math.ceil(grand));
+    roundAdj = +(target-grand).toFixed(2);
+    grand = target;
+  }
+
+  document.getElementById('t_base').textContent  = tBase.toFixed(2);
+  document.getElementById('t_sgst').textContent  = tSGST.toFixed(2);
+  document.getElementById('t_cgst').textContent  = tCGST.toFixed(2);
+  document.getElementById('t_total').textContent = grand.toFixed(2);
+
+  // store for printing
+  window.__kTotals = {tBase, tSGST, tCGST, roundAdj, grand};
+}
+
+function resetBill(){ rowsEl.innerHTML=''; recalc(); }
+
+function preparePrint(){
+  // ensure calc
+  recalc();
+
+  // Header
+  const shop = document.getElementById('shop').value.trim() || 'SHOP NAME';
+  const addr = document.getElementById('address').value.trim();
+  const gstin= document.getElementById('gstin').value.trim();
+  const cust = document.getElementById('customer').value.trim();
+  const dt   = document.getElementById('invDate').value || new Date().toISOString().slice(0,10);
+  const inv  = document.getElementById('invNo').value.trim() || autoInvoiceNo();
+
+  document.getElementById('p_shop').textContent = shop;
+  document.getElementById('p_addr').textContent = addr;
+  document.getElementById('p_gstin').textContent = gstin ? ('GSTIN: ' + gstin) : '';
+  document.getElementById('p_cust').textContent = cust || '-';
+  document.getElementById('p_date').textContent = dt;
+  document.getElementById('p_invno').textContent= inv;
+
+  // Items
+  const body = document.getElementById('p_body');
+  body.innerHTML = '';
+  [...rowsEl.querySelectorAll('tr')].forEach(tr=>{
+    const row = document.createElement('tr');
+    row.innerHTML = `
+      <td style="text-align:left">${tr.children[0].innerHTML.split('<div')[0].trim()}</td>
+      <td>${tr.children[1].textContent}</td>
+      <td>${(+tr.children[2].textContent).toFixed(2)}</td>
+      <td>${(+tr.children[3].textContent).toFixed(2)}</td>
+      <td>${(+tr.children[4].textContent).toFixed(2)}</td>
+      <td>${(+tr.children[5].textContent).toFixed(2)}</td>`;
+    body.appendChild(row);
+  });
+
+  const {tBase,tSGST,tCGST,roundAdj,grand} = window.__kTotals || {tBase:0,tSGST:0,tCGST:0,roundAdj:0,grand:0};
+  document.getElementById('p_tbase').textContent  = tBase.toFixed(2);
+  document.getElementById('p_tsgst').textContent  = tSGST.toFixed(2);
+  document.getElementById('p_tcgst').textContent  = tCGST.toFixed(2);
+  document.getElementById('p_round').textContent  = roundAdj.toFixed(2);
+  document.getElementById('p_gtotal').textContent = grand.toFixed(2);
+
+  // show printable and call print
+  document.getElementById('printable').style.display = 'block';
+  window.print();
+  document.getElementById('printable').style.display = 'none';
+}
+
+function shareWhatsApp(){
+  // summary text (PDF attach must be manual)
+  recalc();
+  const lines = [];
+  lines.push(`*${(document.getElementById('shop').value || 'Invoice')}*`);
+  lines.push(`Invoice: ${(document.getElementById('invNo').value || autoInvoiceNo())}`);
+  const dt = document.getElementById('invDate').value || new Date().toISOString().slice(0,10);
+  lines.push(`Date: ${dt}`);
+  const cust = document.getElementById('customer').value||'';
+  if(cust) lines.push(`Customer: ${cust}`);
+  lines.push('');
+  [...rowsEl.querySelectorAll('tr')].forEach(tr=>{
+    const name = tr.children[0].textContent.trim().replace(/\s+Incl.*$/,'');
+    const qty  = tr.children[1].textContent;
+    const tot  = tr.children[5].textContent;
+    lines.push(`${name} x${qty} — ₹ ${tot}`);
+  });
+  const {grand} = window.__kTotals || {grand:0};
+  lines.push('');
+  lines.push(`Grand Total: ₹ ${(+grand).toFixed(2)}`);
+  lines.push('');
+  lines.push(`(PDF attach: use Print → Save as PDF, then attach here)`);
+  const url = 'https://wa.me/?text=' + encodeURIComponent(lines.join('\n'));
+  window.open(url,'_blank');
+}
+
+function autoInvoiceNo(){
+  const k='ks_inv_seq'; let n=+(localStorage.getItem(k)||'0')+1; localStorage.setItem(k,n); 
+  return '#INV-' + String(n).padStart(4,'0');
+}
+
+function escapeHtml(s){return String(s).replace(/[&<>"']/g,m=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[m]));}
+
+// init
+(function(){
+  document.getElementById('invDate').value = new Date().toISOString().slice(0,10);
+})();
+</script>
 </body>
 </html>
