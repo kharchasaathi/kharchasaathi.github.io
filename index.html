@@ -158,8 +158,8 @@
     <a class="tool-card" href="tools/gst-bill.html">
       <span>📄</span> GST Reverse Calculator
     </a>
-    <a class="tool-card" href="tools/trust-ledger.html">
-      <span>🔗</span> Trust Ledger (Proof of Invoice)
+    <a class="tool-card" href="tools/invoice-pro.html">
+      <span>🧾</span> Invoice Pro (Smart Billing)
     </a>
   </div>
 
@@ -181,16 +181,16 @@
 
   <script>
     (function(){
-      const t=localStorage.getItem('ks-theme');
-      if(t==='dark'){
+      const t = localStorage.getItem('ks-theme');
+      if(t === 'dark'){
         document.body.classList.add('dark');
-        document.querySelector('.theme-toggle').textContent='☀️';
+        document.querySelector('.theme-toggle').textContent = '☀️';
       }
     })();
     function toggleTheme(){
-      const d=document.body.classList.toggle('dark');
-      localStorage.setItem('ks-theme', d?'dark':'light');
-      document.querySelector('.theme-toggle').textContent = d?'☀️':'🌙';
+      const d = document.body.classList.toggle('dark');
+      localStorage.setItem('ks-theme', d ? 'dark' : 'light');
+      document.querySelector('.theme-toggle').textContent = d ? '☀️' : '🌙';
     }
   </script>
 
