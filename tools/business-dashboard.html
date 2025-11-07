@@ -73,7 +73,6 @@
   .restock-btn {
     background: #28a745;
     color: white;
-    border: none;
     border-radius: 5px;
     padding: 5px 10px;
     cursor: pointer;
@@ -118,13 +117,14 @@
 
 <!-- SALES SECTION -->
 <div id="sales" class="section">
-  <h3>💰 Record Sale</h3>
+  <h3>💰 Sales Ledger</h3>
   <table id="salesTable">
     <thead>
       <tr><th>Date</th><th>Product</th><th>Qty</th><th>Price ₹</th><th>Total ₹</th></tr>
     </thead>
     <tbody></tbody>
   </table>
+  <button class="clear-btn" onclick="clearSales()">🧹 Clear All Sales</button>
 </div>
 
 <!-- WANTING SECTION -->
@@ -178,6 +178,7 @@ function addStock() {
 }
 
 function recordSale(name, date, qty, price) {
+  if(!name || !qty || !price || !date) return alert("Please fill all sale details!");
   sales.push({product:name, qty, price, amount:qty*price, date});
   localStorage.setItem('sales-data',JSON.stringify(sales));
   let item=stock.find(s=>s.name.toLowerCase()===name.toLowerCase());
@@ -209,6 +210,7 @@ function removeWant(index){
 }
 
 function clearStock(){ if(confirm("Clear all stock?")){localStorage.removeItem('stock-data');stock=[];renderStock();}}
+function clearSales(){ if(confirm("Clear all sales?")){localStorage.removeItem('sales-data');sales=[];renderSales();}}
 function clearWant(){ if(confirm("Clear the entire wanting list?")){localStorage.removeItem('wanting-data');want=[];renderWant();}}
 
 function renderStock(){
