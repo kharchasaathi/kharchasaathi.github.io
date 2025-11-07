@@ -11,7 +11,6 @@
      crossorigin="anonymous"></script>
 
   <style>
-    /* 🌙 Theme Styles */
     :root {
       --orange: #ff7a00;
       --orange-dark: #cc6300;
@@ -23,7 +22,8 @@
 
     body {
       font-family: "Poppins", Arial, sans-serif;
-      margin: 0; padding: 0;
+      margin: 0;
+      padding: 0;
       background: var(--bg-light);
       color: var(--text-dark);
       text-align: center;
@@ -48,7 +48,7 @@
       margin-bottom: 30px;
     }
 
-    /* 🌗 Theme Toggle */
+    /* Theme Toggle */
     .theme-toggle {
       position: fixed;
       top: 14px;
@@ -62,12 +62,9 @@
       cursor: pointer;
       transition: 0.3s;
     }
+    .theme-toggle:hover { background: var(--orange-dark); }
 
-    .theme-toggle:hover {
-      background: var(--orange-dark);
-    }
-
-    /* 🧩 Section Titles */
+    /* Section Titles */
     .section-title {
       font-size: 20px;
       font-weight: 700;
@@ -77,7 +74,7 @@
       color: var(--orange);
     }
 
-    /* 🧮 Tool Grid */
+    /* Tools Grid */
     .tools-grid {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
@@ -112,13 +109,12 @@
       margin-bottom: 8px;
     }
 
-    /* Dark mode cards */
+    /* Dark Mode */
     body.dark .tool-card {
       background: #1e1e1e;
       color: var(--text-light);
       box-shadow: 0 2px 8px rgba(255,255,255,0.05);
     }
-
     body.dark .tool-card:hover {
       background: #2a2a2a;
       box-shadow: 0 3px 12px rgba(255,255,255,0.08);
@@ -132,6 +128,7 @@
     }
   </style>
 </head>
+
 <body>
 
   <button class="theme-toggle" onclick="toggleTheme()">🌙</button>
@@ -162,11 +159,20 @@
   <!-- 💼 Business Tools -->
   <div class="section-title">Business Tools</div>
   <div class="tools-grid">
-    <a class="tool-card" href="tools/gst-bill.html">
-      <span>📄</span> GST Reverse Calculator
+    <a class="tool-card" href="tools/stock-manager.html">
+      <span>📦</span> Stock Manager (Inventory)
+    </a>
+    <a class="tool-card" href="tools/sales.html">
+      <span>📈</span> Sales Ledger (Daily Sales)
+    </a>
+    <a class="tool-card" href="tools/wanting.html">
+      <span>🛒</span> Wanting List (Restock Items)
     </a>
     <a class="tool-card" href="tools/invoice-pro.html">
       <span>🧾</span> Invoice Pro (Smart Billing)
+    </a>
+    <a class="tool-card" href="tools/gst-bill.html">
+      <span>📄</span> GST Reverse Calculator
     </a>
   </div>
 
