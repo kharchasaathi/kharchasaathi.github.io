@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>📦 Stock Manager — KharchaSaathi</title>
+<title>📦 Business Dashboard — KharchaSaathi</title>
 <style>
   body {
     font-family: "Poppins", Arial, sans-serif;
@@ -70,11 +70,20 @@
     background: #d9534f;
   }
   .clear-btn:hover { background: #b52b27; }
+  .restock-btn {
+    background: #28a745;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    padding: 5px 10px;
+    cursor: pointer;
+  }
+  .restock-btn:hover { background: #1e7e34; }
 </style>
 </head>
 <body>
 
-<h2>📦 Stock Manager Dashboard</h2>
+<h2>📦 Business Dashboard</h2>
 
 <div class="tabs">
   <div class="tab active" onclick="openTab('stock')">📦 Current Stock</div>
@@ -84,36 +93,29 @@
 
 <!-- STOCK SECTION -->
 <div id="stock" class="section active">
-  <h3>🧾 Add New Stock</h3>
-  <input id="pname" placeholder="Product name">
-  <input id="pqty" type="number" placeholder="Quantity">
-  <input id="pdate" type="date">
-  <button onclick="addStock()">Add</button>
-  <button class="clear-btn" onclick="clearStock()">🧹 Clear Stock</button>
+  <h3>🧾 Stock Inventory</h3>
 
-  <h3>📋 Current Stock</h3>
   <table id="stockTable">
     <thead>
-      <tr><th>Date</th><th>Product</th><th>Qty</th></tr>
+      <tr><th>Date</th><th>Product</th><th>Qty</th><th>Action</th></tr>
     </thead>
     <tbody></tbody>
   </table>
+
+  <h4>Add New Stock</h4>
+  <input id="pdate" type="date">
+  <input id="pname" placeholder="Product name">
+  <input id="pqty" type="number" placeholder="Quantity">
+  <button onclick="addStock()">Add</button>
+  <button class="clear-btn" onclick="clearStock()">🧹 Clear Stock</button>
 </div>
 
 <!-- SALES SECTION -->
 <div id="sales" class="section">
   <h3>💰 Record Sale</h3>
-  <input id="sname" placeholder="Product name">
-  <input id="sqty" type="number" placeholder="Quantity">
-  <input id="sprice" type="number" placeholder="Price ₹">
-  <input id="sdate" type="date">
-  <button onclick="addSale()">Add Sale</button>
-  <button class="clear-btn" onclick="clearSales()">🧹 Clear Sales</button>
-
-  <h3>📈 Sales Ledger</h3>
   <table id="salesTable">
     <thead>
-      <tr><th>Date</th><th>Product</th><th>Qty</th><th>Total ₹</th></tr>
+      <tr><th>Date</th><th>Product</th><th>Qty</th><th>Price ₹</th><th>Total ₹</th></tr>
     </thead>
     <tbody></tbody>
   </table>
@@ -121,19 +123,18 @@
 
 <!-- WANTING SECTION -->
 <div id="wanting" class="section">
-  <h3>🛒 Add Wanting Item</h3>
-  <input id="witem" placeholder="Item name">
-  <input id="wdate" type="date">
-  <button onclick="addWant()">Add</button>
-  <button class="clear-btn" onclick="clearWant()">🧹 Clear Wanting List</button>
-
-  <h3>📦 Wanting Items</h3>
+  <h3>🛒 Wanting Items</h3>
   <table id="wantTable">
     <thead>
-      <tr><th>Date</th><th>Item</th></tr>
+      <tr><th>Date</th><th>Item</th><th>Action</th></tr>
     </thead>
     <tbody></tbody>
   </table>
+  <h4>Add New Wanting Item</h4>
+  <input id="wdate" type="date">
+  <input id="witem" placeholder="Item name">
+  <button onclick="addWant()">Add</button>
+  <button class="clear-btn" onclick="clearWant()">🧹 Clear All Wanting</button>
 </div>
 
 <div style="text-align:center;margin-top:20px;">
@@ -154,29 +155,38 @@ function openTab(tab) {
 
 function addStock() {
   let name=document.getElementById('pname').value.trim();
-  let qty=document.getElementById('pqty').value;
+  let qty=parseInt(document.getElementById('pqty').value);
   let date=document.getElementById('pdate').value;
   if(!name||!qty||!date) return alert("Fill all fields!");
   stock.push({name,qty,date});
   localStorage.setItem('stock-data',JSON.stringify(stock));
-  renderStock();
+  
+  // Also create empty entry in sales
+  if(!sales.find(s=>s.product.toLowerCase()===name.toLowerCase())){
+    sales.push({product:name,qty:0,price:0,amount:0,date:""});
+    localStorage.setItem('sales-data',JSON.stringify(sales));
+  }
+
+  // Remove from wanting list if restocked
+  let index = want.findIndex(w=>w.item.toLowerCase()===name.toLowerCase());
+  if(index>-1){want.splice(index,1);localStorage.setItem('wanting-data',JSON.stringify(want));}
+
+  renderStock(); renderSales(); renderWant();
   document.getElementById('pname').value='';
   document.getElementById('pqty').value='';
 }
 
-function addSale() {
-  let name=document.getElementById('sname').value.trim();
-  let qty=parseInt(document.getElementById('sqty').value);
-  let price=parseFloat(document.getElementById('sprice').value);
-  let date=document.getElementById('sdate').value;
-  if(!name||!qty||!price||!date) return alert("Fill all fields!");
-  sales.push({product:name,qty,amount:qty*price,date});
+function recordSale(name, date, qty, price) {
+  sales.push({product:name, qty, price, amount:qty*price, date});
   localStorage.setItem('sales-data',JSON.stringify(sales));
-  // deduct from stock if exists
   let item=stock.find(s=>s.name.toLowerCase()===name.toLowerCase());
   if(item){item.qty=Math.max(0,item.qty-qty);}
+  if(item && item.qty===0 && !want.find(w=>w.item===name)){
+    want.push({item:name, date:date});
+  }
   localStorage.setItem('stock-data',JSON.stringify(stock));
-  renderStock(); renderSales();
+  localStorage.setItem('wanting-data',JSON.stringify(want));
+  renderStock(); renderSales(); renderWant();
 }
 
 function addWant() {
@@ -189,21 +199,41 @@ function addWant() {
   document.getElementById('witem').value='';
 }
 
+function markRestocked(index){
+  if(confirm("Mark this item as restocked?")){
+    want.splice(index,1);
+    localStorage.setItem('wanting-data',JSON.stringify(want));
+    renderWant();
+  }
+}
+
 function clearStock(){ if(confirm("Clear all stock?")){localStorage.removeItem('stock-data');stock=[];renderStock();}}
-function clearSales(){ if(confirm("Clear all sales?")){localStorage.removeItem('sales-data');sales=[];renderSales();}}
 function clearWant(){ if(confirm("Clear wanting list?")){localStorage.removeItem('wanting-data');want=[];renderWant();}}
 
 function renderStock(){
   const tb=document.querySelector('#stockTable tbody');
-  tb.innerHTML=stock.length?stock.map(s=>`<tr><td>${s.date}</td><td>${s.name}</td><td>${s.qty}</td></tr>`).join(''):"<tr><td colspan=3>No stock available</td></tr>";
+  tb.innerHTML=stock.length?stock.map((s,i)=>`
+  <tr>
+    <td>${s.date}</td>
+    <td>${s.name}</td>
+    <td>${s.qty}</td>
+    <td>
+      <input type='number' id='qty${i}' placeholder='Qty' style='width:60px'>
+      <input type='number' id='price${i}' placeholder='Price' style='width:80px'>
+      <input type='date' id='date${i}' style='width:130px'>
+      <button onclick="recordSale('${s.name}',document.getElementById('date${i}').value,parseInt(document.getElementById('qty${i}').value),parseFloat(document.getElementById('price${i}').value))">Sell</button>
+    </td>
+  </tr>`).join(''):"<tr><td colspan=4>No stock available</td></tr>";
 }
+
 function renderSales(){
   const tb=document.querySelector('#salesTable tbody');
-  tb.innerHTML=sales.length?sales.map(s=>`<tr><td>${s.date}</td><td>${s.product}</td><td>${s.qty}</td><td>₹${s.amount.toFixed(2)}</td></tr>`).join(''):"<tr><td colspan=4>No sales recorded yet.</td></tr>";
+  tb.innerHTML=sales.length?sales.map(s=>`<tr><td>${s.date}</td><td>${s.product}</td><td>${s.qty}</td><td>${s.price}</td><td>₹${(s.amount||0).toFixed(2)}</td></tr>`).join(''):"<tr><td colspan=5>No sales recorded.</td></tr>";
 }
+
 function renderWant(){
   const tb=document.querySelector('#wantTable tbody');
-  tb.innerHTML=want.length?want.map(w=>`<tr><td>${w.date}</td><td>${w.item}</td></tr>`).join(''):"<tr><td colspan=2>No items added.</td></tr>";
+  tb.innerHTML=want.length?want.map((w,i)=>`<tr><td>${w.date}</td><td>${w.item}</td><td><button class='restock-btn' onclick='markRestocked(${i})'>✔️ Restocked</button></td></tr>`).join(''):"<tr><td colspan=3>No items.</td></tr>";
 }
 
 renderStock(); renderSales(); renderWant();
