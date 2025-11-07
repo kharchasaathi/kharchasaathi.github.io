@@ -1,10 +1,11 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+  <!-- Version: KharchaSaathi v3.0 | Updated Nov 2025 -->
   <meta name="google-adsense-account" content="ca-pub-2914631277707668">
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="KharchaSaathi — Smart tools to manage rent, expenses, stock, sales, invoices & daily splits with full dark mode support.">
+  <meta name="description" content="KharchaSaathi — Smart tools to manage rent, expenses, stock, sales, invoices & daily splits with full dark mode and offline PWA support.">
   <meta name="theme-color" content="#ff7a00">
   <meta property="og:title" content="KharchaSaathi — Smart Tools for Business & Life">
   <meta property="og:description" content="Manage stock, sales, expenses, rent & invoices — all in one dashboard. Built for both business & roommates.">
@@ -14,14 +15,26 @@
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
   <meta http-equiv="Pragma" content="no-cache">
   <meta http-equiv="Expires" content="0">
-  <link rel="manifest" href="manifest.json">
+
+  <!-- ✅ Icons & Manifest -->
+  <link rel="icon" type="image/png" href="icon-192.png">
   <link rel="apple-touch-icon" href="icon-512.png">
+  <link rel="manifest" href="manifest.json">
+
   <link rel="preload" href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;800&display=swap" as="style">
   <title>💰 KharchaSaathi — Smart Tools Hub</title>
 
   <!-- ✅ Google AdSense -->
-  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-2914631277707668"
-     crossorigin="anonymous"></script>
+  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-2914631277707668" crossorigin="anonymous"></script>
+
+  <!-- 📊 Google Analytics -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-XXXXXXXXXX"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-XXXXXXXXXX');
+  </script>
 
   <style>
     :root {
