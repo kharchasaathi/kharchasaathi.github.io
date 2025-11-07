@@ -89,6 +89,16 @@ a.back-link {
   display: inline-block; margin-top: 20px;
 }
 a.back-link:hover { background: #222; }
+
+.remove-btn, .restock-btn {
+  border-radius: 5px;
+  padding: 5px 10px;
+  color: white;
+}
+.remove-btn { background: #dc3545; }
+.remove-btn:hover { background: #a71d2a; }
+.restock-btn { background: #28a745; }
+.restock-btn:hover { background: #1e7e34; }
 </style>
 </head>
 <body>
@@ -140,109 +150,170 @@ a.back-link:hover { background: #222; }
   <button class="clear-btn" onclick="clearStock()">🧹 Clear Stock</button>
 </div>
 
+<!-- SALES -->
+<div id="sales" class="section">
+  <h3>💰 Sales Ledger</h3>
+  <table id="salesTable">
+    <thead><tr><th>Date</th><th>Type</th><th>Product</th><th>Qty</th><th>Price ₹</th><th>Total ₹</th></tr></thead>
+    <tbody></tbody>
+    <tfoot><tr><td colspan="5" style="text-align:right;font-weight:bold;">Day Total:</td><td id="dayTotal" style="font-weight:bold;color:var(--orange);">0</td></tr></tfoot>
+  </table>
+
+  <h4>Add Sale</h4>
+  <input id="sdate" type="date"><select id="stype"></select>
+  <input id="sname" placeholder="Product name"><input id="sqty" type="number" placeholder="Qty">
+  <input id="sprice" type="number" placeholder="Price ₹">
+  <button onclick="addSale()">Add Sale</button>
+  <button class="clear-btn" onclick="clearSales()">🧹 Clear Sales</button>
+</div>
+
+<!-- WANTING -->
+<div id="wanting" class="section">
+  <h3>🛒 Wanting Items</h3>
+  <table id="wantTable">
+    <thead><tr><th>Date</th><th>Type</th><th>Item</th><th>Restocked Qty</th><th>Actions</th></tr></thead>
+    <tbody></tbody>
+  </table>
+  <h4>Add Wanting Item</h4>
+  <input id="wdate" type="date"><select id="wtype"></select>
+  <input id="witem" placeholder="Item name">
+  <button onclick="addWant()">Add</button>
+  <button class="clear-btn" onclick="clearWant()">🧹 Clear All</button>
+</div>
+
 <div style="text-align:center;">
   <a href="../index.html" class="back-link">← Back to Home</a>
 </div>
 
 <script>
-document.addEventListener("DOMContentLoaded", ()=>{
-  let types = JSON.parse(localStorage.getItem('item-types')||'[]');
-  let stock = JSON.parse(localStorage.getItem('stock-data')||'[]');
+let types = JSON.parse(localStorage.getItem('item-types')||'[]');
+let stock = JSON.parse(localStorage.getItem('stock-data')||'[]');
+let sales = JSON.parse(localStorage.getItem('sales-data')||'[]');
+let want = JSON.parse(localStorage.getItem('wanting-data')||'[]');
 
-  // ✅ Theme load
+(function(){
   const t = localStorage.getItem('ks-theme');
   if(t==='dark'){document.body.classList.add('dark');document.querySelector('.theme-toggle').textContent='☀️';}
-  window.toggleTheme=function(){
-    const d=document.body.classList.toggle('dark');
-    localStorage.setItem('ks-theme',d?'dark':'light');
-    document.querySelector('.theme-toggle').textContent=d?'☀️':'🌙';
-  };
+})();
+function toggleTheme(){
+  const d=document.body.classList.toggle('dark');
+  localStorage.setItem('ks-theme',d?'dark':'light');
+  document.querySelector('.theme-toggle').textContent=d?'☀️':'🌙';
+}
 
-  // ✅ Tabs
-  window.openTab=function(tab){
-    document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
-    document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
-    document.querySelector(`[onclick="openTab('${tab}')"]`).classList.add('active');
-    document.getElementById(tab).classList.add('active');
-  }
+function openTab(tab){
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
+  document.querySelector(`[onclick="openTab('${tab}')"]`).classList.add('active');
+  document.getElementById(tab).classList.add('active');
+}
 
-  // ✅ Render types
-  function renderTypes(){
-    document.getElementById('typeList').innerHTML = types.length
-      ? types.map(t=>`<li>${t}</li>`).join('')
-      : "<li>No types yet.</li>";
-  }
-
-  function updateDropdowns(){
-    const selects = [document.getElementById('ptype')];
-    selects.forEach(sel=>{
-      sel.innerHTML='<option value="">Select Type</option>'+types.map(t=>`<option>${t}</option>`).join('');
-    });
-  }
-
-  window.addType=function(){
-    let name=document.getElementById('typeName').value.trim();
-    if(!name)return alert("Enter type!");
-    if(types.includes(name))return alert("Type exists!");
-    types.push(name);
-    localStorage.setItem('item-types',JSON.stringify(types));
+function addType(){
+  let name=document.getElementById('typeName').value.trim();
+  if(!name)return alert("Enter type!");
+  if(types.includes(name))return alert("Type exists!");
+  types.push(name);
+  localStorage.setItem('item-types',JSON.stringify(types));
+  renderTypes();updateDropdowns();
+  document.getElementById('typeName').value='';
+}
+function clearTypes(){
+  if(confirm("Clear all types?")){
+    types=[];localStorage.removeItem('item-types');
     renderTypes();updateDropdowns();
-    document.getElementById('typeName').value='';
   }
+}
+function renderTypes(){
+  document.getElementById('typeList').innerHTML = types.length
+    ? types.map(t=>`<li>${t}</li>`).join('')
+    : "<li>No types yet.</li>";
+}
+function updateDropdowns(){
+  const selects=[document.getElementById('ptype'),document.getElementById('stype'),document.getElementById('wtype')];
+  selects.forEach(sel=>{sel.innerHTML='<option value=\"\">Select Type</option>'+types.map(t=>`<option>${t}</option>`).join('');});
+}
 
-  window.clearTypes=function(){
-    if(confirm("Clear all types?")){
-      types=[];localStorage.removeItem('item-types');
-      renderTypes();updateDropdowns();
-    }
-  }
+function addStock(){
+  const type=document.getElementById('ptype').value;
+  const selected=document.getElementById('pnameSelect').value;
+  const name=selected || document.getElementById('pname').value.trim();
+  const qty=parseInt(document.getElementById('pqty').value);
+  const date=document.getElementById('pdate').value;
+  if(!type||!name||!qty||!date)return alert('Fill all fields!');
+  stock.push({type,name,qty,sold:0,date});
+  localStorage.setItem('stock-data',JSON.stringify(stock));
+  renderStock();updateProductList();
+}
+function renderStock(){
+  const tb=document.querySelector('#stockTable tbody');
+  tb.innerHTML=stock.length?stock.map(s=>{
+    let remaining=s.qty-(s.sold||0);
+    return `<tr><td>${s.date}</td><td>${s.type}</td><td>${s.name}</td><td>${s.qty}</td><td>${s.sold||0}</td><td>${remaining}</td></tr>`;
+  }).join(''):"<tr><td colspan=6>No stock available.</td></tr>";
+}
+function clearStock(){if(confirm("Clear all stock?")){stock=[];localStorage.removeItem('stock-data');renderStock();}}
 
-  // ✅ Stock
-  function renderStock(){
-    const tb=document.querySelector('#stockTable tbody');
-    tb.innerHTML=stock.length
-      ? stock.map(s=>{
-          let remain=s.qty-(s.sold||0);
-          return `<tr><td>${s.date}</td><td>${s.type}</td><td>${s.name}</td><td>${s.qty}</td><td>${s.sold||0}</td><td>${remain}</td></tr>`;
-        }).join('')
-      : "<tr><td colspan=6>No stock available.</td></tr>";
-  }
+function updateProductList(){
+  const type=document.getElementById('ptype').value;
+  const pnameSelect=document.getElementById('pnameSelect');
+  if(!type){pnameSelect.innerHTML='<option>-- Select Type First --</option>';return;}
+  const items=stock.filter(s=>s.type===type).map(s=>s.name);
+  const unique=[...new Set(items)];
+  pnameSelect.innerHTML=unique.length?unique.map(p=>`<option>${p}</option>`).join(''):'<option>No products yet — add below</option>';
+}
 
-  window.updateProductList=function(){
-    const type=document.getElementById('ptype').value;
-    const pnameSelect=document.getElementById('pnameSelect');
-    if(!type){pnameSelect.innerHTML='<option>-- Select Type First --</option>';return;}
-    const items=stock.filter(s=>s.type===type).map(s=>s.name);
-    const uniqueItems=[...new Set(items)];
-    if(uniqueItems.length>0){
-      pnameSelect.innerHTML=uniqueItems.map(p=>`<option value="${p}">${p}</option>`).join('');
-      pnameSelect.insertAdjacentHTML('afterbegin','<option value="">-- Select Product --</option>');
-    } else pnameSelect.innerHTML='<option value="">No products yet — add below 👇</option>';
-  }
+function addSale(){
+  let type=document.getElementById('stype').value;
+  let product=document.getElementById('sname').value.trim();
+  let qty=parseInt(document.getElementById('sqty').value);
+  let price=parseFloat(document.getElementById('sprice').value);
+  let date=document.getElementById('sdate').value;
+  if(!type||!product||!qty||!price||!date)return alert('Fill all fields!');
+  sales.push({type,product,qty,price,amount:qty*price,date});
+  localStorage.setItem('sales-data',JSON.stringify(sales));
+  let item=stock.find(s=>s.name.toLowerCase()===product.toLowerCase());
+  if(item){item.sold=(item.sold||0)+qty;localStorage.setItem('stock-data',JSON.stringify(stock));}
+  renderStock();renderSales();
+}
+function renderSales(){
+  const tb=document.querySelector('#salesTable tbody');
+  let total=0;
+  tb.innerHTML=sales.length?sales.map(s=>{
+    total+=s.amount;return `<tr><td>${s.date}</td><td>${s.type}</td><td>${s.product}</td><td>${s.qty}</td><td>${s.price}</td><td>${s.amount}</td></tr>`;
+  }).join(''):"<tr><td colspan=6>No sales yet.</td></tr>";
+  document.getElementById('dayTotal').textContent=total.toFixed(2);
+}
+function clearSales(){if(confirm("Clear sales?")){sales=[];localStorage.removeItem('sales-data');renderSales();}}
 
-  window.addStock=function(){
-    const type=document.getElementById('ptype').value;
-    const sel=document.getElementById('pnameSelect').value;
-    const newP=document.getElementById('pname').value.trim();
-    const name=sel || newP;
-    const qty=parseInt(document.getElementById('pqty').value);
-    const date=document.getElementById('pdate').value;
-    if(!type||!name||!qty||!date)return alert("Fill all fields!");
-    stock.push({type,name,qty,sold:0,date});
-    localStorage.setItem('stock-data',JSON.stringify(stock));
-    renderStock();updateProductList();
-    document.getElementById('pname').value='';document.getElementById('pqty').value='';
-  }
+function addWant(){
+  let type=document.getElementById('wtype').value;
+  let item=document.getElementById('witem').value.trim();
+  let date=document.getElementById('wdate').value;
+  if(!type||!item||!date)return alert('Fill all fields!');
+  want.push({type,item,date});
+  localStorage.setItem('wanting-data',JSON.stringify(want));
+  renderWant();
+}
+function renderWant(){
+  const tb=document.querySelector('#wantTable tbody');
+  if(!want.length){tb.innerHTML='<tr><td colspan=5>No items.</td></tr>';return;}
+  tb.innerHTML=want.map((w,i)=>`<tr><td>${w.date}</td><td>${w.type}</td><td>${w.item}</td><td>-</td>
+  <td><button class='restock-btn' onclick='restock(${i})'>✔</button> <button class='remove-btn' onclick='removeWant(${i})'>🗑</button></td></tr>`).join('');
+}
+function restock(i){
+  let qty=prompt('Enter restocked qty:');if(!qty||isNaN(qty))return;
+  const today=new Date().toISOString().split('T')[0];
+  const item=want[i];
+  stock.push({type:item.type,name:item.item,qty:parseInt(qty),sold:0,date:today});
+  localStorage.setItem('stock-data',JSON.stringify(stock));
+  want.splice(i,1);
+  localStorage.setItem('wanting-data',JSON.stringify(want));
+  renderStock();renderWant();
+}
+function removeWant(i){want.splice(i,1);localStorage.setItem('wanting-data',JSON.stringify(want));renderWant();}
+function clearWant(){if(confirm('Clear wanting list?')){want=[];localStorage.removeItem('wanting-data');renderWant();}}
 
-  window.clearStock=function(){
-    if(confirm("Clear all stock?")){
-      stock=[];localStorage.removeItem('stock-data');renderStock();
-    }
-  }
-
-  // ✅ Init
-  renderTypes();updateDropdowns();renderStock();
-});
+renderTypes();updateDropdowns();renderStock();renderSales();renderWant();
 </script>
 </body>
 </html>
