@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>📦 Stock Manager — KharchaSaathi</title>
+<style>
+  body {
+    font-family: "Poppins", Arial, sans-serif;
+    background: #f8f9fa;
+    margin: 0;
+    padding: 20px;
+    color: #222;
+  }
+  h2 {
+    text-align: center;
+    color: #ff7a00;
+  }
+  .section {
+    background: #fff;
+    border-radius: 12px;
+    padding: 15px;
+    margin-bottom: 20px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+  }
+  input, button {
+    padding: 8px 10px;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    margin: 5px;
+    font-size: 14px;
+  }
+  button {
+    background: #ff7a00;
+    color: white;
+    font-weight: 600;
+    cursor: pointer;
+    transition: 0.25s;
+  }
+  button:hover {
+    background: #cc6300;
+  }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 10px;
+  }
+  th, td {
+    border: 1px solid #ddd;
+    padding: 8px;
+    text-align: center;
+  }
+  th {
+    background: #ff7a00;
+    color: #fff;
+  }
+  .footer-buttons {
+    text-align: center;
+    margin-top: 25px;
+  }
+  .footer-buttons a {
+    text-decoration: none;
+    color: white;
+    background: #444;
+    padding: 10px 18px;
+    border-radius: 8px;
+    margin: 6px;
+    font-weight: 600;
+    display: inline-block;
+    transition: 0.3s;
+  }
+  .footer-buttons a:hover { background: #666; }
+  .clear-btn { background: #d9534f; }
+  .clear-btn:hover { background: #b52b27; }
+</style>
+</head>
+<body>
+
+<h2>📦 Stock Manager</h2>
+
+<div class="section">
+  <h3>➕ Add Product</h3>
+  <input type="text" id="pname" placeholder="Product Name">
+  <input type="number" id="qty" placeholder="Quantity">
+  <input type="number" id="buy" placeholder="Buying Price ₹">
+  <input type="number" id="sell" placeholder="Selling Price ₹">
+  <button onclick="addProduct()">Add</button>
+</div>
+
+<div class="section">
+  <h3>📋 Current Stock</h3>
+  <table id="stockTable">
+    <thead>
+      <tr>
+        <th>Product</th>
+        <th>Qty</th>
+        <th>Buy ₹</th>
+        <th>Sell ₹</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+</div>
+
+<div class="footer-buttons">
+  <a href="../index.html">← Back to Home</a>
+  <a href="sales.html">📈 View Sales</a>
+  <a href="wanting.html">🛒 Wanting List</a>
+  <a href="#" class="clear-btn" onclick="clearAll()">🧹 Clear All Data</a>
+</div>
+
+<script>
+let stock = JSON.parse(localStorage.getItem('stock-data') || '[]');
+let sales = JSON.parse(localStorage.getItem('sales-data') || '[]');
+
+function save() {
+  localStorage.setItem('stock-data', JSON.stringify(stock));
+  localStorage.setItem('sales-data', JSON.stringify(sales));
+}
+
+function addProduct() {
+  const pname = document.getElementById('pname').value.trim();
+  const qty = parseInt(document.getElementById('qty').value);
+  const buy = parseFloat(document.getElementById('buy').value);
+  const sell = parseFloat(document.getElementById('sell').value);
+  if(!pname || !qty || !buy || !sell) return alert("⚠️ Fill all fields!");
+  
+  const exist = stock.find(p => p.name === pname);
+  if(exist) exist.qty += qty;
+  else stock.push({name: pname, qty, buy, sell});
+  
+  save();
+  render();
+  clearInputs();
+}
+
+function clearInputs() {
+  document.getElementById('pname').value = '';
+  document.getElementById('qty').value = '';
+  document.getElementById('buy').value = '';
+  document.getElementById('sell').value = '';
+}
+
+function sellItem(name) {
+  const prod = stock.find(p => p.name === name);
+  const qty = prompt(`Enter quantity to sell for ${name}:`, 1);
+  if(!qty || isNaN(qty)) return;
+  if(qty > prod.qty) return alert("❌ Not enough stock!");
+
+  const total = prod.sell * qty;
+  const date = new Date().toISOString().split('T')[0];
+
+  sales.push({date, product: name, qty: Number(qty), amount: total});
+  prod.qty -= qty;
+
+  save();
+  render();
+  alert(`✅ Sold ${qty} of ${name} | ₹${total.toFixed(2)}`);
+}
+
+function addWanting(name) {
+  let want = JSON.parse(localStorage.getItem('wanting-data') || '[]');
+  if(!want.includes(name)) want.push(name);
+  localStorage.setItem('wanting-data', JSON.stringify(want));
+  alert(`${name} added to Wanting List 🛒`);
+}
+
+function deleteProduct(name) {
+  if(!confirm(`Delete ${name}?`)) return;
+  stock = stock.filter(p => p.name !== name);
+  save();
+  render();
+}
+
+function render() {
+  const tbody = document.querySelector('#stockTable tbody');
+  tbody.innerHTML = '';
+  stock.forEach(p => {
+    tbody.innerHTML += `
+      <tr>
+        <td>${p.name}</td>
+        <td>${p.qty}</td>
+        <td>${p.buy}</td>
+        <td>${p.sell}</td>
+        <td>
+          <button onclick="sellItem('${p.name}')">💸 Sell</button>
+          <button onclick="addWanting('${p.name}')">🛒 Want</button>
+          <button onclick="deleteProduct('${p.name}')">❌</button>
+        </td>
+      </tr>`;
+  });
+}
+
+function clearAll() {
+  if(confirm("⚠️ Clear all stock & sales data?")) {
+    stock = [];
+    sales = [];
+    save();
+    render();
+    alert("🧹 All cleared!");
+  }
+}
+
+render();
+</script>
+
+</body>
+</html>
