@@ -121,7 +121,7 @@ pre {
   text-align: center;
   margin-top: 10px;
 }
-.video-demo {
+.image-guide {
   max-width: 800px;
   margin: 30px auto;
   background: #fff;
@@ -130,11 +130,15 @@ pre {
   padding: 20px;
   text-align: center;
 }
-.video-demo iframe {
-  width: 100%;
-  height: 315px;
+.image-guide img {
+  max-width: 100%;
   border-radius: 10px;
-  border: none;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+}
+.image-guide p {
+  color: #555;
+  font-size: 14px;
+  margin-top: 10px;
 }
 </style>
 </head>
@@ -189,12 +193,13 @@ pre {
   <p class="guide-note">— Built by KharchaSaathi • Local Blockchain Proof System —</p>
 </div>
 
-<!-- 🎥 VIDEO DEMO SECTION -->
-<div class="video-demo">
-  <h3>🎥 Watch How It Works</h3>
-  <p style="color:#555;">Learn how to add invoices, generate proof, and verify the ledger in this quick demo.</p>
-  <!-- 🔗 Replace the YouTube link below with your own video link -->
-  <iframe src="https://www.youtube.com/embed/dQw4w9WgXcQ" allowfullscreen></iframe>
+<!-- 🖼️ IMAGE GUIDE SECTION -->
+<div class="image-guide">
+  <h3>🖼️ Visual Demo Guide</h3>
+  <p>See how to add invoices, generate proof, and verify your ledger visually.</p>
+  <img src="../assets/trust-ledger-guide.png" alt="Trust Ledger Demo Steps">
+  <p><b>Tip:</b> Replace this image with your own tutorial or screenshots.  
+  You can upload it inside <code>/assets/trust-ledger-guide.png</code>.</p>
 </div>
 
 <a href="../index.html" class="back-home">← Back to Home</a>
