@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>🏠 RoomShare Ledger Pro — Dynamic Daily Expense Splitter</title>
+<title>🏠 RoomShare Ledger Pro — Daily Expense Splitter</title>
 <style>
   body {
     font-family: "Poppins", Arial, sans-serif;
@@ -62,6 +62,30 @@
     text-align: center;
     margin-top: 15px;
   }
+  .footer-buttons {
+    text-align: center;
+    margin-top: 25px;
+  }
+  .footer-buttons a {
+    text-decoration: none;
+    color: white;
+    background: #444;
+    padding: 10px 18px;
+    border-radius: 8px;
+    margin: 6px;
+    font-weight: 600;
+    display: inline-block;
+    transition: 0.3s;
+  }
+  .footer-buttons a:hover {
+    background: #666;
+  }
+  .clear-btn {
+    background: #d9534f;
+  }
+  .clear-btn:hover {
+    background: #b52b27;
+  }
 </style>
 </head>
 <body>
@@ -100,6 +124,11 @@
 </div>
 
 <div class="summary" id="summary">No expenses yet.</div>
+
+<div class="footer-buttons">
+  <a href="../index.html">← Back to Home</a>
+  <a href="#" class="clear-btn" onclick="clearAll()">🧹 Clear All Data</a>
+</div>
 
 <script>
 let persons = JSON.parse(localStorage.getItem('roomshare-persons') || '[]');
@@ -180,6 +209,18 @@ function render() {
   });
 
   document.getElementById('summary').innerHTML = summary;
+}
+
+function clearAll() {
+  if (confirm("⚠️ Are you sure you want to clear all data?")) {
+    localStorage.removeItem('roomshare-persons');
+    localStorage.removeItem('roomshare-expenses');
+    persons = [];
+    expenses = [];
+    renderPersons();
+    render();
+    alert("🧹 All data cleared!");
+  }
 }
 
 renderPersons();
