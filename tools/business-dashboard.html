@@ -79,6 +79,13 @@
     cursor: pointer;
   }
   .restock-btn:hover { background: #1e7e34; }
+  .remove-btn {
+    background: #dc3545;
+    color: white;
+    border-radius: 5px;
+    padding: 5px 10px;
+  }
+  .remove-btn:hover { background: #a71d2a; }
 </style>
 </head>
 <body>
@@ -94,7 +101,6 @@
 <!-- STOCK SECTION -->
 <div id="stock" class="section active">
   <h3>🧾 Stock Inventory</h3>
-
   <table id="stockTable">
     <thead>
       <tr><th>Date</th><th>Product</th><th>Qty</th><th>Action</th></tr>
@@ -126,15 +132,16 @@
   <h3>🛒 Wanting Items</h3>
   <table id="wantTable">
     <thead>
-      <tr><th>Date</th><th>Item</th><th>Action</th></tr>
+      <tr><th>Date</th><th>Item</th><th>Actions</th></tr>
     </thead>
     <tbody></tbody>
   </table>
+
   <h4>Add New Wanting Item</h4>
   <input id="wdate" type="date">
   <input id="witem" placeholder="Item name">
   <button onclick="addWant()">Add</button>
-  <button class="clear-btn" onclick="clearWant()">🧹 Clear All Wanting</button>
+  <button class="clear-btn" onclick="clearWant()">🧹 Clear Entire List</button>
 </div>
 
 <div style="text-align:center;margin-top:20px;">
@@ -161,15 +168,9 @@ function addStock() {
   stock.push({name,qty,date});
   localStorage.setItem('stock-data',JSON.stringify(stock));
   
-  // Also create empty entry in sales
-  if(!sales.find(s=>s.product.toLowerCase()===name.toLowerCase())){
-    sales.push({product:name,qty:0,price:0,amount:0,date:""});
-    localStorage.setItem('sales-data',JSON.stringify(sales));
-  }
-
-  // Remove from wanting list if restocked
-  let index = want.findIndex(w=>w.item.toLowerCase()===name.toLowerCase());
-  if(index>-1){want.splice(index,1);localStorage.setItem('wanting-data',JSON.stringify(want));}
+  // also remove from wanting if restocked
+  want = want.filter(w => w.item.toLowerCase() !== name.toLowerCase());
+  localStorage.setItem('wanting-data',JSON.stringify(want));
 
   renderStock(); renderSales(); renderWant();
   document.getElementById('pname').value='';
@@ -199,8 +200,8 @@ function addWant() {
   document.getElementById('witem').value='';
 }
 
-function markRestocked(index){
-  if(confirm("Mark this item as restocked?")){
+function removeWant(index){
+  if(confirm("Remove this item from wanting list?")){
     want.splice(index,1);
     localStorage.setItem('wanting-data',JSON.stringify(want));
     renderWant();
@@ -208,7 +209,7 @@ function markRestocked(index){
 }
 
 function clearStock(){ if(confirm("Clear all stock?")){localStorage.removeItem('stock-data');stock=[];renderStock();}}
-function clearWant(){ if(confirm("Clear wanting list?")){localStorage.removeItem('wanting-data');want=[];renderWant();}}
+function clearWant(){ if(confirm("Clear the entire wanting list?")){localStorage.removeItem('wanting-data');want=[];renderWant();}}
 
 function renderStock(){
   const tb=document.querySelector('#stockTable tbody');
@@ -233,7 +234,25 @@ function renderSales(){
 
 function renderWant(){
   const tb=document.querySelector('#wantTable tbody');
-  tb.innerHTML=want.length?want.map((w,i)=>`<tr><td>${w.date}</td><td>${w.item}</td><td><button class='restock-btn' onclick='markRestocked(${i})'>✔️ Restocked</button></td></tr>`).join(''):"<tr><td colspan=3>No items.</td></tr>";
+  tb.innerHTML=want.length?want.map((w,i)=>`
+  <tr>
+    <td>${w.date}</td>
+    <td>${w.item}</td>
+    <td>
+      <button class='restock-btn' onclick='addStockFromWant(${i})'>✔️ Restocked</button>
+      <button class='remove-btn' onclick='removeWant(${i})'>🗑 Remove</button>
+    </td>
+  </tr>`).join(''):"<tr><td colspan=3>No items in wanting list.</td></tr>";
+}
+
+function addStockFromWant(i){
+  const item = want[i];
+  const today = new Date().toISOString().split('T')[0];
+  stock.push({name:item.item, qty:1, date:today});
+  want.splice(i,1);
+  localStorage.setItem('stock-data',JSON.stringify(stock));
+  localStorage.setItem('wanting-data',JSON.stringify(want));
+  renderStock(); renderWant();
 }
 
 renderStock(); renderSales(); renderWant();
