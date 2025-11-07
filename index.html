@@ -4,7 +4,7 @@
   <meta name="google-adsense-account" content="ca-pub-2914631277707668">
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="KharchaSaathi - Smart tools to manage rent, expenses, stock, sales, and invoices. Perfect for personal use and small businesses.">
+  <meta name="description" content="KharchaSaathi - Smart tools to manage rent, expenses, stock, sales, and invoices with dark mode. Ideal for personal use and any business.">
   <title>KharchaSaathi — Smart Tools Hub</title>
 
   <!-- ✅ Google AdSense Auto Ads Script -->
@@ -19,6 +19,10 @@
       --bg-dark: #121212;
       --text-dark: #222;
       --text-light: #e8e8e8;
+      --card-light: #ffffff;
+      --card-dark: #1e1e1e;
+      --border-light: rgba(0,0,0,0.05);
+      --border-dark: rgba(255,255,255,0.1);
     }
 
     body {
@@ -28,16 +32,20 @@
       background: var(--bg-light);
       color: var(--text-dark);
       text-align: center;
-      transition: 0.3s;
+      transition: background 0.3s, color 0.3s;
     }
 
-    body.dark { background: var(--bg-dark); color: var(--text-light); }
+    body.dark {
+      background: var(--bg-dark);
+      color: var(--text-light);
+    }
 
     h1 {
       font-size: 38px;
       font-weight: 800;
       margin-top: 40px;
       margin-bottom: 10px;
+      color: var(--orange);
     }
 
     p.subtitle {
@@ -45,6 +53,7 @@
       color: #666;
       margin-bottom: 30px;
     }
+    body.dark p.subtitle { color: #bbb; }
 
     /* 🌗 Theme Toggle */
     .theme-toggle {
@@ -59,6 +68,7 @@
       font-size: 14px;
       cursor: pointer;
       transition: 0.3s;
+      z-index: 100;
     }
     .theme-toggle:hover { background: var(--orange-dark); }
 
@@ -83,10 +93,10 @@
     }
 
     .tool-card {
-      background: white;
+      background: var(--card-light);
       border-radius: 12px;
       padding: 20px;
-      box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+      box-shadow: 0 2px 10px var(--border-light);
       text-decoration: none;
       color: var(--text-dark);
       font-weight: 600;
@@ -108,9 +118,9 @@
     }
 
     body.dark .tool-card {
-      background: #1e1e1e;
+      background: var(--card-dark);
       color: var(--text-light);
-      box-shadow: 0 2px 8px rgba(255,255,255,0.05);
+      box-shadow: 0 2px 8px var(--border-dark);
     }
 
     body.dark .tool-card:hover {
@@ -123,6 +133,12 @@
       padding: 20px;
       font-size: 13px;
       color: #888;
+      border-top: 1px solid var(--border-light);
+    }
+
+    body.dark footer {
+      color: #aaa;
+      border-top: 1px solid var(--border-dark);
     }
 
     small.desc {
@@ -130,6 +146,13 @@
       font-size: 13px;
       margin-top: 6px;
       display: block;
+    }
+    body.dark small.desc { color: #bbb; }
+
+    /* Responsive Fix */
+    @media (max-width: 600px) {
+      h1 { font-size: 30px; }
+      .section-title { font-size: 18px; }
     }
   </style>
 </head>
@@ -162,16 +185,16 @@
     </a>
     <a class="tool-card" href="tools/roomshare-ledger.html">
       <span>📒</span> RoomShare Ledger Pro
-      <small class="desc">Track daily shared expenses room-wise.</small>
+      <small class="desc">Track shared daily expenses room-wise.</small>
     </a>
   </div>
 
   <!-- 💼 Business Tools -->
   <div class="section-title">Business Tools</div>
   <div class="tools-grid">
-    <a class="tool-card" href="tools/business-dashboard.html" title="Manage stock, sales, and wanting list easily.">
+    <a class="tool-card" href="tools/business-dashboard.html" title="Manage stock, sales, and wanting list with type-based grouping.">
       <span>📦</span> Business Dashboard
-      <small class="desc">Add stock by type, record daily sales, and track restock items efficiently.</small>
+      <small class="desc">Add item types, manage stock, sales & wanting list — fully dark mode compatible.</small>
     </a>
 
     <a class="tool-card" href="tools/invoice-pro.html">
@@ -209,6 +232,7 @@
         document.querySelector('.theme-toggle').textContent = '☀️';
       }
     })();
+
     function toggleTheme(){
       const d = document.body.classList.toggle('dark');
       localStorage.setItem('ks-theme', d ? 'dark' : 'light');
