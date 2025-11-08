@@ -1,238 +1,471 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>📦 Business Dashboard — KharchaSaathi</title>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>📦 KharchaSaathi — Business Dashboard v4.0</title>
+<meta name="theme-color" content="#ff7a00">
 <style>
-  :root {
-    --orange:#ff7a00;--orange-dark:#cc6300;
-    --bg-light:#f8f9fa;--bg-dark:#121212;
-    --card-light:#fff;--card-dark:#1e1e1e;
-    --text-dark:#222;--text-light:#e8e8e8;
-    --border-light:#ddd;--border-dark:#333;
+  :root{
+    --orange:#ff7a00; --orange-dark:#cc6300;
+    --bg:#f8f9fa; --card:#fff; --text:#222;
+    --dark-bg:#121212; --dark-card:#1e1e1e; --muted:#666;
   }
-  body{font-family:"Poppins",Arial,sans-serif;background:var(--bg-light);margin:0;padding:20px;color:var(--text-dark);transition:.3s;}
-  body.dark{background:var(--bg-dark);color:var(--text-light);}
-  h2{text-align:center;color:var(--orange);}
-  .theme-toggle{position:fixed;top:14px;right:14px;background:var(--orange);color:white;border:none;border-radius:6px;padding:8px 12px;cursor:pointer;transition:.3s;}
-  .theme-toggle:hover{background:var(--orange-dark);}
-  .tabs{display:flex;justify-content:center;gap:10px;margin:20px 0;}
-  .tab{background:#ddd;padding:10px 18px;border-radius:8px;cursor:pointer;font-weight:600;}
-  body.dark .tab{background:#333;color:var(--text-light);}
-  .tab.active{background:var(--orange);color:#fff;}
-  .section{display:none;background:var(--card-light);padding:20px;border-radius:12px;box-shadow:0 2px 8px rgba(0,0,0,.1);}
-  body.dark .section{background:var(--card-dark);}
-  .section.active{display:block;}
-  input,button,select{padding:8px;margin:6px;border-radius:6px;border:1px solid var(--border-light);background:inherit;color:inherit;}
-  body.dark input,body.dark select{border:1px solid var(--border-dark);background:#2b2b2b;color:var(--text-light);}
-  button{background:var(--orange);color:white;border:none;cursor:pointer;}
-  button:hover{background:var(--orange-dark);}
-  table{width:100%;border-collapse:collapse;margin-top:15px;}
-  th,td{border:1px solid var(--border-light);padding:8px;text-align:center;}
-  body.dark th,body.dark td{border:1px solid var(--border-dark);}
-  th{background:var(--orange);color:white;}
-  .clear-btn{background:#d9534f;}
-  .clear-btn:hover{background:#b52b27;}
-  .remove-btn,.restock-btn{border-radius:5px;padding:5px 10px;color:white;}
-  .remove-btn{background:#dc3545;}
-  .restock-btn{background:#28a745;}
-  a.back-link{background:#444;color:#fff;padding:10px 18px;border-radius:8px;text-decoration:none;display:inline-block;margin-top:20px;}
+  *{box-sizing:border-box}
+  body{font-family:Inter, Poppins, Arial, sans-serif;margin:0;padding:18px;background:var(--bg);color:var(--text);transition:background .25s,color .25s;}
+  body.dark{background:var(--dark-bg);color:#e8e8e8}
+  h1{margin:0 0 14px;color:var(--orange);font-size:20px}
+  .topbar{display:flex;gap:12px;align-items:center;justify-content:space-between;flex-wrap:wrap}
+  .controls{display:flex;gap:8px;align-items:center}
+  .theme-btn, .export-btn, .small-btn{background:var(--orange);color:#fff;border:none;padding:8px 10px;border-radius:8px;cursor:pointer}
+  .theme-btn:hover{background:var(--orange-dark)}
+  .tabs{display:flex;gap:8px;margin:18px 0;flex-wrap:wrap}
+  .tab{background:#eee;padding:8px 12px;border-radius:10px;cursor:pointer;font-weight:600}
+  body.dark .tab{background:#2b2b2b}
+  .tab.active{background:var(--orange);color:#fff}
+  .layout{margin-top:6px}
+  .section{display:none;background:var(--card);padding:14px;border-radius:12px;box-shadow:0 6px 20px rgba(0,0,0,.06);margin-bottom:18px}
+  body.dark .section{background:var(--dark-card);box-shadow:none}
+  .section.active{display:block}
+  .row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+  input[type="text"], input[type="date"], input[type="number"], select{padding:8px;border-radius:8px;border:1px solid #ddd;min-width:140px}
+  body.dark input, body.dark select{background:#222;border-color:#333;color:#e8e8e8}
+  table{width:100%;border-collapse:collapse;margin-top:12px}
+  th,td{padding:8px;border:1px solid #eee;text-align:center;font-size:13px}
+  body.dark th, body.dark td{border-color:#333}
+  th{background:var(--orange);color:#fff}
+  .muted{color:var(--muted);font-size:13px}
+  .section-footer{margin-top:12px;padding-top:10px;border-top:1px dashed #eee;color:var(--muted);font-size:13px}
+  body.dark .section-footer{border-top-color:#2b2b2b;color:#ccc}
+  .summary{display:flex;gap:12px;flex-wrap:wrap;margin-top:8px}
+  .card{background:linear-gradient(180deg,#fff,#fff);padding:8px 12px;border-radius:8px;box-shadow:0 3px 10px rgba(0,0,0,.03)}
+  body.dark .card{background:#222;box-shadow:none}
+  .right{margin-left:auto}
+  .small-muted{font-size:12px;color:#888}
+  .search-input{min-width:200px}
+  .actions{display:flex;gap:8px;align-items:center}
+  .export-btn.secondary{background:#2a9d8f}
+  .flex-col{display:flex;flex-direction:column;gap:8px}
+  @media(max-width:720px){ .row{flex-direction:column;align-items:stretch} .search-input{min-width:100%} table td, table th{font-size:12px} }
 </style>
 </head>
 <body>
-<button class="theme-toggle" onclick="toggleTheme()">🌙</button>
-<h2>📦 Business Dashboard</h2>
 
-<div class="tabs">
-  <div class="tab active" onclick="openTab('types')">🗂 Manage Types</div>
-  <div class="tab" onclick="openTab('stock')">📦 Current Stock</div>
-  <div class="tab" onclick="openTab('sales')">📈 Sales Ledger</div>
-  <div class="tab" onclick="openTab('wanting')">🛒 Wanting List</div>
-</div>
-
-<!-- TYPES -->
-<div id="types" class="section active">
-  <h3>🗂 Manage Item Types</h3>
-  <input id="typeName" placeholder="Enter new type">
-  <button onclick="addType()">Add Type</button>
-  <button class="clear-btn" onclick="clearTypes()">🧹 Clear All Types</button>
-  <h4>📋 Available Types</h4>
-  <ul id="typeList"></ul>
-</div>
-
-<!-- STOCK -->
-<div id="stock" class="section">
-  <h3>📦 Current Stock</h3>
-  <label><strong>View by Type:</strong></label>
-  <select id="viewTypeFilter" onchange="renderStock(this.value)">
-    <option value="All">All Types</option>
-  </select>
-  <table id="stockTable">
-    <thead><tr><th>Date</th><th>Type</th><th>Product</th><th>Qty</th><th>Sold</th><th>Remaining</th></tr></thead>
-    <tbody></tbody>
-  </table>
-  <button class="clear-btn" onclick="clearStock()">🧹 Clear All Stock</button>
-  <hr>
-  <h4>➕ Add Stock</h4>
-  <input id="pdate" type="date"><select id="ptype"></select>
-  <input id="pname" placeholder="Product name"><input id="pqty" type="number" placeholder="Qty">
-  <button onclick="addStock()">Add</button>
-</div>
-
-<!-- SALES -->
-<div id="sales" class="section">
-  <h3>💰 Sales Ledger</h3>
-  <table id="salesTable">
-    <thead><tr><th>Date</th><th>Type</th><th>Product</th><th>Qty</th><th>Price ₹</th><th>Total ₹</th></tr></thead>
-    <tbody></tbody>
-    <tfoot><tr><td colspan="5" style="text-align:right;font-weight:bold;">Day Total:</td><td id="dayTotal" style="color:var(--orange);font-weight:bold;">0</td></tr></tfoot>
-  </table>
-  <button class="clear-btn" onclick="clearSales()">🧹 Clear All Sales</button>
-  <h4>Add Sale</h4>
-  <input id="sdate" type="date"><select id="stype"></select>
-  <input id="sname" placeholder="Product name"><input id="sqty" type="number" placeholder="Qty">
-  <input id="sprice" type="number" placeholder="Price ₹">
-  <button onclick="addSale()">Add Sale</button>
-</div>
-
-<!-- WANTING -->
-<div id="wanting" class="section">
-  <h3>🛒 Wanting Items</h3>
-  <label><strong>View by Type:</strong></label>
-  <select id="viewWantFilter" onchange="renderWant(this.value)">
-    <option value="All">All Types</option>
-  </select>
-  <table id="wantTable">
-    <thead><tr><th>Date</th><th>Type</th><th>Item</th><th>Qty</th><th>Actions</th></tr></thead>
-    <tbody></tbody>
-  </table>
-  <div style="text-align:right;margin-top:10px;">
-    <button onclick="printWanting()">🖨️ Print / PDF</button>
-    <button class="clear-btn" onclick="clearWant()">🧹 Clear All</button>
+<div class="topbar">
+  <div>
+    <h1>📦 KharchaSaathi — Business Dashboard v4.0</h1>
+    <div class="muted">Offline-ready • Search • Export • Guides • Smart totals</div>
   </div>
-  <hr>
-  <h4>Add Want</h4>
-  <input id="wdate" type="date"><select id="wtype"></select>
-  <input id="witem" placeholder="Item name">
-  <button onclick="addWant()">Add</button>
+
+  <div class="controls">
+    <button class="theme-btn" id="themeBtn">🌙</button>
+    <button class="export-btn" id="backupBtn" title="Export all data JSON">⤓ Backup</button>
+    <button class="export-btn secondary" id="restoreBtn" title="Restore from JSON file">⤴ Restore</button>
+  </div>
 </div>
 
-<div style="text-align:center;">
-  <a href="../index.html" class="back-link">← Back</a>
+<div class="tabs" role="tablist" aria-label="Dashboard sections">
+  <div class="tab active" data-tab="types" onclick="openTab('types')">🗂 Manage Types</div>
+  <div class="tab" data-tab="stock" onclick="openTab('stock')">📦 Current Stock</div>
+  <div class="tab" data-tab="sales" onclick="openTab('sales')">📈 Sales Ledger</div>
+  <div class="tab" data-tab="wanting" onclick="openTab('wanting')">🛒 Wanting List</div>
 </div>
+
+<div class="layout">
+
+  <!-- TYPES -->
+  <section id="types" class="section active" aria-labelledby="types">
+    <div class="row">
+      <input type="text" id="typeSearch" placeholder="Search types (e.g. Mobiles, Accessories)" class="search-input" oninput="renderTypes()" />
+      <input type="text" id="typeName" placeholder="Add new type (exact name)" />
+      <div class="actions">
+        <button onclick="addType()">Add Type</button>
+        <button class="small-btn clear-btn" onclick="clearTypes()">Clear All Types</button>
+      </div>
+      <div class="right">
+        <button onclick="exportCSV('types')" class="export-btn">Export CSV</button>
+      </div>
+    </div>
+
+    <ul id="typeList" style="margin-top:12px;padding-left:16px;"></ul>
+
+    <div class="section-footer">
+      <div class="summary">
+        <div class="card">Total Types: <strong id="totalTypes">0</strong></div>
+        <div class="card">Tip: Use exact type names to keep stock & wanting lists linked.</div>
+      </div>
+      <div style="margin-top:8px" class="muted">Guide: Type examples - <em>Mobiles</em>, <em>Accessories</em>, <em>Chargers</em>. Use search to filter.</div>
+    </div>
+  </section>
+
+  <!-- STOCK -->
+  <section id="stock" class="section" aria-labelledby="stock">
+    <div class="row">
+      <input type="text" id="stockSearch" placeholder="Search product name..." class="search-input" oninput="renderStock()" />
+      <label class="muted">View by Type:</label>
+      <select id="viewTypeFilter" onchange="renderStock()"><option value="All">All Types</option></select>
+
+      <div class="actions">
+        <button onclick="exportCSV('stock')">Export CSV</button>
+        <button class="small-btn clear-btn" onclick="clearStock()">Clear All Stock</button>
+      </div>
+    </div>
+
+    <table id="stockTable" aria-live="polite">
+      <thead><tr><th>Date</th><th>Type</th><th>Product</th><th>Qty</th><th>Sold</th><th>Remaining</th></tr></thead>
+      <tbody></tbody>
+    </table>
+
+    <div style="margin-top:12px" class="row">
+      <div class="flex-col" style="flex:1;min-width:220px">
+        <label class="small-muted">Add Stock</label>
+        <input type="date" id="pdate" />
+      </div>
+      <div class="flex-col" style="min-width:160px">
+        <label class="small-muted">Type</label>
+        <select id="ptype"></select>
+      </div>
+      <div class="flex-col" style="min-width:200px">
+        <label class="small-muted">Product name</label>
+        <input type="text" id="pname" placeholder="e.g. Redmi 12" />
+      </div>
+      <div class="flex-col" style="min-width:120px">
+        <label class="small-muted">Qty</label>
+        <input type="number" id="pqty" min="1" />
+      </div>
+      <div style="align-self:flex-end">
+        <button onclick="addStock()">Add Stock</button>
+      </div>
+    </div>
+
+    <div class="section-footer">
+      <div class="summary">
+        <div class="card">Total Items: <strong id="stockCount">0</strong></div>
+        <div class="card">Total Qty: <strong id="stockQty">0</strong></div>
+        <div class="card">Total Remaining: <strong id="stockRem">0</strong></div>
+      </div>
+      <div class="muted" style="margin-top:8px">Guide: Select a type to view only its products. Use search to find products quickly.</div>
+    </div>
+  </section>
+
+  <!-- SALES -->
+  <section id="sales" class="section" aria-labelledby="sales">
+    <div class="row">
+      <input type="text" id="salesSearch" placeholder="Search sold product..." class="search-input" oninput="renderSales()" />
+      <label class="muted">Filter by Type:</label>
+      <select id="stypeFilter" onchange="renderSales()"><option value="All">All Types</option></select>
+      <div class="actions">
+        <button onclick="exportCSV('sales')">Export CSV</button>
+        <button class="small-btn clear-btn" onclick="clearSales()">Clear All Sales</button>
+      </div>
+    </div>
+
+    <table id="salesTable">
+      <thead><tr><th>Date</th><th>Type</th><th>Product</th><th>Qty</th><th>Price ₹</th><th>Total ₹</th></tr></thead>
+      <tbody></tbody>
+      <tfoot><tr><td colspan="5" style="text-align:right;font-weight:bold">Day Total:</td><td id="dayTotal">0</td></tr></tfoot>
+    </table>
+
+    <div style="margin-top:12px" class="row">
+      <input type="date" id="sdate" />
+      <select id="stype"></select>
+      <input type="text" id="sname" placeholder="Product name" />
+      <input type="number" id="sqty" placeholder="Qty" min="1" />
+      <input type="number" id="sprice" placeholder="Price ₹" min="0" step="0.01" />
+      <button onclick="addSale()">Add Sale</button>
+    </div>
+
+    <div class="section-footer">
+      <div class="summary"><div class="card">Total Sales: <strong id="salesCount">0</strong></div>
+        <div class="card">Revenue: ₹<strong id="salesRevenue">0</strong></div></div>
+      <div class="muted" style="margin-top:8px">Guide: When adding a sale, if product exists in stock quantity will be updated (sold counter).</div>
+    </div>
+  </section>
+
+  <!-- WANTING -->
+  <section id="wanting" class="section" aria-labelledby="wanting">
+    <div class="row">
+      <input type="text" id="wantSearch" placeholder="Search wanting item..." class="search-input" oninput="renderWant()" />
+      <label class="muted">View by Type:</label>
+      <select id="viewWantFilter" onchange="renderWant()"><option value="All">All Types</option></select>
+      <div class="actions">
+        <button onclick="exportCSV('wanting')">Export CSV</button>
+        <button class="small-btn clear-btn" onclick="clearWant()">Clear All Wanting</button>
+      </div>
+    </div>
+
+    <table id="wantTable">
+      <thead><tr><th>Date</th><th>Type</th><th>Item</th><th>Qty</th><th>Actions</th></tr></thead>
+      <tbody></tbody>
+    </table>
+
+    <div style="margin-top:12px" class="row">
+      <input type="date" id="wdate" />
+      <select id="wtype"></select>
+      <input type="text" id="witem" placeholder="Item name" />
+      <button onclick="addWant()">Add Want</button>
+      <div style="margin-left:auto">
+        <button class="export-btn" onclick="printWanting()">🖨️ Print / PDF</button>
+      </div>
+    </div>
+
+    <div class="section-footer">
+      <div class="summary"><div class="card">Wanting Items: <strong id="wantCount">0</strong></div></div>
+      <div class="muted" style="margin-top:8px">Guide: Use Wanting to track items to reorder. Restock from Wanting to easily add to stock.</div>
+    </div>
+  </section>
+
+</div>
+
+<!-- hidden file input for restore -->
+<input type="file" id="restoreFile" accept="application/json" style="display:none" />
 
 <script>
-let types=JSON.parse(localStorage.getItem('item-types')||'[]');
-let stock=JSON.parse(localStorage.getItem('stock-data')||'[]');
-let sales=JSON.parse(localStorage.getItem('sales-data')||'[]');
-let want=JSON.parse(localStorage.getItem('wanting-data')||'[]');
+/* ====== Data keys and in-memory arrays ====== */
+const K_TYPES = 'item-types';
+const K_STOCK = 'stock-data';
+const K_SALES = 'sales-data';
+const K_WANT = 'wanting-data';
 
-// THEME
-(function(){
-  const t=localStorage.getItem('ks-theme');
-  if(t==='dark'){document.body.classList.add('dark');document.querySelector('.theme-toggle').textContent='☀️';}
+let types = JSON.parse(localStorage.getItem(K_TYPES) || '[]');
+let stock = JSON.parse(localStorage.getItem(K_STOCK) || '[]');
+let sales = JSON.parse(localStorage.getItem(K_SALES) || '[]');
+let want = JSON.parse(localStorage.getItem(K_WANT) || '[]');
+
+/* ====== Utility helpers ====== */
+function saveAll(){ localStorage.setItem(K_TYPES, JSON.stringify(types)); localStorage.setItem(K_STOCK, JSON.stringify(stock)); localStorage.setItem(K_SALES, JSON.stringify(sales)); localStorage.setItem(K_WANT, JSON.stringify(want)); }
+/* ensure numeric return */
+function formatNum(n){ const v = Number(n); return isNaN(v) ? 0 : v; }
+
+/* ====== THEME ====== */
+const themeBtn = document.getElementById('themeBtn');
+(function initTheme(){
+  const t = localStorage.getItem('ks-theme');
+  if(t === 'dark'){ document.body.classList.add('dark'); themeBtn.textContent = '☀️'; }
 })();
-function toggleTheme(){
-  const d=document.body.classList.toggle('dark');
-  localStorage.setItem('ks-theme',d?'dark':'light');
-  document.querySelector('.theme-toggle').textContent=d?'☀️':'🌙';
-}
-function openTab(tab){
-  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
-  document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
-  document.querySelector(`[onclick="openTab('${tab}')"]`).classList.add('active');
-  document.getElementById(tab).classList.add('active');
+themeBtn.addEventListener('click', ()=>{ document.body.classList.toggle('dark'); const isDark = document.body.classList.contains('dark'); localStorage.setItem('ks-theme', isDark ? 'dark':'light'); themeBtn.textContent = isDark ? '☀️' : '🌙'; });
+
+/* ====== Tabs ====== */
+function openTab(id){
+  document.querySelectorAll('.tab').forEach(el=>el.classList.remove('active'));
+  document.querySelectorAll('.section').forEach(el=>el.classList.remove('active'));
+  document.querySelector('.tab[data-tab="'+id+'"]').classList.add('active');
+  document.getElementById(id).classList.add('active');
 }
 
-// TYPES
-function addType(){let name=document.getElementById('typeName').value.trim();
-  if(!name)return alert("Enter type!");
-  if(types.includes(name))return alert("Type exists!");
-  types.push(name);localStorage.setItem('item-types',JSON.stringify(types));
-  renderTypes();updateDropdowns();document.getElementById('typeName').value='';
+/* ====== TYPES ====== */
+function renderTypes(){
+  const search = document.getElementById('typeSearch').value.trim().toLowerCase();
+  const ul = document.getElementById('typeList');
+  const filtered = types.filter(t=>t.toLowerCase().includes(search));
+  if(!filtered.length) ul.innerHTML = '<li class="muted">No types.</li>';
+  else ul.innerHTML = filtered.map(t=>`<li>${escapeHtml(t)}</li>`).join('');
+  document.getElementById('totalTypes').textContent = types.length;
+  updateDropdowns();
 }
-function clearTypes(){if(confirm("Clear all types?")){types=[];localStorage.removeItem('item-types');renderTypes();updateDropdowns();}}
-function renderTypes(){document.getElementById('typeList').innerHTML=types.length?types.map(t=>`<li>${t}</li>`).join(''):"<li>No types yet.</li>";}
+function addType(){
+  const name = document.getElementById('typeName').value.trim();
+  if(!name) return alert('Enter type name');
+  if(types.includes(name)) return alert('Type exists');
+  types.push(name);
+  saveAll(); renderTypes(); document.getElementById('typeName').value='';
+}
+function clearTypes(){
+  if(!confirm('Clear ALL types? This will NOT delete stock/sales/wanting data but dropdowns will clear.')) return;
+  types = [];
+  saveAll(); renderTypes();
+}
+
+/* ====== DROPDOWNS & FILTERS ====== */
 function updateDropdowns(){
-  ['ptype','stype','wtype','viewTypeFilter','viewWantFilter'].forEach(id=>{
-    const el=document.getElementById(id); if(!el)return;
-    el.innerHTML='<option value="">Select Type</option>'+types.map(t=>`<option>${t}</option>`).join('');
-    if(id==='viewTypeFilter' || id==='viewWantFilter') el.insertAdjacentHTML('afterbegin','<option value="All">All Types</option>');
+  const ids = ['ptype','stype','wtype','viewTypeFilter','viewWantFilter','stypeFilter'];
+  ids.forEach(id=>{
+    const el = document.getElementById(id);
+    if(!el) return;
+    const prev = el.value || '';
+    /* IMPORTANT: value must be raw (not escaped) so comparisons work */
+    el.innerHTML = '<option value="">Select Type</option>' + types.map(t=>`<option value="${t}">${escapeHtml(t)}</option>`).join('');
+    if(id==='viewTypeFilter' || id==='viewWantFilter' || id==='stypeFilter'){
+      el.insertAdjacentHTML('afterbegin','<option value="All">All Types</option>');
+    }
+    if(prev && [...el.options].some(o=>o.value===prev)) el.value = prev;
   });
 }
 
-// STOCK
+/* ====== STOCK ====== */
+function renderStock(){
+  const table = document.querySelector('#stockTable tbody');
+  const search = document.getElementById('stockSearch') ? document.getElementById('stockSearch').value.trim().toLowerCase() : '';
+  const view = document.getElementById('viewTypeFilter').value || 'All';
+  let data = stock.slice();
+  if(view !== 'All' && view) data = data.filter(s=>s.type === view);
+  if(search) data = data.filter(s=> (s.name||'').toLowerCase().includes(search) || (s.type||'').toLowerCase().includes(search));
+  if(!data.length){ table.innerHTML = '<tr><td colspan="6" class="muted">No stock.</td></tr>'; }
+  else {
+    table.innerHTML = data.map(s=>{
+      const rem = formatNum(s.qty) - (formatNum(s.sold) || 0);
+      return `<tr>
+        <td>${escapeHtml(s.date)}</td>
+        <td>${escapeHtml(s.type)}</td>
+        <td>${escapeHtml(s.name)}</td>
+        <td>${formatNum(s.qty)}</td>
+        <td>${formatNum(s.sold||0)}</td>
+        <td>${rem}</td>
+      </tr>`;
+    }).join('');
+  }
+  const totalItems = stock.length;
+  const totalQty = stock.reduce((acc,s)=>acc + (parseInt(s.qty)||0),0);
+  const totalRem = stock.reduce((acc,s)=>acc + ((parseInt(s.qty)||0) - (parseInt(s.sold)||0)),0);
+  document.getElementById('stockCount').textContent = totalItems;
+  document.getElementById('stockQty').textContent = totalQty;
+  document.getElementById('stockRem').textContent = totalRem;
+}
+
 function addStock(){
-  const type=document.getElementById('ptype').value,name=document.getElementById('pname').value.trim(),
-  qty=parseInt(document.getElementById('pqty').value),date=document.getElementById('pdate').value;
-  if(!type||!name||!qty||!date)return alert("Fill all fields!");
-  stock.push({type,name,qty,sold:0,date});localStorage.setItem('stock-data',JSON.stringify(stock));
-  renderStock(document.getElementById('viewTypeFilter').value);
+  const type = document.getElementById('ptype').value;
+  const name = document.getElementById('pname').value.trim();
+  const qty = parseInt(document.getElementById('pqty').value);
+  const date = document.getElementById('pdate').value;
+  if(!type || !name || !qty || !date) return alert('Fill all fields to add stock');
+  stock.push({type,name,qty:qty,sold:0,date});
+  saveAll(); renderStock(); document.getElementById('pname').value=''; document.getElementById('pqty').value='';
 }
-function renderStock(f="All"){
-  const tb=document.querySelector('#stockTable tbody');
-  let data=f==="All"||!f?stock:stock.filter(s=>s.type===f);
-  tb.innerHTML=data.length?data.map(s=>{
-    let rem=s.qty-(s.sold||0);
-    return `<tr><td>${s.date}</td><td>${s.type}</td><td>${s.name}</td><td>${s.qty}</td><td>${s.sold||0}</td><td>${rem}</td></tr>`;
-  }).join(''):"<tr><td colspan=6>No stock.</td></tr>";
+function clearStock(){
+  if(!confirm('Clear ALL stock? This cannot be undone.')) return;
+  stock = []; saveAll(); renderStock();
 }
-function clearStock(){if(confirm("Clear all stock?")){stock=[];localStorage.removeItem('stock-data');renderStock();}}
 
-// SALES
-function addSale(){
-  let type=document.getElementById('stype').value,name=document.getElementById('sname').value.trim(),
-  qty=parseInt(document.getElementById('sqty').value),price=parseFloat(document.getElementById('sprice').value),
-  date=document.getElementById('sdate').value;
-  if(!type||!name||!qty||!price||!date)return alert("Fill all fields!");
-  sales.push({type,product:name,qty,price,amount:qty*price,date});
-  localStorage.setItem('sales-data',JSON.stringify(sales));
-  let item=stock.find(s=>s.name.toLowerCase()===name.toLowerCase());
-  if(item){item.sold=(item.sold||0)+qty;localStorage.setItem('stock-data',JSON.stringify(stock));}
-  renderStock();renderSales();
-}
+/* ====== SALES ====== */
 function renderSales(){
-  const tb=document.querySelector('#salesTable tbody');
-  if(!sales.length){tb.innerHTML="<tr><td colspan=6>No sales.</td></tr>";document.getElementById('dayTotal').textContent='0';return;}
-  let total=0;tb.innerHTML=sales.map(s=>{total+=s.amount;return `<tr><td>${s.date}</td><td>${s.type}</td><td>${s.product}</td><td>${s.qty}</td><td>${s.price}</td><td>${s.amount}</td></tr>`;}).join('');
-  document.getElementById('dayTotal').textContent=total.toFixed(2);
+  const table = document.querySelector('#salesTable tbody');
+  const search = document.getElementById('salesSearch') ? document.getElementById('salesSearch').value.trim().toLowerCase() : '';
+  const view = document.getElementById('stypeFilter').value || 'All';
+  let data = sales.slice();
+  if(view !== 'All' && view) data = data.filter(s=>s.type === view);
+  if(search) data = data.filter(s=> (s.product||'').toLowerCase().includes(search) || (s.type||'').toLowerCase().includes(search));
+  if(!data.length){ table.innerHTML = '<tr><td colspan="6" class="muted">No sales.</td></tr>'; document.getElementById('dayTotal').textContent = '0'; document.getElementById('salesCount').textContent = '0'; document.getElementById('salesRevenue').textContent='0'; return; }
+  let total=0;
+  table.innerHTML = data.map(s=>{ total += (parseFloat(s.amount)||0); return `<tr><td>${escapeHtml(s.date)}</td><td>${escapeHtml(s.type)}</td><td>${escapeHtml(s.product)}</td><td>${s.qty}</td><td>${s.price}</td><td>${s.amount}</td></tr>`; }).join('');
+  document.getElementById('dayTotal').textContent = total.toFixed(2);
+  document.getElementById('salesCount').textContent = sales.length;
+  document.getElementById('salesRevenue').textContent = total.toFixed(2);
 }
-function clearSales(){if(confirm("Clear all sales?")){sales=[];localStorage.removeItem('sales-data');renderSales();}}
 
-// WANTING
+function addSale(){
+  const type = document.getElementById('stype').value;
+  const name = document.getElementById('sname').value.trim();
+  const qty = parseInt(document.getElementById('sqty').value);
+  const price = parseFloat(document.getElementById('sprice').value);
+  const date = document.getElementById('sdate').value;
+  if(!type || !name || !qty || isNaN(price) || !date) return alert('Fill all sale fields');
+  const amount = qty * price;
+  sales.push({type,product:name,qty,price,amount,date});
+  const item = stock.find(s=>s.name.toLowerCase() === name.toLowerCase());
+  if(item){ item.sold = (parseInt(item.sold)||0) + qty; }
+  saveAll(); renderSales(); renderStock();
+  document.getElementById('sname').value=''; document.getElementById('sqty').value=''; document.getElementById('sprice').value='';
+}
+function clearSales(){
+  if(!confirm('Clear ALL sales?')) return;
+  sales = []; saveAll(); renderSales();
+}
+
+/* ====== WANTING ====== */
+function renderWant(){
+  const table = document.querySelector('#wantTable tbody');
+  const search = document.getElementById('wantSearch') ? document.getElementById('wantSearch').value.trim().toLowerCase() : '';
+  const view = document.getElementById('viewWantFilter').value || 'All';
+  let data = want.slice();
+  if(view !== 'All' && view) data = data.filter(w=>w.type === view);
+  if(search) data = data.filter(w=> (w.item||'').toLowerCase().includes(search) || (w.type||'').toLowerCase().includes(search));
+  if(!data.length){ table.innerHTML = '<tr><td colspan="5" class="muted">No items.</td></tr>'; document.getElementById('wantCount').textContent = '0'; return; }
+  table.innerHTML = data.map((w,i)=>`<tr><td>${escapeHtml(w.date)}</td><td>${escapeHtml(w.type)}</td><td>${escapeHtml(w.item)}</td><td>${w.qty||'-'}</td>
+    <td><button class="restock-btn" onclick="restockWant(${want.indexOf(w)})">Restock</button>
+    <button class="remove-btn" onclick="removeWant(${want.indexOf(w)})">Remove</button></td></tr>`).join('');
+  document.getElementById('wantCount').textContent = want.length;
+}
+
 function addWant(){
-  const type=document.getElementById('wtype').value,item=document.getElementById('witem').value.trim(),date=document.getElementById('wdate').value;
-  if(!type||!item||!date)return alert("Fill all fields!");
-  want.push({type,item,date});localStorage.setItem('wanting-data',JSON.stringify(want));renderWant(document.getElementById('viewWantFilter').value);
+  const type = document.getElementById('wtype').value;
+  const item = document.getElementById('witem').value.trim();
+  const date = document.getElementById('wdate').value;
+  if(!type || !item || !date) return alert('Fill all wanting fields');
+  want.push({type,item,date});
+  saveAll(); renderWant(); document.getElementById('witem').value='';
 }
-function restock(i){
-  const qty=prompt("Restocked Qty:");if(!qty)return;
-  const today=new Date().toISOString().split('T')[0];const w=want[i];
+function restockWant(index){
+  const qty = prompt('Enter restocked qty:');
+  if(!qty || isNaN(qty)) return alert('Invalid qty');
+  const today = new Date().toISOString().split('T')[0];
+  const w = want[index];
   stock.push({type:w.type,name:w.item,qty:parseInt(qty),sold:0,date:today});
-  localStorage.setItem('stock-data',JSON.stringify(stock));
-  want.splice(i,1);localStorage.setItem('wanting-data',JSON.stringify(want));
-  renderWant(document.getElementById('viewWantFilter').value);renderStock();
+  want.splice(index,1);
+  saveAll(); renderStock(); renderWant();
 }
-function removeWant(i){want.splice(i,1);localStorage.setItem('wanting-data',JSON.stringify(want));renderWant(document.getElementById('viewWantFilter').value);}
-function renderWant(filter="All"){
-  const tb=document.querySelector('#wantTable tbody');
-  let data = filter==="All"||!filter ? want : want.filter(w=>w.type===filter);
-  tb.innerHTML=data.length?data.map((w,i)=>`<tr><td>${w.date}</td><td>${w.type}</td><td>${w.item}</td><td>-</td>
-  <td><button class='restock-btn' onclick='restock(${want.indexOf(w)})'>✔</button>
-  <button class='remove-btn' onclick='removeWant(${want.indexOf(w)})'>🗑</button></td></tr>`).join(''):"<tr><td colspan=5>No items.</td></tr>";
+function removeWant(index){
+  if(!confirm('Remove this want item?')) return;
+  want.splice(index,1); saveAll(); renderWant();
 }
-function clearWant(){if(confirm("Clear all wanting items?")){want=[];localStorage.removeItem('wanting-data');renderWant();}}
-function printWanting(){
-  const content=document.getElementById('wantTable').outerHTML;
-  const win=window.open("","_blank");
-  win.document.write("<h3>🛒 Wanting List</h3>"+content);
-  win.document.close();
-  win.print();
+function clearWant(){
+  if(!confirm('Clear all wanting items?')) return;
+  want = []; saveAll(); renderWant();
 }
 
-// INIT
-renderTypes();updateDropdowns();renderStock();renderSales();renderWant();
+/* ====== EXPORT / BACKUP / RESTORE / PRINT ====== */
+function exportCSV(section){
+  let rows = [], filename = 'export.csv';
+  if(section==='types'){ rows = types.map(t=>[t]); rows.unshift(['Type']); filename='types.csv'; }
+  else if(section==='stock'){ rows = stock.map(s=>[s.date,s.type,s.name,s.qty,s.sold || 0, (s.qty - (s.sold||0))]); rows.unshift(['Date','Type','Product','Qty','Sold','Remaining']); filename='stock.csv'; }
+  else if(section==='sales'){ rows = sales.map(s=>[s.date,s.type,s.product,s.qty,s.price,s.amount]); rows.unshift(['Date','Type','Product','Qty','Price','Total']); filename='sales.csv'; }
+  else if(section==='wanting'){ rows = want.map(w=>[w.date,w.type,w.item,w.qty||'']); rows.unshift(['Date','Type','Item','Qty']); filename='wanting.csv'; }
+  else { alert('Unknown export'); return; }
+  const csv = rows.map(r=>r.map(cell=>`"${String(cell).replace(/"/g,'""')}"`).join(',')).join('\n');
+  const blob = new Blob([csv],{type:'text/csv;charset=utf-8;'}); const url = URL.createObjectURL(blob);
+  const a = document.createElement('a'); a.href = url; a.download = filename; a.click(); URL.revokeObjectURL(url);
+}
+function printWanting(){
+  const tableHtml = document.getElementById('wantTable').outerHTML;
+  const title = '<h3>🛒 Wanting List — KharchaSaathi</h3>';
+  const w = window.open('','_blank','width=800,height=600');
+  w.document.write('<html><head><title>Wanting List</title><style>body{font-family:Arial;padding:12px} table{width:100%;border-collapse:collapse} th,td{border:1px solid #ccc;padding:6px;text-align:center} th{background:#ff7a00;color:#fff}</style></head><body>');
+  w.document.write(title + tableHtml);
+  w.document.write('</body></html>'); w.document.close(); w.print();
+}
+document.getElementById('backupBtn').addEventListener('click', ()=>{
+  const payload = { types, stock, sales, want, exportedAt: new Date().toISOString() };
+  const blob = new Blob([JSON.stringify(payload,null,2)], {type:'application/json'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a'); a.href = url; a.download = `kharchasaathi_backup_${new Date().toISOString().slice(0,10)}.json`; a.click(); URL.revokeObjectURL(url);
+});
+document.getElementById('restoreBtn').addEventListener('click', ()=>document.getElementById('restoreFile').click());
+document.getElementById('restoreFile').addEventListener('change', function(e){
+  const f = this.files[0]; if(!f) return;
+  const reader = new FileReader();
+  reader.onload = function(){ try {
+    const obj = JSON.parse(reader.result);
+    if(confirm('Restore will replace current data. Continue?')){
+      types = obj.types || []; stock = obj.stock || []; sales = obj.sales || []; want = obj.want || [];
+      saveAll(); renderAll(); alert('Restore complete');
+    }
+  } catch(err){ alert('Invalid file'); } };
+  reader.readAsText(f);
+});
+
+/* HELPERS & INIT */
+function escapeHtml(s){ if(s==null) return ''; return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function renderAll(){ renderTypes(); updateDropdowns(); renderStock(); renderSales(); renderWant(); }
+renderAll();
+
+/* live listeners */
+document.getElementById('typeSearch').addEventListener('input', renderTypes);
+const maybe = id => document.getElementById(id) ? document.getElementById(id) : null;
+maybe('viewTypeFilter')?.addEventListener('change', renderStock);
+maybe('stockSearch')?.addEventListener('input', renderStock);
+maybe('salesSearch')?.addEventListener('input', renderSales);
+maybe('stypeFilter')?.addEventListener('change', renderSales);
+maybe('viewWantFilter')?.addEventListener('change', renderWant);
+maybe('wantSearch')?.addEventListener('input', renderWant);
 </script>
 </body>
 </html>
