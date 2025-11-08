@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>📦 KharchaSaathi — Business Dashboard v6.2.6</title>
+<title>📦 KharchaSaathi — Business Dashboard v6.2.7</title>
 <meta name="theme-color" content="#ff7a00">
 <style>
 :root{
@@ -56,10 +56,8 @@ body.dark td{border:1px solid var(--dark-border);}
   background:rgba(0,0,0,0.6);display:none;
   justify-content:center;align-items:center;z-index:1000;
 }
-.help-content{background:var(--card);padding:20px;max-width:500px;border-radius:12px;color:var(--text);}
+.help-content{background:var(--card);padding:20px;max-width:550px;border-radius:12px;color:var(--text);overflow-y:auto;max-height:85vh;}
 body.dark .help-content{background:var(--dark-card);color:var(--dark-text);}
-
-/* ✅ Inputs Dark Mode */
 input, select{
   padding:6px;border:1px solid #ccc;border-radius:6px;
   margin:4px;outline:none;font-size:14px;
@@ -74,7 +72,7 @@ body.dark input::placeholder{color:#aaa;}
 <body>
 
 <div class="topbar">
-  <h1>📦 KharchaSaathi v6.2.6</h1>
+  <h1>📦 KharchaSaathi v6.2.7</h1>
   <button class="theme-btn" id="themeBtn">🌙</button>
 </div>
 
@@ -153,20 +151,87 @@ body.dark input::placeholder{color:#aaa;}
 </section>
 
 <div class="footer-btns">
-  <a href="#" onclick="toggleHelp()">📘 Help</a>
+  <a href="#" onclick="toggleHelp()">📘 Help & Guide</a>
   <a href="../index.html">🏠 Back</a>
 </div>
 
-<!-- Help -->
+<!-- 📘 Full Help & Guide -->
 <div id="helpModal" class="help-modal">
   <div class="help-content">
-    <h2>📘 Help Guide</h2>
+    <h2>📘 KharchaSaathi — Complete User Guide</h2>
+    <hr>
+    <h3>🗂 1. Item Types</h3>
     <ul>
-      <li>Switch tabs anytime; dark mode keeps all visible.</li>
-      <li>💰 Sale = Cash | 📒 Credit = Khata</li>
-      <li>Low stock auto alerts + wanting list auto add.</li>
+      <li>👉 Create product categories (Mobiles, TVs, Accessories, etc.)</li>
+      <li>✅ These appear in dropdowns across Stock & Wanting.</li>
+      <li>🧹 Clear All removes all item types.</li>
     </ul>
-    <button onclick="toggleHelp()">Close</button>
+
+    <h3>📦 2. Stock Management</h3>
+    <ul>
+      <li>➕ Add product details: Date, Type, Name & Quantity.</li>
+      <li>📋 Every product updates quantity automatically if re-added.</li>
+      <li>⚙️ Set Low Stock Limit — alerts when remaining ≤ limit.</li>
+      <li>📊 Columns: Total Qty | Sold | Remaining | Alert | Limit.</li>
+    </ul>
+
+    <h3>💰 3. Selling (Cash & Credit)</h3>
+    <ul>
+      <li>💰 “Sale” → Cash Transaction</li>
+      <li>📒 “Credit” → Khata Sale (recorded separately)</li>
+      <li>📅 You’ll be asked for Quantity & Price per sale.</li>
+      <li>📈 Sales auto-updates Stock and adds entry to Ledger.</li>
+      <li>🧹 “Clear All” resets full sales record.</li>
+    </ul>
+
+    <h3>🔔 4. Inventory Alerts</h3>
+    <ul>
+      <li>⚠️ When stock ≤ limit → “LOW” alert appears.</li>
+      <li>❌ When stock = 0 → product auto-moves to “Wanting List”.</li>
+    </ul>
+
+    <h3>🛒 5. Wanting List</h3>
+    <ul>
+      <li>📝 Auto-adds items that go out of stock.</li>
+      <li>✅ Restock → adds back to Stock with new quantity.</li>
+      <li>🗑 Delete → remove item manually.</li>
+      <li>🖨️ Print → generate supplier restock list.</li>
+    </ul>
+
+    <h3>📈 6. Sales Ledger</h3>
+    <ul>
+      <li>📊 View all daily Cash & Credit sales.</li>
+      <li>💵 “Total” shows combined revenue of the day.</li>
+      <li>🧹 Use Clear to reset after monthly closing.</li>
+    </ul>
+
+    <h3>🌙 7. Dark / Light Mode</h3>
+    <ul>
+      <li>🌙 Toggle top-right icon to switch theme instantly.</li>
+      <li>💾 Theme preference auto-saves in local storage.</li>
+    </ul>
+
+    <h3>💾 8. Data & Backup</h3>
+    <ul>
+      <li>🗂 All data stored locally in browser (offline ready).</li>
+      <li>⚙️ “Clear” options wipe section data only.</li>
+      <li>📤 Backup & Export coming soon (v6.3 feature).</li>
+    </ul>
+
+    <h3>🚀 9. Summary Flow</h3>
+    <ol>
+      <li>🗂 Add Product Type →</li>
+      <li>📦 Add Stock →</li>
+      <li>💰 Sell (Cash/Credit) →</li>
+      <li>⚠️ Auto Alerts trigger →</li>
+      <li>🛒 Out-of-stock goes to Wanting →</li>
+      <li>✅ Restock adds it back.</li>
+    </ol>
+
+    <hr>
+    <div style="text-align:right">
+      <button onclick="toggleHelp()">Close Guide</button>
+    </div>
   </div>
 </div>
 
@@ -198,7 +263,7 @@ function updateDropdowns(){
   });
 }
 
-/* GLOBAL LIMIT */
+/* LIMIT */
 function setGlobalLimit(){const v=parseInt(document.getElementById('globalLimit').value);if(isNaN(v)||v<0)return alert("Invalid limit");localStorage.setItem(K_LIMIT,v);alert("Limit set "+v);}
 function getLimit(){const v=parseInt(localStorage.getItem(K_LIMIT));return isNaN(v)?0:v;}
 
@@ -245,7 +310,7 @@ sales.push({date,type:s.type,product:s.name,qty,price,amount:qty*price,status});
 saveAll();renderStock();renderSales();checkWantAuto(s);
 }
 
-/* AUTO WANTING */
+/* AUTO WANT */
 function checkWantAuto(s){
 const remain=s.qty-(s.sold||0);
 if(remain<=0&&!want.find(w=>w.type===s.type&&w.item.toLowerCase()===s.name.toLowerCase())){
@@ -266,40 +331,4 @@ function clearSales(){if(confirm("Clear sales?")){sales=[];saveAll();renderSales
 function addWant(){
 const date=document.getElementById('wdate').value,type=document.getElementById('wtype').value,item=document.getElementById('witem').value.trim();
 if(!date||!type||!item)return;
-if(want.find(w=>w.type===type&&w.item.toLowerCase()===item.toLowerCase()))return alert("Already exists");
-want.push({date,type,item,restocked:false});saveAll();renderWant();
-}
-function renderWant(){
-const tb=document.querySelector('#wantTable tbody');
-tb.innerHTML=want.map((w,i)=>`<tr><td>${w.date}</td><td>${w.type}</td><td>${w.item}</td><td><button class="sell-btn" onclick="restock(${i})">✅ Restock</button> <button class="credit-btn" onclick="delWant(${i})">🗑 Delete</button></td></tr>`).join('');
-}
-function restock(i){
-const q=parseInt(prompt("Enter Restock Qty:"));if(!q||q<=0)return alert("Invalid qty");
-const w=want[i];const date=new Date().toISOString().split('T')[0];
-const ex=stock.find(s=>s.type===w.type&&s.name.toLowerCase()===w.item.toLowerCase());
-if(ex){ex.qty+=q;}else{stock.push({date,type:w.type,name:w.item,qty:q,sold:0});}
-want.splice(i,1);saveAll();renderStock();renderWant();
-alert(`✅ ${q} of "${w.item}" added to Stock & removed from Wanting.`);
-}
-function delWant(i){want.splice(i,1);saveAll();renderWant();}
-function printWanting(){const w=window.open('','_blank');w.document.write('<h3>Wanting List</h3>'+document.getElementById('wantTable').outerHTML);w.print();}
-
-/* UI */
-document.querySelectorAll('.tab').forEach(t=>t.onclick=()=>{
-  document.querySelectorAll('.tab,.section').forEach(e=>e.classList.remove('active'));
-  t.classList.add('active');
-  document.getElementById(t.dataset.tab).classList.add('active');
-});
-document.getElementById('themeBtn').onclick=()=>{
-  document.body.classList.toggle('dark');
-  localStorage.setItem('theme',document.body.classList.contains('dark'));
-};
-if(localStorage.getItem('theme')==='true')document.body.classList.add('dark');
-function toggleHelp(){const h=document.getElementById('helpModal');h.style.display=h.style.display==='flex'?'none':'flex';}
-
-/* INIT */
-function renderAll(){renderTypes();updateDropdowns();renderStock();renderSales();renderWant();}
-renderAll();
-</script>
-</body>
-</html>
+if(want
