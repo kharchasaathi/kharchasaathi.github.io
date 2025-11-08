@@ -75,9 +75,62 @@ body.dark .help-content{background:var(--dark-card);color:#fff;}
   <div class="tab" data-tab="wanting">🛒 Wanting</div>
 </div>
 
-<!-- Your existing sections (Types, Stock, Sales, Wanting) same as v5.9 -->
-<!-- నేను వాటిని skip చేస్తున్నా ఎందుకంటే అవి నువ్వు వాడుతున్న వి -->
-<!-- కేవలం Help భాగం మాత్రమే కొత్తది -->
+<!-- TYPES -->
+<section id="types" class="section active">
+  <h3>🗂 Manage Item Types</h3>
+  <div class="row">
+    <input type="text" id="typeName" placeholder="Add new type (Mobiles, Chargers)" />
+    <button onclick="addType()">Add</button>
+    <button class="small-btn" onclick="clearTypes()">Clear All</button>
+  </div>
+  <ul id="typeList" style="margin-top:10px;padding-left:18px;"></ul>
+</section>
+
+<!-- STOCK -->
+<section id="stock" class="section">
+  <h3>📦 Current Stock</h3>
+  <div class="row">
+    <input type="date" id="pdate">
+    <select id="ptype"></select>
+    <input type="text" id="pname" placeholder="Product name">
+    <input type="number" id="pqty" placeholder="Qty">
+    <button onclick="addStock()">Add</button>
+    <button class="small-btn" onclick="clearStock()">Clear All</button>
+  </div>
+  <table id="stockTable">
+    <thead><tr><th>Date</th><th>Type</th><th>Product</th><th>Qty</th><th>Sold</th><th>Remaining</th><th colspan="2">Action</th></tr></thead>
+    <tbody></tbody>
+  </table>
+</section>
+
+<!-- SALES -->
+<section id="sales" class="section">
+  <h3>💰 Sales Ledger</h3>
+  <div class="row">
+    <button class="small-btn" onclick="clearSales()">🧹 Clear All Sales</button>
+  </div>
+  <table id="salesTable">
+    <thead><tr><th>Date</th><th>Type</th><th>Product</th><th>Qty</th><th>Price ₹</th><th>Total ₹</th><th>Status</th><th>Action</th></tr></thead>
+    <tbody></tbody>
+    <tfoot><tr><td colspan="6" style="text-align:right;font-weight:bold;">Total:</td><td id="dayTotal">0</td><td></td></tr></tfoot>
+  </table>
+</section>
+
+<!-- WANTING -->
+<section id="wanting" class="section">
+  <h3>🛒 Wanting List</h3>
+  <div class="row">
+    <input type="date" id="wdate">
+    <select id="wtype"></select>
+    <input type="text" id="witem" placeholder="Item name">
+    <button onclick="addWant()">Add</button>
+    <button onclick="printWanting()">🖨️ Print</button>
+  </div>
+  <table id="wantTable">
+    <thead><tr><th>Date</th><th>Type</th><th>Item</th><th>Actions</th></tr></thead>
+    <tbody></tbody>
+  </table>
+</section>
 
 <div class="footer-btns">
   <a href="#" onclick="toggleHelp()">📘 Help</a>
@@ -126,10 +179,121 @@ body.dark .help-content{background:var(--dark-card);color:#fff;}
 </div>
 
 <script>
+const K_TYPES='item-types',K_STOCK='stock-data',K_SALES='sales-data',K_WANT='wanting-data';
+let types=JSON.parse(localStorage.getItem(K_TYPES)||'[]'),
+stock=JSON.parse(localStorage.getItem(K_STOCK)||'[]'),
+sales=JSON.parse(localStorage.getItem(K_SALES)||'[]'),
+want=JSON.parse(localStorage.getItem(K_WANT)||'[]');
+
+function saveAll(){
+  localStorage.setItem(K_TYPES,JSON.stringify(types));
+  localStorage.setItem(K_STOCK,JSON.stringify(stock));
+  localStorage.setItem(K_SALES,JSON.stringify(sales));
+  localStorage.setItem(K_WANT,JSON.stringify(want));
+}
+function addType(){
+  const t=document.getElementById('typeName').value.trim();
+  if(!t)return alert("Enter type name");
+  if(types.includes(t))return alert("Already exists");
+  types.push(t);saveAll();renderTypes();updateDropdowns();
+  document.getElementById('typeName').value='';
+}
+function clearTypes(){if(confirm("Clear all types?")){types=[];saveAll();renderTypes();updateDropdowns();}}
+function renderTypes(){document.getElementById('typeList').innerHTML=types.length?types.map(t=>`<li>${t}</li>`).join(''):"<li>No types yet</li>";}
+function updateDropdowns(){
+  ['ptype','wtype'].forEach(id=>{
+    const el=document.getElementById(id);
+    if(el)el.innerHTML='<option value="">Select</option>'+types.map(t=>`<option>${t}</option>`).join('');
+  });
+}
+function addStock(){
+  const date=document.getElementById('pdate').value;
+  const type=document.getElementById('ptype').value;
+  const name=document.getElementById('pname').value.trim();
+  const qty=parseInt(document.getElementById('pqty').value);
+  if(!date||!type||!name||!qty)return alert("Fill all fields");
+  stock.push({date,type,name,qty,sold:0});
+  saveAll();renderStock();
+  ['pdate','ptype','pname','pqty'].forEach(id=>document.getElementById(id).value='');
+}
+function clearStock(){if(confirm("Clear stock?")){stock=[];saveAll();renderStock();}}
+function renderStock(){
+  const tb=document.querySelector('#stockTable tbody');
+  tb.innerHTML=stock.map((s,i)=>`
+  <tr><td>${s.date}</td><td>${s.type}</td><td>${s.name}</td>
+  <td>${s.qty}</td><td>${s.sold||0}</td><td>${s.qty-(s.sold||0)}</td>
+  <td><button class="sell-btn" onclick="sellItem(${i},'Paid')">💰 Sell</button></td>
+  <td><button class="credit-btn" onclick="sellItem(${i},'Credit')">📒 Credit</button></td></tr>`).join('');
+}
+function sellItem(i,status){
+  const item=stock[i];
+  const remain=item.qty-(item.sold||0);
+  if(remain<=0)return alert("No stock left!");
+  const qty=parseInt(prompt(`Enter ${status==='Credit'?'Credit':'Sale'} Qty (${remain} left):`));
+  if(!qty||qty<=0||qty>remain)return;
+  const price=parseFloat(prompt("Enter Price ₹:"));
+  if(!price||price<=0)return;
+  const date=new Date().toISOString().split('T')[0];
+  const amount=qty*price;
+  item.sold=(item.sold||0)+qty;
+  sales.push({date,type:item.type,product:item.name,qty,price,amount,status});
+  saveAll();renderStock();renderSales();
+  alert(status==='Credit'?"📒 Added to Khata":"✅ Sale Added!");
+}
+function renderSales(){
+  const tb=document.querySelector('#salesTable tbody');let t=0;
+  tb.innerHTML=sales.map((s,i)=>{t+=s.amount;return`
+  <tr><td>${s.date}</td><td>${s.type}</td><td>${s.product}</td>
+  <td>${s.qty}</td><td>${s.price}</td><td>${s.amount}</td>
+  <td>${s.status}</td>
+  <td>${s.status==='Credit'?`<button class='credit-btn' onclick='markPaid(${i})'>Mark Paid</button>`:""}</td></tr>`}).join('');
+  document.getElementById('dayTotal').textContent=t.toFixed(2);
+}
+function markPaid(i){sales[i].status="Paid";saveAll();renderSales();alert("✅ Marked Paid!");}
+function clearSales(){if(confirm("Clear all sales?")){sales=[];saveAll();renderSales();}}
+function addWant(){
+  const date=document.getElementById('wdate').value,type=document.getElementById('wtype').value,item=document.getElementById('witem').value.trim();
+  if(!date||!type||!item)return alert("Fill all fields");
+  want.push({date,type,item,restocked:false});saveAll();renderWant();
+  ['wdate','wtype','witem'].forEach(id=>document.getElementById(id).value='');
+}
+function renderWant(){
+  const tb=document.querySelector('#wantTable tbody');
+  tb.innerHTML=want.map((w,i)=>`
+  <tr class="${w.restocked?'restocked':''}">
+    <td>${w.date}</td><td>${w.type}</td><td>${w.item}</td>
+    <td>
+      ${!w.restocked?`<button class='sell-btn' onclick='markRestocked(${i})'>✅</button>`:''}
+      <button class='credit-btn' onclick="removeWant(${i})">🗑</button>
+    </td>
+  </tr>`).join('');
+}
+function markRestocked(i){
+  const qty=parseInt(prompt("Enter Restocked Quantity:"));
+  if(!qty||qty<=0)return;
+  const date=new Date().toISOString().split('T')[0];
+  const w=want[i];
+  w.restocked=true;
+  stock.push({date,type:w.type,name:w.item,qty,sold:0});
+  saveAll();renderWant();renderStock();
+  alert(`✅ ${qty} of "${w.item}" added to Stock!`);
+}
+function removeWant(i){want.splice(i,1);saveAll();renderWant();}
+function printWanting(){const w=window.open('','_blank');w.document.write('<h3>🛒 Wanting List</h3>'+document.getElementById('wantTable').outerHTML);w.print();}
+document.getElementById('themeBtn').onclick=()=>{
+  document.body.classList.toggle('dark');
+  localStorage.setItem('theme',document.body.classList.contains('dark')?'dark':'light');
+  document.getElementById('themeBtn').textContent=document.body.classList.contains('dark')?'☀️':'🌙';
+};
+if(localStorage.getItem('theme')==='dark'){document.body.classList.add('dark');document.getElementById('themeBtn').textContent='☀️';}
+document.querySelectorAll('.tab').forEach(t=>t.addEventListener('click',()=>openTab(t.dataset.tab)));
+function openTab(id){document.querySelectorAll('.tab,.section').forEach(e=>e.classList.remove('active'));document.querySelector(`.tab[data-tab="${id}"]`).classList.add('active');document.getElementById(id).classList.add('active');}
 function toggleHelp(){
   const modal=document.getElementById('helpModal');
   modal.style.display=(modal.style.display==='flex')?'none':'flex';
 }
+function renderAll(){renderTypes();updateDropdowns();renderStock();renderSales();renderWant();}
+renderAll();
 </script>
 </body>
 </html>
