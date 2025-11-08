@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>📦 KharchaSaathi — Business Dashboard v6.2.2</title>
+<title>📦 KharchaSaathi — Business Dashboard v6.2.3</title>
 <meta name="theme-color" content="#ff7a00">
 <style>
 :root{
@@ -41,7 +41,7 @@ body.dark .help-content{background:var(--dark-card);color:#fff;}
 <body>
 
 <div class="topbar">
-  <h1>📦 KharchaSaathi v6.2.2</h1>
+  <h1>📦 KharchaSaathi v6.2.3</h1>
   <button class="theme-btn" id="themeBtn">🌙</button>
 </div>
 
@@ -117,13 +117,14 @@ body.dark .help-content{background:var(--dark-card);color:#fff;}
   <a href="../index.html">🏠 Back</a>
 </div>
 
+<!-- Help Modal -->
 <div id="helpModal" class="help-modal">
   <div class="help-content">
     <h2>📘 Help Guide</h2>
     <ul>
-      <li>Auto Wanting when Remaining = 0</li>
-      <li>Sell = Cash | Credit = Khata</li>
-      <li>Low Stock Alerts show automatically</li>
+      <li>💰 Sale = Cash | 📒 Credit = Khata</li>
+      <li>✅ Tick adds item to Stock & removes from Wanting</li>
+      <li>Low stock alert auto-updates</li>
     </ul>
     <button onclick="toggleHelp()">Close</button>
   </div>
@@ -169,8 +170,10 @@ return `<tr>
 <td>${s.date}</td><td>${s.type}</td><td>${s.name}</td>
 <td>${s.qty}</td><td>${sold}</td><td>${rem}</td>
 <td class="${cls}">${status}</td><td>${limit}</td>
-<td><button onclick="sellItem(${i},'Paid')" class="sell-btn">💰</button> 
-<button onclick="sellItem(${i},'Credit')" class="credit-btn">📒</button></td></tr>`;
+<td>
+  <button onclick="sellItem(${i},'Paid')" class="sell-btn">💰 Sale</button>
+  <button onclick="sellItem(${i},'Credit')" class="credit-btn">📒 Credit</button>
+</td></tr>`;
 }).join('');
 }
 
@@ -212,14 +215,16 @@ want.push({date,type,item,restocked:false});saveAll();renderWant();
 }
 function renderWant(){
 const tb=document.querySelector('#wantTable tbody');
-tb.innerHTML=want.map((w,i)=>`<tr class="${w.restocked?'restocked':''}"><td>${w.date}</td><td>${w.type}</td><td>${w.item}</td><td><button class="sell-btn" onclick="restock(${i})">✅</button> <button class="credit-btn" onclick="delWant(${i})">🗑</button></td></tr>`).join('');
+tb.innerHTML=want.map((w,i)=>`<tr class="${w.restocked?'restocked':''}"><td>${w.date}</td><td>${w.type}</td><td>${w.item}</td><td><button class="sell-btn" onclick="restock(${i})">✅ Restock</button> <button class="credit-btn" onclick="delWant(${i})">🗑 Delete</button></td></tr>`).join('');
 }
 function restock(i){
-const q=parseInt(prompt("Enter Restock Qty"));if(!q)return;
-const w=want[i];const ex=stock.find(s=>s.type===w.type&&s.name.toLowerCase()===w.item.toLowerCase());
-const date=new Date().toISOString().split('T')[0];
+const q=parseInt(prompt("Enter Restock Qty:"));if(!q||q<=0)return alert("Invalid qty");
+const w=want[i];const date=new Date().toISOString().split('T')[0];
+const ex=stock.find(s=>s.type===w.type&&s.name.toLowerCase()===w.item.toLowerCase());
 if(ex){ex.qty+=q;}else{stock.push({date,type:w.type,name:w.item,qty:q,sold:0});}
-w.restocked=true;saveAll();renderStock();renderWant();
+want.splice(i,1); // remove immediately
+saveAll();renderStock();renderWant();
+alert(`✅ ${q} of "${w.item}" added to Stock & removed from Wanting.`);
 }
 function delWant(i){want.splice(i,1);saveAll();renderWant();}
 function printWanting(){const w=window.open('','_blank');w.document.write('<h3>Wanting List</h3>'+document.getElementById('wantTable').outerHTML);w.print();}
