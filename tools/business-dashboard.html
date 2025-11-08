@@ -97,10 +97,15 @@
 <!-- WANTING -->
 <div id="wanting" class="section">
   <h3>🛒 Wanting Items</h3>
+  <label><strong>View by Type:</strong></label>
+  <select id="viewWantFilter" onchange="renderWant(this.value)">
+    <option value="All">All Types</option>
+  </select>
   <table id="wantTable">
     <thead><tr><th>Date</th><th>Type</th><th>Item</th><th>Qty</th><th>Actions</th></tr></thead>
     <tbody></tbody>
   </table>
+  <hr>
   <h4>Add Want</h4>
   <input id="wdate" type="date"><select id="wtype"></select>
   <input id="witem" placeholder="Item name">
@@ -117,6 +122,7 @@ let stock=JSON.parse(localStorage.getItem('stock-data')||'[]');
 let sales=JSON.parse(localStorage.getItem('sales-data')||'[]');
 let want=JSON.parse(localStorage.getItem('wanting-data')||'[]');
 
+// Theme
 (function(){
   const t=localStorage.getItem('ks-theme');
   if(t==='dark'){document.body.classList.add('dark');document.querySelector('.theme-toggle').textContent='☀️';}
@@ -143,10 +149,10 @@ function addType(){let name=document.getElementById('typeName').value.trim();
 function clearTypes(){if(confirm("Clear types?")){types=[];localStorage.removeItem('item-types');renderTypes();updateDropdowns();}}
 function renderTypes(){document.getElementById('typeList').innerHTML=types.length?types.map(t=>`<li>${t}</li>`).join(''):"<li>No types yet.</li>";}
 function updateDropdowns(){
-  ['ptype','stype','wtype','viewTypeFilter'].forEach(id=>{
+  ['ptype','stype','wtype','viewTypeFilter','viewWantFilter'].forEach(id=>{
     const el=document.getElementById(id); if(!el)return;
     el.innerHTML='<option value="">Select Type</option>'+types.map(t=>`<option>${t}</option>`).join('');
-    if(id==='viewTypeFilter') el.insertAdjacentHTML('afterbegin','<option value="All">All Types</option>');
+    if(id==='viewTypeFilter' || id==='viewWantFilter') el.insertAdjacentHTML('afterbegin','<option value="All">All Types</option>');
   });
 }
 
@@ -190,7 +196,7 @@ function renderSales(){
 function addWant(){
   const type=document.getElementById('wtype').value,item=document.getElementById('witem').value.trim(),date=document.getElementById('wdate').value;
   if(!type||!item||!date)return alert("Fill all fields!");
-  want.push({type,item,date});localStorage.setItem('wanting-data',JSON.stringify(want));renderWant();
+  want.push({type,item,date});localStorage.setItem('wanting-data',JSON.stringify(want));renderWant(document.getElementById('viewWantFilter').value);
 }
 function restock(i){
   const qty=prompt("Restocked Qty:");if(!qty)return;
@@ -198,13 +204,15 @@ function restock(i){
   stock.push({type:w.type,name:w.item,qty:parseInt(qty),sold:0,date:today});
   localStorage.setItem('stock-data',JSON.stringify(stock));
   want.splice(i,1);localStorage.setItem('wanting-data',JSON.stringify(want));
-  renderWant();renderStock();
+  renderWant(document.getElementById('viewWantFilter').value);renderStock();
 }
-function removeWant(i){want.splice(i,1);localStorage.setItem('wanting-data',JSON.stringify(want));renderWant();}
-function renderWant(){
+function removeWant(i){want.splice(i,1);localStorage.setItem('wanting-data',JSON.stringify(want));renderWant(document.getElementById('viewWantFilter').value);}
+function renderWant(filter="All"){
   const tb=document.querySelector('#wantTable tbody');
-  tb.innerHTML=want.length?want.map((w,i)=>`<tr><td>${w.date}</td><td>${w.type}</td><td>${w.item}</td><td>-</td>
-  <td><button class='restock-btn' onclick='restock(${i})'>✔</button><button class='remove-btn' onclick='removeWant(${i})'>🗑</button></td></tr>`).join(''):"<tr><td colspan=5>No items.</td></tr>";
+  let data = filter==="All"||!filter ? want : want.filter(w=>w.type===filter);
+  tb.innerHTML=data.length?data.map((w,i)=>`<tr><td>${w.date}</td><td>${w.type}</td><td>${w.item}</td><td>-</td>
+  <td><button class='restock-btn' onclick='restock(${want.indexOf(w)})'>✔</button>
+  <button class='remove-btn' onclick='removeWant(${want.indexOf(w)})'>🗑</button></td></tr>`).join(''):"<tr><td colspan=5>No items.</td></tr>";
 }
 
 // INIT
