@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>📦 KharchaSaathi — Business Dashboard v5.5</title>
+<title>📦 KharchaSaathi — Business Dashboard v5.6</title>
 <meta name="theme-color" content="#ff7a00">
 <style>
 :root{
@@ -47,8 +47,8 @@ th{background:var(--orange);color:#fff}
 
 <div class="topbar">
   <div>
-    <h1>📦 KharchaSaathi — Business Dashboard v5.5</h1>
-    <div class="muted">Offline • Smart Sell • Credit Integrated</div>
+    <h1>📦 KharchaSaathi — Business Dashboard v5.6</h1>
+    <div class="muted">Offline • Dual Sell • Credit Integrated</div>
   </div>
   <div class="controls">
     <button class="theme-btn" id="themeBtn">🌙</button>
@@ -58,13 +58,14 @@ th{background:var(--orange);color:#fff}
 <div class="tabs">
   <div class="tab active" data-tab="stock">📦 Stock</div>
   <div class="tab" data-tab="sales">📈 Sales</div>
-  <div class="tab" data-tab="wanting">🛒 Wanting</div>
 </div>
 
 <section id="stock" class="section active">
   <h3>📦 Current Stock</h3>
   <table id="stockTable">
-    <thead><tr><th>Date</th><th>Type</th><th>Product</th><th>Qty</th><th>Sold</th><th>Remaining</th><th>Action</th></tr></thead>
+    <thead>
+      <tr><th>Date</th><th>Type</th><th>Product</th><th>Qty</th><th>Sold</th><th>Remaining</th><th colspan="2">Action</th></tr>
+    </thead>
     <tbody></tbody>
   </table>
 </section>
@@ -76,11 +77,6 @@ th{background:var(--orange);color:#fff}
     <tbody></tbody>
     <tfoot><tr><td colspan="6" style="text-align:right;font-weight:bold;">Total:</td><td id="dayTotal">0</td><td></td></tr></tfoot>
   </table>
-</section>
-
-<section id="wanting" class="section">
-  <h3>🛒 Wanting List</h3>
-  <p style="opacity:0.7;">(Feature unchanged in this version)</p>
 </section>
 
 <div class="footer-btns">
@@ -101,26 +97,25 @@ tb.innerHTML=stock.map((s,i)=>`
 <tr>
 <td>${s.date}</td><td>${s.type}</td><td>${s.name}</td>
 <td>${s.qty}</td><td>${s.sold||0}</td><td>${s.qty-(s.sold||0)}</td>
-<td><button class="sell-btn" onclick="sellPrompt(${i})">🛒 Sell / Credit</button></td>
+<td><button class="sell-btn" onclick="sellItem(${i},'Paid')">💰 Sell</button></td>
+<td><button class="credit-btn" onclick="sellItem(${i},'Credit')">📒 Credit</button></td>
 </tr>`).join('');
 }
 
-function sellPrompt(i){
+function sellItem(i,status){
 const item=stock[i];
 const remain=item.qty-(item.sold||0);
 if(remain<=0)return alert("No stock left!");
-const qty=parseInt(prompt(`Enter quantity to sell (${remain} available):`));
+const qty=parseInt(prompt(`Enter quantity for ${status==='Credit'?'Credit':'Sale'} (${remain} available):`));
 if(!qty||qty<=0||qty>remain)return;
 const price=parseFloat(prompt("Enter price per unit ₹:"));
 if(!price||price<=0)return;
-const choice=confirm("Credit Sale? (OK=Credit, Cancel=Cash)");
-const status=choice?"Credit":"Paid";
 const date=new Date().toISOString().split('T')[0];
 const amount=qty*price;
 item.sold=(item.sold||0)+qty;
 sales.push({date,type:item.type,product:item.name,qty,price,amount,status});
 saveAll();renderStock();renderSales();
-alert(status==="Credit"?"📒 Added to Khata (Credit)":"✅ Cash Sale Added!");
+alert(status==='Credit'?'📒 Added to Khata (Credit)':'✅ Cash Sale Added!');
 }
 
 function renderSales(){
@@ -145,7 +140,7 @@ document.getElementById('themeBtn').textContent=document.body.classList.contains
 };
 if(localStorage.getItem('theme')==='dark'){document.body.classList.add('dark');document.getElementById('themeBtn').textContent='☀️';}
 
-function openHelp(){alert("💡 Sell / Credit integration:\n1️⃣ Click Sell/Credit button in Stock\n2️⃣ Choose Cash or Credit\n3️⃣ Auto entry in Sales!");}
+function openHelp(){alert("🧾 New Feature: Dual Sell Buttons\n💰 Sell → Cash Sale\n📒 Credit → Khata Sale\nAuto entry in Sales Ledger.");}
 
 document.querySelectorAll('.tab').forEach(tab=>tab.addEventListener('click',()=>openTab(tab.dataset.tab)));
 function openTab(id){document.querySelectorAll('.tab,.section').forEach(e=>e.classList.remove('active'));document.querySelector(`.tab[data-tab="${id}"]`).classList.add('active');document.getElementById(id).classList.add('active');}
