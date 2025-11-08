@@ -3,45 +3,63 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>📦 KharchaSaathi — Business Dashboard v6.2.4</title>
+<title>📦 KharchaSaathi — Business Dashboard v6.2.5</title>
 <meta name="theme-color" content="#ff7a00">
 <style>
 :root{
   --orange:#ff7a00; --orange-dark:#cc6300;
   --bg:#f8f9fa; --card:#fff; --text:#222;
-  --dark-bg:#121212; --dark-card:#1e1e1e;
+  --dark-bg:#121212; --dark-card:#1e1e1e; --dark-text:#f1f1f1;
+  --dark-border:#444;
 }
 *{box-sizing:border-box;}
 body{font-family:Poppins,Arial,sans-serif;margin:0;padding:18px;background:var(--bg);color:var(--text);}
-body.dark{background:var(--dark-bg);color:#eee;}
+body.dark{background:var(--dark-bg);color:var(--dark-text);}
 h1{color:var(--orange);}
 .topbar{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;}
-.theme-btn,.small-btn,.action-btn{background:var(--orange);color:#fff;border:none;padding:8px 10px;border-radius:8px;cursor:pointer;}
+.theme-btn,.small-btn,.action-btn{
+  background:var(--orange);color:#fff;border:none;
+  padding:8px 10px;border-radius:8px;cursor:pointer;transition:.2s;
+}
 .theme-btn:hover,.small-btn:hover,.action-btn:hover{background:var(--orange-dark);}
 .tabs{display:flex;gap:8px;margin:18px 0;justify-content:center;flex-wrap:wrap;}
 .tab{background:#eee;padding:8px 12px;border-radius:10px;cursor:pointer;font-weight:600;}
 .tab.active{background:var(--orange);color:#fff;}
 .section{display:none;background:var(--card);padding:14px;border-radius:12px;box-shadow:0 6px 20px rgba(0,0,0,.06);margin-bottom:18px;}
 .section.active{display:block;}
+body.dark .section{background:var(--dark-card);color:var(--dark-text);}
 table{width:100%;border-collapse:collapse;margin-top:12px;}
 th,td{padding:8px;border:1px solid #ddd;text-align:center;font-size:13px;}
 th{background:var(--orange);color:#fff;}
-.low{color:#b35a00;font-weight:700;}
-.out{color:#c70000;font-weight:700;}
-.ok{color:#087f3a;font-weight:700;}
+body.dark th{background:var(--orange-dark);}
+body.dark td{border:1px solid var(--dark-border);}
+.low{color:#ffbb33;font-weight:700;}
+.out{color:#ff5555;font-weight:700;}
+.ok{color:#4eff90;font-weight:700;}
 .restocked{background:#d4f7d4!important;color:#090!important;}
 .footer-btns{text-align:center;margin-top:20px;}
 .footer-btns a{background:var(--orange);color:#fff;padding:10px 16px;border-radius:8px;text-decoration:none;margin:6px;display:inline-block;}
 .footer-btns a:hover{background:var(--orange-dark);}
 .help-modal{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.6);display:none;justify-content:center;align-items:center;z-index:1000;}
 .help-content{background:var(--card);padding:20px;max-width:500px;border-radius:12px;color:var(--text);}
-body.dark .help-content{background:var(--dark-card);color:#fff;}
+body.dark .help-content{background:var(--dark-card);color:var(--dark-text);}
+
+/* ✅ Fix Input & Select Styles */
+input, select{
+  padding:6px;border:1px solid #ccc;border-radius:6px;
+  margin:4px;outline:none;font-size:14px;
+}
+body.dark input,body.dark select{
+  background:#222;color:#fff;border:1px solid var(--dark-border);
+}
+input::placeholder{color:#888;}
+body.dark input::placeholder{color:#aaa;}
 </style>
 </head>
 <body>
 
 <div class="topbar">
-  <h1>📦 KharchaSaathi v6.2.4</h1>
+  <h1>📦 KharchaSaathi v6.2.5</h1>
   <button class="theme-btn" id="themeBtn">🌙</button>
 </div>
 
