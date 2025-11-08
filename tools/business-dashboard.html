@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>📦 KharchaSaathi — Business Dashboard v5.7</title>
+<title>📦 KharchaSaathi — Business Dashboard v5.8</title>
 <meta name="theme-color" content="#ff7a00">
 <style>
 :root{
@@ -37,9 +37,12 @@ th{background:var(--orange);color:#fff}
 .sell-btn:hover{background:#007c50}
 .credit-btn{background:#007bff;color:#fff;border:none;padding:5px 8px;border-radius:6px;cursor:pointer}
 .credit-btn:hover{background:#0056b3}
+.tick-btn{background:#00a86b;color:#fff;border:none;padding:5px 8px;border-radius:6px;cursor:pointer}
+.tick-btn:hover{background:#007c50}
 .footer-btns{text-align:center;margin-top:20px}
 .footer-btns a{background:var(--orange);color:#fff;padding:10px 16px;border-radius:8px;text-decoration:none;margin:6px;display:inline-block}
 .footer-btns a:hover{background:var(--orange-dark)}
+.restocked{background:#d4f7d4 !important;color:#090 !important;}
 @media(max-width:720px){.row{flex-direction:column;align-items:stretch}table td,table th{font-size:12px}}
 </style>
 </head>
@@ -47,7 +50,7 @@ th{background:var(--orange);color:#fff}
 
 <div class="topbar">
   <div>
-    <h1>📦 KharchaSaathi — Business Dashboard v5.7</h1>
+    <h1>📦 KharchaSaathi — Business Dashboard v5.8</h1>
     <div class="muted">Offline • Dual Sell • Credit + Wanting</div>
   </div>
   <div class="controls">
@@ -93,6 +96,9 @@ th{background:var(--orange);color:#fff}
 <!-- SALES -->
 <section id="sales" class="section">
   <h3>💰 Sales Ledger</h3>
+  <div class="row">
+    <button class="small-btn" onclick="clearSales()">🧹 Clear All Sales</button>
+  </div>
   <table id="salesTable">
     <thead><tr><th>Date</th><th>Type</th><th>Product</th><th>Qty</th><th>Price ₹</th><th>Total ₹</th><th>Status</th><th>Action</th></tr></thead>
     <tbody></tbody>
@@ -199,17 +205,26 @@ function renderSales(){
   document.getElementById('dayTotal').textContent=t.toFixed(2);
 }
 function markPaid(i){sales[i].status="Paid";saveAll();renderSales();alert("✅ Marked Paid!");}
+function clearSales(){if(confirm("Clear all sales?")){sales=[];saveAll();renderSales();}}
 
 function addWant(){
   const date=document.getElementById('wdate').value,type=document.getElementById('wtype').value,item=document.getElementById('witem').value.trim();
   if(!date||!type||!item)return alert("Fill all fields");
-  want.push({date,type,item});saveAll();renderWant();
+  want.push({date,type,item,restocked:false});saveAll();renderWant();
   ['wdate','wtype','witem'].forEach(id=>document.getElementById(id).value='');
 }
 function renderWant(){
   const tb=document.querySelector('#wantTable tbody');
-  tb.innerHTML=want.map((w,i)=>`<tr><td>${w.date}</td><td>${w.type}</td><td>${w.item}</td><td><button onclick="removeWant(${i})">🗑</button></td></tr>`).join('');
+  tb.innerHTML=want.map((w,i)=>`
+  <tr class="${w.restocked?'restocked':''}">
+    <td>${w.date}</td><td>${w.type}</td><td>${w.item}</td>
+    <td>
+      ${!w.restocked?`<button class='tick-btn' onclick='markRestocked(${i})'>✅</button>`:''}
+      <button onclick="removeWant(${i})">🗑</button>
+    </td>
+  </tr>`).join('');
 }
+function markRestocked(i){want[i].restocked=true;saveAll();renderWant();}
 function removeWant(i){want.splice(i,1);saveAll();renderWant();}
 function printWanting(){const w=window.open('','_blank');w.document.write('<h3>🛒 Wanting List</h3>'+document.getElementById('wantTable').outerHTML);w.print();}
 
@@ -220,7 +235,7 @@ document.getElementById('themeBtn').onclick=()=>{
 };
 if(localStorage.getItem('theme')==='dark'){document.body.classList.add('dark');document.getElementById('themeBtn').textContent='☀️';}
 
-function openHelp(){alert("📦 v5.7: Added full integration\n🗂 Types + 📦 Stock + 💰 Sell/Credit + 🛒 Wanting");}
+function openHelp(){alert("📦 v5.8: Added 'Clear All Sales' + Wanting ✅ Tick Restocked feature.");}
 
 document.querySelectorAll('.tab').forEach(t=>t.addEventListener('click',()=>openTab(t.dataset.tab)));
 function openTab(id){document.querySelectorAll('.tab,.section').forEach(e=>e.classList.remove('active'));document.querySelector(`.tab[data-tab="${id}"]`).classList.add('active');document.getElementById(id).classList.add('active');}
