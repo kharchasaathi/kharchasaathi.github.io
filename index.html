@@ -78,7 +78,7 @@ document.getElementById('themeBtn').onclick=()=>{
 
 // 🔥 Firebase Auth Setup
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
-import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signInWithPopup, GoogleAuthProvider } 
+import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signInWithPopup, GoogleAuthProvider, sendPasswordResetEmail, setPersistence, browserLocalPersistence } 
 from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
 
 const firebaseConfig = {
@@ -94,7 +94,8 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const provider = new GoogleAuthProvider();
-  // ✅ Login Function
+
+// ✅ Login Function
 document.getElementById("loginBtn").addEventListener("click", async ()=>{
   const email = document.getElementById("email").value.trim();
   const password = document.getElementById("password").value.trim();
@@ -103,7 +104,7 @@ document.getElementById("loginBtn").addEventListener("click", async ()=>{
   try{
     await signInWithEmailAndPassword(auth, email, password);
     alert("✅ Login successful!");
-    window.location.href = "./pages/business-dashboard.html";
+    window.location.href = "./tools/business-dashboard.html";
   }catch(error){
     alert("❌ Login failed: " + error.message);
   }
@@ -118,7 +119,7 @@ document.getElementById("registerBtn").addEventListener("click", async ()=>{
   try{
     await createUserWithEmailAndPassword(auth, email, password);
     alert("🎉 Account created successfully!");
-    window.location.href = "./pages/business-dashboard.html";
+    window.location.href = "./tools/business-dashboard.html";
   }catch(error){
     alert("❌ Registration failed: " + error.message);
   }
@@ -129,7 +130,7 @@ document.getElementById("googleBtn").addEventListener("click", async ()=>{
   try{
     await signInWithPopup(auth, provider);
     alert("✅ Google login success!");
-    window.location.href = "./pages/business-dashboard.html";
+    window.location.href = "./tools/business-dashboard.html";
   }catch(error){
     alert("❌ Google login failed: " + error.message);
   }
@@ -138,17 +139,15 @@ document.getElementById("googleBtn").addEventListener("click", async ()=>{
 // 📴 Offline Mode
 document.getElementById("offlineBtn").addEventListener("click", ()=>{
   alert("📴 Working in Offline Mode — Data stored locally.");
-  window.location.href = "./pages/business-dashboard.html";
+  window.location.href = "./tools/business-dashboard.html";
 });
-  import { sendPasswordResetEmail, setPersistence, browserLocalPersistence } 
-from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
 
 // 🔄 Remember Session (Stay logged in)
 setPersistence(auth, browserLocalPersistence)
   .then(() => console.log("✅ Session persistence enabled"))
   .catch(err => console.warn("⚠️ Persistence error:", err.message));
 
-// 🔐 Forgot Password (Optional link could be added in UI)
+// 🔐 Forgot Password
 const forgotLink = document.createElement("a");
 forgotLink.textContent = "🔑 Forgot Password?";
 forgotLink.href = "#";
@@ -164,95 +163,7 @@ forgotLink.onclick = async ()=>{
 };
 document.querySelector(".alt-links").appendChild(forgotLink);
 
-// 🌓 Theme Memory Check
-if(localStorage.getItem('theme')==='true') document.body.classList.add('dark');
-  // 🌀 Add Loader Element
-const loader = document.createElement("div");
-loader.id = "loader";
-loader.innerHTML = `<div class="spinner"></div><p>Loading...</p>`;
-document.body.appendChild(loader);
-
-// 💫 Loader Styles
-const style = document.createElement("style");
-style.innerHTML = `
-#loader {
-  position: fixed;
-  top:0; left:0; right:0; bottom:0;
-  background: rgba(0,0,0,0.6);
-  display:flex; flex-direction:column;
-  justify-content:center; align-items:center;
-  color:#fff; font-size:16px; z-index:9999;
-  opacity:0; pointer-events:none;
-  transition: opacity 0.3s ease;
-}
-#loader.show {opacity:1; pointer-events:all;}
-.spinner {
-  border: 4px solid rgba(255,255,255,0.2);
-  border-top: 4px solid #ff7a00;
-  border-radius: 50%;
-  width: 40px; height: 40px;
-  animation: spin 0.8s linear infinite;
-}
-@keyframes spin { 100% { transform: rotate(360deg); } }
-`;
-document.head.appendChild(style);
-
-// 🔄 Show Loader during Firebase operations
-function showLoader(){ loader.classList.add("show"); }
-function hideLoader(){ loader.classList.remove("show"); }
-
-// Wrap auth actions with loader
-async function safeAction(fn){
-  try{
-    showLoader();
-    await fn();
-  }catch(e){ console.error(e); alert(e.message);}
-  finally{ hideLoader(); }
-}
-
-// Modify existing actions with loader
-document.getElementById("loginBtn").onclick = ()=> safeAction(async ()=>{
-  const email=document.getElementById("email").value.trim();
-  const password=document.getElementById("password").value.trim();
-  await signInWithEmailAndPassword(auth,email,password);
-  window.location.href="./pages/business-dashboard.html";
-});
-
-document.getElementById("registerBtn").onclick = ()=> safeAction(async ()=>{
-  const email=document.getElementById("email").value.trim();
-  const password=document.getElementById("password").value.trim();
-  await createUserWithEmailAndPassword(auth,email,password);
-  window.location.href="./pages/business-dashboard.html";
-});
-  // ✨ Fade-in Transition for Page Load
-document.body.style.opacity = 0;
-window.addEventListener("load", () => {
-  document.body.style.transition = "opacity 0.8s ease";
-  document.body.style.opacity = 1;
-});
-
-// 🌙 Theme Button Enhancements
-const themeBtn = document.getElementById("themeToggle");
-if(themeBtn){
-  themeBtn.onclick = () => {
-    document.body.classList.toggle("dark");
-    const dark = document.body.classList.contains("dark");
-    localStorage.setItem("theme", dark);
-    themeBtn.textContent = dark ? "☀️" : "🌙";
-  };
-}
-
-// 🧭 Smooth Scroll Links (optional enhancement)
-document.querySelectorAll('a[href^="#"]').forEach(anchor=>{
-  anchor.addEventListener('click', function(e){
-    e.preventDefault();
-    document.querySelector(this.getAttribute('href'))
-      .scrollIntoView({behavior:'smooth'});
-  });
-});
-
-// ✅ Page Ready
 console.log("%cKharchaSaathi Index Page Loaded Successfully ✨","color:#ff7a00;font-weight:bold;");
-  </script>
+</script>
 </body>
 </html>
