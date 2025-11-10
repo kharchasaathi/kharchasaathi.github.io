@@ -1,177 +1,1938 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <!-- ✅ Google Analytics -->
-  <script async src="https://www.googletagmanager.com/gtag/js?id=G-PZQQQLCZ6B"></script>
-  <script>
-    window.dataLayer = window.dataLayer || [];
-    function gtag(){dataLayer.push(arguments);}
-    gtag('js', new Date());
-    gtag('config', 'G-PZQQQLCZ6B');
-  </script>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>KharchaSaathi — Login</title>
+<meta name="theme-color" content="#ff7a00" />
+<link rel="icon" href="icons/icon-192.png" />
 
-  <!-- ✅ Google AdSense -->
-  <meta name="google-adsense-account" content="ca-pub-2914631277707668">
-  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-2914631277707668" crossorigin="anonymous"></script>
+<style>
+  :root{
+    --orange:#ff7a00; --orange-dark:#cc6300;
+    --bg:#f6f7f9; --card:#ffffff; --text:#222;
+    --muted:#666; --glass: rgba(255,255,255,0.6);
+    --dark-bg:#0f1720; --dark-card:#111318; --dark-text:#e6eef8;
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0;
+    font-family: "Poppins", system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+    background:linear-gradient(180deg,#ffffff 0%, #f3f6fa 100%);
+    color:var(--text);
+    min-height:100vh;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding:20px;
+  }
+  .wrap{
+    width:100%;
+    max-width:920px;
+    display:grid;
+    grid-template-columns: 1fr 420px;
+    gap:28px;
+    align-items:center;
+  }
+  .brand{
+    padding:28px;
+    border-radius:14px;
+    background: linear-gradient(180deg, #fff 0%, #fff 100%);
+    box-shadow:0 8px 30px rgba(15,20,30,0.06);
+  }
+  .brand h1{
+    margin:0 0 8px 0;
+    font-size:32px;color:var(--orange);
+    letter-spacing:0.2px;
+  }
+  .brand p{margin:0;color:var(--muted);font-size:15px;}
+  .hero{
+    margin-top:18px;color:#333;font-size:14px;line-height:1.5;
+  }
 
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="KharchaSaathi — Smart tools to manage rent, expenses, stock, sales, invoices & ledgers with dark mode support. Perfect for both personal and business use.">
-  <meta name="theme-color" content="#ff7a00">
-  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
-  <meta http-equiv="Pragma" content="no-cache" />
-  <meta http-equiv="Expires" content="0" />
+  .card{
+    background:var(--card);
+    border-radius:12px;
+    padding:20px;
+    box-shadow:0 8px 30px rgba(15,20,30,0.06);
+  }
 
-  <!-- ✅ Favicon -->
-  <link rel="icon" type="image/png" href="favicon.ico">
+  .form-row{display:flex;gap:8px;margin-bottom:12px;align-items:center;}
+  label{font-size:13px;color:var(--muted);display:block;margin-bottom:6px;}
+  input[type="email"],input[type="password"],input[type="text"]{
+    width:100%;padding:10px 12px;border-radius:8px;border:1px solid #e3e6ea;font-size:14px;
+    outline:none;background:transparent;
+  }
+  .btn{
+    display:inline-flex;align-items:center;gap:8px;
+    background:var(--orange);color:#fff;border:none;padding:10px 14px;border-radius:8px;
+    cursor:pointer;font-weight:600;
+  }
+  .btn.ghost{background:transparent;color:var(--orange);border:1px solid rgba(255,122,0,0.16);}
+  .social-btn{width:100%;display:flex;justify-content:center;padding:10px;border-radius:8px;border:1px solid #ddd;background:#fff;cursor:pointer}
+  .muted{color:var(--muted);font-size:13px}
 
-  <!-- ✅ App Manifest (PWA) -->
-  <link rel="manifest" href="manifest.json">
-  <link rel="apple-touch-icon" href="icons/icon-512.png">
+  .center{text-align:center}
+  .small{font-size:13px;color:var(--muted)}
+  .row{display:flex;gap:8px;align-items:center}
+  a.link{color:var(--orange);text-decoration:none;font-weight:600}
+  .help{font-size:13px;color:#999;margin-top:8px}
 
-  <!-- ✅ Fonts -->
-  <link rel="preload" href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;800&display=swap" as="style">
+  /* responsive */
+  @media(max-width:900px){
+    .wrap{grid-template-columns:1fr; padding:0}
+  }
 
-  <title>💰 KharchaSaathi — Smart Tools Hub</title>
-
-  <style>
-    :root {
-      --orange: #ff7a00;
-      --orange-dark: #cc6300;
-      --bg-light: #fafafa;
-      --bg-dark: #121212;
-      --text-dark: #222;
-      --text-light: #e8e8e8;
-      --card-light: #ffffff;
-      --card-dark: #1e1e1e;
-      --border-light: rgba(0,0,0,0.05);
-      --border-dark: rgba(255,255,255,0.15);
-      --shadow-light: rgba(0,0,0,0.08);
-      --shadow-dark: rgba(255,255,255,0.05);
-    }
-    *{box-sizing:border-box;}
-    body{
-      font-family:"Poppins",Arial,sans-serif;
-      margin:0;padding:0;
-      background:var(--bg-light);color:var(--text-dark);
-      text-align:center;min-height:100vh;
-      display:flex;flex-direction:column;
-      transition:background .4s,color .4s;
-    }
-    body.dark{background:var(--bg-dark);color:var(--text-light);}
-    h1{font-size:38px;font-weight:800;margin:40px 0 10px;color:var(--orange);}
-    p.subtitle{font-size:16px;color:#666;margin-bottom:30px;}
-    body.dark p.subtitle{color:#bbb;}
-    .theme-toggle{position:fixed;top:14px;right:14px;background:var(--orange);color:#fff;border:none;border-radius:8px;padding:8px 14px;font-size:15px;cursor:pointer;z-index:1000;box-shadow:0 2px 6px var(--shadow-light);}
-    .theme-toggle:hover{background:var(--orange-dark);}
-    .section-title{font-size:20px;font-weight:700;margin:40px 0 20px;text-transform:uppercase;letter-spacing:1px;color:var(--orange);}
-    .tools-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:20px;max-width:960px;margin:auto;padding:0 20px;flex:1;}
-    .tool-card{background:var(--card-light);border-radius:16px;padding:24px;box-shadow:0 4px 12px var(--shadow-light);text-decoration:none;color:var(--text-dark);font-weight:600;transition:all .25s;display:flex;flex-direction:column;align-items:center;min-height:160px;}
-    .tool-card:hover{transform:translateY(-6px);box-shadow:0 6px 18px rgba(0,0,0,.1);background:#fff3e6;}
-    .tool-card span{font-size:34px;margin-bottom:10px;}
-    body.dark .tool-card{background:var(--card-dark);color:var(--text-light);box-shadow:0 3px 8px var(--shadow-dark);}
-    body.dark .tool-card:hover{background:#2a2a2a;box-shadow:0 3px 14px rgba(255,255,255,.08);}
-    footer{margin-top:50px;padding:25px 0;font-size:13px;color:#888;border-top:1px solid var(--border-light);}
-    body.dark footer{color:#aaa;border-top:1px solid var(--border-dark);}
-    small.desc{color:#777;font-size:13px;margin-top:8px;text-align:center;display:block;line-height:1.4em;}
-    body.dark small.desc{color:#bbb;}
-    #helpPopup{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.6);justify-content:center;align-items:center;z-index:9999;}
-    .help-box{background:var(--card-light);color:var(--text-dark);padding:20px;border-radius:12px;max-width:700px;width:90%;max-height:85vh;overflow-y:auto;text-align:left;}
-    body.dark .help-box{background:var(--card-dark);color:var(--text-light);}
-    .help-box h2{text-align:center;color:var(--orange);}
-    .close-btn{background:var(--orange);border:none;color:#fff;padding:6px 10px;border-radius:8px;cursor:pointer;float:right;}
-    .close-btn:hover{background:var(--orange-dark);}
-    @media(max-width:600px){h1{font-size:30px;}.section-title{font-size:18px;}.tool-card{padding:18px;}}
-  </style>
+  /* dark support */
+  body.dark{
+    background:linear-gradient(180deg,var(--dark-bg),#02040a);
+    color:var(--dark-text);
+  }
+  body.dark .card{background:var(--dark-card);box-shadow:0 8px 30px rgba(0,0,0,0.5)}
+  body.dark input{background:#0b0d10;color:var(--dark-text);border:1px solid #222}
+  body.dark .brand{background:transparent}
+  body.dark .muted{color:#92a0b3}
+  .top-actions{display:flex;gap:8px;justify-content:flex-end}
+  .theme-toggle{background:transparent;border:1px solid rgba(0,0,0,0.06);padding:8px;border-radius:10px;cursor:pointer}
+  body.dark .theme-toggle{border-color: rgba(255,255,255,0.06)}
+  .error{background:#ffecec;color:#900;padding:8px;border-radius:8px;margin-bottom:12px}
+  .success{background:#e8fff0;color:#027a3a;padding:8px;border-radius:8px;margin-bottom:12px}
+</style>
 </head>
-
 <body>
-  <button class="theme-toggle" onclick="toggleTheme()">🌙</button>
 
-  <h1>💰 KharchaSaathi</h1>
-  <p class="subtitle">Your Smart Companion for Daily & Business Calculations</p>
-
-  <div class="section-title">Personal Tools</div>
-  <div class="tools-grid">
-    <a class="tool-card" href="tools/rent-split.html"><span>🏠</span>Rent Split Calculator<small class="desc">Split rent among friends easily.</small></a>
-    <a class="tool-card" href="tools/trip-expense-splitter.html"><span>🚗</span>Trip Expense Splitter<small class="desc">Manage shared trip expenses.</small></a>
-    <a class="tool-card" href="tools/water-bill-split.html"><span>💧</span>Water Bill Splitter<small class="desc">Split household water bills.</small></a>
-    <a class="tool-card" href="tools/grocery-split-pro.html"><span>🛒</span>Grocery Split (Pro)<small class="desc">Divide grocery costs clearly.</small></a>
-    <a class="tool-card" href="tools/roomshare-ledger.html"><span>📒</span>RoomShare Ledger Pro<small class="desc">Track shared expenses room-wise.</small></a>
+<div style="width:100%;max-width:1100px;">
+  <div style="display:flex;justify-content:flex-end;margin-bottom:12px;">
+    <button class="theme-toggle" id="themeToggle">🌙 Theme</button>
   </div>
 
-  <div class="section-title">Business Tools</div>
-  <div class="tools-grid">
-    <a class="tool-card" href="tools/business-dashboard.html"><span>📦</span>Business Dashboard<small class="desc">Manage stock, sales & wanting list with PDF export.</small></a>
-    <a class="tool-card" href="tools/invoice-pro.html"><span>🧾</span>Invoice Pro (Smart Billing)<small class="desc">Create, print & share invoices instantly.</small></a>
-    <a class="tool-card" href="tools/gst-bill.html"><span>📄</span>GST Reverse Calculator<small class="desc">Find GST components from totals.</small></a>
-  </div>
+  <div class="wrap">
+    <!-- Left: Brand / Info -->
+    <div class="brand">
+      <h1>📦 KharchaSaathi</h1>
+      <p>Business Dashboard — Secure, Offline-first, Cloud-sync</p>
+      <div class="hero">
+        <p><b>Features:</b></p>
+        <ul style="margin:8px 0 0 18px;color:#444">
+          <li>Offline local storage + optional Firebase cloud sync</li>
+          <li>Stock, Sales, Wanting list — lightweight & fast</li>
+          <li>Secure login via Email or Google</li>
+        </ul>
+      </div>
+      <div class="help" style="margin-top:14px;">
+        Note: Login required to sync data to cloud. You can still use dashboard offline if you skip login.
+      </div>
+    </div>
 
-  <div class="section-title">Guides & Help</div>
-  <div class="tools-grid">
-    <a class="tool-card" href="#" onclick="openHelp()"><span>📘</span>Open Help Center</a>
-  </div>
+    <!-- Right: Auth Card -->
+    <div>
+      <div class="card" id="authCard">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+          <div>
+            <h2 style="margin:0;font-size:20px">Sign in</h2>
+            <div class="small muted">Use email & password or Google</div>
+          </div>
+          <div class="small muted">v2.0</div>
+        </div>
 
-  <footer>© 2025 KharchaSaathi • Built by Abid Ali</footer>
+        <div id="message"></div>
 
-  <div id="helpPopup">
-    <div class="help-box">
-      <button class="close-btn" onclick="closeHelp()">✖ Close</button>
-      <h2>📘 Guides & Help — KharchaSaathi</h2>
-      <ul>
-        <li>🌙 Toggle Dark Mode easily.</li>
-        <li>📦 Manage Stock & Sales in Business Dashboard.</li>
-        <li>📒 Track shared expenses via RoomShare Ledger.</li>
-        <li>🧾 Generate Invoices & GST calculations.</li>
-        <li>💾 All data stored offline in browser.</li>
-      </ul>
+        <!-- Email sign in -->
+        <div id="loginForm">
+          <label for="email">Email</label>
+          <input id="email" type="email" placeholder="you@example.com" autocomplete="username" />
+
+          <label for="password">Password</label>
+          <input id="password" type="password" placeholder="••••••••" autocomplete="current-password" />
+
+          <div style="display:flex;justify-content:space-between;align-items:center;margin:10px 0">
+            <div class="row"><input id="remember" type="checkbox" /> <label style="margin-left:6px;">Remember</label></div>
+            <a href="#" id="showSignup" class="link">Create account</a>
+          </div>
+
+          <div style="display:flex;gap:8px">
+            <button class="btn" id="signinBtn">Sign in</button>
+            <button class="btn ghost" id="skipBtn">Use Offline</button>
+          </div>
+
+          <div style="margin:12px 0" class="center">
+            <div class="muted">or continue with</div>
+          </div>
+
+          <div style="display:grid;gap:8px">
+            <button id="googleBtn" class="social-btn">Continue with Google</button>
+          </div>
+
+          <div class="muted center" style="margin-top:10px">Forgot password? <a href="#" id="forgotLink" class="link">Reset</a></div>
+        </div>
+
+        <!-- Signup form (hidden by default) -->
+        <div id="signupForm" style="display:none">
+          <label for="suEmail">Email</label>
+          <input id="suEmail" type="email" placeholder="you@example.com" />
+          <label for="suPassword">Password (min 6)</label>
+          <input id="suPassword" type="password" placeholder="Choose a password" />
+          <label for="suName">Name (optional)</label>
+          <input id="suName" type="text" placeholder="Your name" />
+
+          <div style="display:flex;gap:8px;margin-top:10px">
+            <button class="btn" id="signupBtn">Create account</button>
+            <button class="btn ghost" id="backToLogin">Back</button>
+          </div>
+        </div>
+
+      </div>
+
+      <div style="margin-top:12px;text-align:center;font-size:13px;color:#888">
+        <div>By continuing you agree to our <a href="#" class="link">Terms</a></div>
+      </div>
     </div>
   </div>
+</div>
 
-  <!-- ✅ Firebase SDK Integration (Updated) -->
+<!-- Firebase + Logic -->
+<script type="module">
+  // --- Theme init / toggle (persist) ---
+  const themeToggle = document.getElementById('themeToggle');
+  if(localStorage.getItem('ks-theme') === 'dark') document.body.classList.add('dark');
+  const setThemeText = ()=> themeToggle.textContent = document.body.classList.contains('dark') ? '☀️ Light' : '🌙 Dark';
+  setThemeText();
+  themeToggle.onclick = ()=>{
+    document.body.classList.toggle('dark');
+    localStorage.setItem('ks-theme', document.body.classList.contains('dark') ? 'dark' : 'light');
+    setThemeText();
+  };
+
+  // --- UI refs ---
+  const emailEl = document.getElementById('email');
+  const passwordEl = document.getElementById('password');
+  const signinBtn = document.getElementById('signinBtn');
+  const googleBtn = document.getElementById('googleBtn');
+  const signupBtn = document.getElementById('signupBtn');
+  const showSignup = document.getElementById('showSignup');
+  const signupForm = document.getElementById('signupForm');
+  const loginForm = document.getElementById('loginForm');
+  const backToLogin = document.getElementById('backToLogin');
+  const message = document.getElementById('message');
+  const skipBtn = document.getElementById('skipBtn');
+  const forgotLink = document.getElementById('forgotLink');
+
+  function showMessage(text, type='error'){ // type: 'error'|'success'
+    message.innerHTML = text ? `<div class="${type==='error' ? 'error' : 'success'}">${text}</div>` : '';
+  }
+
+  // --- Firebase imports & config (modular v11) ---
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
+  import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, GoogleAuthProvider, signInWithPopup, sendPasswordResetEmail, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
+
+  // use your project's config (you already provided earlier)
+  const firebaseConfig = {
+    apiKey: "AIzaSyC1TSwODhcD88-IizbteOGF-bbebAP6Poc",
+    authDomain: "kharchasaathi-main.firebaseapp.com",
+    projectId: "kharchasaathi-main",
+    storageBucket: "kharchasaathi-main.firebasestorage.app",
+    messagingSenderId: "116390837159",
+    appId: "1:116390837159:web:6e3900fa3b25a07d4c9482",
+    measurementId: "G-1M4H9VRSBY"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+  const provider = new GoogleAuthProvider();
+
+  // If user already logged in -> redirect to dashboard
+  onAuthStateChanged(auth, (user) => {
+    if(user){
+      // user is signed in -> go to dashboard
+      // keep a short delay to show success
+      showMessage('Logged in as '+ (user.email || user.displayName), 'success');
+      setTimeout(()=> window.location.href = './dashboard.html', 700);
+    } else {
+      // not signed in -> show login UI (default)
+    }
+  });
+
+  // --- Sign in with email/password ---
+  signinBtn.onclick = async () => {
+    showMessage('');
+    const email = emailEl.value.trim();
+    const pass = passwordEl.value;
+    if(!email || !pass) return showMessage('Enter email & password');
+    signinBtn.disabled = true;
+    signinBtn.textContent = 'Signing in...';
+    try{
+      await signInWithEmailAndPassword(auth, email, pass);
+      // onAuthStateChanged will redirect
+    }catch(err){
+      console.error(err);
+      showMessage(err.message || 'Sign in failed');
+      signinBtn.disabled = false;
+      signinBtn.textContent = 'Sign in';
+    }
+  };
+
+  // --- Sign up flow ---
+  showSignup.onclick = (e)=>{ e.preventDefault(); loginForm.style.display='none'; signupForm.style.display='block'; showMessage(''); };
+  backToLogin.onclick = (e)=>{ e.preventDefault(); signupForm.style.display='none'; loginForm.style.display='block'; showMessage(''); };
+
+  signupBtn.onclick = async () => {
+    showMessage('');
+    const se = document.getElementById('suEmail').value.trim();
+    const sp = document.getElementById('suPassword').value;
+    const name = document.getElementById('suName').value.trim();
+    if(!se || !sp) return showMessage('Enter email and password to create account');
+    if(sp.length < 6) return showMessage('Password must be at least 6 characters');
+    signupBtn.disabled = true;
+    signupBtn.textContent = 'Creating...';
+    try{
+      const cred = await createUserWithEmailAndPassword(auth, se, sp);
+      // optionally set displayName in profile (requires updateProfile import)
+      showMessage('Account created — redirecting...', 'success');
+      // onAuthStateChanged will handle redirect
+    }catch(err){
+      console.error(err);
+      showMessage(err.message || 'Signup failed');
+      signupBtn.disabled = false;
+      signupBtn.textContent = 'Create account';
+    }
+  };
+
+  // --- Google sign-in ---
+  googleBtn.onclick = async () => {
+    showMessage('');
+    googleBtn.disabled = true;
+    googleBtn.textContent = 'Opening Google...';
+    try{
+      await signInWithPopup(auth, provider);
+      // onAuthStateChanged will redirect
+    }catch(err){
+      console.error(err);
+      showMessage(err.message || 'Google sign-in failed');
+      googleBtn.disabled = false;
+      googleBtn.textContent = 'Continue with Google';
+    }
+  };
+
+  // --- Forgot password ---
+  forgotLink.onclick = async (e) => {
+    e.preventDefault();
+    const email = prompt('Enter your account email for reset:');
+    if(!email) return;
+    try{
+      await sendPasswordResetEmail(auth, email);
+      alert('Password reset sent to '+email);
+    }catch(err){
+      alert('Error: '+ (err.message || err));
+    }
+  };
+
+  // --- Skip/offline button: go to dashboard with local-only mode ---
+  skipBtn.onclick = ()=>{
+    // optional: mark in localStorage that user is offline-mode
+    localStorage.setItem('ks-offline', 'true');
+    // direct to dashboard (dashboard should allow offline usage when ks-offline)
+    window.location.href = './dashboard.html';
+  };
+
+  // Small UX: enter key triggers sign in
+  [emailEl, passwordEl].forEach(el=> el.addEventListener('keydown', (ev)=>{
+    if(ev.key === 'Enter') signinBtn.click();
+  }));
+
+</script>
+
+</body>
+</html>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>📦 KharchaSaathi Dashboard v2.0</title>
+<meta name="theme-color" content="#ff7a00">
+<link rel="icon" href="icons/icon-192.png">
+<style>
+:root{
+  --orange:#ff7a00; --orange-dark:#cc6300;
+  --bg:#f6f7f9; --card:#fff; --text:#222; --muted:#666;
+  --dark-bg:#0e0f12; --dark-card:#1b1d22; --dark-text:#f5f7fa; --dark-border:#2d2f34;
+}
+*{box-sizing:border-box;transition:background .25s,color .25s;}
+body{
+  font-family:Poppins,Arial,sans-serif;margin:0;padding:16px;
+  background:var(--bg);color:var(--text);
+}
+body.dark{background:var(--dark-bg);color:var(--dark-text);}
+h1{color:var(--orange);margin:0;}
+.topbar{
+  display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;
+  background:var(--card);padding:10px 14px;border-radius:10px;
+  box-shadow:0 2px 8px rgba(0,0,0,0.06);
+}
+body.dark .topbar{background:var(--dark-card);box-shadow:0 2px 8px rgba(255,255,255,0.05);}
+.theme-btn{background:transparent;border:1px solid rgba(0,0,0,0.15);
+  border-radius:8px;padding:6px 12px;cursor:pointer;color:var(--orange);}
+body.dark .theme-btn{border:1px solid var(--dark-border);color:#ffd1a1;}
+
+.tabs{display:flex;gap:10px;margin:16px 0;justify-content:center;flex-wrap:wrap;}
+.tab{background:#eee;padding:8px 12px;border-radius:8px;cursor:pointer;font-weight:600;}
+body.dark .tab{background:#202226;color:#aaa;}
+.tab.active{background:var(--orange);color:#fff;}
+
+.section{display:none;background:var(--card);padding:14px;border-radius:10px;
+  box-shadow:0 4px 14px rgba(0,0,0,0.06);}
+.section.active{display:block;}
+body.dark .section{background:var(--dark-card);box-shadow:0 0 8px rgba(255,255,255,0.04);}
+
+input,select{padding:6px 10px;border:1px solid #ccc;border-radius:6px;
+  font-size:14px;margin:4px;}
+body.dark input,body.dark select{background:#222;color:#fff;border:1px solid var(--dark-border);}
+
+table{width:100%;border-collapse:collapse;margin-top:12px;}
+th,td{padding:8px;border:1px solid #ddd;text-align:center;font-size:13px;}
+th{background:var(--orange);color:#fff;}
+body.dark th{background:var(--orange-dark);}
+.low{color:#ffb84d;font-weight:700;}
+.out{color:#ff5c5c;font-weight:700;}
+.ok{color:#5cf07a;font-weight:700;}
+
+button.small-btn,button.action-btn{
+  background:var(--orange);border:none;color:#fff;padding:6px 10px;
+  border-radius:6px;cursor:pointer;margin:2px;
+}
+button.small-btn:hover{background:var(--orange-dark);}
+.footer{text-align:center;margin-top:20px;color:var(--muted);font-size:13px;}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <h1>📊 KharchaSaathi v2.0</h1>
+  <div style="display:flex;align-items:center;gap:8px;">
+    <span id="userStatus" style="font-size:13px;color:var(--muted);"></span>
+    <button class="theme-btn" id="themeBtn">🌙</button>
+    <button class="small-btn" id="logoutBtn">🚪 Logout</button>
+  </div>
+</div>
+
+<div class="tabs">
+  <div class="tab active" data-tab="types">🗂 Types</div>
+  <div class="tab" data-tab="stock">📦 Stock</div>
+  <div class="tab" data-tab="sales">💰 Sales</div>
+  <div class="tab" data-tab="wanting">🛒 Wanting</div>
+</div>
+
+<!-- TYPES -->
+<section id="types" class="section active">
+  <h3>🗂 Manage Item Types</h3>
+  <input type="text" id="typeName" placeholder="Add new type">
+  <button class="small-btn" onclick="addType()">Add</button>
+  <button class="small-btn" onclick="clearTypes()">Clear All</button>
+  <ul id="typeList" style="margin-top:10px;padding-left:18px;"></ul>
+</section>
+
+<!-- STOCK -->
+<section id="stock" class="section">
+  <h3>📦 Current Stock</h3>
+  <div style="margin-bottom:10px;">
+    <label>Low Stock Limit:</label>
+    <input type="number" id="globalLimit" placeholder="2" style="width:70px;">
+    <button class="small-btn" onclick="setGlobalLimit()">Set</button>
+  </div>
+  <input type="date" id="pdate">
+  <select id="ptype"></select>
+  <input type="text" id="pname" placeholder="Product name">
+  <input type="number" id="pqty" placeholder="Qty">
+  <button class="small-btn" onclick="addStock()">Add</button>
+
+  <br><br>
+  <label><b>Filter:</b></label>
+  <select id="filterType" onchange="renderStock()">
+    <option value="all">All</option>
+  </select>
+
+  <table id="stockTable">
+    <thead>
+      <tr>
+        <th>Date</th><th>Type</th><th>Product</th><th>Qty</th>
+        <th>Sold</th><th>Remain</th><th>Status</th><th>Limit</th><th>Action</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+</section>
+
+<!-- SALES -->
+<section id="sales" class="section">
+  <h3>💰 Sales Records</h3>
+  <button class="small-btn" onclick="clearSales()">🧹 Clear</button>
+  <table id="salesTable">
+    <thead><tr><th>Date</th><th>Type</th><th>Product</th><th>Qty</th><th>₹ Price</th><th>₹ Total</th><th>Status</th></tr></thead>
+    <tbody></tbody>
+    <tfoot><tr><td colspan="5" style="text-align:right">Total:</td><td id="totalSales">0</td><td></td></tr></tfoot>
+  </table>
+</section>
+
+<!-- WANTING -->
+<section id="wanting" class="section">
+  <h3>🛒 Wanting List</h3>
+  <input type="date" id="wdate">
+  <select id="wtype"></select>
+  <input type="text" id="witem" placeholder="Item name">
+  <button class="small-btn" onclick="addWant()">Add</button>
+  <table id="wantTable">
+    <thead><tr><th>Date</th><th>Type</th><th>Item</th><th>Action</th></tr></thead>
+    <tbody></tbody>
+  </table>
+</section>
+
+<div class="footer">
+  <div>💾 Offline-First Mode | Cloud Sync available after Login</div>
+</div>
+
+<script>
+// 🌙 Theme Setup
+if(localStorage.getItem('ks-theme') === 'dark') document.body.classList.add('dark');
+document.getElementById('themeBtn').onclick = ()=>{
+  document.body.classList.toggle('dark');
+  localStorage.setItem('ks-theme', document.body.classList.contains('dark') ? 'dark' : 'light');
+  document.getElementById('themeBtn').textContent = document.body.classList.contains('dark') ? '☀️' : '🌙';
+};
+
+// 🗂 Tabs
+document.querySelectorAll('.tab').forEach(tab=>{
+  tab.onclick = ()=>{
+    document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+    document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
+    tab.classList.add('active');
+    document.getElementById(tab.dataset.tab).classList.add('active');
+  };
+});
+
+// 🧠 Local Data Keys
+const K_TYPES='item-types',K_STOCK='stock-data',K_SALES='sales-data',K_WANT='wanting-data',K_LIMIT='default-limit';
+let types=JSON.parse(localStorage.getItem(K_TYPES)||'[]'),
+    stock=JSON.parse(localStorage.getItem(K_STOCK)||'[]'),
+    sales=JSON.parse(localStorage.getItem(K_SALES)||'[]'),
+    want=JSON.parse(localStorage.getItem(K_WANT)||'[]');
+
+// 💾 Save All
+function saveAll(){
+  localStorage.setItem(K_TYPES,JSON.stringify(types));
+  localStorage.setItem(K_STOCK,JSON.stringify(stock));
+  localStorage.setItem(K_SALES,JSON.stringify(sales));
+  localStorage.setItem(K_WANT,JSON.stringify(want));
+}
+
+// TYPES
+function addType(){
+  const t=document.getElementById('typeName').value.trim();
+  if(!t)return alert("Enter type name");
+  if(types.includes(t))return alert("Already exists");
+  types.push(t);saveAll();renderTypes();updateDropdowns();
+  document.getElementById('typeName').value='';
+}
+function clearTypes(){if(confirm("Clear all?")){types=[];saveAll();renderTypes();updateDropdowns();}}
+function renderTypes(){
+  document.getElementById('typeList').innerHTML=types.map(t=>`<li>${t}</li>`).join('')||'<li>No types</li>';
+}
+function updateDropdowns(){
+  ['ptype','wtype','filterType'].forEach(id=>{
+    const el=document.getElementById(id);if(!el)return;
+    let extra=id==='filterType'?'<option value="all">All</option>':'<option value="">Select</option>';
+    el.innerHTML=extra+types.map(t=>`<option value="${t}">${t}</option>`).join('');
+  });
+}
+
+// STOCK
+function addStock(){
+  const d=document.getElementById('pdate').value,
+  t=document.getElementById('ptype').value,
+  n=document.getElementById('pname').value.trim(),
+  q=parseInt(document.getElementById('pqty').value);
+  if(!d||!t||!n||!q)return alert("Fill all fields");
+  const ex=stock.find(s=>s.type===t&&s.name.toLowerCase()===n.toLowerCase());
+  if(ex){ex.qty+=q;ex.date=d;}else{stock.push({date:d,type:t,name:n,qty:q,sold:0});}
+  saveAll();renderStock();
+}
+function renderStock(){
+  const f=document.getElementById('filterType').value;
+  const tb=document.querySelector('#stockTable tbody');
+  const limit=parseInt(localStorage.getItem(K_LIMIT)||'0');
+  tb.innerHTML=stock.filter(s=>f==='all'||s.type===f).map((s,i)=>{
+    const rem=s.qty-(s.sold||0);
+    let cls='ok',st='OK';
+    if(rem<=0){cls='out';st='OUT';}else if(rem<=limit){cls='low';st='LOW';}
+    return `<tr><td>${s.date}</td><td>${s.type}</td><td>${s.name}</td>
+    <td>${s.qty}</td><td>${s.sold||0}</td><td>${rem}</td>
+    <td class="${cls}">${st}</td><td>${limit}</td>
+    <td><button class="small-btn" onclick="sellItem(${i},'Paid')">💰</button>
+    <button class="small-btn" onclick="sellItem(${i},'Credit')">📒</button></td></tr>`;
+  }).join('');
+}
+function setGlobalLimit(){
+  const v=parseInt(document.getElementById('globalLimit').value);
+  if(isNaN(v)||v<0)return alert("Invalid");
+  localStorage.setItem(K_LIMIT,v);
+  alert("Limit set "+v);
+}
+function sellItem(i,st){
+  const s=stock[i];const rem=s.qty-(s.sold||0);
+  if(rem<=0)return alert("No stock");
+  const q=parseInt(prompt(`Qty (max ${rem})`));if(!q||q>rem)return;
+  const p=parseFloat(prompt("Price ₹:"));if(!p)return;
+  const date=new Date().toISOString().split('T')[0];
+  s.sold=(s.sold||0)+q;
+  sales.push({date,type:s.type,product:s.name,qty:q,price:p,amount:q*p,status:st});
+  saveAll();renderStock();renderSales();
+}
+
+// SALES
+function renderSales(){
+  let t=0;const tb=document.querySelector('#salesTable tbody');
+  tb.innerHTML=sales.map(s=>{t+=s.amount;return `<tr><td>${s.date}</td><td>${s.type}</td><td>${s.product}</td><td>${s.qty}</td><td>${s.price}</td><td>${s.amount}</td><td>${s.status}</td></tr>`;}).join('');
+  document.getElementById('totalSales').textContent=t;
+}
+function clearSales(){if(confirm("Clear sales?")){sales=[];saveAll();renderSales();}}
+
+// WANTING
+function addWant(){
+  const d=document.getElementById('wdate').value,
+  t=document.getElementById('wtype').value,
+  i=document.getElementById('witem').value.trim();
+  if(!d||!t||!i)return alert("Fill all fields");
+  want.push({date:d,type:t,item:i});saveAll();renderWant();
+}
+function renderWant(){
+  const tb=document.querySelector('#wantTable tbody');
+  tb.innerHTML=want.map((w,i)=>`<tr><td>${w.date}</td><td>${w.type}</td><td>${w.item}</td>
+  <td><button class="small-btn" onclick="restock(${i})">✅</button>
+  <button class="small-btn" onclick="delWant(${i})">🗑</button></td></tr>`).join('');
+}
+function restock(i){
+  const q=parseInt(prompt("Restock qty:"));
+  if(!q)return;
+  const w=want[i];
+  const ex=stock.find(s=>s.type===w.type&&s.name.toLowerCase()===w.item.toLowerCase());
+  const date=new Date().toISOString().split('T')[0];
+  if(ex){ex.qty+=q;}else{stock.push({date,type:w.type,name:w.item,qty:q,sold:0});}
+  want.splice(i,1);saveAll();renderStock();renderWant();
+}
+function delWant(i){want.splice(i,1);saveAll();renderWant();}
+
+// 🧩 Initialize
+renderTypes();updateDropdowns();renderStock();renderSales();renderWant();
+
+// LOGOUT (we'll link Firebase later)
+document.getElementById('logoutBtn').onclick=()=>{
+  localStorage.removeItem('ks-offline');
+  window.location.href='./index.html';
+};
+</script>
+</body>
+</html>
+<!-- 🌩️ Firebase Cloud Sync -->
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
+import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
+import { getFirestore, doc, setDoc, getDoc, updateDoc } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyC1TSwODhcD88-IizbteOGF-bbebAP6Poc",
+  authDomain: "kharchasaathi-main.firebaseapp.com",
+  projectId: "kharchasaathi-main",
+  storageBucket: "kharchasaathi-main.firebasestorage.app",
+  messagingSenderId: "116390837159",
+  appId: "1:116390837159:web:6e3900fa3b25a07d4c9482",
+  measurementId: "G-1M4H9VRSBY"
+};
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+
+const userStatus = document.getElementById('userStatus');
+
+// 🔄 Check auth state
+onAuthStateChanged(auth, async (user) => {
+  if(!user){
+    if(localStorage.getItem('ks-offline') === 'true'){
+      userStatus.textContent = "Offline Mode 📴";
+      console.log("Offline mode active, no Firebase sync");
+      return;
+    }
+    // redirect to login if not in offline mode
+    window.location.href = './index.html';
+    return;
+  }
+
+  // Logged-in user detected ✅
+  userStatus.textContent = `Online ☁️ (${user.email})`;
+  console.log("Firebase user:", user.email);
+
+  const userDoc = doc(db, "users", user.uid, "business_data", "dashboard");
+
+  try {
+    const snapshot = await getDoc(userDoc);
+    if(snapshot.exists()){
+      const cloudData = snapshot.data();
+      console.log("☁️ Cloud data fetched:", cloudData);
+
+      // Merge logic (avoid overwrite)
+      if(cloudData.stock && Array.isArray(cloudData.stock)){
+        const localStock = JSON.parse(localStorage.getItem('stock-data')||'[]');
+        const merged = mergeUnique(localStock, cloudData.stock, 'name');
+        localStorage.setItem('stock-data', JSON.stringify(merged));
+        console.log("Stock merged from cloud:", merged.length);
+      }
+
+      if(cloudData.sales && Array.isArray(cloudData.sales)){
+        const localSales = JSON.parse(localStorage.getItem('sales-data')||'[]');
+        const mergedSales = mergeUnique(localSales, cloudData.sales, 'product');
+        localStorage.setItem('sales-data', JSON.stringify(mergedSales));
+      }
+
+    } else {
+      // first-time sync
+      await setDoc(userDoc, {
+        stock: JSON.parse(localStorage.getItem('stock-data')||'[]'),
+        sales: JSON.parse(localStorage.getItem('sales-data')||'[]'),
+        want: JSON.parse(localStorage.getItem('wanting-data')||'[]'),
+        createdAt: new Date().toLocaleString()
+      });
+      console.log("☁️ Initial cloud data created");
+    }
+
+    // After merge, re-render
+    renderStock(); renderSales(); renderWant();
+
+    // Periodic sync every 60 sec
+    setInterval(syncToCloud, 60000);
+
+  } catch (err){
+    console.error("⚠️ Cloud sync error:", err);
+    userStatus.textContent = "Sync Error ⚠️ (offline cached)";
+  }
+});
+
+// 🧠 Merge helper (unique by key)
+function mergeUnique(localArr, cloudArr, key){
+  const merged = [...localArr];
+  cloudArr.forEach(c=>{
+    if(!merged.find(l=>l[key]?.toLowerCase()===c[key]?.toLowerCase())){
+      merged.push(c);
+    }
+  });
+  return merged;
+}
+
+// ☁️ Sync Local → Cloud
+async function syncToCloud(){
+  const user = auth.currentUser;
+  if(!user) return;
+  const userDoc = doc(db, "users", user.uid, "business_data", "dashboard");
+  const payload = {
+    stock: JSON.parse(localStorage.getItem('stock-data')||'[]'),
+    sales: JSON.parse(localStorage.getItem('sales-data')||'[]'),
+    want: JSON.parse(localStorage.getItem('wanting-data')||'[]'),
+    lastSync: new Date().toLocaleString()
+  };
+  try{
+    await updateDoc(userDoc, payload);
+    console.log("✅ Synced to cloud @", payload.lastSync);
+    userStatus.textContent = "☁️ Synced " + new Date().toLocaleTimeString();
+  }catch(err){
+    console.warn("⚠️ Sync failed (will retry):", err);
+  }
+}
+
+// 🚪 Logout handler (with Firebase)
+document.getElementById('logoutBtn').onclick = async ()=>{
+  try{
+    await signOut(auth);
+    localStorage.removeItem('ks-offline');
+    window.location.href='./index.html';
+  }catch(err){
+    alert("Logout error: "+err.message);
+  }
+};
+</script>
+<!-- 🌤️ PART 3 — Cloud Backup UI & Status -->
+<script>
+const syncPanel = document.createElement('div');
+syncPanel.style.cssText = `
+  position:fixed;bottom:14px;right:14px;
+  background:var(--card);padding:10px 14px;
+  border-radius:10px;box-shadow:0 3px 10px rgba(0,0,0,0.15);
+  font-size:13px;color:var(--text);z-index:2000;
+`;
+syncPanel.innerHTML = `
+  <div style="display:flex;align-items:center;gap:10px;">
+    <div id="syncDot" style="width:10px;height:10px;border-radius:50%;background:#ccc;"></div>
+    <div id="syncText">Status: Checking...</div>
+    <button id="syncNowBtn" style="background:var(--orange);border:none;color:#fff;padding:6px 10px;border-radius:6px;cursor:pointer;">Sync Now</button>
+  </div>
+`;
+document.body.appendChild(syncPanel);
+
+let syncState = 'offline'; // offline, online, syncing
+let lastSyncTime = localStorage.getItem('lastSyncTime') || 'Never';
+
+function updateSyncUI(state){
+  const dot = document.getElementById('syncDot');
+  const txt = document.getElementById('syncText');
+  syncState = state;
+  if(state==='syncing'){dot.style.background='#ffb84d';txt.textContent='Syncing...';}
+  else if(state==='online'){dot.style.background='#4eff90';txt.textContent='Online • Last Sync: '+lastSyncTime;}
+  else{dot.style.background='#ff5c5c';txt.textContent='Offline Mode';}
+}
+
+// Auto-detect network changes
+window.addEventListener('online', ()=>updateSyncUI('online'));
+window.addEventListener('offline', ()=>updateSyncUI('offline'));
+if(navigator.onLine) updateSyncUI('online'); else updateSyncUI('offline');
+
+// Manual Sync button (works with Part 2B functions)
+document.getElementById('syncNowBtn').onclick = async ()=>{
+  if(typeof syncToCloud !== 'function'){alert('Cloud sync not initialized');return;}
+  updateSyncUI('syncing');
+  try{
+    await syncToCloud();
+    lastSyncTime = new Date().toLocaleTimeString();
+    localStorage.setItem('lastSyncTime',lastSyncTime);
+    updateSyncUI('online');
+  }catch(e){
+    console.warn('Manual Sync error',e);
+    updateSyncUI('offline');
+  }
+};
+
+// Refresh indicator every minute
+setInterval(()=>{
+  if(navigator.onLine) updateSyncUI('online');
+  else updateSyncUI('offline');
+},60000);
+</script>
+<!-- 🌈 PART 4 — Pro UI + Analytics -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+const analyticsSection = document.createElement('section');
+analyticsSection.id = "analytics";
+analyticsSection.className = "section";
+analyticsSection.innerHTML = `
+  <h3>📊 Business Analytics</h3>
+  <div style="display:flex;flex-wrap:wrap;gap:16px;justify-content:center;margin:20px 0;">
+    <div class="cardGlass" id="totalSalesCard"><h2>₹ 0</h2><p>Total Sales</p></div>
+    <div class="cardGlass" id="stockCard"><h2>0</h2><p>Stock Items</p></div>
+    <div class="cardGlass" id="lowStockCard"><h2>0</h2><p>Low Stock Alerts</p></div>
+  </div>
+  <canvas id="salesChart" height="160"></canvas>
+  <canvas id="stockChart" height="160" style="margin-top:30px;"></canvas>
+`;
+document.querySelector('.footer').before(analyticsSection);
+
+const chartStyle = document.createElement('style');
+chartStyle.textContent = `
+  .cardGlass{
+    flex:1 1 200px;
+    background:rgba(255,255,255,0.15);
+    backdrop-filter:blur(10px);
+    border-radius:12px;
+    padding:14px 18px;
+    text-align:center;
+    color:var(--text);
+    box-shadow:0 4px 16px rgba(0,0,0,0.1);
+  }
+  body.dark .cardGlass{
+    background:rgba(30,30,30,0.4);
+    color:var(--dark-text);
+    box-shadow:0 4px 12px rgba(255,255,255,0.05);
+  }
+  .cardGlass h2{margin:0;font-size:26px;color:var(--orange);}
+  .cardGlass p{margin:6px 0 0;font-size:13px;color:#888;}
+`;
+document.head.appendChild(chartStyle);
+
+// Update Analytics data from local storage
+function updateAnalytics(){
+  const sales = JSON.parse(localStorage.getItem('sales-data')||'[]');
+  const stock = JSON.parse(localStorage.getItem('stock-data')||'[]');
+  const limit = parseInt(localStorage.getItem('default-limit')||'0');
+
+  const totalSales = sales.reduce((a,b)=>a+(b.amount||0),0);
+  const totalStock = stock.length;
+  const lowStock = stock.filter(s=>(s.qty-(s.sold||0))<=limit).length;
+
+  document.querySelector('#totalSalesCard h2').textContent = "₹ "+totalSales;
+  document.querySelector('#stockCard h2').textContent = totalStock;
+  document.querySelector('#lowStockCard h2').textContent = lowStock;
+
+  drawSalesChart(sales);
+  drawStockChart(stock);
+}
+
+// Charts setup
+let salesChart, stockChart;
+function drawSalesChart(sales){
+  const ctx = document.getElementById('salesChart').getContext('2d');
+  const dates = [...new Set(sales.map(s=>s.date))];
+  const totals = dates.map(d=>sales.filter(s=>s.date===d)
+   .reduce((a,b)=>a+(b.amount||0),0));
+  if(salesChart) salesChart.destroy();
+  salesChart = new Chart(ctx,{type:'line',
+   data:{labels:dates,
+   datasets:[{label:'Daily Sales ₹',data:totals,borderWidth:2,tension:0.3}]},
+   options:{plugins:{legend:{display:false}},
+   scales:{y:{beginAtZero:true}}}});
+}
+function drawStockChart(stock){
+  const ctx = document.getElementById('stockChart').getContext('2d');
+  const types = [...new Set(stock.map(s=>s.type))];
+  const quantities = types.map(t=>stock.filter(s=>s.type===t)
+   .reduce((a,b)=>a+b.qty-(b.sold||0),0));
+  if(stockChart) stockChart.destroy();
+  stockChart = new Chart(ctx,{type:'bar',
+   data:{labels:types,
+   datasets:[{label:'Stock by Type',data:quantities,borderWidth:1}]},
+   options:{plugins:{legend:{display:false}},
+   scales:{y:{beginAtZero:true}}}});
+}
+
+// Auto-update on render / sync
+updateAnalytics();
+setInterval(updateAnalytics, 30000);
+</script>
+<!-- 🤖 PART 5 — AI Predictor + Voice Assistant -->
+<script>
+const aiSection = document.createElement('section');
+aiSection.id = "aiPredictor";
+aiSection.className = "section";
+aiSection.innerHTML = `
+  <h3>🤖 AI Expense Predictor & Voice Assistant</h3>
+  <div class="aiContainer">
+    <div class="cardGlass" id="predictCard">
+      <h2>₹ 0</h2>
+      <p>Next 7-Day Sales Forecast</p>
+    </div>
+    <button id="voiceBtn" class="action-btn">🎤 Ask Kharcha AI</button>
+    <div id="voiceOutput" style="margin-top:10px;font-size:14px;color:#888;"></div>
+  </div>
+`;
+document.querySelector('.footer-btns').before(aiSection);
+
+// Styles
+const aiStyle = document.createElement('style');
+aiStyle.textContent = `
+  .aiContainer{display:flex;flex-direction:column;align-items:center;gap:14px;}
+  #voiceBtn{font-size:15px;padding:8px 16px;}
+  #voiceOutput{min-height:22px;}
+`;
+document.head.appendChild(aiStyle);
+
+// Predictor Logic
+function predictNextWeek(){
+  const sales = JSON.parse(localStorage.getItem('sales-data') || '[]');
+  if(!sales.length) return 0;
+  const daily = {};
+  sales.forEach(s => {daily[s.date] = (daily[s.date] || 0) + s.amount;});
+  const vals = Object.values(daily);
+  const avg = vals.reduce((a,b)=>a+b,0) / vals.length;
+  const trend = (vals[vals.length-1] - vals[0]) / vals.length;
+  return Math.round((avg + trend) * 7);
+}
+
+// Update forecast
+function updatePrediction(){
+  const forecast = predictNextWeek();
+  document.querySelector('#predictCard h2').textContent = "₹ " + forecast;
+}
+updatePrediction();
+setInterval(updatePrediction, 60000);
+
+// Voice Assistant (Speech Recognition)
+const voiceBtn = document.getElementById('voiceBtn');
+const output = document.getElementById('voiceOutput');
+if('webkitSpeechRecognition' in window){
+  const recognition = new webkitSpeechRecognition();
+  recognition.lang = 'en-IN';
+  recognition.continuous = false;
+  recognition.interimResults = false;
+
+  voiceBtn.onclick = ()=>{
+    output.textContent = "🎙️ Listening…";
+    recognition.start();
+  };
+
+  recognition.onresult = (event)=>{
+    const query = event.results[0][0].transcript.toLowerCase();
+    output.textContent = "🗣️ " + query;
+    handleVoiceQuery(query);
+  };
+}else{
+  voiceBtn.disabled = true;
+  output.textContent = "Voice Recognition not supported on this browser.";
+}
+
+// Handle voice queries
+function handleVoiceQuery(q){
+  const sales = JSON.parse(localStorage.getItem('sales-data') || '[]');
+  const stock = JSON.parse(localStorage.getItem('stock-data') || '[]');
+  if(q.includes('sell') || q.includes('sales')){
+    const total = sales.reduce((a,b)=>a+(b.amount||0),0);
+    output.textContent = `💬 Total sales so far ₹ ${total}`;
+  }else if(q.includes('stock')){
+    output.textContent = `📦 You have ${stock.length} items in stock.`;
+  }else if(q.includes('low')){
+    const limit = parseInt(localStorage.getItem('default-limit')||'0');
+    const low = stock.filter(s=>(s.qty-(s.sold||0))<=limit).length;
+    output.textContent = `⚠️ ${low} items are low in stock.`;
+  }else if(q.includes('predict') || q.includes('forecast')){
+    const f = predictNextWeek();
+    output.textContent = `🤖 Predicted 7-day sales: ₹ ${f}`;
+  }else{
+    output.textContent = "🤔 Sorry, I didn't get that.";
+  }
+}
+</script>
+<!-- 🧾 PART 6 — AI Report Generator -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
+
+<script>
+const reportSection = document.createElement('section');
+reportSection.id = "reportGenerator";
+reportSection.className = "section";
+reportSection.innerHTML = `
+  <h3>📄 Business Report & AI Insights</h3>
+  <div class="aiContainer">
+    <button id="genReport" class="action-btn">📊 Generate Report (PDF)</button>
+    <div id="insightBox" class="cardGlass" style="margin-top:14px;">
+      <h3>💡 Smart Insights</h3>
+      <ul id="insightList" style="list-style:none;padding-left:0;margin:10px 0;text-align:left;"></ul>
+    </div>
+  </div>
+`;
+document.querySelector('.footer-btns').before(reportSection);
+
+// 🔍 AI Smart Insights
+function generateInsights(){
+  const sales = JSON.parse(localStorage.getItem('sales-data') || '[]');
+  const stock = JSON.parse(localStorage.getItem('stock-data') || '[]');
+  const limit = parseInt(localStorage.getItem('default-limit')||'0');
+
+  let insights = [];
+  if(!sales.length) {
+    insights.push("❌ No sales data available.");
+  } else {
+    const totalSales = sales.reduce((a,b)=>a+(b.amount||0),0);
+    const avgSale = (totalSales / sales.length).toFixed(2);
+    const topProduct = [...sales].sort((a,b)=>b.amount - a.amount)[0]?.product || "N/A";
+    const lowStock = stock.filter(s=>(s.qty-(s.sold||0))<=limit).length;
+
+    insights.push(`💰 Total Sales: ₹${totalSales}`);
+    insights.push(`📈 Avg Sale per Entry: ₹${avgSale}`);
+    insights.push(`🏆 Top Selling Product: ${topProduct}`);
+    insights.push(`⚠️ Low Stock Items: ${lowStock}`);
+  }
+
+  document.getElementById("insightList").innerHTML = insights.map(i=>`<li>${i}</li>`).join('');
+}
+generateInsights();
+
+// 📄 PDF Generator
+document.getElementById('genReport').onclick = async ()=>{
+  const { jsPDF } = window.jspdf;
+  const pdf = new jsPDF('p','mm','a4');
+  
+  const dashboard = document.body;
+  const canvas = await html2canvas(dashboard,{scale:1.2,backgroundColor:null});
+  const imgData = canvas.toDataURL('image/png');
+  const pageWidth = pdf.internal.pageSize.getWidth();
+  const pageHeight = pdf.internal.pageSize.getHeight();
+  const imgHeight = (canvas.height * pageWidth) / canvas.width;
+  
+  pdf.addImage(imgData,'PNG',0,0,pageWidth,imgHeight);
+  pdf.save(`KharchaSaathi_Report_${new Date().toLocaleDateString()}.pdf`);
+  alert("✅ Report generated successfully!");
+};
+</script>
+{
+  "name": "KharchaSaathi",
+  "short_name": "KharchaSaathi",
+  "start_url": "index.html",
+  "display": "standalone",
+  "background_color": "#ff7a00",
+  "theme_color": "#ff7a00",
+  "orientation": "portrait",
+  "description": "Smart Business Dashboard + Expense Manager with AI & Cloud Sync",
+  "icons": [
+    {
+      "src": "icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
+const CACHE_NAME = "kharcha-saathi-v1";
+const ASSETS = [
+  "/",
+  "/index.html",
+  "/tools/business-dashboard.html",
+  "/manifest.json",
+  "/icons/icon-192.png",
+  "/icons/icon-512.png",
+  "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js"
+];
+
+// install
+self.addEventListener("install", e => {
+  e.waitUntil(
+    caches.open(CACHE_NAME).then(cache => cache.addAll(ASSETS))
+  );
+  self.skipWaiting();
+});
+
+// activate
+self.addEventListener("activate", e => {
+  e.waitUntil(
+    caches.keys().then(keys =>
+      Promise.all(keys.filter(k => k !== CACHE_NAME).map(k => caches.delete(k)))
+    )
+  );
+  self.clients.claim();
+});
+
+// fetch
+self.addEventListener("fetch", e => {
+  e.respondWith(
+    caches.match(e.request).then(res =>
+      res || fetch(e.request).then(fetchRes => {
+        return caches.open(CACHE_NAME).then(cache => {
+          cache.put(e.request, fetchRes.clone());
+          return fetchRes;
+        });
+      }).catch(() => caches.match("/index.html"))
+    )
+  );
+});
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#ff7a00">
+<link rel="apple-touch-icon" href="icons/icon-512.png">
+<script>
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('/service-worker.js')
+    .then(() => console.log('✅ Service Worker Registered — PWA Active'))
+    .catch(err => console.error('❌ SW Error:', err));
+}
+</script>
+<!-- ✅ PART 8: Browser Notifications -->
+<script type="module">
+import { getMessaging, getToken, onMessage } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-messaging.js";
+
+const messaging = getMessaging();
+
+async function requestPermission() {
+  const permission = await Notification.requestPermission();
+  if (permission === 'granted') {
+    console.log('✅ Notification permission granted.');
+    getToken(messaging, {
+      vapidKey: "BNz3CzPuv0nBx-MyDummyVapidKeyExample"
+    }).then(token => {
+      console.log('🔔 Token:', token);
+      localStorage.setItem('fcm_token', token);
+    });
+  } else {
+    console.log('❌ Notification permission denied.');
+  }
+}
+
+onMessage(messaging, (payload) => {
+  new Notification("📢 KharchaSaathi Alert", {
+    body: payload.notification.body,
+    icon: "icons/icon-192.png"
+  });
+});
+
+requestPermission();
+</script>
+<!-- ✅ PART 9: Cloud Sync + Business Analytics Charts -->
+<script type="module">
+import { getFirestore, collection, addDoc, getDocs, query, orderBy, limit } 
+from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
+import { initializeApp } 
+from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
+import { getAuth, onAuthStateChanged } 
+from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
+import { Chart, registerables } 
+from "https://cdn.jsdelivr.net/npm/chart.js";
+
+Chart.register(...registerables);
+
+const firebaseConfig = {
+  apiKey: "AIzaSyC1TSwODhcD88-IizbteOGF-bbebAP6Poc",
+  authDomain: "kharchasaathi-main.firebaseapp.com",
+  projectId: "kharchasaathi-main",
+  storageBucket: "kharchasaathi-main.firebasestorage.app",
+  messagingSenderId: "116390837159",
+  appId: "1:116390837159:web:6e3900fa3b25a07d4c9482",
+  measurementId: "G-1M4H9VRSBY"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+const auth = getAuth(app);
+
+const syncStatus = document.createElement('div');
+syncStatus.id = "syncStatus";
+syncStatus.style.cssText = `
+  position:fixed;bottom:10px;right:10px;
+  background:#ff7a00;color:white;
+  padding:6px 14px;border-radius:8px;
+  font-size:13px;z-index:1000;
+`;
+document.body.appendChild(syncStatus);
+
+onAuthStateChanged(auth, async (user) => {
+  if (!user) {
+    syncStatus.textContent = "⚠️ Login required for Cloud Sync";
+    return;
+  }
+
+  syncStatus.textContent = "☁️ Syncing data...";
+  
+  try {
+    const userId = user.uid;
+    const ref = collection(db, "users", userId, "business_data", "sales_records");
+
+    // Save all local sales data to Firebase
+    const allSales = JSON.parse(localStorage.getItem('sales-data') || '[]');
+    for (let sale of allSales) {
+      await addDoc(ref, sale);
+    }
+
+    syncStatus.textContent = "✅ Synced Successfully";
+
+    // Fetch latest sales data for chart
+    const q = query(ref, orderBy("date", "desc"), limit(10));
+    const docs = await getDocs(q);
+    const salesData = [];
+    docs.forEach(doc => salesData.push(doc.data()));
+
+    renderSalesChart(salesData.reverse());
+  } 
+  catch (e) {
+    console.error("❌ Cloud Sync Error:", e);
+    syncStatus.textContent = "⚠️ Sync failed";
+  }
+});
+
+function renderSalesChart(data){
+  const chartContainer = document.createElement('div');
+  chartContainer.innerHTML = `<canvas id="salesChart" style="max-width:600px;margin:20px auto;display:block;"></canvas>`;
+  document.body.appendChild(chartContainer);
+
+  const ctx = document.getElementById("salesChart");
+  const labels = data.map(d => d.date);
+  const values = data.map(d => d.amount);
+
+  new Chart(ctx, {
+    type: "bar",
+    data: {
+      labels,
+      datasets: [{
+        label: "Sales ₹",
+        data: values,
+        borderWidth: 2,
+        backgroundColor: "rgba(255,122,0,0.7)"
+      }]
+    },
+    options: {
+      plugins:{legend:{display:false}},
+      scales:{
+        y:{beginAtZero:true},
+        x:{ticks:{color:"#666"}}
+      }
+    }
+  });
+}
+</script>
+<!-- ✅ PART 10: AI Expense Predictor + Smart Insights -->
+<script>
+function analyzeBusinessTrends() {
+  const sales = JSON.parse(localStorage.getItem('sales-data') || '[]');
+  const stock = JSON.parse(localStorage.getItem('stock-data') || '[]');
+  const want = JSON.parse(localStorage.getItem('wanting-data') || '[]');
+  
+  let totalSales = 0, totalQty = 0;
+  const productCount = {};
+
+  sales.forEach(s => {
+    totalSales += s.amount;
+    totalQty += s.qty;
+    productCount[s.product] = (productCount[s.product] || 0) + s.qty;
+  });
+
+  const topProducts = Object.entries(productCount)
+    .sort((a,b) => b[1]-a[1])
+    .slice(0,3)
+    .map(([name,qty]) => `${name} (${qty})`)
+    .join(', ') || "No data";
+
+  const lowStock = stock.filter(s => (s.qty - (s.sold||0)) <= (parseInt(localStorage.getItem('default-limit')) || 2));
+  const wantingItems = want.map(w => w.item);
+
+  const suggestions = [];
+
+  if (lowStock.length > 0) {
+    suggestions.push(`⚠️ Low stock: ${lowStock.map(s => s.name).join(', ')}`);
+  }
+  if (wantingItems.length > 0) {
+    suggestions.push(`🛒 Items in Wanting list: ${wantingItems.join(', ')}`);
+  }
+  if (totalSales > 0) {
+    const avg = (totalSales / (sales.length || 1)).toFixed(2);
+    suggestions.push(`💰 Avg Sale: ₹${avg}`);
+  }
+  if (topProducts !== "No data") {
+    suggestions.push(`🔥 Top Products: ${topProducts}`);
+  }
+
+  // Profit suggestion (mock AI logic)
+  if (totalSales > 50000) {
+    suggestions.push("🚀 High turnover! Consider investing in bulk suppliers.");
+  } else if (totalSales < 5000 && sales.length > 5) {
+    suggestions.push("📉 Sales low. Try offering a discount or combo deal.");
+  }
+
+  showSmartInsights(suggestions);
+}
+
+function showSmartInsights(list) {
+  const box = document.createElement('div');
+  box.id = 'aiInsights';
+  box.style.cssText = `
+    position:fixed;top:15px;right:15px;width:320px;
+    background:#fff3e0;color:#333;padding:16px;
+    border-radius:12px;box-shadow:0 4px 12px rgba(0,0,0,0.2);
+    z-index:1000;font-size:14px;max-height:90vh;overflow:auto;
+  `;
+  box.innerHTML = `<h3 style="color:#ff7a00;margin-top:0;">🤖 Smart Insights</h3><ul style="text-align:left;">${list.map(i=>`<li>${i}</li>`).join('')}</ul>
+  <button style="margin-top:8px;padding:6px 10px;border:none;background:#ff7a00;color:white;border-radius:8px;cursor:pointer;" onclick="document.getElementById('aiInsights').remove()">Close</button>`;
+  document.body.appendChild(box);
+}
+
+// Auto analyze after page load
+window.addEventListener('load', ()=> setTimeout(analyzeBusinessTrends, 2000));
+</script>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>🔐 KharchaSaathi Login</title>
+  <meta name="theme-color" content="#ff7a00">
+  <style>
+    body {
+      font-family: Poppins, Arial, sans-serif;
+      background: linear-gradient(135deg, #ff7a00, #ffbb33);
+      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      margin: 0;
+      flex-direction: column;
+      text-align: center;
+    }
+    h1 {
+      font-size: 40px;
+      margin-bottom: 12px;
+      text-shadow: 1px 1px 3px rgba(0,0,0,0.2);
+    }
+    p {
+      margin-top: 0;
+      color: #fff8e1;
+      font-size: 15px;
+    }
+    button {
+      margin-top: 20px;
+      background: white;
+      color: #ff7a00;
+      border: none;
+      border-radius: 8px;
+      padding: 10px 18px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: 0.3s;
+      box-shadow: 0 3px 8px rgba(0,0,0,0.2);
+    }
+    button:hover {
+      background: #ffe0b2;
+      transform: scale(1.05);
+    }
+    footer {
+      position: fixed;
+      bottom: 12px;
+      color: #fff8e1;
+      font-size: 13px;
+    }
+  </style>
+</head>
+<body>
+  <h1>💰 KharchaSaathi</h1>
+  <p>Your Smart Business Assistant</p>
+  <button id="googleLoginBtn">🚀 Login with Google</button>
+
+  <footer>© 2025 KharchaSaathi • Powered by Firebase Auth</footer>
+
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
-    import { getFirestore, collection, addDoc } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
+    import { getAuth, GoogleAuthProvider, signInWithPopup } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyC1TSwODhcD88-IizbteOGF-bbebAP6Poc",
       authDomain: "kharchasaathi-main.firebaseapp.com",
       projectId: "kharchasaathi-main",
-      storageBucket: "kharchasaathi-main.appspot.com",
+      storageBucket: "kharchasaathi-main.firebasestorage.app",
       messagingSenderId: "116390837159",
       appId: "1:116390837159:web:6e3900fa3b25a07d4c9482",
       measurementId: "G-1M4H9VRSBY"
     };
 
     const app = initializeApp(firebaseConfig);
-    const db = getFirestore(app);
+    const auth = getAuth(app);
+    const provider = new GoogleAuthProvider();
 
-    async function testFirebase() {
+    const loginBtn = document.getElementById("googleLoginBtn");
+
+    loginBtn.addEventListener("click", async () => {
       try {
-        await addDoc(collection(db, "connection_test"), {
-          connected: true,
-          user: "Abid Ali",
-          time: new Date().toLocaleString()
-        });
-        console.log("✅ Firebase connection successful!");
-      } catch (error) {
-        console.error("❌ Firebase error:", error);
+        const result = await signInWithPopup(auth, provider);
+        const user = result.user;
+        localStorage.setItem("ks_user", JSON.stringify({
+          name: user.displayName,
+          email: user.email,
+          photo: user.photoURL,
+          uid: user.uid
+        }));
+        alert(`✅ Welcome ${user.displayName}!`);
+        window.location.href = "tools/business-dashboard.html"; // redirect
+      } catch (err) {
+        console.error(err);
+        alert("❌ Login failed: " + err.message);
       }
-    }
-    testFirebase();
+    });
   </script>
+</body>
+</html>
+<script>
+const user = JSON.parse(localStorage.getItem("ks_user"));
+if(!user){
+  window.location.href = "../login.html";
+}
+</script>
+<!-- ✅ User Profile Display Section -->
+<div id="userProfile" style="text-align:right;margin-bottom:10px;display:none;">
+  <img id="userPhoto" src="" alt="User Photo" style="width:42px;height:42px;border-radius:50%;vertical-align:middle;">
+  <span id="userName" style="margin-left:10px;font-weight:600;"></span>
+  <button id="logoutBtn" style="margin-left:14px;padding:6px 10px;background:#ff7a00;color:#fff;border:none;border-radius:8px;cursor:pointer;">Logout</button>
+</div>
+<!-- ✅ PART 12: USER PROFILE + LOGOUT -->
+<script>
+window.addEventListener('load', () => {
+  const user = JSON.parse(localStorage.getItem("ks_user"));
+  const profile = document.getElementById("userProfile");
+  const photo = document.getElementById("userPhoto");
+  const name = document.getElementById("userName");
+  const logoutBtn = document.getElementById("logoutBtn");
 
-  <!-- ✅ Theme + Service Worker -->
-  <script>
-    (()=>{const t=localStorage.getItem('ks-theme');if(t==='dark'){document.body.classList.add('dark');document.querySelector('.theme-toggle').textContent='☀️';}})();
-    function toggleTheme(){const dark=document.body.classList.toggle('dark');localStorage.setItem('ks-theme',dark?'dark':'light');document.querySelector('.theme-toggle').textContent=dark?'☀️':'🌙';}
-    function openHelp(){document.getElementById('helpPopup').style.display='flex';}
-    function closeHelp(){document.getElementById('helpPopup').style.display='none';}
-    if('serviceWorker' in navigator){
-      navigator.serviceWorker.register('service-worker.js')
-        .then(()=>console.log('✅ Service Worker Registered'))
-        .catch(err=>console.log('❌ SW Error:',err));
+  if(user){
+    profile.style.display = "block";
+    photo.src = user.photo || "https://cdn-icons-png.flaticon.com/512/847/847969.png";
+    name.textContent = user.name || "Guest User";
+
+    logoutBtn.onclick = () => {
+      if(confirm("Logout from KharchaSaathi?")){
+        localStorage.removeItem("ks_user");
+        alert("👋 Logged out successfully!");
+        window.location.href = "../login.html";
+      }
+    };
+  } else {
+    // if user not found, redirect to login page
+    window.location.href = "../login.html";
+  }
+});
+</script>
+<!-- ✅ PART 13: REALTIME CLOUD SYNC -->
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
+import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyC1TSwODhcD88-IizbteOGF-bbebAP6Poc",
+  authDomain: "kharchasaathi-main.firebaseapp.com",
+  projectId: "kharchasaathi-main",
+  storageBucket: "kharchasaathi-main.firebasestorage.app",
+  messagingSenderId: "116390837159",
+  appId: "1:116390837159:web:6e3900fa3b25a07d4c9482",
+  measurementId: "G-1M4H9VRSBY"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+
+async function cloudSync() {
+  const user = JSON.parse(localStorage.getItem("ks_user"));
+  if (!user) return;
+
+  const uid = user.uid;
+  const docRef = doc(db, "users", uid, "business_data", "dashboard");
+
+  try {
+    // 🧠 Get Local Data
+    const data = {
+      types: JSON.parse(localStorage.getItem('item-types') || '[]'),
+      stock: JSON.parse(localStorage.getItem('stock-data') || '[]'),
+      sales: JSON.parse(localStorage.getItem('sales-data') || '[]'),
+      want: JSON.parse(localStorage.getItem('wanting-data') || '[]'),
+      lastSync: new Date().toLocaleString(),
+    };
+
+    // ☁️ Upload to Firestore
+    await setDoc(docRef, data, { merge: true });
+    console.log("✅ Data synced to cloud:", data);
+    document.title = "☁️ Synced - KharchaSaathi";
+
+    // 📥 Restore (if no local data)
+    const snapshot = await getDoc(docRef);
+    if (snapshot.exists() && (!data.stock.length || !data.sales.length)) {
+      const cloudData = snapshot.data();
+      localStorage.setItem("item-types", JSON.stringify(cloudData.types || []));
+      localStorage.setItem("stock-data", JSON.stringify(cloudData.stock || []));
+      localStorage.setItem("sales-data", JSON.stringify(cloudData.sales || []));
+      localStorage.setItem("wanting-data", JSON.stringify(cloudData.want || []));
+      console.log("🔄 Cloud data restored locally");
     }
-  </script>
+
+  } catch (err) {
+    console.error("❌ Cloud sync error:", err.message);
+  }
+}
+
+// ⏱️ Auto Sync Every 1 Minute
+setInterval(() => {
+  if (navigator.onLine) {
+    cloudSync();
+  } else {
+    console.warn("📴 Offline: Skipping sync");
+  }
+}, 60000);
+
+// 🟢 First Sync on Load
+if (navigator.onLine) {
+  cloudSync();
+}
+</script>
+<!-- ✅ SYNC STATUS BAR -->
+<div id="syncStatus" 
+     style="background:#fff;border-radius:10px;padding:6px 10px;
+            box-shadow:0 0 6px rgba(0,0,0,0.1);margin:8px 0;
+            display:flex;align-items:center;justify-content:space-between;">
+  <div>
+    <span id="statusDot" style="display:inline-block;width:10px;height:10px;
+          border-radius:50%;background:#ccc;margin-right:6px;"></span>
+    <b id="statusText">Checking connection...</b>
+  </div>
+  <div id="lastSyncTime" style="font-size:13px;color:#777;">Last Sync: —</div>
+</div>
+<!-- ✅ PART 14: SYNC STATUS LOGIC -->
+<script>
+function updateSyncUI(status, time) {
+  const dot = document.getElementById("statusDot");
+  const text = document.getElementById("statusText");
+  const last = document.getElementById("lastSyncTime");
+
+  if (status === "online") {
+    dot.style.background = "#4eff90";
+    text.textContent = "Online — Cloud Sync Active";
+  } else if (status === "offline") {
+    dot.style.background = "#ff5555";
+    text.textContent = "Offline — Local Mode";
+  } else if (status === "syncing") {
+    dot.style.background = "#ffbb33";
+    text.textContent = "Syncing...";
+  }
+
+  if (time) {
+    last.textContent = "Last Sync: " + time;
+  }
+}
+
+// 🌐 Detect Network Status
+window.addEventListener('online', () => {
+  updateSyncUI("online");
+  cloudSync(); // trigger immediate sync
+});
+window.addEventListener('offline', () => updateSyncUI("offline"));
+
+// ⏱️ Hook into cloudSync() from Part 13
+async function enhancedCloudSync() {
+  updateSyncUI("syncing");
+  await cloudSync();
+  const now = new Date().toLocaleTimeString();
+  localStorage.setItem("ks_lastSync", now);
+  updateSyncUI("online", now);
+}
+
+// 🟢 Initial UI Load
+window.addEventListener('load', () => {
+  const last = localStorage.getItem("ks_lastSync") || "—";
+  updateSyncUI(navigator.onLine ? "online" : "offline", last);
+});
+</script>
+<!-- ✅ CLOUD STORAGE TOOLBAR -->
+<div id="cloudTools" 
+     style="margin:12px 0;padding:10px;background:#fff;
+            border-radius:10px;box-shadow:0 0 6px rgba(0,0,0,0.1);">
+  <h3 style="margin:0 0 10px 0;">☁️ Cloud Tools</h3>
+  
+  <div style="display:flex;flex-wrap:wrap;gap:10px;align-items:center;">
+    <button id="manualSyncBtn" 
+            style="padding:8px 14px;background:#ff7a00;color:#fff;
+                   border:none;border-radius:8px;cursor:pointer;">
+      🔄 Sync Now
+    </button>
+
+    <button id="downloadBackupBtn" 
+            style="padding:8px 14px;background:#0091ff;color:#fff;
+                   border:none;border-radius:8px;cursor:pointer;">
+      💾 Export Backup
+    </button>
+
+    <div style="flex:1;">
+      <div style="font-size:14px;margin-bottom:4px;">Cloud Usage:</div>
+      <div style="background:#eee;border-radius:10px;overflow:hidden;height:10px;">
+        <div id="usageBar" style="width:0%;height:10px;background:#4eff90;"></div>
+      </div>
+      <div id="usageText" style="font-size:13px;margin-top:4px;color:#777;">Calculating...</div>
+    </div>
+  </div>
+</div>
+<!-- ✅ PART 15: CLOUD TOOLS LOGIC -->
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
+import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyC1TSwODhcD88-IizbteOGF-bbebAP6Poc",
+  authDomain: "kharchasaathi-main.firebaseapp.com",
+  projectId: "kharchasaathi-main",
+  storageBucket: "kharchasaathi-main.firebasestorage.app",
+  messagingSenderId: "116390837159",
+  appId: "1:116390837159:web:6e3900fa3b25a07d4c9482",
+  measurementId: "G-1M4H9VRSBY"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+
+// 🟢 Calculate and show cloud usage (approximation)
+async function checkCloudUsage() {
+  const user = JSON.parse(localStorage.getItem("ks_user"));
+  if (!user) return;
+  const uid = user.uid;
+  const docRef = doc(db, "users", uid, "business_data", "dashboard");
+  const snapshot = await getDoc(docRef);
+
+  if (snapshot.exists()) {
+    const data = snapshot.data();
+    const jsonSize = JSON.stringify(data).length; // bytes
+    const kb = (jsonSize / 1024).toFixed(1);
+    const percent = Math.min((kb / 512) * 100, 100); // assume 512KB quota for now
+    document.getElementById("usageBar").style.width = percent + "%";
+    document.getElementById("usageText").innerText = `${kb} KB / 512 KB`;
+  } else {
+    document.getElementById("usageText").innerText = "No data yet";
+  }
+}
+
+// 🔄 Manual Sync Trigger
+document.getElementById("manualSyncBtn").onclick = async () => {
+  if (navigator.onLine) {
+    document.getElementById("manualSyncBtn").innerText = "🔁 Syncing...";
+    await cloudSync();
+    await checkCloudUsage();
+    document.getElementById("manualSyncBtn").innerText = "✅ Synced";
+    setTimeout(()=>document.getElementById("manualSyncBtn").innerText="🔄 Sync Now",2000);
+  } else {
+    alert("📴 You're offline! Connect to the internet to sync.");
+  }
+};
+
+// 💾 Backup Download (.json)
+document.getElementById("downloadBackupBtn").onclick = async () => {
+  const data = {
+    types: JSON.parse(localStorage.getItem("item-types") || "[]"),
+    stock: JSON.parse(localStorage.getItem("stock-data") || "[]"),
+    sales: JSON.parse(localStorage.getItem("sales-data") || "[]"),
+    want: JSON.parse(localStorage.getItem("wanting-data") || "[]"),
+    exportedAt: new Date().toLocaleString(),
+  };
+
+  const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = "KharchaSaathi_Backup.json";
+  a.click();
+  URL.revokeObjectURL(url);
+  alert("✅ Backup downloaded successfully!");
+};
+
+// Initialize on load
+window.addEventListener("load", () => {
+  checkCloudUsage();
+});
+</script>
+<!-- ✅ IMPORT BACKUP TOOL -->
+<div id="importTool" 
+     style="margin:12px 0;padding:10px;background:#fff;
+            border-radius:10px;box-shadow:0 0 6px rgba(0,0,0,0.1);">
+  <h3 style="margin:0 0 10px 0;">📂 Import Backup</h3>
+  <p style="font-size:14px;color:#666;margin:0 0 8px;">
+    Upload your previously exported <b>KharchaSaathi_Backup.json</b> file to restore your data.
+  </p>
+
+  <input type="file" id="importFile" accept=".json"
+         style="padding:8px;border:1px solid #ccc;border-radius:8px;">
+  <button id="importBtn" 
+          style="padding:8px 14px;background:#4eff90;color:#000;
+                 border:none;border-radius:8px;margin-left:8px;cursor:pointer;">
+    🔁 Restore Backup
+  </button>
+
+  <p id="importStatus" style="margin-top:10px;font-size:13px;color:#555;">
+    Status: Waiting for file upload...
+  </p>
+</div>
+<!-- ✅ PART 16: IMPORT BACKUP LOGIC -->
+<script>
+document.getElementById("importBtn").onclick = async () => {
+  const fileInput = document.getElementById("importFile");
+  const status = document.getElementById("importStatus");
+
+  if (!fileInput.files.length) {
+    alert("⚠️ Please select a backup (.json) file first!");
+    return;
+  }
+
+  const file = fileInput.files[0];
+  const reader = new FileReader();
+
+  reader.onload = async (event) => {
+    try {
+      const data = JSON.parse(event.target.result);
+      if (!data.types || !data.stock || !data.sales || !data.want) {
+        throw new Error("Invalid backup format");
+      }
+
+      // 🧠 Replace Local Data
+      localStorage.setItem("item-types", JSON.stringify(data.types));
+      localStorage.setItem("stock-data", JSON.stringify(data.stock));
+      localStorage.setItem("sales-data", JSON.stringify(data.sales));
+      localStorage.setItem("wanting-data", JSON.stringify(data.want));
+
+      status.style.color = "#4eff90";
+      status.textContent = "✅ Backup restored successfully! Refreshing...";
+
+      // Optional Cloud Upload (if online)
+      if (navigator.onLine && typeof cloudSync === "function") {
+        await cloudSync();
+      }
+
+      setTimeout(() => window.location.reload(), 1500);
+    } catch (err) {
+      console.error("Restore Error:", err);
+      status.style.color = "#ff5555";
+      status.textContent = "❌ Invalid or corrupted backup file.";
+      alert("⚠️ Error: " + err.message);
+    }
+  };
+
+  reader.readAsText(file);
+};
+</script>
+<!-- ✅ ANALYTICS DASHBOARD -->
+<div id="analyticsSection" 
+     style="margin:20px 0;padding:16px;background:#fff;border-radius:14px;
+            box-shadow:0 0 10px rgba(0,0,0,0.1);">
+  <h3 style="margin:0 0 16px 0;">📊 Business Insights</h3>
+
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));
+              gap:16px;margin-bottom:20px;">
+    <div class="stat-card" style="background:#ff7a00;color:#fff;padding:16px;border-radius:12px;">
+      <h4>Total Sales ₹</h4>
+      <p id="statTotalSales" style="font-size:24px;font-weight:700;margin:0;">0</p>
+    </div>
+    <div class="stat-card" style="background:#0091ff;color:#fff;padding:16px;border-radius:12px;">
+      <h4>Total Stock Items</h4>
+      <p id="statTotalStock" style="font-size:24px;font-weight:700;margin:0;">0</p>
+    </div>
+    <div class="stat-card" style="background:#4eff90;color:#000;padding:16px;border-radius:12px;">
+      <h4>Low / Out Items</h4>
+      <p id="statLowStock" style="font-size:24px;font-weight:700;margin:0;">0</p>
+    </div>
+  </div>
+
+  <canvas id="salesChart" style="width:100%;max-height:320px;"></canvas>
+</div>
+<!-- ✅ PART 17: ANALYTICS LOGIC + CHART -->
+<script type="module">
+import { Chart, registerables } from "https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.esm.js";
+Chart.register(...registerables);
+
+// 🔸 Update Dashboard Stats
+function updateDashboardStats() {
+  const salesData = JSON.parse(localStorage.getItem("sales-data") || "[]");
+  const stockData = JSON.parse(localStorage.getItem("stock-data") || "[]");
+
+  // total sales
+  const totalSales = salesData.reduce((sum, s) => sum + (s.amount || 0), 0);
+  document.getElementById("statTotalSales").innerText = totalSales.toLocaleString();
+
+  // total stock
+  document.getElementById("statTotalStock").innerText = stockData.length;
+
+  // low / out stock
+  const limit = parseInt(localStorage.getItem("default-limit")) || 0;
+  const lowCount = stockData.filter(s => {
+    const remain = (s.qty || 0) - (s.sold || 0);
+    return remain <= limit;
+  }).length;
+  document.getElementById("statLowStock").innerText = lowCount;
+}
+
+// 🔸 Chart: Sales over time
+function renderSalesChart() {
+  const ctx = document.getElementById("salesChart");
+  const salesData = JSON.parse(localStorage.getItem("sales-data") || "[]");
+
+  const daily = {};
+  salesData.forEach(s => {
+    daily[s.date] = (daily[s.date] || 0) + (s.amount || 0);
+  });
+
+  const labels = Object.keys(daily).sort();
+  const values = labels.map(d => daily[d]);
+
+  new Chart(ctx, {
+    type: "line",
+    data: {
+      labels,
+      datasets: [{
+        label: "Daily Sales ₹",
+        data: values,
+        borderWidth: 2,
+        borderColor: "#ff7a00",
+        fill: false,
+        tension: 0.25,
+      }]
+    },
+    options: {
+      scales: {
+        y: { beginAtZero: true },
+        x: { ticks: { color: "#555" } }
+      },
+      plugins: { legend: { display: false } },
+      responsive: true,
+      maintainAspectRatio: false
+    }
+  });
+}
+
+// 🚀 Initialize when dashboard loads
+window.addEventListener("load", () => {
+  updateDashboardStats();
+  renderSalesChart();
+});
+</script>
+<!-- ✅ PART 17: ANALYTICS LOGIC + CHART -->
+<script type="module">
+import { Chart, registerables } from "https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.esm.js";
+Chart.register(...registerables);
+
+function updateDashboardStats() {
+  const salesData = JSON.parse(localStorage.getItem("sales-data") || "[]");
+  const stockData = JSON.parse(localStorage.getItem("stock-data") || "[]");
+
+  const totalSales = salesData.reduce((sum, s) => sum + (s.amount || 0), 0);
+  document.getElementById("statTotalSales").innerText = totalSales.toLocaleString();
+
+  document.getElementById("statTotalStock").innerText = stockData.length;
+
+  const limit = parseInt(localStorage.getItem("default-limit")) || 0;
+  const lowCount = stockData.filter(s => {
+    const remain = (s.qty || 0) - (s.sold || 0);
+    return remain <= limit;
+  }).length;
+  document.getElementById("statLowStock").innerText = lowCount;
+}
+
+function renderSalesChart() {
+  const ctx = document.getElementById("salesChart");
+  const salesData = JSON.parse(localStorage.getItem("sales-data") || "[]");
+  const daily = {};
+  salesData.forEach(s => { daily[s.date] = (daily[s.date] || 0) + (s.amount || 0); });
+
+  const labels = Object.keys(daily).sort();
+  const values = labels.map(d => daily[d]);
+
+  new Chart(ctx, {
+    type: "line",
+    data: {
+      labels,
+      datasets: [{
+        label: "Daily Sales ₹",
+        data: values,
+        borderWidth: 2,
+        borderColor: "#ff7a00",
+        backgroundColor: "rgba(255,122,0,0.2)",
+        fill: true,
+        tension: 0.25
+      }]
+    },
+    options: {
+      scales: {
+        y: { beginAtZero: true, ticks: { color: "#666" } },
+        x: { ticks: { color: "#666" } }
+      },
+      plugins: { legend: { display: false } },
+      responsive: true,
+      maintainAspectRatio: false
+    }
+  });
+}
+
+window.addEventListener("load", () => {
+  updateDashboardStats();
+  renderSalesChart();
+});
+</script>
+
+<!-- ✅ OPTIONAL HELP TOGGLE SCRIPT -->
+<script>
+function toggleHelp(){
+  const h=document.getElementById('helpModal');
+  h.style.display=h.style.display==='flex'?'none':'flex';
+}
+</script>
+
 </body>
 </html>
