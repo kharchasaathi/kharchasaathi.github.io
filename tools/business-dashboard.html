@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>📦 KharchaSaathi — Business Dashboard v6.2.8</title>
+<title>📦 KharchaSaathi — Business Dashboard (Stable)</title>
 <meta name="theme-color" content="#ff7a00">
 <style>
 :root{
@@ -69,7 +69,7 @@ body.dark input,body.dark select{
 <body>
 
 <div class="topbar">
-  <h1>📦 KharchaSaathi v6.2.8</h1>
+  <h1>📦 KharchaSaathi (Offline)</h1>
   <button class="theme-btn" id="themeBtn">🌙</button>
 </div>
 
@@ -80,7 +80,6 @@ body.dark input,body.dark select{
   <div class="tab" data-tab="wanting">🛒 Wanting</div>
 </div>
 
-<!-- TYPES -->
 <section id="types" class="section active">
   <h3>🗂 Manage Item Types</h3>
   <input type="text" id="typeName" placeholder="Add new type">
@@ -89,7 +88,6 @@ body.dark input,body.dark select{
   <ul id="typeList" style="margin-top:10px;padding-left:18px;"></ul>
 </section>
 
-<!-- STOCK -->
 <section id="stock" class="section">
   <h3>📦 Current Stock</h3>
   <div>
@@ -121,7 +119,6 @@ body.dark input,body.dark select{
   </table>
 </section>
 
-<!-- SALES -->
 <section id="sales" class="section">
   <h3>💰 Sales Ledger</h3>
   <button class="small-btn" onclick="clearSales()">🧹 Clear All</button>
@@ -132,7 +129,6 @@ body.dark input,body.dark select{
   </table>
 </section>
 
-<!-- WANTING -->
 <section id="wanting" class="section">
   <h3>🛒 Wanting List</h3>
   <input type="date" id="wdate">
@@ -151,78 +147,38 @@ body.dark input,body.dark select{
   <a href="../index.html">🏠 Back</a>
 </div>
 
-<!-- 📘 Help -->
 <div id="helpModal" class="help-modal">
   <div class="help-content">
     <h2>📘 KharchaSaathi — User Guide</h2>
     <ul>
-      <li>🗂 Create Types → 📦 Add Stock → 💰 Sell → 🛒 Auto Wanting → ✅ Restock.</li>
-      <li>💰 “Sale” = Cash, 📒 “Credit” = Khata.</li>
-      <li>⚙️ Set Low Stock Limit → get automatic alerts.</li>
-      <li>🌙 Dark mode auto-saves your preference.</li>
-      <li>💾 Offline + Cloud Sync (auto backup to Firebase)</li>
+      <li>🗂 Create Types → 📦 Add Stock → 💰 Sell → 🛒 Auto Wanting → ✅ Restock</li>
+      <li>💰 “Sale” = Cash, 📒 “Credit” = Khata</li>
+      <li>⚙️ Set Low Stock Limit → Auto alert</li>
+      <li>🌙 Dark mode auto-saves preference</li>
+      <li>💾 Offline mode — All data stored locally</li>
     </ul>
     <button onclick="toggleHelp()">Close</button>
   </div>
 </div>
 
-<!-- 🌙 THEME + FIREBASE + LOCAL LOGIC -->
-<script type="module">
+<script>
 if(localStorage.getItem('theme')==='true') document.body.classList.add('dark');
 document.getElementById('themeBtn').onclick=()=>{
   document.body.classList.toggle('dark');
   localStorage.setItem('theme',document.body.classList.contains('dark'));
 };
 
-import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
-import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
-import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
-
-const firebaseConfig = {
-  apiKey: "AIzaSyC1TSwODhcD88-IizbteOGF-bbebAP6Poc",
-  authDomain: "kharchasaathi-main.firebaseapp.com",
-  projectId: "kharchasaathi-main",
-  storageBucket: "kharchasaathi-main.firebasestorage.app",
-  messagingSenderId: "116390837159",
-  appId: "1:116390837159:web:6e3900fa3b25a07d4c9482",
-  measurementId: "G-1M4H9VRSBY"
-};
-
-const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
-const db = getFirestore(app);
-
-onAuthStateChanged(auth, async (user) => {
-  if(!user){
-    alert("⚠️ Please login first to access Dashboard!");
-    window.location.href="../index.html";
-    return;
-  }
-
-  const userId = user.uid;
-  const userDoc = doc(db, "users", userId, "business_data", "dashboard");
-
-  const snapshot = await getDoc(userDoc);
-  if(!snapshot.exists()){
-    await setDoc(userDoc,{
-      createdAt:new Date().toLocaleString(),
-      totalSales:0,
-      totalStock:0,
-      lastSync:new Date().toLocaleString()
-    });
-  } else {
-    console.log("✅ Cloud data loaded:", snapshot.data());
-  }
-  console.log("✅ Cloud connected:", user.email);
+const tabs=document.querySelectorAll('.tab');
+const sections=document.querySelectorAll('.section');
+tabs.forEach(tab=>{
+  tab.onclick=()=>{
+    tabs.forEach(t=>t.classList.remove('active'));
+    sections.forEach(s=>s.classList.remove('active'));
+    tab.classList.add('active');
+    document.getElementById(tab.dataset.tab).classList.add('active');
+  };
 });
-</script>
 
-<script>
-/* ✅ Local Storage + UI Logic */
-  if (!localStorage.getItem(K_TYPES)) localStorage.setItem(K_TYPES, "[]");
-if (!localStorage.getItem(K_STOCK)) localStorage.setItem(K_STOCK, "[]");
-if (!localStorage.getItem(K_SALES)) localStorage.setItem(K_SALES, "[]");
-if (!localStorage.getItem(K_WANT)) localStorage.setItem(K_WANT, "[]");
 const K_TYPES='item-types',K_STOCK='stock-data',K_SALES='sales-data',K_WANT='wanting-data',K_LIMIT='default-limit';
 let types=JSON.parse(localStorage.getItem(K_TYPES)||'[]'),
 stock=JSON.parse(localStorage.getItem(K_STOCK)||'[]'),
@@ -247,7 +203,7 @@ const el=document.getElementById(id);if(!el)return;
 let extra=id==='filterType'?'<option value="all">All Types</option>':'<option value="">Select</option>';
 el.innerHTML=extra+types.map(t=>`<option value="${t}">${t}</option>`).join('');});}
 
-/* LIMIT + STOCK */
+/* STOCK */
 function setGlobalLimit(){const v=parseInt(document.getElementById('globalLimit').value);
 if(isNaN(v)||v<0)return alert("Invalid limit");
 localStorage.setItem(K_LIMIT,v);alert("Limit set "+v);}
@@ -318,9 +274,8 @@ w.document.close();w.print();}
 /* HELP + INIT */
 function toggleHelp(){const h=document.getElementById('helpModal');
 h.style.display=h.style.display==='flex'?'none':'flex';}
-window.onload = () => {
-  renderAll();
-};
+function renderAll(){renderTypes();updateDropdowns();renderStock();renderSales();renderWant();}
+window.onload=renderAll;
 </script>
 </body>
 </html>
