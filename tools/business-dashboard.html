@@ -219,6 +219,10 @@ onAuthStateChanged(auth, async (user) => {
 
 <script>
 /* ✅ Local Storage + UI Logic */
+  if (!localStorage.getItem(K_TYPES)) localStorage.setItem(K_TYPES, "[]");
+if (!localStorage.getItem(K_STOCK)) localStorage.setItem(K_STOCK, "[]");
+if (!localStorage.getItem(K_SALES)) localStorage.setItem(K_SALES, "[]");
+if (!localStorage.getItem(K_WANT)) localStorage.setItem(K_WANT, "[]");
 const K_TYPES='item-types',K_STOCK='stock-data',K_SALES='sales-data',K_WANT='wanting-data',K_LIMIT='default-limit';
 let types=JSON.parse(localStorage.getItem(K_TYPES)||'[]'),
 stock=JSON.parse(localStorage.getItem(K_STOCK)||'[]'),
@@ -314,7 +318,10 @@ w.document.close();w.print();}
 /* HELP + INIT */
 function toggleHelp(){const h=document.getElementById('helpModal');
 h.style.display=h.style.display==='flex'?'none':'flex';}
-function renderAll(){renderTypes();updateDropdowns();renderStock();renderSales();renderWant();}
+functionwindow.onload = () => {
+  renderAll();
+};
+{renderTypes();updateDropdowns();renderStock();renderSales();renderWant();}
 renderAll();
 </script>
 </body>
