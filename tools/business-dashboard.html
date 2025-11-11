@@ -162,11 +162,11 @@ body.dark input,body.dark select{
 </div>
 
 <script>
-if(localStorage.getItem('theme')==='true') document.body.classList.add('dark');
+if(localStorage.getItem('ks-theme')==='dark') document.body.classList.add('dark');
 document.getElementById('themeBtn').onclick=()=>{
   document.body.classList.toggle('dark');
-  localStorage.setItem('theme',document.body.classList.contains('dark'));
-};
+  localStorage.setItem('ks-theme',document.body.classList.contains('dark') ? 'dark' : 'light');
+}; 
 
 const tabs=document.querySelectorAll('.tab');
 const sections=document.querySelectorAll('.section');
@@ -189,6 +189,7 @@ function saveAll(){localStorage.setItem(K_TYPES,JSON.stringify(types));
 localStorage.setItem(K_STOCK,JSON.stringify(stock));
 localStorage.setItem(K_SALES,JSON.stringify(sales));
 localStorage.setItem(K_WANT,JSON.stringify(want));}
+  syncToCloud(); // ☁️ Cloud Backup Auto
 
 /* TYPES */
 function addType(){const t=document.getElementById('typeName').value.trim();
@@ -275,7 +276,36 @@ w.document.close();w.print();}
 function toggleHelp(){const h=document.getElementById('helpModal');
 h.style.display=h.style.display==='flex'?'none':'flex';}
 function renderAll(){renderTypes();updateDropdowns();renderStock();renderSales();renderWant();}
-window.onload=renderAll;
+/* ☁️ Firebase Cloud Sync (Optional Add-on) */
+import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
+import { getFirestore, doc, setDoc } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyC1TSwODhcD88-IizbteOGF-bbebAP6Poc",
+  authDomain: "kharchasaathi-main.firebaseapp.com",
+  projectId: "kharchasaathi-main",
+  storageBucket: "kharchasaathi-main.firebasestorage.app",
+  messagingSenderId: "116390837159",
+  appId: "1:116390837159:web:6e3900fa3b25a07d4c9482",
+  measurementId: "G-1M4H9VRSBY"
+};
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+
+/* 🔄 Sync to Cloud Function */
+async function syncToCloud(){
+  try {
+    const uid = localStorage.getItem('ks-user') || 'guest';
+    await setDoc(doc(db, "users", uid, "data", "dashboard"), {
+      types, stock, sales, want,
+      lastSync: new Date().toLocaleString()
+    });
+    console.log("✅ Cloud Sync Successful");
+  } catch (err) {
+    console.warn("⚠️ Cloud Sync Failed:", err.message);
+  }
+}
+  window.onload=renderAll;
 </script>
 </body>
 </html>
