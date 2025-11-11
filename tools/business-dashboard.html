@@ -7,16 +7,14 @@
 <meta name="theme-color" content="#ff7a00">
 <style>
 :root{
-  --orange:#ff7a00; --orange-dark:#cc6300;
-  --bg:#f8f9fa; --card:#fff; --text:#222;
-  --dark-bg:#0f0f0f; --dark-card:#1b1b1b; --dark-text:#f2f2f2;
+  --orange:#ff7a00;--orange-dark:#cc6300;
+  --bg:#f8f9fa;--card:#fff;--text:#222;
+  --dark-bg:#0f0f0f;--dark-card:#1b1b1b;--dark-text:#f2f2f2;
   --dark-border:#444;
 }
 *{box-sizing:border-box;transition:background .2s,color .2s}
-html,body{height:100%}
 body{
-  font-family:Poppins,Arial,sans-serif;
-  margin:0;padding:18px;
+  font-family:Poppins,Arial,sans-serif;margin:0;padding:18px;
   background:var(--bg);color:var(--text);
 }
 body.dark{background:var(--dark-bg);color:var(--dark-text)}
@@ -28,84 +26,57 @@ h1{color:var(--orange);margin:0;font-size:20px}
 }
 .theme-btn:hover,.small-btn:hover{background:var(--orange-dark)}
 .tabs{display:flex;gap:8px;margin:6px 0 18px;justify-content:center;flex-wrap:wrap}
-.tab{
-  background:#eee;padding:8px 12px;border-radius:10px;
-  cursor:pointer;font-weight:600;transition:.15s;
-}
+.tab{background:#eee;padding:8px 12px;border-radius:10px;cursor:pointer;font-weight:600}
 body.dark .tab{background:#222;color:#ccc}
 .tab.active{background:var(--orange);color:#fff}
-.container{max-width:1100px;margin:0 auto}
-.section{
-  display:none;background:var(--card);padding:14px;
-  border-radius:12px;box-shadow:0 6px 20px rgba(0,0,0,.06);
-  margin-bottom:18px;
-}
+.section{display:none;background:var(--card);padding:14px;border-radius:12px;box-shadow:0 6px 20px rgba(0,0,0,.06);margin-bottom:18px}
 .section.active{display:block}
-body.dark .section{
-  background:var(--dark-card);
-  border:1px solid var(--dark-border);
-  color:var(--dark-text);
-}
+body.dark .section{background:var(--dark-card);border:1px solid var(--dark-border);color:var(--dark-text)}
 .footer-btns{text-align:center;margin-top:20px}
-.footer-btns a{
-  background:var(--orange);color:#fff;padding:10px 16px;
-  border-radius:8px;text-decoration:none;margin:6px;display:inline-block;
-}
+.footer-btns a{background:var(--orange);color:#fff;padding:10px 16px;border-radius:8px;text-decoration:none;margin:6px;display:inline-block}
 .footer-btns a:hover{background:var(--orange-dark)}
-.help-modal{
-  position:fixed;top:0;left:0;width:100%;height:100%;
-  background:rgba(0,0,0,0.6);
-  display:none;justify-content:center;align-items:center;
-  z-index:1000;
-}
-.help-content{
-  background:var(--card);padding:20px;max-width:640px;
-  border-radius:12px;color:var(--text);
-  overflow-y:auto;max-height:85vh;
-}
+.help-modal{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.6);display:none;justify-content:center;align-items:center;z-index:1000}
+.help-content{background:var(--card);padding:20px;max-width:640px;border-radius:12px;color:var(--text);overflow-y:auto;max-height:85vh}
 body.dark .help-content{background:var(--dark-card);color:var(--dark-text)}
-input,select,button{font-family:inherit}
 </style>
 </head>
 
 <body>
-<div class="container">
-  <div class="topbar">
-    <h1>📦 KharchaSaathi (Offline)</h1>
-    <div style="display:flex;gap:8px;align-items:center">
-      <button class="theme-btn" id="themeBtn" aria-label="Toggle theme">🌙</button>
-      <a class="small-btn" href="../index.html" style="text-decoration:none;color:#fff">🏠 Back</a>
-    </div>
-  </div>
-
-  <div class="tabs" role="tablist" aria-label="Main tabs">
-    <div class="tab active" data-tab="types" role="tab" tabindex="0">🗂 Types</div>
-    <div class="tab" data-tab="stock" role="tab" tabindex="0">📦 Stock</div>
-    <div class="tab" data-tab="sales" role="tab" tabindex="0">📈 Sales</div>
-    <div class="tab" data-tab="wanting" role="tab" tabindex="0">🛒 Wanting</div>
-  </div>
-
-  <!-- Placeholder Sections -->
-  <section id="types" class="section active"></section>
-  <section id="stock" class="section"></section>
-  <section id="sales" class="section"></section>
-  <section id="wanting" class="section"></section>
-
-  <div class="footer-btns">
-    <a href="#" id="helpLink">📘 Help & Guide</a>
+<div class="topbar">
+  <h1>📦 KharchaSaathi (Offline)</h1>
+  <div style="display:flex;gap:8px;align-items:center">
+    <button class="theme-btn" id="themeBtn">🌙</button>
+    <a class="small-btn" href="../index.html">🏠 Back</a>
   </div>
 </div>
 
-<!-- 📘 Help Modal -->
-<div id="helpModal" class="help-modal" role="dialog" aria-modal="true" aria-hidden="true">
+<div class="tabs" role="tablist">
+  <div class="tab active" data-tab="types">🗂 Types</div>
+  <div class="tab" data-tab="stock">📦 Stock</div>
+  <div class="tab" data-tab="sales">📈 Sales</div>
+  <div class="tab" data-tab="wanting">🛒 Wanting</div>
+</div>
+
+<!-- Sections injected below -->
+<section id="types" class="section active"></section>
+<section id="stock" class="section"></section>
+<section id="sales" class="section"></section>
+<section id="wanting" class="section"></section>
+
+<div class="footer-btns">
+  <a href="#" id="helpLink">📘 Help & Guide</a>
+</div>
+
+<!-- Help Modal -->
+<div id="helpModal" class="help-modal">
   <div class="help-content">
     <h2>📘 Quick Help</h2>
     <ul style="padding-left:18px;line-height:1.6">
-      <li>🗂 Add & manage item <b>Types</b></li>
-      <li>📦 Add stock, set limits & auto alerts</li>
-      <li>💰 Record sales — Cash / Credit</li>
-      <li>🛒 Auto Wanting when stock finishes</li>
-      <li>🌙 Theme & data saved offline</li>
+      <li>🗂 Manage item <b>Types</b></li>
+      <li>📦 Add stock & track history</li>
+      <li>💰 Record Sales (Cash/Credit)</li>
+      <li>🛒 Auto Wanting alerts</li>
+      <li>☁️ Data saved offline</li>
     </ul>
     <button class="small-btn" onclick="toggleHelp()">Close</button>
   </div>
@@ -114,13 +85,11 @@ input,select,button{font-family:inherit}
 <script>
 /* 🌙 Theme Toggle */
 (function(){
-  if(localStorage.getItem('ks-theme')==='dark')
-    document.body.classList.add('dark');
-  document.getElementById('themeBtn').addEventListener('click',function(){
+  if(localStorage.getItem('ks-theme')==='dark')document.body.classList.add('dark');
+  document.getElementById('themeBtn').onclick=()=>{
     document.body.classList.toggle('dark');
-    localStorage.setItem('ks-theme',
-      document.body.classList.contains('dark') ? 'dark' : 'light');
-  });
+    localStorage.setItem('ks-theme',document.body.classList.contains('dark')?'dark':'light');
+  };
 })();
 
 /* 🗂 Tabs Handling */
@@ -131,27 +100,19 @@ input,select,button{font-family:inherit}
     tabs.forEach(t=>t.classList.remove('active'));
     sections.forEach(s=>s.classList.remove('active'));
     tab.classList.add('active');
-    const sec=document.getElementById(tab.dataset.tab);
-    if(sec) sec.classList.add('active');
+    document.getElementById(tab.dataset.tab)?.classList.add('active');
   }
   tabs.forEach(tab=>{
     tab.addEventListener('click',()=>activate(tab));
-    tab.addEventListener('keydown',e=>{
-      if(['Enter',' '].includes(e.key)){e.preventDefault();activate(tab);}
-    });
   });
 })();
 
-/* 📘 Help Modal JS */
+/* 📘 Help Modal */
 function toggleHelp(){
   const m=document.getElementById('helpModal');
-  const shown=m.style.display==='flex';
-  m.style.display=shown?'none':'flex';
+  m.style.display=m.style.display==='flex'?'none':'flex';
 }
-document.getElementById('helpLink').addEventListener('click',e=>{
-  e.preventDefault();
-  toggleHelp();
-});
+document.getElementById('helpLink').onclick=e=>{e.preventDefault();toggleHelp();};
 </script>
   <!-- ✅ PART 2 : TYPES + STOCK ENHANCED -->
 <section id="types" class="section active">
@@ -166,10 +127,9 @@ document.getElementById('helpLink').addEventListener('click',e=>{
 
 <section id="stock" class="section">
   <h3>📦 Current Stock</h3>
-
   <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
     <label>Low Stock Limit:</label>
-    <input type="number" id="globalLimit" placeholder="e.g. 2" style="width:100px">
+    <input type="number" id="globalLimit" placeholder="e.g.2" style="width:100px">
     <button class="small-btn" id="setLimitBtn">Set</button>
     <button class="small-btn" id="clearStockBtn">Clear All</button>
   </div>
@@ -185,17 +145,12 @@ document.getElementById('helpLink').addEventListener('click',e=>{
 
   <div style="margin-top:12px">
     <label><b>Filter by Type:</b></label>
-    <select id="filterType" style="min-width:160px">
-      <option value="all">All Types</option>
-    </select>
+    <select id="filterType" style="min-width:160px"><option value="all">All Types</option></select>
   </div>
 
   <table id="stockTable">
     <thead>
-      <tr>
-        <th>Date</th><th>Type</th><th>Product</th><th>Qty</th>
-        <th>Sold</th><th>Remain</th><th>Alert</th><th>Limit</th><th>Action</th>
-      </tr>
+      <tr><th>Date</th><th>Type</th><th>Product</th><th>Qty</th><th>Sold</th><th>Remain</th><th>Alert</th><th>Limit</th><th>Action</th></tr>
     </thead>
     <tbody></tbody>
   </table>
@@ -206,111 +161,79 @@ const K_TYPES='item-types',K_STOCK='stock-data',K_LIMIT='default-limit';
 window.types=JSON.parse(localStorage.getItem(K_TYPES)||'[]');
 window.stock=JSON.parse(localStorage.getItem(K_STOCK)||'[]');
 
-/* --- save all --- */
+/* Save */
 function saveAllLocal(){
   localStorage.setItem(K_TYPES,JSON.stringify(types));
   localStorage.setItem(K_STOCK,JSON.stringify(stock));
 }
 
-/* --- render types --- */
+/* Render types */
 function renderTypes(){
   const list=document.getElementById('typeList');
   list.innerHTML=types.length?types.map(t=>`<li>${t}</li>`).join(''):'<li>No types yet</li>';
 }
 
-/* --- update dropdowns --- */
+/* Dropdown update */
 function updateDropdowns(){
   ['ptype','filterType'].forEach(id=>{
     const el=document.getElementById(id);
     if(!el)return;
-    const base=id==='filterType'
-      ?'<option value="all">All Types</option>'
-      :'<option value="">Select</option>';
+    const base=id==='filterType'?'<option value="all">All Types</option>':'<option value="">Select</option>';
     el.innerHTML=base+types.map(t=>`<option value="${t}">${t}</option>`).join('');
   });
 }
 
-/* --- add type --- */
+/* Add type */
 function addType(){
-  const inp=document.getElementById('typeName');
-  const val=inp.value.trim();
-  if(!val)return alert('Enter type name');
-  if(types.includes(val))return alert('Type exists');
-  types.push(val);saveAllLocal();renderTypes();updateDropdowns();
-  inp.value='';
+  const t=typeName.value.trim();
+  if(!t)return alert('Enter type name');
+  if(types.includes(t))return alert('Type exists');
+  types.push(t);saveAllLocal();renderTypes();updateDropdowns();typeName.value='';
 }
 
-/* --- clear types --- */
-function clearTypes(){
-  if(!confirm('Clear all types?'))return;
-  types=[];saveAllLocal();renderTypes();updateDropdowns();
-}
+/* Clear types */
+function clearTypes(){if(confirm('Clear all types?')){types=[];saveAllLocal();renderTypes();updateDropdowns();}}
 
-/* --- limit --- */
+/* Limit */
 function setGlobalLimit(){
-  const v=parseInt(document.getElementById('globalLimit').value);
-  if(isNaN(v)||v<0)return alert('Invalid limit');
+  const v=parseInt(globalLimit.value);
+  if(isNaN(v)||v<0)return alert('Invalid');
   localStorage.setItem(K_LIMIT,v);alert('Limit set '+v);
 }
-function getLimit(){
-  const v=parseInt(localStorage.getItem(K_LIMIT));
-  return isNaN(v)?0:v;
-}
+function getLimit(){const v=parseInt(localStorage.getItem(K_LIMIT));return isNaN(v)?0:v;}
 
-/* --- add stock --- */
+/* Add stock */
 function addStock(){
-  const d=pdate.value,t=ptype.value,n=pname.value.trim(),
-        q=parseInt(pqty.value),c=parseFloat(pcost.value);
-  if(!d||!t||!n||!q||!c)return alert('Fill all fields');
+  const d=pdate.value,t=ptype.value,n=pname.value.trim(),q=parseInt(pqty.value),c=parseFloat(pcost.value);
+  if(!d||!t||!n||!q||!c)return alert('Fill all');
   let ex=stock.find(s=>s.type===t&&s.name.toLowerCase()===n.toLowerCase());
-  if(ex){
-    ex.qty+=q;
-    ex.date=d;
-    ex.cost=c;
-    ex.history=ex.history||[];
-    ex.history.push({date:d,qty:q,cost:c});
-  }else{
-    stock.push({date:d,type:t,name:n,qty:q,sold:0,cost:c,history:[{date:d,qty:q,cost:c}]});
-  }
-  saveAllLocal();renderStock();
-  pname.value='';pqty.value='';pcost.value='';
+  if(ex){ex.qty+=q;ex.date=d;ex.cost=c;ex.history=ex.history||[];ex.history.push({date:d,qty:q,cost:c});}
+  else stock.push({date:d,type:t,name:n,qty:q,sold:0,cost:c,history:[{date:d,qty:q,cost:c}]});
+  saveAllLocal();renderStock();pname.value='';pqty.value='';pcost.value='';
 }
 
-/* --- clear stock --- */
-function clearStock(){
-  if(!confirm('Clear all stock?'))return;
-  stock=[];saveAllLocal();renderStock();
-}
+/* Clear stock */
+function clearStock(){if(confirm('Clear all stock?')){stock=[];saveAllLocal();renderStock();}}
 
-/* --- render stock --- */
+/* Render stock */
 function renderStock(){
-  const f=filterType.value;
-  const tb=document.querySelector('#stockTable tbody');
-  tb.innerHTML=stock
-  .filter(s=>f==='all'||s.type===f)
-  .map((s,i)=>{
-    const sold=s.sold||0,rem=s.qty-sold,lim=getLimit();
-    let cls='ok',msg='OK';
-    if(rem<=0){cls='out';msg='OUT'}
-    else if(rem<=lim){cls='low';msg='LOW'}
-    return `<tr>
-      <td>${s.date}</td><td>${s.type}</td><td>${s.name}</td>
-      <td>${s.qty}</td><td>${sold}</td><td>${rem}</td>
-      <td class="${cls}">${msg}</td><td>${lim}</td>
-      <td><button onclick="viewHistory(${i})">📜</button></td>
-    </tr>`;
+  const f=filterType.value,tb=document.querySelector('#stockTable tbody');
+  tb.innerHTML=stock.filter(s=>f==='all'||s.type===f).map((s,i)=>{
+    const sold=s.sold||0,rem=s.qty-sold,lim=getLimit();let cls='ok',msg='OK';
+    if(rem<=0){cls='out';msg='OUT'}else if(rem<=lim){cls='low';msg='LOW'}
+    return `<tr><td>${s.date}</td><td>${s.type}</td><td>${s.name}</td><td>${s.qty}</td><td>${sold}</td><td>${rem}</td><td class="${cls}">${msg}</td><td>${lim}</td><td><button onclick="viewHistory(${i})">📜</button></td></tr>`;
   }).join('')||'<tr><td colspan="9">No data</td></tr>';
 }
 
-/* --- view stock history --- */
+/* View history */
 function viewHistory(i){
   const s=stock[i];
-  if(!s.history||!s.history.length)return alert('No history yet');
-  const hist=s.history.map(h=>`${h.date} — Qty:${h.qty} @₹${h.cost}`).join('\n');
+  if(!s.history?.length)return alert('No history');
+  const hist=s.history.map(h=>`${h.date} → Qty:${h.qty} @₹${h.cost}`).join('\n');
   alert(`📜 ${s.name} History:\n${hist}`);
 }
 
-/* --- events --- */
+/* Events */
 document.addEventListener('click',e=>{
   if(e.target.id==='addTypeBtn')addType();
   if(e.target.id==='clearTypesBtn')clearTypes();
@@ -321,5 +244,44 @@ document.addEventListener('click',e=>{
 filterType?.addEventListener('change',renderStock);
 window.addEventListener('load',()=>{renderTypes();updateDropdowns();renderStock();});
 </script>
+  <!-- 🟧 Final Safe Closing (for Business Dashboard) -->
+<style>
+  /* Simple color highlights for alerts */
+  .ok { color: green; font-weight: 600; }
+  .low { color: orange; font-weight: 600; }
+  .out { color: red; font-weight: 700; }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 12px;
+  }
+  th, td {
+    border: 1px solid #ddd;
+    padding: 6px 8px;
+    text-align: center;
+  }
+  th {
+    background: var(--orange);
+    color: #fff;
+  }
+  body.dark th {
+    background: var(--orange-dark);
+  }
+</style>
+
+<!-- ✅ Initialize everything on load -->
+<script>
+window.addEventListener("load",()=>{
+  // If first time user has no data, preload basic example
+  if(!localStorage.getItem('item-types')){
+    localStorage.setItem('item-types',JSON.stringify(['Example Type']));
+  }
+  if(!localStorage.getItem('stock-data')){
+    localStorage.setItem('stock-data',JSON.stringify([]));
+  }
+  console.log("✅ KharchaSaathi loaded successfully!");
+});
+</script>
+
 </body>
 </html>
