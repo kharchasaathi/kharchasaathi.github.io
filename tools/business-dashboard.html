@@ -137,15 +137,20 @@ input,select,button{font-family:inherit}
 })();
 
 /* 📘 Help Modal */
-function toggleHelp(){
-  const m=document.getElementById('helpModal');
-  const shown=m.style.display==='flex';
-  m.style.display=shown?'none':'flex';
-  m.setAttribute('aria-hidden',shown?'true':'false');
-}
-document.getElementById('helpLink').addEventListener('click',e=>{
-  e.preventDefault();toggleHelp();
-});
+<!-- Help Modal -->
+<div id="helpModal" class="help-modal" role="dialog" aria-modal="true" aria-hidden="true">
+  <div class="help-content">
+    <h2>📘 Quick Help</h2>
+    <ul style="padding-left:18px;line-height:1.6">
+      <li>🗂 Add & manage item <b>Types</b></li>
+      <li>📦 Add stock, set limits & auto alerts</li>
+      <li>💰 Record sales — Cash / Credit</li>
+      <li>🛒 Auto Wanting when stock finishes</li>
+      <li>🌙 Theme & data saved offline</li>
+    </ul>
+    <button class="small-btn" onclick="toggleHelp()">Close</button>
+  </div>
+</div>
 </script>
 </body>
 </html>
