@@ -5,67 +5,116 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>📦 KharchaSaathi — Business Dashboard (Stable)</title>
 <meta name="theme-color" content="#ff7a00">
+
 <style>
-:root{
+:root {
   --orange:#ff7a00; --orange-dark:#cc6300;
   --bg:#f8f9fa; --card:#fff; --text:#222;
   --dark-bg:#0f0f0f; --dark-card:#1b1b1b; --dark-text:#f2f2f2;
   --dark-border:#444;
 }
-*{box-sizing:border-box;transition:background .3s,color .3s;}
-body{font-family:Poppins,Arial,sans-serif;margin:0;padding:18px;background:var(--bg);color:var(--text);}
-body.dark{background:var(--dark-bg);color:var(--dark-text);}
-h1{color:var(--orange);}
-.topbar{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;}
-.theme-btn,.small-btn,.action-btn{
-  background:var(--orange);color:#fff;border:none;
-  padding:8px 10px;border-radius:8px;cursor:pointer;transition:.2s;
+* { box-sizing:border-box; transition:background .3s,color .3s; }
+body {
+  font-family:Poppins,Arial,sans-serif;
+  margin:0; padding:18px;
+  background:var(--bg); color:var(--text);
 }
-.theme-btn:hover,.small-btn:hover,.action-btn:hover{background:var(--orange-dark);}
-.tabs{display:flex;gap:8px;margin:18px 0;justify-content:center;flex-wrap:wrap;}
-.tab{background:#eee;padding:8px 12px;border-radius:10px;cursor:pointer;font-weight:600;transition:.2s;}
-body.dark .tab{background:#222;color:#ccc;}
-.tab.active{background:var(--orange);color:#fff;}
-.section{
-  display:none;background:var(--card);
-  padding:14px;border-radius:12px;
+body.dark { background:var(--dark-bg); color:var(--dark-text); }
+h1 { color:var(--orange); }
+
+.topbar {
+  display:flex; justify-content:space-between;
+  align-items:center; flex-wrap:wrap;
+}
+.theme-btn,.small-btn,.action-btn {
+  background:var(--orange); color:#fff; border:none;
+  padding:8px 10px; border-radius:8px; cursor:pointer; transition:.2s;
+}
+.theme-btn:hover,.small-btn:hover,.action-btn:hover {
+  background:var(--orange-dark);
+}
+
+.tabs {
+  display:flex; gap:8px; margin:18px 0;
+  justify-content:center; flex-wrap:wrap;
+}
+.tab {
+  background:#eee; padding:8px 12px;
+  border-radius:10px; cursor:pointer;
+  font-weight:600; transition:.2s;
+}
+body.dark .tab { background:#222; color:#ccc; }
+.tab.active { background:var(--orange); color:#fff; }
+
+.section {
+  display:none; background:var(--card);
+  padding:14px; border-radius:12px;
   box-shadow:0 6px 20px rgba(0,0,0,.08);
-  margin-bottom:18px;position:relative;z-index:2;
+  margin-bottom:18px; position:relative; z-index:2;
 }
-.section.active{display:block;}
-body.dark .section{
+.section.active { display:block; }
+
+body.dark .section {
   background:var(--dark-card);
   border:1px solid var(--dark-border);
   box-shadow:0 0 12px rgba(255,255,255,0.05);
   color:var(--dark-text);
 }
-table{width:100%;border-collapse:collapse;margin-top:12px;}
-th,td{padding:8px;border:1px solid #ddd;text-align:center;font-size:13px;}
-th{background:var(--orange);color:#fff;}
-body.dark th{background:var(--orange-dark);}
-body.dark td{border:1px solid var(--dark-border);}
-.low{color:#ffbb33;font-weight:700;}
-.out{color:#ff5555;font-weight:700;}
-.ok{color:#4eff90;font-weight:700;}
-.footer-btns{text-align:center;margin-top:20px;}
-.footer-btns a{background:var(--orange);color:#fff;padding:10px 16px;border-radius:8px;text-decoration:none;margin:6px;display:inline-block;}
-.footer-btns a:hover{background:var(--orange-dark);}
-.help-modal{
-  position:fixed;top:0;left:0;width:100%;height:100%;
-  background:rgba(0,0,0,0.6);display:none;
-  justify-content:center;align-items:center;z-index:1000;
+
+table {
+  width:100%; border-collapse:collapse;
+  margin-top:12px;
 }
-.help-content{background:var(--card);padding:20px;max-width:550px;border-radius:12px;color:var(--text);overflow-y:auto;max-height:85vh;}
-body.dark .help-content{background:var(--dark-card);color:var(--dark-text);}
-input, select{
-  padding:6px;border:1px solid #ccc;border-radius:6px;
-  margin:4px;outline:none;font-size:14px;
+th,td {
+  padding:8px; border:1px solid #ddd;
+  text-align:center; font-size:13px;
 }
-body.dark input,body.dark select{
-  background:#222;color:#fff;border:1px solid var(--dark-border);
+th { background:var(--orange); color:#fff; }
+body.dark th { background:var(--orange-dark); }
+body.dark td { border:1px solid var(--dark-border); }
+
+.low { color:#ffbb33; font-weight:700; }
+.out { color:#ff5555; font-weight:700; }
+.ok { color:#4eff90; font-weight:700; }
+
+.footer-btns { text-align:center; margin-top:20px; }
+.footer-btns a {
+  background:var(--orange); color:#fff;
+  padding:10px 16px; border-radius:8px;
+  text-decoration:none; margin:6px;
+  display:inline-block;
+}
+.footer-btns a:hover { background:var(--orange-dark); }
+
+.help-modal {
+  position:fixed; top:0; left:0; width:100%; height:100%;
+  background:rgba(0,0,0,0.6);
+  display:none; justify-content:center;
+  align-items:center; z-index:1000;
+}
+.help-content {
+  background:var(--card); padding:20px;
+  max-width:550px; border-radius:12px;
+  color:var(--text); overflow-y:auto;
+  max-height:85vh;
+}
+body.dark .help-content {
+  background:var(--dark-card);
+  color:var(--dark-text);
+}
+
+input, select {
+  padding:6px; border:1px solid #ccc;
+  border-radius:6px; margin:4px;
+  outline:none; font-size:14px;
+}
+body.dark input, body.dark select {
+  background:#222; color:#fff;
+  border:1px solid var(--dark-border);
 }
 </style>
 </head>
+
 <body>
 
 <div class="topbar">
@@ -79,68 +128,432 @@ body.dark input,body.dark select{
   <div class="tab" data-tab="sales">📈 Sales</div>
   <div class="tab" data-tab="wanting">🛒 Wanting</div>
 </div>
-<section id="sales" class="section">
-  <h3>💰 Sales Ledger</h3>
-  <label>Sale Date: </label>
-  <input type="date" id="saleDate">
-  <button class="small-btn" onclick="setSaleDate()">Set Date</button>
-  <button class="small-btn" onclick="clearSales()">🧹 Clear All</button>
-  <table id="salesTable">
+<!-- ✅ PART 2/4: TYPES + STOCK (Final, Error-Free) -->
+<section id="types" class="section active">
+  <h3>🗂 Manage Item Types</h3>
+  <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+    <input type="text" id="typeName" placeholder="Add new type" style="flex:1;min-width:180px;">
+    <button type="button" id="addTypeBtn">Add</button>
+    <button class="small-btn" id="clearTypesBtn">Clear All</button>
+  </div>
+  <ul id="typeList" style="margin-top:10px;padding-left:18px;"></ul>
+</section>
+
+<section id="stock" class="section">
+  <h3>📦 Current Stock</h3>
+  <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+    <label>Low Stock Limit:</label>
+    <input type="number" id="globalLimit" placeholder="e.g. 2" style="width:100px">
+    <button class="small-btn" id="setLimitBtn">Set</button>
+    <button class="small-btn" id="clearStockBtn">Clear All</button>
+  </div>
+
+  <div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
+    <input type="date" id="pdate" style="min-width:150px;">
+    <select id="ptype" style="min-width:140px;"></select>
+    <input type="text" id="pname" placeholder="Product name" style="min-width:160px;">
+    <input type="number" id="pqty" placeholder="Qty" style="width:90px;">
+    <button type="button" id="addStockBtn">Add</button>
+  </div>
+
+  <div style="margin-top:12px;">
+    <label><b>Filter by Type:</b></label>
+    <select id="filterType" style="min-width:160px;">
+      <option value="all">All Types</option>
+    </select>
+  </div>
+
+  <table id="stockTable">
     <thead>
-      <tr><th>Date</th><th>Type</th><th>Product</th><th>Qty</th><th>Price ₹</th><th>Total ₹</th><th>Status</th></tr>
+      <tr>
+        <th>Date</th><th>Type</th><th>Product</th><th>Qty</th>
+        <th>Sold</th><th>Remain</th><th>Alert</th><th>Limit</th><th>Action</th>
+      </tr>
     </thead>
     <tbody></tbody>
-    <tfoot><tr><td colspan="5" style="text-align:right">Total:</td><td id="dayTotal">0</td><td></td></tr></tfoot>
   </table>
 </section>
 
-<!-- Wanting & Footer same as before -->
-  <script>
-let currentSaleDate = new Date().toISOString().split('T')[0];
+<script>
+/* ---------- GLOBAL KEYS ---------- */
+const K_TYPES = 'item-types';
+const K_STOCK = 'stock-data';
+const K_LIMIT = 'default-limit';
 
-function setSaleDate(){
-  const d=document.getElementById('saleDate').value;
-  if(!d)return alert("Pick a date");
-  currentSaleDate=d;
-  alert("✅ Sale date set to "+d);
+window.types = JSON.parse(localStorage.getItem(K_TYPES) || '[]');
+window.stock = JSON.parse(localStorage.getItem(K_STOCK) || '[]');
+window.sales = JSON.parse(localStorage.getItem('sales-data') || '[]');
+window.want  = JSON.parse(localStorage.getItem('wanting-data') || '[]');
+
+/* ---------- SAVE ALL ---------- */
+function saveAllLocal() {
+  localStorage.setItem(K_TYPES, JSON.stringify(types));
+  localStorage.setItem(K_STOCK, JSON.stringify(stock));
+  localStorage.setItem('sales-data', JSON.stringify(sales));
+  localStorage.setItem('wanting-data', JSON.stringify(want));
+  try { if (typeof syncToCloud === 'function') syncToCloud(); } catch(e){}
 }
 
-function sellItem(i,status){
-  const s=stock[i],remain=s.qty-(s.sold||0);
-  if(remain<=0)return alert("No stock left!");
-  const qty=parseInt(prompt(`Enter qty (max ${remain})`));
-  if(!qty||qty>remain)return;
-  const price=parseFloat(prompt("Enter price ₹:"));
-  if(!price)return;
-  const date=currentSaleDate;
-  s.sold=(s.sold||0)+qty;
-  sales.push({date,type:s.type,product:s.name,qty,price,amount:qty*price,status});
-  saveAll();renderStock();renderSales();checkWantAuto(s);
+/* ---------- TYPES ---------- */
+function renderTypes() {
+  const el = document.getElementById('typeList');
+  el.innerHTML = types.length
+    ? types.map(t=>`<li>${t}</li>`).join('')
+    : '<li>No types yet</li>';
 }
 
-function settleCredit(i){
-  const s=sales[i];
-  if(!s||s.status!=='Credit')return alert("Not a credit sale!");
-  if(!confirm(`Settle ${s.product} (${s.amount} ₹)?`))return;
-  const ex=stock.find(x=>x.type===s.type&&x.name.toLowerCase()===s.product.toLowerCase());
-  if(ex){ex.qty+=s.qty;ex.sold-=s.qty;}
-  else{stock.push({date:new Date().toISOString().split('T')[0],type:s.type,name:s.product,qty:s.qty,sold:0});}
-  sales.splice(i,1);
-  saveAll();renderSales();renderStock();
-  alert(`✅ ${s.product} re-added to stock & credit settled`);
+function updateDropdowns() {
+  ['ptype','wtype','filterType'].forEach(id=>{
+    const el = document.getElementById(id);
+    if(!el) return;
+    const extra = id==='filterType'
+      ? '<option value="all">All Types</option>'
+      : '<option value="">Select</option>';
+    el.innerHTML = extra + types.map(t=>`<option value="${t}">${t}</option>`).join('');
+  });
 }
 
-function renderSales(){
-  const tb=document.querySelector('#salesTable tbody');let t=0;
-  tb.innerHTML=sales.map((s,i)=>{
-    t+=s.amount;
-    const btn=s.status==='Credit'?`<button onclick="settleCredit(${i})">✅ Settle</button>`:'';
-    return `<tr><td>${s.date}</td><td>${s.type}</td><td>${s.product}</td>
-      <td>${s.qty}</td><td>${s.price}</td><td>${s.amount}</td><td>${s.status} ${btn}</td></tr>`;
-  }).join('');
-  document.getElementById('dayTotal').textContent=t;
+function addType(){
+  const inp=document.getElementById('typeName');
+  const t=inp.value.trim();
+  if(!t) return alert('Enter a type name');
+  if(types.includes(t)) return alert('Already exists');
+  types.push(t);
+  saveAllLocal(); renderTypes(); updateDropdowns();
+  inp.value='';
 }
+
+function clearTypes(){
+  if(!confirm('Clear all types?')) return;
+  types=[]; saveAllLocal(); renderTypes(); updateDropdowns();
+}
+
+/* ---------- STOCK ---------- */
+function setGlobalLimit(){
+  const v=parseInt(document.getElementById('globalLimit').value);
+  if(isNaN(v)||v<0) return alert('Invalid limit');
+  localStorage.setItem(K_LIMIT,v);
+  alert('Limit set '+v);
+}
+
+function getLimit(){
+  const v=parseInt(localStorage.getItem(K_LIMIT));
+  return isNaN(v)?0:v;
+}
+
+function addStock(){
+  const date=document.getElementById('pdate').value;
+  const type=document.getElementById('ptype').value;
+  const name=document.getElementById('pname').value.trim();
+  const qty=parseInt(document.getElementById('pqty').value);
+  if(!date||!type||!name||!qty) return alert('Fill all fields');
+  const ex=stock.find(s=>s.type===type && s.name.toLowerCase()===name.toLowerCase());
+  if(ex){ ex.qty+=qty; ex.date=date; }
+  else{ stock.push({date,type,name,qty,sold:0}); }
+  saveAllLocal(); renderStock();
+  document.getElementById('pname').value='';
+  document.getElementById('pqty').value='';
+}
+
+function clearStock(){
+  if(!confirm('Clear all stock?')) return;
+  stock=[]; saveAllLocal(); renderStock();
+}
+
+function renderStock(){
+  const filter=document.getElementById('filterType').value;
+  const tb=document.querySelector('#stockTable tbody');
+  tb.innerHTML=stock
+    .filter(s=>filter==='all'||s.type===filter)
+    .map((s,i)=>{
+      const sold=s.sold||0, rem=s.qty-sold, limit=getLimit();
+      let cls='ok',status='OK';
+      if(rem<=0){cls='out';status='OUT';}
+      else if(rem<=limit){cls='low';status='LOW';}
+      return `<tr>
+        <td>${s.date}</td><td>${s.type}</td><td>${s.name}</td>
+        <td>${s.qty}</td><td>${sold}</td><td>${rem}</td>
+        <td class="${cls}">${status}</td><td>${limit}</td>
+        <td>
+          <button onclick="sellItem(${i},'Paid')">💰 Sale</button>
+          <button onclick="sellItem(${i},'Credit')">📒 Credit</button>
+        </td>
+      </tr>`;
+    }).join('');
+}
+
+/* ---------- INIT ---------- */
+function initPart2(){
+  renderTypes(); updateDropdowns(); renderStock();
+  const ft=document.getElementById('filterType');
+  if(ft && !ft.value) ft.value='all';
+}
+window.addEventListener('load',initPart2);
 </script>
+<!-- ===== PART 3/4: SALES UI + JS (Sale date, sell, credit settle) ===== -->
+<section id="sales" class="section">
+  <h3>💰 Sales Ledger</h3>
+
+  <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:8px;">
+    <label style="white-space:nowrap;">Sale Date:</label>
+    <input type="date" id="saleDate" style="min-width:150px;">
+    <button type="button" id="setSaleDateBtn" class="small-btn">Set Date</button>
+    <button type="button" id="clearSalesBtn" class="small-btn">🧹 Clear All</button>
+  </div>
+
+  <table id="salesTable" aria-label="Sales table">
+    <thead>
+      <tr>
+        <th>Date</th><th>Type</th><th>Product</th><th>Qty</th>
+        <th>Price ₹</th><th>Total ₹</th><th>Status</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+    <tfoot>
+      <tr><td colspan="5" style="text-align:right">Total:</td><td id="dayTotal">0</td><td></td></tr>
+    </tfoot>
+  </table>
+</section>
+
+<script>
+/* -------- PART 3 JS: Sales & Credit Settle -------- */
+
+/* currentSaleDate used by sellItem; default = today */
+let currentSaleDate = new Date().toISOString().split('T')[0];
+const saleDateInput = document.getElementById && document.getElementById('saleDate');
+if (saleDateInput) saleDateInput.value = currentSaleDate;
+
+/* Helper: ensure we have global arrays (Part2 provides them, but be safe) */
+window.sales = window.sales || JSON.parse(localStorage.getItem('sales-data') || '[]');
+window.stock  = window.stock  || JSON.parse(localStorage.getItem('stock-data') || '[]');
+window.types  = window.types  || JSON.parse(localStorage.getItem('item-types') || '[]');
+window.want   = window.want   || JSON.parse(localStorage.getItem('wanting-data') || '[]');
+
+/* Set sale date from UI */
+function setSaleDate(){
+  const d = document.getElementById('saleDate').value;
+  if(!d) return alert('Pick a date');
+  currentSaleDate = d;
+  alert('✅ Sale date set to ' + d);
+}
+
+/* sellItem is called from stock table buttons.
+   It creates a sales entry (Paid/Credit) and updates stock.sold.
+   Uses currentSaleDate to stamp the sale.
+*/
+function sellItem(index, status){
+  const s = stock[index];
+  if(!s) return alert('Item not found');
+  const remain = s.qty - (s.sold || 0);
+  if(remain <= 0) return alert('No stock left!');
+  const qtyStr = prompt(`Enter qty (max ${remain})`);
+  const qty = parseInt(qtyStr, 10);
+  if(!qty || qty <= 0 || qty > remain) return alert('Invalid qty');
+  const priceStr = prompt('Enter price ₹:');
+  const price = parseFloat(priceStr);
+  if(!price || price <= 0) return alert('Invalid price');
+
+  const date = currentSaleDate || new Date().toISOString().split('T')[0];
+  s.sold = (s.sold || 0) + qty;
+  const amount = qty * price;
+
+  sales.push({ date, type: s.type, product: s.name, qty, price, amount, status });
+  // persist and refresh
+  if (typeof saveAllLocal === 'function') saveAllLocal();
+  renderStock();
+  renderSales();
+  // auto add to wanting if needed (same logic used elsewhere)
+  if (typeof checkWantAuto === 'function') checkWantAuto(s);
+}
+
+/* Settle credit sale: return qty back to stock and remove sale entry */
+function settleCredit(saleIndex){
+  const sale = sales[saleIndex];
+  if(!sale) return alert('Sale not found');
+  if(sale.status !== 'Credit') return alert('This sale is not Credit');
+
+  if(!confirm(`Settle credit for ${sale.product} — ₹${sale.amount} ?`)) return;
+
+  // Find stock item by type & name (case-insensitively)
+  const ex = stock.find(x => x.type === sale.type && x.name.toLowerCase() === sale.product.toLowerCase());
+  if(ex){
+    // return qty to stock and reduce sold
+    ex.qty = (ex.qty || 0) + sale.qty;
+    ex.sold = Math.max(0, (ex.sold || 0) - sale.qty);
+  } else {
+    // create a new stock entry with today's date
+    stock.push({ date: new Date().toISOString().split('T')[0], type: sale.type, name: sale.product, qty: sale.qty, sold: 0 });
+  }
+
+  // remove sale
+  sales.splice(saleIndex, 1);
+
+  if (typeof saveAllLocal === 'function') saveAllLocal();
+  renderSales();
+  renderStock();
+  alert('✅ Credit settled and stock updated');
+}
+
+/* Render sales table */
+function renderSales(){
+  const tb = document.querySelector('#salesTable tbody');
+  if(!tb) return;
+  let total = 0;
+  tb.innerHTML = sales.map((s, i) => {
+    total += (s.amount || 0);
+    const settleBtn = s.status === 'Credit' ? ` <button type="button" onclick="settleCredit(${i})">✅ Settle</button>` : '';
+    return `<tr>
+      <td>${escapeHtml ? escapeHtml(s.date) : s.date}</td>
+      <td>${escapeHtml ? escapeHtml(s.type) : s.type}</td>
+      <td>${escapeHtml ? escapeHtml(s.product) : s.product}</td>
+      <td>${s.qty}</td>
+      <td>${s.price}</td>
+      <td>${s.amount}</td>
+      <td>${s.status}${settleBtn}</td>
+    </tr>`;
+  }).join('');
+  const totalEl = document.getElementById('dayTotal');
+  if(totalEl) totalEl.textContent = total;
+}
+
+/* Clear all sales */
+function clearSales(){
+  if(!confirm('Clear all sales?')) return;
+  sales = [];
+  if (typeof saveAllLocal === 'function') saveAllLocal();
+  renderSales();
+}
+
+/* Event bindings */
+document.addEventListener('click', function(e){
+  if(e.target && e.target.id === 'setSaleDateBtn') setSaleDate();
+  if(e.target && e.target.id === 'clearSalesBtn') clearSales();
+});
+
+/* Initialize sales UI on load if standalone */
+window.addEventListener('load', function(){
+  // ensure sale date input shows currentSaleDate
+  const sd = document.getElementById('saleDate');
+  if(sd && !sd.value) sd.value = currentSaleDate;
+  // initial render
+  if(typeof renderSales === 'function') renderSales();
+});
+</script>
+<!-- ===== PART 4/4: WANTING + HELP + FIREBASE CLOUD SYNC ===== -->
+
+<section id="wanting" class="section">
+  <h3>🛒 Wanting List</h3>
+  <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:10px;">
+    <input type="date" id="wdate" style="min-width:150px;">
+    <select id="wtype" style="min-width:140px;"></select>
+    <input type="text" id="witem" placeholder="Item name" style="min-width:160px;">
+    <button type="button" id="addWantBtn">Add</button>
+    <button type="button" id="printWantBtn">🖨️ Print</button>
+  </div>
+
+  <table id="wantTable">
+    <thead><tr><th>Date</th><th>Type</th><th>Item</th><th>Action</th></tr></thead>
+    <tbody></tbody>
+  </table>
+</section>
+
+<div class="footer-btns">
+  <a href="#" onclick="toggleHelp()">📘 Help & Guide</a>
+  <a href="../index.html">🏠 Back</a>
+</div>
+
+<div id="helpModal" class="help-modal">
+  <div class="help-content">
+    <h2>📘 KharchaSaathi — User Guide</h2>
+    <ul>
+      <li>🗂 Create Types → 📦 Add Stock → 💰 Sell → 🛒 Auto Wanting → ✅ Restock</li>
+      <li>💰 “Sale” = Cash, 📒 “Credit” = Khata</li>
+      <li>⚙️ Set Low Stock Limit → Auto Alert</li>
+      <li>🌙 Dark mode auto-saves preference</li>
+      <li>💾 Offline mode — All data stored locally</li>
+    </ul>
+    <button onclick="toggleHelp()">Close</button>
+  </div>
+</div>
+
+<script>
+/* ---------- WANTING LOGIC ---------- */
+window.want = window.want || JSON.parse(localStorage.getItem('wanting-data') || '[]');
+
+function addWant(){
+  const date=document.getElementById('wdate').value;
+  const type=document.getElementById('wtype').value;
+  const item=document.getElementById('witem').value.trim();
+  if(!date||!type||!item) return alert('Fill all fields');
+  if(want.find(w=>w.type===type && w.item.toLowerCase()===item.toLowerCase()))
+    return alert('Already exists');
+  want.push({date,type,item});
+  saveAllLocal();
+  renderWant();
+  document.getElementById('witem').value='';
+}
+
+function renderWant(){
+  const tb=document.querySelector('#wantTable tbody');
+  tb.innerHTML = want.map((w,i)=>`
+    <tr>
+      <td>${w.date}</td><td>${w.type}</td><td>${w.item}</td>
+      <td>
+        <button onclick="restock(${i})">✅ Restock</button>
+        <button onclick="delWant(${i})">🗑 Delete</button>
+      </td>
+    </tr>`).join('');
+}
+
+function restock(i){
+  const q=parseInt(prompt('Enter Restock Qty:'));
+  if(!q||q<=0) return alert('Invalid qty');
+  const w=want[i];
+  const date=new Date().toISOString().split('T')[0];
+  const ex=stock.find(s=>s.type===w.type && s.name.toLowerCase()===w.item.toLowerCase());
+  if(ex){ ex.qty+=q; }
+  else { stock.push({date,type:w.type,name:w.item,qty:q,sold:0}); }
+  want.splice(i,1);
+  saveAllLocal(); renderStock(); renderWant();
+  alert(`✅ ${q} of "${w.item}" added to Stock & removed from Wanting.`);
+}
+
+function delWant(i){
+  want.splice(i,1);
+  saveAllLocal(); renderWant();
+}
+
+function printWanting(){
+  const w=window.open('','_blank');
+  w.document.write('<h3>🛒 Wanting List</h3>'+document.getElementById('wantTable').outerHTML);
+  w.document.close(); w.print();
+}
+
+function toggleHelp(){
+  const h=document.getElementById('helpModal');
+  h.style.display = h.style.display==='flex' ? 'none' : 'flex';
+}
+
+/* Auto add wanting when stock = 0 */
+function checkWantAuto(s){
+  const remain=s.qty-(s.sold||0);
+  if(remain<=0 && !want.find(w=>w.type===s.type && w.item.toLowerCase()===s.name.toLowerCase())){
+    want.push({date:new Date().toISOString().split('T')[0],type:s.type,item:s.name});
+    saveAllLocal(); renderWant();
+  }
+}
+
+/* Bind buttons */
+document.addEventListener('click',e=>{
+  if(e.target && e.target.id==='addWantBtn') addWant();
+  if(e.target && e.target.id==='printWantBtn') printWanting();
+});
+
+/* Init wanting */
+window.addEventListener('load',()=>renderWant());
+</script>
+
+<!-- ---------- FIREBASE CLOUD SYNC (Module) ---------- -->
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
 import { getFirestore, doc, setDoc } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
@@ -155,20 +568,23 @@ const firebaseConfig = {
   measurementId: "G-1M4H9VRSBY"
 };
 const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
+const db  = getFirestore(app);
 
-async function syncToCloud(){
+export async function syncToCloud(){
   try{
-    const uid=localStorage.getItem('ks-user')||'guest';
+    const uid = localStorage.getItem('ks-user') || 'guest';
     await setDoc(doc(db,"users",uid,"data","dashboard"),{
-      types,stock,sales,want,lastSync:new Date().toLocaleString()
+      types, stock, sales, want,
+      lastSync: new Date().toLocaleString()
     });
     console.log("✅ Cloud Sync Successful");
-  }catch(err){console.warn("⚠️ Cloud Sync Failed:",err.message||err);}
+  }catch(err){
+    console.warn("⚠️ Cloud Sync Failed:", err.message || err);
+  }
 }
 
-window.addEventListener('load',()=>{if(typeof renderAll==='function')renderAll();});
+/* After module load, ensure renderAll runs once */
+window.addEventListener('load',()=>{ if(typeof renderAll==='function') renderAll(); });
 </script>
-
 </body>
 </html>
