@@ -335,15 +335,25 @@ document.getElementById('themeBtn').onclick = () => {
 /* 🔄 Tabs Switching */
 const tabs = document.querySelectorAll('.tab');
 const sections = document.querySelectorAll('.section');
-tabs.forEach(tab => {
-  tab.addEventListener('click', () => {
-    tabs.forEach(t => t.classList.remove('active'));
-    sections.forEach(s => {
-  if (s.id !== 'dashboard') s.classList.remove('active');
-});
+tabs.forEach(tab=>{
+  tab.addEventListener('click',()=>{
+    // deactivate all
+    tabs.forEach(t=>t.classList.remove('active'));
+    sections.forEach(s=>s.classList.remove('active'));
+
+    // activate selected
     tab.classList.add('active');
-    const target = document.getElementById(tab.dataset.tab);
-    if (target) target.classList.add('active');
+    const target=document.getElementById(tab.dataset.tab);
+    if(target) target.classList.add('active');
+
+    // ✅ Refresh logic (important)
+    if(tab.dataset.tab==='types'){ 
+      renderTypes(); 
+      updateDropdowns(); 
+    }
+    if(tab.dataset.tab==='stock'){ 
+      renderStock(); 
+    }
   });
 });
 
