@@ -532,7 +532,7 @@ applyProfitVisibility();
 </script>
   <!-- ===== PART 2 – Smart Sales + Credit + Auto Wanting Module ===== -->
 
-<!-- ===== UPGRADED: Stock Action Buttons (Sale + Credit + History) ===== -->
+<!-- ===== CLEAR LABELS VERSION: History / Sale / Credit ===== -->
 <script>
 function patchStockActions() {
   const tb = document.querySelector('#stockTable tbody');
@@ -541,9 +541,9 @@ function patchStockActions() {
     if (!tr.querySelector('.stock-action') && !tr.querySelector('td[colspan]')) {
       const cell = tr.lastElementChild;
       cell.innerHTML = `
-        <button class="stock-action history-btn" data-i="${i}">📜</button>
-        <button class="stock-action sale-btn" data-i="${i}">💸</button>
-        <button class="stock-action credit-btn" data-i="${i}">📒</button>
+        <button class="stock-action history-btn" data-i="${i}" title="View History">📜 History</button>
+        <button class="stock-action sale-btn" data-i="${i}" title="Record Sale">💸 Sale</button>
+        <button class="stock-action credit-btn" data-i="${i}" title="Add Credit Sale">📒 Credit</button>
       `;
     }
   });
@@ -559,7 +559,7 @@ function handleHistory(i) {
   alert(`📜 ${s.name} History:\n${hist}`);
 }
 
-/* 💸 SALE / CREDIT common handler */
+/* 💸 SALE / CREDIT */
 function handleSaleOrCredit(i, mode) {
   const s = window.stock[i];
   if (!s) return alert('Invalid item');
@@ -577,22 +577,11 @@ function handleSaleOrCredit(i, mode) {
   const profit = Math.round((price - cost) * qty * 100) / 100;
 
   s.sold = (s.sold || 0) + qty;
-
-  const sale = {
-    date: d,
-    type: s.type,
-    product: s.name,
-    qty,
-    price,
-    amount: qty * price,
-    profit,
-    status: mode
-  };
+  const sale = { date: d, type: s.type, product: s.name, qty, price, amount: qty * price, profit, status: mode };
 
   window.sales.push(sale);
   localStorage.setItem('sales-data', JSON.stringify(window.sales));
 
-  // Auto wanting if stock 0
   if (s.sold >= s.qty) {
     alert(`${s.name} is out of stock! Added to Wanting list.`);
     const wanting = JSON.parse(localStorage.getItem('wanting-data') || '[]');
@@ -608,7 +597,7 @@ function handleSaleOrCredit(i, mode) {
 }
 
 /* 🖱️ Event handling */
-document.addEventListener('click', (e) => {
+document.addEventListener('click', e => {
   if (e.target.classList.contains('history-btn')) handleHistory(e.target.dataset.i);
   if (e.target.classList.contains('sale-btn')) handleSaleOrCredit(e.target.dataset.i, 'Paid');
   if (e.target.classList.contains('credit-btn')) handleSaleOrCredit(e.target.dataset.i, 'Credit');
