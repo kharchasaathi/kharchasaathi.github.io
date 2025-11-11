@@ -32,6 +32,13 @@ body.dark .section{background:var(--dark-card);border:1px solid var(--dark-borde
 .help-modal{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.6);display:none;justify-content:center;align-items:center;z-index:1000}
 .help-content{background:var(--card);padding:20px;max-width:640px;border-radius:12px;color:var(--text);overflow-y:auto;max-height:85vh}
 body.dark .help-content{background:var(--dark-card);color:var(--dark-text)}
+.ok{color:green;font-weight:600}
+.low{color:orange;font-weight:600}
+.out{color:red;font-weight:700}
+table{width:100%;border-collapse:collapse;margin-top:12px}
+th,td{border:1px solid #ddd;padding:6px 8px;text-align:center}
+th{background:var(--orange);color:#fff}
+body.dark th{background:var(--orange-dark)}
 </style>
 </head>
 
@@ -52,61 +59,6 @@ body.dark .help-content{background:var(--dark-card);color:var(--dark-text)}
 </div>
 
 <!-- Sections -->
-<section id="types" class="section active"></section>
-<section id="stock" class="section"></section>
-<section id="sales" class="section"></section>
-<section id="wanting" class="section"></section>
-
-<div class="footer-btns">
-  <a href="#" id="helpLink">📘 Help & Guide</a>
-</div>
-
-<!-- Help Modal -->
-<div id="helpModal" class="help-modal">
-  <div class="help-content">
-    <h2>📘 Quick Help</h2>
-    <ul style="padding-left:18px;line-height:1.6">
-      <li>🗂 Add & manage item <b>Types</b></li>
-      <li>📦 Add stock, set low limit, auto alert</li>
-      <li>💰 Record Sales (Cash / Credit)</li>
-      <li>🛒 Auto Wanting when stock finishes</li>
-      <li>☁️ Data saved offline</li>
-    </ul>
-    <button class="small-btn" onclick="toggleHelp()">Close</button>
-  </div>
-</div>
-
-<script>
-/* 🌙 Theme Toggle */
-(function(){
-  if(localStorage.getItem('ks-theme')==='dark')document.body.classList.add('dark');
-  document.getElementById('themeBtn').onclick=()=>{
-    document.body.classList.toggle('dark');
-    localStorage.setItem('ks-theme',document.body.classList.contains('dark')?'dark':'light');
-  };
-})();
-
-/* 🗂 Tabs Handling */
-(function(){
-  const tabs=document.querySelectorAll('.tab');
-  const sections=document.querySelectorAll('.section');
-  function activate(tab){
-    tabs.forEach(t=>t.classList.remove('active'));
-    sections.forEach(s=>s.classList.remove('active'));
-    tab.classList.add('active');
-    document.getElementById(tab.dataset.tab)?.classList.add('active');
-  }
-  tabs.forEach(tab=>tab.addEventListener('click',()=>activate(tab)));
-})();
-
-/* 📘 Help Modal */
-function toggleHelp(){
-  const m=document.getElementById('helpModal');
-  m.style.display=m.style.display==='flex'?'none':'flex';
-}
-document.getElementById('helpLink').onclick=e=>{e.preventDefault();toggleHelp();};
-</script>
-<!-- ✅ PART 2 : TYPES + STOCK ENHANCED -->
 <section id="types" class="section active">
   <h3>🗂 Manage Item Types</h3>
   <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
@@ -146,21 +98,67 @@ document.getElementById('helpLink').onclick=e=>{e.preventDefault();toggleHelp();
   </table>
 </section>
 
+<section id="sales" class="section">
+  <h3>📈 Sales (coming soon...)</h3>
+  <p>Sales ledger and profit tracking will be added next update.</p>
+</section>
+
+<section id="wanting" class="section">
+  <h3>🛒 Wanting (coming soon...)</h3>
+  <p>Auto wanting & reminders section will appear here.</p>
+</section>
+
+<div class="footer-btns">
+  <a href="#" id="helpLink">📘 Help & Guide</a>
+</div>
+
+<!-- Help Modal -->
+<div id="helpModal" class="help-modal">
+  <div class="help-content">
+    <h2>📘 Quick Help</h2>
+    <ul style="padding-left:18px;line-height:1.6">
+      <li>🗂 Add & manage item <b>Types</b></li>
+      <li>📦 Add stock, set low limit, auto alert</li>
+      <li>💰 Record Sales (Cash / Credit)</li>
+      <li>🛒 Auto Wanting when stock finishes</li>
+      <li>☁️ Data saved offline</li>
+    </ul>
+    <button class="small-btn" onclick="toggleHelp()">Close</button>
+  </div>
+</div>
+
 <script>
+/* 🌙 Theme Toggle */
+if(localStorage.getItem('ks-theme')==='dark')document.body.classList.add('dark');
+document.getElementById('themeBtn').onclick=()=>{
+  document.body.classList.toggle('dark');
+  localStorage.setItem('ks-theme',document.body.classList.contains('dark')?'dark':'light');
+};
+
+/* Tabs */
+const tabs=document.querySelectorAll('.tab'),sections=document.querySelectorAll('.section');
+tabs.forEach(tab=>{
+  tab.addEventListener('click',()=>{
+    tabs.forEach(t=>t.classList.remove('active'));
+    sections.forEach(s=>s.classList.remove('active'));
+    tab.classList.add('active');
+    document.getElementById(tab.dataset.tab)?.classList.add('active');
+  });
+});
+
+/* Help */
+function toggleHelp(){
+  const m=document.getElementById('helpModal');
+  m.style.display=m.style.display==='flex'?'none':'flex';
+}
+document.getElementById('helpLink').onclick=e=>{e.preventDefault();toggleHelp();};
+
+/* ===== TYPES + STOCK LOGIC ===== */
 const K_TYPES='item-types',K_STOCK='stock-data',K_LIMIT='default-limit';
 window.types=JSON.parse(localStorage.getItem(K_TYPES)||'["Mobiles","Accessories"]');
 window.stock=JSON.parse(localStorage.getItem(K_STOCK)||'[]');
-
-/* Save */
-function saveAllLocal(){localStorage.setItem(K_TYPES,JSON.stringify(types));localStorage.setItem(K_STOCK,JSON.stringify(stock));}
-
-/* Render types */
-function renderTypes(){
-  const list=document.getElementById('typeList');
-  list.innerHTML=types.map(t=>`<li>${t}</li>`).join('');
-}
-
-/* Dropdown update */
+function saveAll(){localStorage.setItem(K_TYPES,JSON.stringify(types));localStorage.setItem(K_STOCK,JSON.stringify(stock));}
+function renderTypes(){typeList.innerHTML=types.map(t=>`<li>${t}</li>`).join('');}
 function updateDropdowns(){
   ['ptype','filterType'].forEach(id=>{
     const el=document.getElementById(id);
@@ -169,60 +167,41 @@ function updateDropdowns(){
     el.innerHTML=base+types.map(t=>`<option value="${t}">${t}</option>`).join('');
   });
 }
-
-/* Add type */
 function addType(){
   const t=typeName.value.trim();
-  if(!t)return alert('Enter type name');
-  if(types.includes(t))return alert('Type exists');
-  types.push(t);saveAllLocal();renderTypes();updateDropdowns();typeName.value='';
+  if(!t)return alert('Enter type');
+  if(types.includes(t))return alert('Exists');
+  types.push(t);saveAll();renderTypes();updateDropdowns();typeName.value='';
 }
-
-/* Clear types */
-function clearTypes(){if(confirm('Clear all types?')){types=[];saveAllLocal();renderTypes();updateDropdowns();}}
-
-/* Limit */
-function setGlobalLimit(){
-  const v=parseInt(globalLimit.value);
-  if(isNaN(v)||v<0)return alert('Invalid');
-  localStorage.setItem(K_LIMIT,v);alert('Limit set '+v);
-}
+function clearTypes(){if(confirm('Clear all types?')){types=[];saveAll();renderTypes();updateDropdowns();}}
+function setGlobalLimit(){const v=parseInt(globalLimit.value);if(isNaN(v)||v<0)return alert('Invalid');localStorage.setItem(K_LIMIT,v);alert('Limit set '+v);}
 function getLimit(){const v=parseInt(localStorage.getItem(K_LIMIT));return isNaN(v)?0:v;}
-
-/* Add stock */
 function addStock(){
   const d=pdate.value,t=ptype.value,n=pname.value.trim(),q=parseInt(pqty.value),c=parseFloat(pcost.value);
   if(!d||!t||!n||!q||!c)return alert('Fill all fields');
   let ex=stock.find(s=>s.type===t&&s.name.toLowerCase()===n.toLowerCase());
   if(ex){ex.qty+=q;ex.date=d;ex.cost=c;ex.history=ex.history||[];ex.history.push({date:d,qty:q,cost:c});}
   else stock.push({date:d,type:t,name:n,qty:q,sold:0,cost:c,history:[{date:d,qty:q,cost:c}]});
-  saveAllLocal();renderStock();pname.value='';pqty.value='';pcost.value='';
+  saveAll();renderStock();pname.value='';pqty.value='';pcost.value='';
 }
-
-/* Render stock */
 function renderStock(){
   const f=filterType.value,tb=document.querySelector('#stockTable tbody');
   tb.innerHTML=stock.filter(s=>f==='all'||s.type===f).map((s,i)=>{
     const sold=s.sold||0,rem=s.qty-sold,lim=getLimit();
-    let cls='ok',msg='OK';
-    if(rem<=0){cls='out';msg='OUT'}else if(rem<=lim){cls='low';msg='LOW'}
+    let cls='ok',msg='OK';if(rem<=0){cls='out';msg='OUT'}else if(rem<=lim){cls='low';msg='LOW'}
     return `<tr><td>${s.date}</td><td>${s.type}</td><td>${s.name}</td><td>${s.qty}</td><td>${sold}</td><td>${rem}</td><td class="${cls}">${msg}</td><td>${lim}</td><td><button onclick="viewHistory(${i})">📜</button></td></tr>`;
   }).join('')||'<tr><td colspan="9">No Data</td></tr>';
 }
-
-/* History */
 function viewHistory(i){
   const s=stock[i];
   if(!s.history)return alert('No history');
   alert(`📜 ${s.name}:\n`+s.history.map(h=>`${h.date} — Qty:${h.qty} @₹${h.cost}`).join('\n'));
 }
-
-/* Events */
 document.addEventListener('click',e=>{
   if(e.target.id==='addTypeBtn')addType();
   if(e.target.id==='clearTypesBtn')clearTypes();
   if(e.target.id==='setLimitBtn')setGlobalLimit();
-  if(e.target.id==='clearStockBtn'){if(confirm('Clear all stock?')){stock=[];saveAllLocal();renderStock();}}
+  if(e.target.id==='clearStockBtn'){if(confirm('Clear all stock?')){stock=[];saveAll();renderStock();}}
   if(e.target.id==='addStockBtn')addStock();
 });
 filterType?.addEventListener('change',renderStock);
