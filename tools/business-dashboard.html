@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+Y<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="utf-8">
@@ -632,7 +632,39 @@ window.addEventListener('load', () => {
   patchStockActions();
   setTimeout(patchStockActions, 800);
 });
+<!-- existing scripts (like stock, sales, credit etc.) -->
+
+<!-- ===== PART 6 : SUMMARY PANEL LOGIC ===== -->
+<script>
+function updateSummaryCards(){
+  const today = new Date().toISOString().split('T')[0];
+  const sales = JSON.parse(localStorage.getItem('sales-data')||'[]');
+  const stock = JSON.parse(localStorage.getItem('stock-data')||'[]');
+
+  let todaySales = 0, todayCredit = 0, todayProfit = 0;
+  sales.forEach(s=>{
+    if(s.date===today){
+      if(s.status==='Paid') todaySales += s.amount||0;
+      if(s.status==='Credit') todayCredit += s.amount||0;
+      todayProfit += s.profit||0;
+    }
+  });
+
+  const totalQty = stock.reduce((a,b)=>a+(b.qty||0),0);
+  const soldQty = stock.reduce((a,b)=>a+(b.sold||0),0);
+  const remainPct = totalQty>0?Math.round(((totalQty-soldQty)/totalQty)*100):0;
+
+  document.getElementById('todaySales').textContent = '₹'+todaySales.toFixed(2);
+  document.getElementById('todayCredit').textContent = '₹'+todayCredit.toFixed(2);
+  document.getElementById('todayProfit').textContent = '₹'+todayProfit.toFixed(2);
+  document.getElementById('stockRemain').textContent = remainPct+'%';
+}
+
+/* Refresh logic */
+window.addEventListener('load',updateSummaryCards);
+window.addEventListener('storage',updateSummaryCards);
+setInterval(updateSummaryCards,60000);
 </script>
-  
+
 </body>
 </html>
