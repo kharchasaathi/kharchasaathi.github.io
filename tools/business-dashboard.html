@@ -185,11 +185,16 @@ stock=JSON.parse(localStorage.getItem(K_STOCK)||'[]'),
 sales=JSON.parse(localStorage.getItem(K_SALES)||'[]'),
 want=JSON.parse(localStorage.getItem(K_WANT)||'[]');
 
-function saveAll(){localStorage.setItem(K_TYPES,JSON.stringify(types));
-localStorage.setItem(K_STOCK,JSON.stringify(stock));
-localStorage.setItem(K_SALES,JSON.stringify(sales));
-localStorage.setItem(K_WANT,JSON.stringify(want));}
-  syncToCloud(); // ☁️ Cloud Backup Auto
+function saveAll() {
+  localStorage.setItem(K_TYPES, JSON.stringify(types));
+  localStorage.setItem(K_STOCK, JSON.stringify(stock));
+  localStorage.setItem(K_SALES, JSON.stringify(sales));
+  localStorage.setItem(K_WANT, JSON.stringify(want));
+
+  // ☁️ Cloud Backup Auto
+  // syncToCloud is declared later in the file; calling it here is fine.
+  syncToCloud();
+}
 
 /* TYPES */
 function addType(){const t=document.getElementById('typeName').value.trim();
