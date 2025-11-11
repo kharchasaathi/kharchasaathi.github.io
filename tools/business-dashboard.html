@@ -108,10 +108,14 @@ body.dark .tab {
   border-radius:12px;
   box-shadow:0 6px 20px rgba(0,0,0,.06);
   margin-bottom:18px;
-:root {
-  
-  box-sizing: border-box;
-  transition: background 0.2s, color 0.2s;
+}
+.section.active {
+  display:block;
+}
+body.dark .section {
+  background:var(--dark-card);
+  border:1px solid var(--dark-border);
+  color:var(--dark-text);
 }
 
 /* 🧱 Body style */
