@@ -530,5 +530,126 @@ window.refreshSaleSelectors = refreshSaleSelectors;
 profitLocked = false;
 applyProfitVisibility();
 </script>
+  <!-- ===== PART 2 – Smart Sales + Credit + Auto Wanting Module ===== -->
+<script>
+/* 
+⚙️ This patch extends existing STOCK + SALES logic to add:
+  1️⃣ Sale button per product
+  2️⃣ Credit sales tracking
+  3️⃣ Auto Wanting entries when stock runs out
+  4️⃣ Daily summary refresh links
+*/
+
+const WANTING_KEY = 'wanting-data';
+window.wanting = JSON.parse(localStorage.getItem(WANTING_KEY) || '[]');
+function saveWanting(){ localStorage.setItem(WANTING_KEY, JSON.stringify(wanting)); }
+
+/* ---------- 🛒 Inject ‘Sale’ buttons into Stock table ---------- */
+function patchStockTableForSale(){
+  const tb = document.querySelector('#stockTable tbody');
+  if(!tb) return;
+  tb.querySelectorAll('tr').forEach((tr,i)=>{
+    if(!tr.querySelector('.sale-btn') && !tr.querySelector('td[colspan]')){
+      const lastTd = tr.lastElementChild;
+      lastTd.innerHTML += ` <button class="sale-btn" data-index="${i}">💸</button>`;
+    }
+  });
+}
+
+/* ---------- 🧾 Handle quick Sale click ---------- */
+document.addEventListener('click',e=>{
+  if(e.target.classList.contains('sale-btn')){
+    const i = +e.target.dataset.index;
+    const s = window.stock[i];
+    if(!s) return;
+    const qty = parseInt(prompt(`Sell how many ${s.name}? (Remain ${s.qty - (s.sold||0)})`));
+    if(!qty || qty<=0) return;
+    const price = parseFloat(prompt(`Sale price per unit (₹)`));
+    if(!price) return;
+
+    // Credit or Paid?
+    const status = confirm('Mark as Credit sale? OK = Credit / Cancel = Paid')?'Credit':'Paid';
+    const date = new Date().toISOString().split('T')[0];
+    const type = s.type, name = s.name;
+
+    // Reduce stock sold count
+    s.sold = (s.sold||0) + qty;
+    if(s.sold >= s.qty){
+      alert(`${name} is now out of stock! Adding to Wanting list.`);
+      wanting.push({date, type, name, note:'Auto-added: sold out'});
+      saveWanting();
+    }
+
+    // Cost + Profit
+    const cost = parseFloat(s.cost)||0;
+    const profit = Math.round((price - cost) * qty * 100)/100;
+
+    // Record sale entry
+    const sale = {date,type,product:name,qty,price,amount:price*qty,profit,status};
+    window.sales.push(sale);
+    localStorage.setItem('sales-data',JSON.stringify(window.sales));
+    if(typeof saveAllLocal==='function') saveAllLocal();
+    alert(`Sale recorded: ${qty} x ${name} = ₹${price*qty}`);
+
+    renderStock();
+    renderSales();
+    patchStockTableForSale();
+  }
+});
+
+/* ---------- 🧾 Credit Ledger tab shortcut ---------- */
+(function(){
+  const creditBtn = document.createElement('button');
+  creditBtn.textContent='💳 View Credit Ledger';
+  creditBtn.className='small-btn';
+  creditBtn.onclick=()=>{
+    const credits=(window.sales||[]).filter(s=>s.status==='Credit');
+    if(!credits.length)return alert('No credit sales yet');
+    const txt=credits.map(c=>`${c.date} — ${c.product} (${c.qty}) ₹${c.amount}`).join('\n');
+    alert('💳 Credit Ledger:\n'+txt);
+  };
+  document.querySelector('#sales')?.prepend(creditBtn);
+})();
+
+/* ---------- 🛒 Render Wanting tab ---------- */
+(function(){
+  const sec=document.getElementById('wanting');
+  if(!sec)return;
+  sec.innerHTML = `<h3>🛒 Wanting List</h3>
+  <p>Auto-added when stock runs out or manually entered here.</p>
+  <div style="margin:6px 0;display:flex;gap:8px;flex-wrap:wrap;">
+    <input type="text" id="wantName" placeholder="Product name" style="flex:1;min-width:180px">
+    <button id="addWantBtn">Add</button>
+    <button id="clearWantBtn" class="small-btn">Clear All</button>
+  </div>
+  <ul id="wantList" style="margin-top:10px;padding-left:18px"></ul>`;
+  
+  function renderWanting(){
+    const list=document.getElementById('wantList');
+    if(!list)return;
+    list.innerHTML=wanting.length?wanting.map((w,i)=>`<li>${w.date||''} — ${w.name||w.product||''} (${w.type||''})</li>`).join(''):'<li>None</li>';
+  }
+
+  document.addEventListener('click',e=>{
+    if(e.target.id==='addWantBtn'){
+      const name=document.getElementById('wantName').value.trim();
+      if(!name)return alert('Enter product name');
+      wanting.push({date:new Date().toISOString().split('T')[0],name});
+      saveWanting();renderWanting();document.getElementById('wantName').value='';
+    }
+    if(e.target.id==='clearWantBtn'){
+      if(confirm('Clear all wanting?')){wanting=[];saveWanting();renderWanting();}
+    }
+  });
+
+  window.addEventListener('load',renderWanting);
+})();
+
+/* ---------- ⏰ Daily refresh after stock render ---------- */
+window.addEventListener('load',()=>{
+  patchStockTableForSale();
+  setTimeout(patchStockTableForSale,1000);
+});
+</script>
 </body>
 </html>
