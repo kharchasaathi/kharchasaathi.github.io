@@ -186,7 +186,9 @@ const sections = document.querySelectorAll('.section');
 tabs.forEach(tab => {
   tab.addEventListener('click', () => {
     tabs.forEach(t => t.classList.remove('active'));
-    sections.forEach(s => s.classList.remove('active'));
+    sections.forEach(s => {
+  if (s.id !== 'dashboard') s.classList.remove('active');
+});
     tab.classList.add('active');
     const target = document.getElementById(tab.dataset.tab);
     if (target) target.classList.add('active');
