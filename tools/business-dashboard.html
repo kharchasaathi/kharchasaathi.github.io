@@ -161,6 +161,7 @@ body.dark input,body.dark select{
   </div>
 </div>
 
+<!-- 🔹 Regular Script -->
 <script>
 if(localStorage.getItem('ks-theme')==='dark') document.body.classList.add('dark');
 document.getElementById('themeBtn').onclick=()=>{
@@ -185,103 +186,129 @@ stock=JSON.parse(localStorage.getItem(K_STOCK)||'[]'),
 sales=JSON.parse(localStorage.getItem(K_SALES)||'[]'),
 want=JSON.parse(localStorage.getItem(K_WANT)||'[]');
 
-function saveAll() {
-  localStorage.setItem(K_TYPES, JSON.stringify(types));
-  localStorage.setItem(K_STOCK, JSON.stringify(stock));
-  localStorage.setItem(K_SALES, JSON.stringify(sales));
-  localStorage.setItem(K_WANT, JSON.stringify(want));
-
-  // ☁️ Cloud Backup Auto
-  // syncToCloud is declared later in the file; calling it here is fine.
+function saveAll(){
+  localStorage.setItem(K_TYPES,JSON.stringify(types));
+  localStorage.setItem(K_STOCK,JSON.stringify(stock));
+  localStorage.setItem(K_SALES,JSON.stringify(sales));
+  localStorage.setItem(K_WANT,JSON.stringify(want));
   syncToCloud();
 }
 
-/* TYPES */
 function addType(){const t=document.getElementById('typeName').value.trim();
 if(!t)return alert("Enter a type name");
 if(types.includes(t))return alert("Already exists");
 types.push(t);saveAll();renderTypes();updateDropdowns();
 document.getElementById('typeName').value='';}
-function renderTypes(){document.getElementById('typeList').innerHTML=types.map(t=>`<li>${t}</li>`).join('')||'<li>No types yet</li>';}
+
+function renderTypes(){document.getElementById('typeList').innerHTML=types.map(t=>`<li>${t}</li>`).join('')||'<li>No types yet</li>'; }
 function clearTypes(){if(confirm("Clear all types?")){types=[];saveAll();renderTypes();updateDropdowns();}}
 function updateDropdowns(){['ptype','wtype','filterType'].forEach(id=>{
 const el=document.getElementById(id);if(!el)return;
 let extra=id==='filterType'?'<option value="all">All Types</option>':'<option value="">Select</option>';
 el.innerHTML=extra+types.map(t=>`<option value="${t}">${t}</option>`).join('');});}
 
-/* STOCK */
 function setGlobalLimit(){const v=parseInt(document.getElementById('globalLimit').value);
 if(isNaN(v)||v<0)return alert("Invalid limit");
 localStorage.setItem(K_LIMIT,v);alert("Limit set "+v);}
 function getLimit(){const v=parseInt(localStorage.getItem(K_LIMIT));return isNaN(v)?0:v;}
-function addStock(){const date=document.getElementById('pdate').value,type=document.getElementById('ptype').value,name=document.getElementById('pname').value.trim(),qty=parseInt(document.getElementById('pqty').value);
-if(!date||!type||!name||!qty)return alert("Fill all fields");
-const ex=stock.find(s=>s.type===type&&s.name.toLowerCase()===name.toLowerCase());
-if(ex){ex.qty+=qty;ex.date=date;}else{stock.push({date,type,name,qty,sold:0});}
-saveAll();renderStock();}
-function clearStock(){if(confirm("Clear all stock?")){stock=[];saveAll();renderStock();}}
-function renderStock(){const filter=document.getElementById('filterType').value;
-const tb=document.querySelector('#stockTable tbody');
-tb.innerHTML=stock.filter(s=>filter==='all'||s.type===filter)
-.map((s,i)=>{const sold=s.sold||0,rem=s.qty-sold,limit=getLimit();
-let cls='ok',status='OK';
-if(rem<=0){cls='out';status='OUT';}
-else if(rem<=limit){cls='low';status='LOW';}
-return `<tr><td>${s.date}</td><td>${s.type}</td><td>${s.name}</td>
-<td>${s.qty}</td><td>${sold}</td><td>${rem}</td>
-<td class="${cls}">${status}</td><td>${limit}</td>
-<td><button onclick="sellItem(${i},'Paid')">💰 Sale</button>
-<button onclick="sellItem(${i},'Credit')">📒 Credit</button></td></tr>`;}).join('');}
 
-/* SALES */
-function sellItem(i,status){const s=stock[i],remain=s.qty-(s.sold||0);
-if(remain<=0)return alert("No stock left!");
-const qty=parseInt(prompt(`Enter qty (max ${remain})`));
-if(!qty||qty>remain)return;
-const price=parseFloat(prompt("Enter price ₹:"));
-if(!price)return;
-const date=new Date().toISOString().split('T')[0];
-s.sold=(s.sold||0)+qty;
-sales.push({date,type:s.type,product:s.name,qty,price,amount:qty*price,status});
-saveAll();renderStock();renderSales();checkWantAuto(s);}
-function renderSales(){const tb=document.querySelector('#salesTable tbody');let t=0;
-tb.innerHTML=sales.map(s=>{t+=s.amount;return `<tr><td>${s.date}</td><td>${s.type}</td><td>${s.product}</td>
-<td>${s.qty}</td><td>${s.price}</td><td>${s.amount}</td><td>${s.status}</td></tr>`;}).join('');
-document.getElementById('dayTotal').textContent=t;}
+function addStock(){
+  const date=document.getElementById('pdate').value,type=document.getElementById('ptype').value,
+  name=document.getElementById('pname').value.trim(),qty=parseInt(document.getElementById('pqty').value);
+  if(!date||!type||!name||!qty)return alert("Fill all fields");
+  const ex=stock.find(s=>s.type===type&&s.name.toLowerCase()===name.toLowerCase());
+  if(ex){ex.qty+=qty;ex.date=date;}else{stock.push({date,type,name,qty,sold:0});}
+  saveAll();renderStock();
+}
+function clearStock(){if(confirm("Clear all stock?")){stock=[];saveAll();renderStock();}}
+function renderStock(){
+  const filter=document.getElementById('filterType').value;
+  const tb=document.querySelector('#stockTable tbody');
+  tb.innerHTML=stock.filter(s=>filter==='all'||s.type===filter)
+  .map((s,i)=>{
+    const sold=s.sold||0,rem=s.qty-sold,limit=getLimit();
+    let cls='ok',status='OK';
+    if(rem<=0){cls='out';status='OUT';}
+    else if(rem<=limit){cls='low';status='LOW';}
+    return `<tr><td>${s.date}</td><td>${s.type}</td><td>${s.name}</td>
+    <td>${s.qty}</td><td>${sold}</td><td>${rem}</td>
+    <td class="${cls}">${status}</td><td>${limit}</td>
+    <td><button onclick="sellItem(${i},'Paid')">💰 Sale</button>
+    <button onclick="sellItem(${i},'Credit')">📒 Credit</button></td></tr>`;
+  }).join('');
+}
+
+function sellItem(i,status){
+  const s=stock[i],remain=s.qty-(s.sold||0);
+  if(remain<=0)return alert("No stock left!");
+  const qty=parseInt(prompt(`Enter qty (max ${remain})`));
+  if(!qty||qty>remain)return;
+  const price=parseFloat(prompt("Enter price ₹:"));
+  if(!price)return;
+  const date=new Date().toISOString().split('T')[0];
+  s.sold=(s.sold||0)+qty;
+  sales.push({date,type:s.type,product:s.name,qty,price,amount:qty*price,status});
+  saveAll();renderStock();renderSales();checkWantAuto(s);
+}
+
+function renderSales(){
+  const tb=document.querySelector('#salesTable tbody');let t=0;
+  tb.innerHTML=sales.map(s=>{t+=s.amount;
+    return `<tr><td>${s.date}</td><td>${s.type}</td><td>${s.product}</td>
+    <td>${s.qty}</td><td>${s.price}</td><td>${s.amount}</td><td>${s.status}</td></tr>`;}).join('');
+  document.getElementById('dayTotal').textContent=t;
+}
+
 function clearSales(){if(confirm("Clear sales?")){sales=[];saveAll();renderSales();}}
 
-/* WANTING */
-function checkWantAuto(s){const remain=s.qty-(s.sold||0);
-if(remain<=0&&!want.find(w=>w.type===s.type&&w.item.toLowerCase()===s.name.toLowerCase())){
-want.push({date:new Date().toISOString().split('T')[0],type:s.type,item:s.name});
-saveAll();renderWant();}}
-function addWant(){const date=document.getElementById('wdate').value,
-type=document.getElementById('wtype').value,item=document.getElementById('witem').value.trim();
-if(!date||!type||!item)return alert("Fill all");
-if(want.find(w=>w.type===type&&w.item.toLowerCase()===item.toLowerCase()))
-return alert("Already exists");
-want.push({date,type,item});saveAll();renderWant();}
-function renderWant(){const tb=document.querySelector('#wantTable tbody');
-tb.innerHTML=want.map((w,i)=>`<tr><td>${w.date}</td><td>${w.type}</td><td>${w.item}</td>
-<td><button onclick="restock(${i})">✅ Restock</button>
-<button onclick="delWant(${i})">🗑 Delete</button></td></tr>`).join('');}
-function restock(i){const q=parseInt(prompt("Enter Restock Qty:"));
-if(!q||q<=0)return alert("Invalid qty");
-const w=want[i];const date=new Date().toISOString().split('T')[0];
-const ex=stock.find(s=>s.type===w.type&&s.name.toLowerCase()===w.item.toLowerCase());
-if(ex){ex.qty+=q;}else{stock.push({date,type:w.type,name:w.item,qty:q,sold:0});}
-want.splice(i,1);saveAll();renderStock();renderWant();
-alert(`✅ ${q} of "${w.item}" added to Stock & removed from Wanting.`);}
-function delWant(i){want.splice(i,1);saveAll();renderWant();}
-function printWanting(){const w=window.open('','_blank');
-w.document.write('<h3>🛒 Wanting List</h3>'+document.getElementById('wantTable').outerHTML);
-w.document.close();w.print();}
+function checkWantAuto(s){
+  const remain=s.qty-(s.sold||0);
+  if(remain<=0&&!want.find(w=>w.type===s.type&&w.item.toLowerCase()===s.name.toLowerCase())){
+    want.push({date:new Date().toISOString().split('T')[0],type:s.type,item:s.name});
+    saveAll();renderWant();
+  }
+}
 
-/* HELP + INIT */
+function addWant(){
+  const date=document.getElementById('wdate').value,type=document.getElementById('wtype').value,
+  item=document.getElementById('witem').value.trim();
+  if(!date||!type||!item)return alert("Fill all");
+  if(want.find(w=>w.type===type&&w.item.toLowerCase()===item.toLowerCase()))
+  return alert("Already exists");
+  want.push({date,type,item});saveAll();renderWant();
+}
+
+function renderWant(){
+  const tb=document.querySelector('#wantTable tbody');
+  tb.innerHTML=want.map((w,i)=>`<tr><td>${w.date}</td><td>${w.type}</td><td>${w.item}</td>
+  <td><button onclick="restock(${i})">✅ Restock</button>
+  <button onclick="delWant(${i})">🗑 Delete</button></td></tr>`).join('');
+}
+
+function restock(i){
+  const q=parseInt(prompt("Enter Restock Qty:"));
+  if(!q||q<=0)return alert("Invalid qty");
+  const w=want[i];const date=new Date().toISOString().split('T')[0];
+  const ex=stock.find(s=>s.type===w.type&&s.name.toLowerCase()===w.item.toLowerCase());
+  if(ex){ex.qty+=q;}else{stock.push({date,type:w.type,name:w.item,qty:q,sold:0});}
+  want.splice(i,1);saveAll();renderStock();renderWant();
+  alert(`✅ ${q} of "${w.item}" added to Stock & removed from Wanting.`);
+}
+
+function delWant(i){want.splice(i,1);saveAll();renderWant();}
+function printWanting(){
+  const w=window.open('','_blank');
+  w.document.write('<h3>🛒 Wanting List</h3>'+document.getElementById('wantTable').outerHTML);
+  w.document.close();w.print();
+}
+
 function toggleHelp(){const h=document.getElementById('helpModal');
 h.style.display=h.style.display==='flex'?'none':'flex';}
+
 function renderAll(){renderTypes();updateDropdowns();renderStock();renderSales();renderWant();}
-/* ☁️ Firebase Cloud Sync (Optional Add-on) */
+</script>
+
+<!-- 🔹 Firebase Cloud Sync Script -->
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
 import { getFirestore, doc, setDoc } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js";
@@ -298,12 +325,15 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-/* 🔄 Sync to Cloud Function */
 async function syncToCloud(){
-  try {
+  try{
     const uid = localStorage.getItem('ks-user') || 'guest';
-    await setDoc(doc(db, "users", uid, "data", "dashboard"), {
-      types, stock, sales, want,
+    await setDoc(doc(db,"users",uid,"data","dashboard"),
+              {
+      types, 
+      stock, 
+      sales, 
+      want,
       lastSync: new Date().toLocaleString()
     });
     console.log("✅ Cloud Sync Successful");
@@ -311,7 +341,9 @@ async function syncToCloud(){
     console.warn("⚠️ Cloud Sync Failed:", err.message);
   }
 }
-  window.onload=renderAll;
+
+window.onload = renderAll;
 </script>
+
 </body>
-</html>
+</html>   
