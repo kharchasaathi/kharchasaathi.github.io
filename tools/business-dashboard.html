@@ -952,15 +952,13 @@ window.addEventListener('load',updateSummaryCards);
 window.addEventListener('storage',updateSummaryCards);
 setInterval(updateSummaryCards,60000);
 </script>
-  
-<!-- ===== PART 3: SMART SALES DASHBOARD ===== -->
+  <!-- ===== PART 3: SMART SALES DASHBOARD (SEPARATE SECTION) ===== -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
 function getSalesData(){
   const sales = JSON.parse(localStorage.getItem('sales-data') || '[]');
   const today = new Date();
   const todayStr = today.toISOString().split('T')[0];
-
   const startOfWeek = new Date(today);
   startOfWeek.setDate(today.getDate() - today.getDay());
   const startOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
@@ -983,67 +981,87 @@ function getSalesData(){
   return {todaySales, weekSales, monthSales, creditSales, paidSales, totalProfit};
 }
 
+/* 🧠 Create Smart Dashboard Section */
+function injectAnalyticsSection(){
+  if(document.getElementById('analyticsSection')) return;
+
+  const sec=document.createElement('section');
+  sec.className='section active';
+  sec.id='analyticsSection';
+  sec.innerHTML=`
+    <h3>📊 Smart Sales Dashboard</h3>
+    <div style="display:flex;flex-wrap:wrap;gap:20px;justify-content:center;align-items:center;">
+      <div style="flex:1;min-width:320px;max-width:460px;">
+        <canvas id="salesBar"></canvas>
+      </div>
+      <div style="flex:1;min-width:280px;max-width:360px;">
+        <canvas id="salesPie"></canvas>
+      </div>
+    </div>
+    <p style="margin-top:14px;text-align:center;font-size:14px;opacity:0.7;">
+      🔄 Auto-updates every 60 seconds from your sales data.
+    </p>
+  `;
+  document.body.appendChild(sec);
+}
+
+/* 📊 Render Charts */
 function renderAnalytics(){
   const {todaySales, weekSales, monthSales, creditSales, paidSales, totalProfit} = getSalesData();
-  const ctx1 = document.getElementById('salesBar');
-  const ctx2 = document.getElementById('salesPie');
+  const ctx1=document.getElementById('salesBar');
+  const ctx2=document.getElementById('salesPie');
+  if(!ctx1||!ctx2)return;
 
-  // 🟦 Bar Chart — Daily/Weekly/Monthly
-  new Chart(ctx1, {
-    type: 'bar',
-    data: {
-      labels: ['Today', 'This Week', 'This Month'],
-      datasets: [{
-        label: 'Sales ₹',
-        data: [todaySales, weekSales, monthSales],
-        borderWidth: 1
+  if(window.salesBarChart) window.salesBarChart.destroy();
+  if(window.salesPieChart) window.salesPieChart.destroy();
+
+  // 🟦 Bar Chart
+  window.salesBarChart=new Chart(ctx1,{
+    type:'bar',
+    data:{
+      labels:['Today','This Week','This Month'],
+      datasets:[{
+        label:'Sales ₹',
+        data:[todaySales,weekSales,monthSales],
+        backgroundColor:['#ffb74d','#ff9800','#f57c00'],
+        borderRadius:6
       }]
     },
-    options: {scales:{y:{beginAtZero:true}}}
+    options:{
+      plugins:{
+        title:{display:true,text:'Sales Summary',font:{size:16}},
+        legend:{display:false}
+      },
+      scales:{y:{beginAtZero:true}}
+    }
   });
 
-  // 🟧 Pie Chart — Paid vs Credit
-  new Chart(ctx2, {
-    type: 'pie',
-    data: {
-      labels: ['Paid Sales', 'Credit Sales'],
-      datasets: [{
-        data: [paidSales, creditSales],
-        backgroundColor: ['#ff7a00','#42a5f5']
+  // 🟧 Pie Chart
+  window.salesPieChart=new Chart(ctx2,{
+    type:'pie',
+    data:{
+      labels:['Paid Sales','Credit Sales'],
+      datasets:[{
+        data:[paidSales,creditSales],
+        backgroundColor:['#43a047','#42a5f5']
       }]
     },
-    options: {
-      plugins: {
-        legend: {position:'bottom'},
+    options:{
+      plugins:{
+        legend:{position:'bottom'},
         title:{display:true,text:`Total Profit ₹${totalProfit.toFixed(2)}`}
       }
     }
   });
 }
 
-// 🧠 Create Analytics Section Dynamically
-function injectAnalyticsSection(){
-  if(document.getElementById('analyticsSection')) return;
-  const sec=document.createElement('section');
-  sec.className='section active';
-  sec.id='analyticsSection';
-  sec.innerHTML=`
-    <h3>📊 Smart Sales Dashboard</h3>
-    <div style="display:flex;flex-wrap:wrap;gap:16px;justify-content:center;">
-      <canvas id="salesBar" style="max-width:400px;flex:1;"></canvas>
-      <canvas id="salesPie" style="max-width:300px;flex:1;"></canvas>
-    </div>
-    <p style="margin-top:12px;text-align:center;font-size:14px;opacity:0.8;">Auto-updates from Sales Data every 60 sec</p>
-  `;
-  document.body.appendChild(sec);
-}
-
-// 🔁 Load Charts when Sales data ready
+/* 🔁 Initialize */
 window.addEventListener('load',()=>{
   injectAnalyticsSection();
   renderAnalytics();
   setInterval(renderAnalytics,60000);
 });
 </script>
+
 </body>
 </html>
