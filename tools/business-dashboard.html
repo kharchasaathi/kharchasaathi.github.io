@@ -207,5 +207,328 @@ document.addEventListener('click',e=>{
 filterType?.addEventListener('change',renderStock);
 window.addEventListener('load',()=>{renderTypes();updateDropdowns();renderStock();});
 </script>
+  <!-- ===== PART: Sales + Profit Module (STEP 1) ===== -->
+<section id="sales" class="section">
+  <h3>💰 Sales & Profit</h3>
+
+  <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:10px;">
+    <label>Sale Date:</label>
+    <input type="date" id="saleDate" style="min-width:150px">
+    <label>Type</label>
+    <select id="saleType" style="min-width:140px"></select>
+    <label>Product</label>
+    <select id="saleProduct" style="min-width:180px"></select>
+    <input type="number" id="saleQty" placeholder="Qty" style="width:80px">
+    <input type="number" id="salePrice" placeholder="Sale ₹" style="width:100px">
+    <select id="saleStatus" style="min-width:100px">
+      <option value="Paid">Paid</option>
+      <option value="Credit">Credit</option>
+    </select>
+    <button id="addSaleBtn">Add Sale</button>
+  </div>
+
+  <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:8px;">
+    <label>GST?</label>
+    <input type="checkbox" id="includeGst"><input type="number" id="gstPercent" placeholder="GST %" style="width:80px" value="0">
+    <button id="viewSalesBtn" class="small-btn">View by Date</button>
+    <button id="printSalesBtn" class="small-btn">Print</button>
+
+    <!-- Admin controls for profit column -->
+    <div style="margin-left:auto;display:flex;gap:8px;align-items:center;">
+      <button id="toggleProfitBtn" class="small-btn">🔒 Lock/Unlock Profit</button>
+      <button id="setAdminBtn" class="small-btn">Set Admin PW</button>
+    </div>
+  </div>
+
+  <table id="salesTable" aria-label="Sales table">
+    <thead>
+      <tr>
+        <th>Date</th><th>Type</th><th>Product</th><th>Qty</th><th>Price ₹</th><th>Total ₹</th><th>Profit ₹</th><th>Status</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+    <tfoot>
+      <tr>
+        <td colspan="5" style="text-align:right">Total:</td>
+        <td id="salesTotal">0</td>
+        <td id="profitTotal">0</td>
+        <td></td>
+      </tr>
+    </tfoot>
+  </table>
+</section>
+
+<script>
+/* Sales + Profit Module
+   - plugs into existing window.stock and localStorage
+   - stores sales in localStorage key 'sales-data'
+   - profit column can be locked (admin password)
+*/
+
+/* --- Setup data stores --- */
+window.sales = JSON.parse(localStorage.getItem('sales-data') || '[]');
+const SALES_KEY = 'sales-data';
+const ADMIN_KEY = 'ks-admin-pw'; // stored hashed? using plain here for simplicity (you can replace with better hashing)
+
+/* --- Helper: persist sales --- */
+function saveSales(){
+  localStorage.setItem(SALES_KEY, JSON.stringify(sales));
+  try{ if(typeof saveAllLocal === 'function') saveAllLocal(); }catch(e){}
+}
+
+/* --- Utility: default admin pw if none --- */
+if(!localStorage.getItem(ADMIN_KEY)){
+  localStorage.setItem(ADMIN_KEY, 'admin123'); // default, change via Set Admin PW
+}
+
+/* --- DOM refs --- */
+const saleDate = document.getElementById('saleDate');
+const saleType = document.getElementById('saleType');
+const saleProduct = document.getElementById('saleProduct');
+const saleQty = document.getElementById('saleQty');
+const salePrice = document.getElementById('salePrice');
+const saleStatus = document.getElementById('saleStatus');
+const includeGst = document.getElementById('includeGst');
+const gstPercent = document.getElementById('gstPercent');
+
+const salesTableBody = document.querySelector('#salesTable tbody');
+const salesTotalEl = document.getElementById('salesTotal');
+const profitTotalEl = document.getElementById('profitTotal');
+
+/* --- Init saleDate to today if empty --- */
+const today = new Date().toISOString().split('T')[0];
+if(saleDate && !saleDate.value) saleDate.value = today;
+
+/* --- Populate Type and Product selects from window.stock/types --- */
+function refreshSaleSelectors(){
+  // types
+  const typesList = Array.isArray(window.types) ? window.types : (window.types = JSON.parse(localStorage.getItem('item-types')||'[]'));
+  saleType.innerHTML = `<option value="">All Types</option>` + typesList.map(t=>`<option value="${t}">${t}</option>`).join('');
+  // products (unique across stock)
+  const prodOptions = (window.stock || []).map(s => ({type:s.type,name:s.name})).filter((v,i,a)=>
+    a.findIndex(x=>x.type===v.type&&x.name===v.name)===i
+  );
+  saleProduct.innerHTML = '<option value="">Select</option>' + prodOptions.map(p=>`<option value="${p.type}|||${p.name}">${p.type} — ${p.name}</option>`).join('');
+}
+
+/* on type change, filter products */
+saleType?.addEventListener('change', ()=>{
+  const t = saleType.value;
+  const filtered = (window.stock || []).filter(s=>!t||s.type===t)
+    .map(s=>({type:s.type,name:s.name}))
+    .filter((v,i,a)=>a.findIndex(x=>x.type===v.type&&x.name===v.name)===i);
+  saleProduct.innerHTML = '<option value="">Select</option>' + filtered.map(p=>`<option value="${p.type}|||${p.name}">${p.type} — ${p.name}</option>`).join('');
+});
+
+/* --- Compute average cost for a product (from its history) --- */
+function getProductCost(type, name){
+  const ex = (window.stock || []).find(s => s.type === type && s.name.toLowerCase() === name.toLowerCase());
+  if(!ex) return 0;
+  // Prefer explicit cost if stored
+  if(ex.cost) return parseFloat(ex.cost) || 0;
+  // otherwise use history average
+  if(Array.isArray(ex.history) && ex.history.length){
+    const tot = ex.history.reduce((acc,h)=>acc + (h.qty*(h.cost||0)), 0);
+    const qtot = ex.history.reduce((acc,h)=>acc + (h.qty||0), 0);
+    return qtot ? (tot / qtot) : 0;
+  }
+  return 0;
+}
+
+/* --- Add sale handler --- */
+function addSale(){
+  const d = saleDate.value || today;
+  const prodVal = saleProduct.value;
+  const qty = parseInt(saleQty.value,10);
+  const price = parseFloat(salePrice.value);
+  const status = saleStatus.value || 'Paid';
+  if(!prodVal) return alert('Select product');
+  if(!qty || qty <= 0) return alert('Invalid qty');
+  if(!price || price <= 0) return alert('Invalid price');
+
+  const [type, name] = prodVal.split('|||');
+
+  // find stock item and remaining
+  const sIndex = (window.stock || []).findIndex(s => s.type === type && s.name.toLowerCase() === name.toLowerCase());
+  let remain = 0;
+  if(sIndex >= 0){
+    const stockItem = window.stock[sIndex];
+    const soldSoFar = stockItem.sold || 0;
+    remain = (stockItem.qty || 0) - soldSoFar;
+    if(qty > remain) {
+      if(!confirm(`Only ${remain} remaining in stock. Proceed to sell ${qty} anyway?`)) return;
+    }
+    // Update sold (but don't reduce qty entries — keep original qty + sold)
+    stockItem.sold = (stockItem.sold || 0) + qty;
+    // persist stock
+    try{ if(typeof saveAllLocal === 'function') saveAllLocal(); }catch(e){}
+  }
+
+  // cost & profit calculation
+  let cost = getProductCost(type, name) || 0;
+  let netSalePrice = price;
+  if(includeGst.checked){
+    const g = parseFloat(gstPercent.value) || 0;
+    if(g > 0) netSalePrice = price / (1 + (g/100));
+  }
+  const profit = ((netSalePrice - cost) * qty);
+
+  // create sale entry
+  const entry = {
+    date: d,
+    type,
+    product: name,
+    qty,
+    price,
+    amount: price * qty,
+    costPerUnit: cost,
+    profit: Math.round(profit*100)/100,
+    status
+  };
+  sales.push(entry);
+  saveSales();
+
+  // re-render
+  renderSales();
+  // reset inputs
+  saleQty.value = '';
+  salePrice.value = '';
+  // re-render stock table if function exists
+  try{ if(typeof renderStock === 'function') renderStock(); }catch(e){}
+}
+
+/* --- Render sales table (optionally filter by date) --- */
+function renderSales(filterDate){
+  const tb = salesTableBody;
+  const list = (window.sales || []);
+  const rows = (filterDate ? list.filter(s => s.date === filterDate) : list);
+  let total = 0, pTotal = 0;
+  tb.innerHTML = (rows.length ? rows.map((s,i) => {
+    total += (s.amount || 0);
+    pTotal += (s.profit || 0);
+    return `<tr data-index="${i}">
+      <td>${s.date}</td>
+      <td>${escapeHtml(s.type)}</td>
+      <td>${escapeHtml(s.product)}</td>
+      <td>${s.qty}</td>
+      <td>${s.price}</td>
+      <td>${s.amount}</td>
+      <td class="profit-cell">${s.profit}</td>
+      <td>${s.status}</td>
+    </tr>`;
+  }).join('') : '<tr><td colspan="8">No Sales Yet</td></tr>');
+  salesTotalEl.textContent = Math.round(total*100)/100;
+  profitTotalEl.textContent = Math.round(pTotal*100)/100;
+  applyProfitVisibility(); // ensure profit column respects lock state
+}
+
+/* --- Simple escapeHtml for safety --- */
+function escapeHtml(str){
+  if(!str && str !== 0) return '';
+  return String(str).replace(/[&<>'"]/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c];});
+}
+
+/* --- Filter/view by saleDate --- */
+document.getElementById('viewSalesBtn')?.addEventListener('click', ()=>{
+  const d = saleDate.value || today;
+  renderSales(d);
+});
+
+/* --- Print displayed sales (current filter) --- */
+document.getElementById('printSalesBtn')?.addEventListener('click', ()=>{
+  // create printable HTML from current tbody rows
+  const rowsHtml = salesTableBody.innerHTML;
+  const printHtml = `<html><head><title>Sales Print</title>
+    <style>table{width:100%;border-collapse:collapse}th,td{border:1px solid #ccc;padding:6px;text-align:center}</style>
+    </head><body><h3>Sales — ${saleDate.value || 'All'}</h3><table><thead>${document.querySelector('#salesTable thead').innerHTML}</thead><tbody>${rowsHtml}</tbody></table></body></html>`;
+  const w = window.open('', '_blank');
+  w.document.write(printHtml);
+  w.document.close();
+  w.print();
+});
+
+/* --- Profit column locking --- */
+let profitLocked = false;
+function applyProfitVisibility(){
+  const colIndex = 6; // 0-based index of Profit column within table head/rows (here it's 6)
+  // hide/show header cell
+  const ths = document.querySelectorAll('#salesTable thead th');
+  if(ths && ths[colIndex]) ths[colIndex].style.display = profitLocked ? 'none' : '';
+  // rows cells
+  document.querySelectorAll('#salesTable tbody tr').forEach(tr=>{
+    const pc = tr.querySelector('.profit-cell');
+    if(pc) pc.style.display = profitLocked ? 'none' : '';
+  });
+  // footer profit total
+  profitTotalEl.style.display = profitLocked ? 'none' : '';
+}
+
+/* Toggle profit lock — require admin pw to unlock if locked */
+document.getElementById('toggleProfitBtn')?.addEventListener('click', async ()=>{
+  if(!profitLocked){
+    // lock — just hide
+    profitLocked = true;
+    applyProfitVisibility();
+    alert('Profit column locked (hidden). To unlock use the same button and enter admin password.');
+    return;
+  }
+  // unlock -> ask for admin password
+  const pw = prompt('Enter admin password to unlock Profit column:');
+  if(!pw) return;
+  const stored = localStorage.getItem(ADMIN_KEY) || '';
+  if(pw === stored){
+    profitLocked = false;
+    applyProfitVisibility();
+    alert('Profit column unlocked.');
+  } else {
+    alert('Incorrect password.');
+  }
+});
+
+/* --- Set/change admin password --- */
+document.getElementById('setAdminBtn')?.addEventListener('click', ()=>{
+  const cur = localStorage.getItem(ADMIN_KEY) || '';
+  if(cur){
+    const old = prompt('Enter current admin password (leave blank to cancel):');
+    if(!old) return;
+    if(old !== cur){ alert('Wrong password'); return; }
+  }
+  const np = prompt('Enter new admin password (min 4 chars):');
+  if(!np || np.length < 4) return alert('Password too short');
+  localStorage.setItem(ADMIN_KEY, np);
+  alert('Admin password updated.');
+});
+
+/* --- Escape-proof: ensure sales array present --- */
+if(!Array.isArray(window.sales)) window.sales = sales = JSON.parse(localStorage.getItem(SALES_KEY) || '[]');
+else var sales = window.sales;
+
+/* --- Hook Add Sale button --- */
+document.getElementById('addSaleBtn')?.addEventListener('click', addSale);
+
+/* --- Escape: ensure selectors are updated on stock change --- */
+function initSalesModule(){
+  refreshSaleSelectors();
+  renderSales(); // all
+  // Try to keep selectors updated when stock/types change (if those functions call saveAllLocal, we can listen storage)
+  // Also call refreshSaleSelectors periodically / on focus (helps with single-file workflows)
+}
+window.addEventListener('load', initSalesModule);
+window.addEventListener('storage', (e)=>{
+  if(e.key === 'stock-data' || e.key === 'item-types') {
+    try{ window.stock = JSON.parse(localStorage.getItem('stock-data')||'[]'); window.types = JSON.parse(localStorage.getItem('item-types')||'[]'); }catch(e){}
+    refreshSaleSelectors(); renderSales();
+  }
+});
+
+/* expose for debugging */
+window.renderSales = renderSales;
+window.addSale = addSale;
+window.refreshSaleSelectors = refreshSaleSelectors;
+
+/* ensure profit column starts visible/unlocked */
+profitLocked = false;
+applyProfitVisibility();
+</script>
 </body>
 </html>
