@@ -83,7 +83,7 @@ body.dark input,body.dark select{
 <section id="types" class="section active">
   <h3>🗂 Manage Item Types</h3>
   <input type="text" id="typeName" placeholder="Add new type">
-  <button onclick="addType()">Add</button>
+  <button type="button" onclick="addType()">Add</button>
   <button class="small-btn" onclick="clearTypes()">Clear All</button>
   <ul id="typeList" style="margin-top:10px;padding-left:18px;"></ul>
 </section>
@@ -101,7 +101,7 @@ body.dark input,body.dark select{
   <select id="ptype"></select>
   <input type="text" id="pname" placeholder="Product name">
   <input type="number" id="pqty" placeholder="Qty">
-  <button onclick="addStock()">Add</button>
+  <button type="button" onclick="addStock()">Add</button>
   <br><br>
   <label><b>Filter by Type:</b></label>
   <select id="filterType" onchange="renderStock()">
@@ -134,8 +134,8 @@ body.dark input,body.dark select{
   <input type="date" id="wdate">
   <select id="wtype"></select>
   <input type="text" id="witem" placeholder="Item name">
-  <button onclick="addWant()">Add</button>
-  <button onclick="printWanting()">🖨️ Print</button>
+  <button type="button" onclick="addWant()">Add</button>
+  <button type="button" onclick="printWanting()">🖨️ Print</button>
   <table id="wantTable">
     <thead><tr><th>Date</th><th>Type</th><th>Item</th><th>Action</th></tr></thead>
     <tbody></tbody>
@@ -161,13 +161,12 @@ body.dark input,body.dark select{
   </div>
 </div>
 
-<!-- 🔹 Regular Script -->
 <script>
 if(localStorage.getItem('ks-theme')==='dark') document.body.classList.add('dark');
 document.getElementById('themeBtn').onclick=()=>{
   document.body.classList.toggle('dark');
   localStorage.setItem('ks-theme',document.body.classList.contains('dark') ? 'dark' : 'light');
-}; 
+};
 
 const tabs=document.querySelectorAll('.tab');
 const sections=document.querySelectorAll('.section');
@@ -194,33 +193,68 @@ function saveAll(){
   syncToCloud();
 }
 
-function addType(){const t=document.getElementById('typeName').value.trim();
-if(!t)return alert("Enter a type name");
-if(types.includes(t))return alert("Already exists");
-types.push(t);saveAll();renderTypes();updateDropdowns();
-document.getElementById('typeName').value='';}
+function addType(){
+  const t=document.getElementById('typeName').value.trim();
+  if(!t)return alert("Enter a type name");
+  if(types.includes(t))return alert("Already exists");
+  types.push(t);
+  saveAll();
+  renderTypes();
+  updateDropdowns();
+  document.getElementById('typeName').value='';
+}
 
-function renderTypes(){document.getElementById('typeList').innerHTML=types.map(t=>`<li>${t}</li>`).join('')||'<li>No types yet</li>'; }
-function clearTypes(){if(confirm("Clear all types?")){types=[];saveAll();renderTypes();updateDropdowns();}}
-function updateDropdowns(){['ptype','wtype','filterType'].forEach(id=>{
-const el=document.getElementById(id);if(!el)return;
-let extra=id==='filterType'?'<option value="all">All Types</option>':'<option value="">Select</option>';
-el.innerHTML=extra+types.map(t=>`<option value="${t}">${t}</option>`).join('');});}
+function renderTypes(){
+  document.getElementById('typeList').innerHTML=
+  types.map(t=>`<li>${t}</li>`).join('')||'<li>No types yet</li>';
+}
 
-function setGlobalLimit(){const v=parseInt(document.getElementById('globalLimit').value);
-if(isNaN(v)||v<0)return alert("Invalid limit");
-localStorage.setItem(K_LIMIT,v);alert("Limit set "+v);}
-function getLimit(){const v=parseInt(localStorage.getItem(K_LIMIT));return isNaN(v)?0:v;}
+function clearTypes(){
+  if(confirm("Clear all types?")){
+    types=[];saveAll();renderTypes();updateDropdowns();
+  }
+}
+
+function updateDropdowns(){
+  ['ptype','wtype','filterType'].forEach(id=>{
+    const el=document.getElementById(id);
+    if(!el)return;
+    let extra=id==='filterType'
+      ?'<option value="all">All Types</option>'
+      :'<option value="">Select</option>';
+    el.innerHTML=extra+types.map(t=>`<option value="${t}">${t}</option>`).join('');
+  });
+}
+  function setGlobalLimit(){
+  const v=parseInt(document.getElementById('globalLimit').value);
+  if(isNaN(v)||v<0)return alert("Invalid limit");
+  localStorage.setItem(K_LIMIT,v);
+  alert("Limit set "+v);
+}
+
+function getLimit(){
+  const v=parseInt(localStorage.getItem(K_LIMIT));
+  return isNaN(v)?0:v;
+}
 
 function addStock(){
-  const date=document.getElementById('pdate').value,type=document.getElementById('ptype').value,
-  name=document.getElementById('pname').value.trim(),qty=parseInt(document.getElementById('pqty').value);
+  const date=document.getElementById('pdate').value,
+  type=document.getElementById('ptype').value,
+  name=document.getElementById('pname').value.trim(),
+  qty=parseInt(document.getElementById('pqty').value);
   if(!date||!type||!name||!qty)return alert("Fill all fields");
   const ex=stock.find(s=>s.type===type&&s.name.toLowerCase()===name.toLowerCase());
-  if(ex){ex.qty+=qty;ex.date=date;}else{stock.push({date,type,name,qty,sold:0});}
+  if(ex){ex.qty+=qty;ex.date=date;}
+  else{stock.push({date,type,name,qty,sold:0});}
   saveAll();renderStock();
 }
-function clearStock(){if(confirm("Clear all stock?")){stock=[];saveAll();renderStock();}}
+
+function clearStock(){
+  if(confirm("Clear all stock?")){
+    stock=[];saveAll();renderStock();
+  }
+}
+
 function renderStock(){
   const filter=document.getElementById('filterType').value;
   const tb=document.querySelector('#stockTable tbody');
@@ -230,11 +264,15 @@ function renderStock(){
     let cls='ok',status='OK';
     if(rem<=0){cls='out';status='OUT';}
     else if(rem<=limit){cls='low';status='LOW';}
-    return `<tr><td>${s.date}</td><td>${s.type}</td><td>${s.name}</td>
-    <td>${s.qty}</td><td>${sold}</td><td>${rem}</td>
-    <td class="${cls}">${status}</td><td>${limit}</td>
-    <td><button onclick="sellItem(${i},'Paid')">💰 Sale</button>
-    <button onclick="sellItem(${i},'Credit')">📒 Credit</button></td></tr>`;
+    return `<tr>
+      <td>${s.date}</td><td>${s.type}</td><td>${s.name}</td>
+      <td>${s.qty}</td><td>${sold}</td><td>${rem}</td>
+      <td class="${cls}">${status}</td><td>${limit}</td>
+      <td>
+        <button onclick="sellItem(${i},'Paid')">💰 Sale</button>
+        <button onclick="sellItem(${i},'Credit')">📒 Credit</button>
+      </td>
+    </tr>`;
   }).join('');
 }
 
@@ -253,13 +291,19 @@ function sellItem(i,status){
 
 function renderSales(){
   const tb=document.querySelector('#salesTable tbody');let t=0;
-  tb.innerHTML=sales.map(s=>{t+=s.amount;
+  tb.innerHTML=sales.map(s=>{
+    t+=s.amount;
     return `<tr><td>${s.date}</td><td>${s.type}</td><td>${s.product}</td>
-    <td>${s.qty}</td><td>${s.price}</td><td>${s.amount}</td><td>${s.status}</td></tr>`;}).join('');
+    <td>${s.qty}</td><td>${s.price}</td><td>${s.amount}</td><td>${s.status}</td></tr>`;
+  }).join('');
   document.getElementById('dayTotal').textContent=t;
 }
 
-function clearSales(){if(confirm("Clear sales?")){sales=[];saveAll();renderSales();}}
+function clearSales(){
+  if(confirm("Clear sales?")){
+    sales=[];saveAll();renderSales();
+  }
+}
 
 function checkWantAuto(s){
   const remain=s.qty-(s.sold||0);
@@ -270,42 +314,59 @@ function checkWantAuto(s){
 }
 
 function addWant(){
-  const date=document.getElementById('wdate').value,type=document.getElementById('wtype').value,
+  const date=document.getElementById('wdate').value,
+  type=document.getElementById('wtype').value,
   item=document.getElementById('witem').value.trim();
-  if(!date||!type||!item)return alert("Fill all");
+  if(!date||!type||!item)return alert("Fill all fields");
   if(want.find(w=>w.type===type&&w.item.toLowerCase()===item.toLowerCase()))
   return alert("Already exists");
-  want.push({date,type,item});saveAll();renderWant();
+  want.push({date,type,item});
+  saveAll();renderWant();
 }
 
 function renderWant(){
   const tb=document.querySelector('#wantTable tbody');
-  tb.innerHTML=want.map((w,i)=>`<tr><td>${w.date}</td><td>${w.type}</td><td>${w.item}</td>
-  <td><button onclick="restock(${i})">✅ Restock</button>
-  <button onclick="delWant(${i})">🗑 Delete</button></td></tr>`).join('');
+  tb.innerHTML=want.map((w,i)=>`<tr>
+    <td>${w.date}</td><td>${w.type}</td><td>${w.item}</td>
+    <td>
+      <button onclick="restock(${i})">✅ Restock</button>
+      <button onclick="delWant(${i})">🗑 Delete</button>
+    </td></tr>`).join('');
 }
 
 function restock(i){
   const q=parseInt(prompt("Enter Restock Qty:"));
   if(!q||q<=0)return alert("Invalid qty");
-  const w=want[i];const date=new Date().toISOString().split('T')[0];
+  const w=want[i];
+  const date=new Date().toISOString().split('T')[0];
   const ex=stock.find(s=>s.type===w.type&&s.name.toLowerCase()===w.item.toLowerCase());
-  if(ex){ex.qty+=q;}else{stock.push({date,type:w.type,name:w.item,qty:q,sold:0});}
-  want.splice(i,1);saveAll();renderStock();renderWant();
+  if(ex){ex.qty+=q;}
+  else{stock.push({date,type:w.type,name:w.item,qty:q,sold:0});}
+  want.splice(i,1);
+  saveAll();renderStock();renderWant();
   alert(`✅ ${q} of "${w.item}" added to Stock & removed from Wanting.`);
 }
 
-function delWant(i){want.splice(i,1);saveAll();renderWant();}
+function delWant(i){
+  want.splice(i,1);
+  saveAll();renderWant();
+}
+
 function printWanting(){
   const w=window.open('','_blank');
   w.document.write('<h3>🛒 Wanting List</h3>'+document.getElementById('wantTable').outerHTML);
-  w.document.close();w.print();
+  w.document.close();
+  w.print();
 }
 
-function toggleHelp(){const h=document.getElementById('helpModal');
-h.style.display=h.style.display==='flex'?'none':'flex';}
+function toggleHelp(){
+  const h=document.getElementById('helpModal');
+  h.style.display=h.style.display==='flex'?'none':'flex';
+}
 
-function renderAll(){renderTypes();updateDropdowns();renderStock();renderSales();renderWant();}
+function renderAll(){
+  renderTypes();updateDropdowns();renderStock();renderSales();renderWant();
+}
 </script>
 
 <!-- 🔹 Firebase Cloud Sync Script -->
@@ -328,12 +389,8 @@ const db = getFirestore(app);
 async function syncToCloud(){
   try{
     const uid = localStorage.getItem('ks-user') || 'guest';
-    await setDoc(doc(db,"users",uid,"data","dashboard"),
-              {
-      types, 
-      stock, 
-      sales, 
-      want,
+    await setDoc(doc(db,"users",uid,"data","dashboard"),{
+      types, stock, sales, want,
       lastSync: new Date().toLocaleString()
     });
     console.log("✅ Cloud Sync Successful");
@@ -346,4 +403,4 @@ window.onload = renderAll;
 </script>
 
 </body>
-</html>   
+</html>
