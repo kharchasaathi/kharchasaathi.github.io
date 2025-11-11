@@ -554,11 +554,6 @@ window.refreshSaleSelectors = refreshSaleSelectors;
 profitLocked = false;
 applyProfitVisibility();
 </script>
-  <!-- ===== PART 2 – Smart Sales + Credit + Auto Wanting Module ===== -->
-
-<!-- ===== CLEAR LABELS VERSION: History / Sale / Credit ===== -->
-
-</script>   <!-- ✅ close previous script properly -->
 
 <!-- ===== PART 2 – Smart Sales + Credit + Auto Wanting Module ===== -->
 <script>
@@ -566,6 +561,7 @@ function patchStockActions() {
   const tb = document.querySelector('#stockTable tbody');
   if (!tb) return;
   tb.querySelectorAll('tr').forEach((tr, i) => {
+    // Only add buttons if not already present and not "No Data" row
     if (!tr.querySelector('.stock-action') && !tr.querySelector('td[colspan]')) {
       const cell = tr.lastElementChild;
       cell.innerHTML = `
@@ -636,7 +632,7 @@ window.addEventListener('load', () => {
   patchStockActions();
   setTimeout(patchStockActions, 800);
 });
-<!-- existing scripts (like stock, sales, credit etc.) -->
+</script>
 
 <!-- ===== PART 6 : SUMMARY PANEL LOGIC ===== -->
 <script>
