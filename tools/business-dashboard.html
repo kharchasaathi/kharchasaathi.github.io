@@ -85,7 +85,7 @@ input,select,button{font-family:inherit}
     <div class="tab" data-tab="wanting" role="tab" tabindex="0">🛒 Wanting</div>
   </div>
 
-  <!-- Placeholder Sections (filled in later parts) -->
+  <!-- Placeholder Sections -->
   <section id="types" class="section active"></section>
   <section id="stock" class="section"></section>
   <section id="sales" class="section"></section>
@@ -96,47 +96,7 @@ input,select,button{font-family:inherit}
   </div>
 </div>
 
-<!-- Help Modal -->
-<div id="helpModal" class="help-modal" role="dialog" aria-modal="true" aria-hidden="true">
-  <div class="help-content">
-    <h2>📘 KharchaSaathi — Quick Guide</h2>
-    <p>Sections are loaded in parts. Use tabs to switch sections. Theme and preferences are saved locally.</p>
-    <button class="small-btn" onclick="toggleHelp()">Close</button>
-  </div>
-</div>
-
-<script>
-/* 🌙 Theme Toggle */
-(function(){
-  if(localStorage.getItem('ks-theme')==='dark')
-    document.body.classList.add('dark');
-  document.getElementById('themeBtn').addEventListener('click',function(){
-    document.body.classList.toggle('dark');
-    localStorage.setItem('ks-theme',
-      document.body.classList.contains('dark') ? 'dark' : 'light');
-  });
-})();
-
-/* 🗂 Tabs Handling */
-(function(){
-  const tabs=document.querySelectorAll('.tab');
-  const sections=document.querySelectorAll('.section');
-  function activate(tab){
-    tabs.forEach(t=>t.classList.remove('active'));
-    sections.forEach(s=>s.classList.remove('active'));
-    tab.classList.add('active');
-    const sec=document.getElementById(tab.dataset.tab);
-    if(sec) sec.classList.add('active');
-  }
-  tabs.forEach(tab=>{
-    tab.addEventListener('click',()=>activate(tab));
-    tab.addEventListener('keydown',e=>{
-      if(['Enter',' '].includes(e.key)){e.preventDefault();activate(tab);}
-    });
-  });
-})();
-
-<!-- 📘 Help Modal (HTML section) -->
+<!-- 📘 Help Modal -->
 <div id="helpModal" class="help-modal" role="dialog" aria-modal="true" aria-hidden="true">
   <div class="help-content">
     <h2>📘 Quick Help</h2>
@@ -182,7 +142,7 @@ input,select,button{font-family:inherit}
   });
 })();
 
-/* 📘 Help Modal JS Function */
+/* 📘 Help Modal JS */
 function toggleHelp(){
   const m=document.getElementById('helpModal');
   const shown=m.style.display==='flex';
@@ -195,4 +155,3 @@ document.getElementById('helpLink').addEventListener('click',e=>{
 </script>
 </body>
 </html>
-
