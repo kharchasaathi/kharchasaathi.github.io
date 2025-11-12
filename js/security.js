@@ -1,71 +1,86 @@
 // security.js — Admin PIN + Role-based Access Layer for KharchaSaathi
 (function () {
-  console.log("🔐 Security module loaded");
+  console.log("%c🔐 Security module initialized", "color:#007bff;font-weight:bold;");
 
-  const ADMIN_PIN = "1234"; // you can change this later (only owner knows)
+  const ADMIN_PIN = "1234"; // 🔑 You can change this anytime (owner only)
+  const STORAGE_KEY = "adminMode";
 
-  // Add Admin Mode indicator at top right
+  // --- Setup UI Elements ---
   const topBar = document.querySelector(".topbar");
+  if (!topBar) return console.warn("⚠️ Security: topbar not found");
+
+  // Admin tag (indicator)
   const adminTag = document.createElement("div");
   adminTag.id = "adminIndicator";
   adminTag.style.cssText = `
-    font-size: 13px; color: white; background:#007bff;
-    padding:3px 8px; border-radius:8px; margin-left:auto; display:none;
+    font-size: 13px;
+    color: #fff;
+    background: #007bff;
+    padding: 3px 8px;
+    border-radius: 8px;
+    margin-left: auto;
+    display: none;
+    user-select: none;
   `;
   adminTag.textContent = "Admin Mode ✅";
   topBar.appendChild(adminTag);
 
-  // Hidden activation shortcut (double tap on app name)
-  const title = document.querySelector("h1");
-  title.addEventListener("dblclick", () => {
-    const pin = prompt("Enter Admin PIN to unlock:");
-    if (pin === ADMIN_PIN) {
-      localStorage.setItem("adminMode", "true");
-      alert("✅ Admin Mode Activated");
-      adminTag.style.display = "inline-block";
-      showAdminOptions();
-    } else {
-      alert("❌ Incorrect PIN!");
-    }
-  });
-
-  // If admin already active from last session
-  if (localStorage.getItem("adminMode") === "true") {
-    adminTag.style.display = "inline-block";
-    showAdminOptions();
-  }
-
-  // Show/Hide secure options dynamically
-  function showAdminOptions() {
-    const adminBtns = document.querySelectorAll(".admin-only");
-    adminBtns.forEach((btn) => (btn.style.display = "inline-block"));
-  }
-
-  // Logout Admin
-  window.deactivateAdmin = function () {
-    localStorage.removeItem("adminMode");
-    alert("🔒 Admin Mode Deactivated");
-    location.reload();
-  };
-
-  // Add a small logout button only visible to admin
+  // Logout button
   const logoutBtn = document.createElement("button");
   logoutBtn.textContent = "Logout Admin";
-  logoutBtn.className = "small-btn";
+  logoutBtn.className = "small-btn admin-only";
   logoutBtn.style.display = "none";
-  logoutBtn.onclick = window.deactivateAdmin;
+  logoutBtn.onclick = deactivateAdmin;
   topBar.appendChild(logoutBtn);
 
-  // Auto toggle logout button if admin active
-  if (localStorage.getItem("adminMode") === "true") {
-    logoutBtn.style.display = "inline-block";
+  // --- Activation Shortcut (Double-tap on title) ---
+  const title = topBar.querySelector("h1");
+  if (title) {
+    title.addEventListener("dblclick", () => {
+      const pin = prompt("🔐 Enter Admin PIN to unlock:");
+      if (pin === ADMIN_PIN) {
+        localStorage.setItem(STORAGE_KEY, "true");
+        alert("✅ Admin Mode Activated");
+        enableAdminUI();
+      } else {
+        alert("❌ Incorrect PIN!");
+      }
+    });
   }
 
-  // Optional: confirmation on risky actions (Clear, Delete All, etc.)
-  window.confirmAdminAction = function (msg, fn) {
-    const isAdmin = localStorage.getItem("adminMode") === "true";
+  // --- Initialize State ---
+  if (localStorage.getItem(STORAGE_KEY) === "true") {
+    enableAdminUI();
+  }
+
+  // --- Core Functions ---
+  function enableAdminUI() {
+    adminTag.style.display = "inline-block";
+    logoutBtn.style.display = "inline-block";
+    showAdminOnlyButtons();
+  }
+
+  function deactivateAdmin() {
+    localStorage.removeItem(STORAGE_KEY);
+    alert("🔒 Admin Mode Deactivated");
+    location.reload();
+  }
+
+  function showAdminOnlyButtons() {
+    const adminBtns = document.querySelectorAll(".admin-only");
+    adminBtns.forEach(btn => (btn.style.display = "inline-block"));
+  }
+
+  // --- Secure Action Wrapper ---
+  window.confirmAdminAction = function (message, callback) {
+    const isAdmin = localStorage.getItem(STORAGE_KEY) === "true";
     if (!isAdmin) return alert("⛔ Only Admin can perform this action!");
-    const ok = confirm("⚠️ " + msg);
-    if (ok && typeof fn === "function") fn();
+    const ok = confirm("⚠️ " + message);
+    if (ok && typeof callback === "function") callback();
   };
+
+  // --- Expose Logout Globally ---
+  window.deactivateAdmin = deactivateAdmin;
+
+  console.log("%c✅ Security system active", "color:#28a745;font-weight:bold;");
 })();
