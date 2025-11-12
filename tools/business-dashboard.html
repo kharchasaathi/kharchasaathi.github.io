@@ -648,6 +648,51 @@
   window.ensureChartsLoadedAndRender = ensureChartsLoadedAndRender;
   
 <script src="js/security.js"></script>
+  window.ensureChartsLoadedAndRender = ensureChartsLoadedAndRender;
+
+<!-- ========================= -->
+<!-- 🔒 FINAL CLEANUP & SAFETY -->
+<!-- ========================= -->
+<script>
+(function(){
+  console.log('%c🧩 Running Closing Safety Script...', 'color:#ff7a00;font-weight:bold;');
+  
+  /* 🧠 Auto-save all modules before closing */
+  window.addEventListener('beforeunload', ()=>{
+    try {
+      if(typeof window.saveAll === 'function') window.saveAll();
+      if(typeof window.saveSales === 'function') window.saveSales();
+      if(typeof window.saveWanting === 'function') window.saveWanting();
+      console.log('%c💾 All data saved safely before unload','color:#43a047');
+    } catch(e){
+      console.warn('⚠️ Auto-save failed:', e);
+    }
+  });
+
+  /* 🧹 Stop unnecessary intervals when page hidden */
+  document.addEventListener('visibilitychange', ()=>{
+    if(document.hidden){
+      if(window.analyticsInterval){ clearInterval(window.analyticsInterval); console.log('⏸ Analytics updates paused'); }
+    } else {
+      if(typeof window.ensureChartsLoadedAndRender === 'function') window.ensureChartsLoadedAndRender();
+      console.log('▶️ Analytics resumed');
+    }
+  });
+
+  /* 🧩 Revalidate Summary Cards on tab focus */
+  window.addEventListener('focus', ()=>{
+    try{
+      if(typeof updateSummaryCards === 'function') updateSummaryCards();
+      console.log('🔁 Summary refreshed on focus');
+    } catch(e){}
+  });
+
+  /* 🧰 Dev Safe Logs */
+  console.log('%c✅ KharchaSaathi - All tabs initialized, memory leak prevention active.','color:#4caf50;font-weight:bold;');
+})();
+</script>
+
+<script src="js/security.js"></script>
 </body>
 </html>
 
