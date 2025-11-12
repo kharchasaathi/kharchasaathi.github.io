@@ -102,7 +102,56 @@
     </div>
   </div>
 
-  <!-- Core script (tabs + theme + lazy module loader + safe init) -->
-  <script src="js/core.js"></script>
+  <!-- ===== Core Script (tabs + theme + safe init) ===== -->
+<script src="js/core.js"></script>
+
+<!-- ===== FINAL CLOSING / SAFETY SECTION ===== -->
+<script>
+(function(){
+  console.log('%c🧩 Running Closing Safety Script...', 'color:#ff7a00;font-weight:bold;');
+
+  // --- Auto-save on close (for all modules) ---
+  window.addEventListener('beforeunload', function(){
+    try {
+      if (typeof window.saveAll === 'function') window.saveAll();
+      if (typeof window.saveSales === 'function') window.saveSales();
+      if (typeof window.saveWanting === 'function') window.saveWanting();
+      console.log('%c💾 All data saved before unload', 'color:#43a047;font-weight:bold;');
+    } catch (e) {
+      console.warn('⚠️ Auto-save failed:', e);
+    }
+  });
+
+  // --- Pause heavy intervals when tab hidden, resume when visible ---
+  document.addEventListener('visibilitychange', function(){
+    if (document.hidden) {
+      if (window.analyticsInterval) {
+        clearInterval(window.analyticsInterval);
+        console.log('⏸ Analytics paused');
+      }
+    } else {
+      if (typeof window.ensureChartsLoadedAndRender === 'function') {
+        window.ensureChartsLoadedAndRender();
+        console.log('▶️ Analytics resumed');
+      }
+    }
+  });
+
+  // --- Refresh summary when window refocuses ---
+  window.addEventListener('focus', function(){
+    try {
+      if (typeof updateSummaryCards === 'function') {
+        updateSummaryCards();
+        console.log('🔁 Summary refreshed on focus');
+      }
+    } catch(e){}
+  });
+
+  console.log('%c✅ KharchaSaathi - Closing safety active','color:#4caf50;font-weight:bold;');
+})();
+</script>
+
+<!-- ===== SECURITY MODULE (Admin PIN & Protection) ===== -->
+<script src="js/security.js"></script>
 </body>
 </html>
