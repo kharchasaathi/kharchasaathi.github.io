@@ -1,19 +1,16 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>📦 KharchaSaathi — Business Dashboard (Stable)</title>
+  <title>📦 KharchaSaathi — Business Dashboard (Optimized)</title>
 
-  <!-- Theme color for mobile address bar -->
+  <!-- Theme color for mobile -->
   <meta name="theme-color" content="#ff7a00">
-
-  <!-- App icons (optional, you can add later if needed) -->
   <link rel="icon" href="../favicon.png">
   <link rel="apple-touch-icon" href="../favicon.png">
 
-  <!-- Main CSS styling -->
+  <!-- 🌈 MAIN STYLE -->
   <style>
     :root {
       --orange: #ff7a00;
@@ -26,1171 +23,645 @@
       --dark-text: #f2f2f2;
       --dark-border: #444;
     }
-/* Base resets */
-* {
-  box-sizing:border-box;
-  transition:background .2s, color .2s;
-}
 
-/* Main body styles */
-body {
-  font-family:Poppins,Arial,sans-serif;
-  margin:0;
-  padding:18px;
-  background:var(--bg);
-  color:var(--text);
-}
-body.dark {
-  background:var(--dark-bg);
-  color:var(--dark-text);
-}
+    /* Base resets */
+    * {
+      box-sizing: border-box;
+      transition: background 0.2s, color 0.2s;
+    }
 
-/* Headings */
-h1 {
-  color:var(--orange);
-  margin:0;
-  font-size:20px;
-}
+    /* Body */
+    body {
+      font-family: Poppins, Arial, sans-serif;
+      margin: 0;
+      padding: 18px;
+      background: var(--bg);
+      color: var(--text);
+    }
+    body.dark {
+      background: var(--dark-bg);
+      color: var(--dark-text);
+    }
 
-/* Header / topbar */
-.topbar {
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-  gap:12px;
-  flex-wrap:wrap;
-  margin-bottom:14px;
-}
+    /* Headings */
+    h1 {
+      color: var(--orange);
+      margin: 0;
+      font-size: 20px;
+    }
 
-/* Buttons */
-.theme-btn, .small-btn {
-  background:var(--orange);
-  color:#fff;
-  border:none;
-  padding:8px 10px;
-  border-radius:8px;
-  cursor:pointer;
-  transition:.15s;
-}
-.theme-btn:hover, .small-btn:hover {
-  background:var(--orange-dark);
-}
-/* 📁 Tabs */
-.tabs {
-  display: flex;
-  gap: 8px;
-  margin: 6px 0 18px;
-  justify-content: center;
-  flex-wrap: nowrap;       /* ✅ no wrapping */
-  overflow-x: auto;        /* ✅ scroll if too wide */
-  scrollbar-width: none;   /* ✅ hide scrollbar (Firefox) */
-}
-.tabs::-webkit-scrollbar {
-  display: none;           /* ✅ hide scrollbar (Chrome/Safari) */
-}
+    /* Topbar */
+    .topbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-bottom: 14px;
+    }
 
-.tab {
-  background: #eee;
-  padding: 8px 12px;
-  border-radius: 10px;
-  cursor: pointer;
-  font-weight: 600;
-  white-space: nowrap;     /* ✅ prevent line breaks in tab text */
-}
+    /* Buttons */
+    .theme-btn, .small-btn {
+      background: var(--orange);
+      color: #fff;
+      border: none;
+      padding: 8px 10px;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: 0.15s;
+    }
+    .theme-btn:hover, .small-btn:hover {
+      background: var(--orange-dark);
+    }
 
-body.dark .tab {
-  background: #222;
-  color: #ccc;
-}
+    /* Tabs */
+    .tabs {
+      display: flex;
+      gap: 8px;
+      margin: 6px 0 18px;
+      justify-content: center;
+      flex-wrap: nowrap;
+      overflow-x: auto;
+      scrollbar-width: none;
+    }
+    .tabs::-webkit-scrollbar { display: none; }
 
-.tab.active {
-  background: var(--orange);
-  color: #fff;
-}
+    .tab {
+      background: #eee;
+      padding: 8px 12px;
+      border-radius: 10px;
+      cursor: pointer;
+      font-weight: 600;
+      white-space: nowrap;
+    }
+    body.dark .tab {
+      background: #222;
+      color: #ccc;
+    }
+    .tab.active {
+      background: var(--orange);
+      color: #fff;
+    }
 
-/* Sections (containers) */
-.section {
-  display:none;
-  background:var(--card);
-  padding:14px;
-  border-radius:12px;
-  box-shadow:0 6px 20px rgba(0,0,0,.06);
-  margin-bottom:18px;
-}
-.section.active {
-  display:block;
-}
-body.dark .section {
-  background:var(--dark-card);
-  border:1px solid var(--dark-border);
-  color:var(--dark-text);
-}
+    /* Section container */
+    .section {
+      display: none;
+      background: var(--card);
+      padding: 14px;
+      border-radius: 12px;
+      box-shadow: 0 6px 20px rgba(0,0,0,0.06);
+      margin-bottom: 18px;
+    }
+    .section.active { display: block; }
+    body.dark .section {
+      background: var(--dark-card);
+      border: 1px solid var(--dark-border);
+      color: var(--dark-text);
+    }
 
-/* 🧱 Body style */
-body {
-  font-family: Poppins, Arial, sans-serif;
-  margin: 0;
-  padding: 18px;
-  background: var(--bg);
-  color: var(--text);
-}
-body.dark {
-  background: var(--dark-bg);
-  color: var(--dark-text);
-}
+    /* Summary Cards */
+    #summaryCards {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: flex-end; /* right align */
+      text-align: right;
+      gap: 10px;
+    }
+    #summaryCards .card {
+      text-align: right;
+      border-radius: 12px;
+      padding: 12px;
+    }
+    #summaryCards .card small {
+      font-size: 13px;
+      opacity: 0.8;
+    }
 
-/* 🧭 Topbar & Headings */
-h1 {
-  color: var(--orange);
-  margin: 0;
-  font-size: 20px;
-}
+    /* Table Styling */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 14px;
+      border-radius: 10px;
+      overflow: hidden;
+    }
+    th, td {
+      border: 1px solid #ddd;
+      padding: 8px 10px;
+      text-align: center;
+      font-size: 14px;
+    }
+    th {
+      background: var(--orange);
+      color: #fff;
+      font-weight: 600;
+      letter-spacing: 0.3px;
+    }
+    body.dark th { background: var(--orange-dark); }
+    tr:nth-child(even) { background: #fdfdfd; }
+    body.dark tr:nth-child(even) { background: #1f1f1f; }
+    tr:hover {
+      background: #fff3e0;
+      transition: 0.2s;
+    }
+    body.dark tr:hover { background: #2a2a2a; }
 
-.topbar {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 12px;
-  flex-wrap: wrap;
-  margin-bottom: 14px;
-}
+    /* Status Colors */
+    .ok { color: #43a047; font-weight: 600; }
+    .low { color: #ffa726; font-weight: 600; }
+    .out { color: #e53935; font-weight: 700; }
 
-.theme-btn, .small-btn {
-  background: var(--orange);
-  color: #fff;
-  border: none;
-  padding: 8px 10px;
-  border-radius: 8px;
-  cursor: pointer;
-  transition: 0.15s;
-}
+    /* Footer Buttons */
+    .footer-btns {
+      text-align: center;
+      margin-top: 20px;
+    }
+    .footer-btns a {
+      background: var(--orange);
+      color: #fff;
+      padding: 10px 16px;
+      border-radius: 8px;
+      text-decoration: none;
+      margin: 6px;
+      display: inline-block;
+    }
+    .footer-btns a:hover { background: var(--orange-dark); }
 
-.theme-btn:hover, .small-btn:hover {
-  background: var(--orange-dark);
-}
-
-/* 📦 Sections */
-.section {
-  display: none;
-  background: var(--card);
-  padding: 14px;
-  border-radius: 12px;
-  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.06);
-  margin-bottom: 18px;
-}
-.section.active {
-  display: block;
-}
-body.dark .section {
-  background: var(--dark-card);
-  border: 1px solid var(--dark-border);
-  color: var(--dark-text);
-}
-
-/* 🧾 Dashboard Cards */
-#summaryCards .card {
-  transition: background 0.3s, color 0.3s;
-}
-body.dark #summaryCards .card {
-  background: var(--dark-card) !important;
-  color: var(--dark-text) !important;
-  border: 1px solid var(--dark-border);
-}
-body.dark #summaryCards .card div {
-  filter: brightness(1.2);
-}
-
-/* 🦶 Footer Buttons */
-.footer-btns {
-  text-align: center;
-  margin-top: 20px;
-}
-.footer-btns a {
-  background: var(--orange);
-  color: #fff;
-  padding: 10px 16px;
-  border-radius: 8px;
-  text-decoration: none;
-  margin: 6px;
-  display: inline-block;
-}
-.footer-btns a:hover {
-  background: var(--orange-dark);
-}
-
-/* ❓ Help Modal (Dark + Light mode compatible) */
-.help-modal {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: rgba(0,0,0,0.6);
-  display: none;
-  justify-content: center;
-  align-items: center;
-  z-index: 1000;
-  transition: opacity 0.3s ease;
-}
-.help-content {
-  background: var(--card);
-  padding: 24px;
-  max-width: 640px;
-  width: 90%;
-  border-radius: 14px;
-  color: var(--text);
-  overflow-y: auto;
-  max-height: 85vh;
-  box-shadow: 0 8px 24px rgba(0,0,0,0.2);
-}
-body.dark .help-content {
-  background: var(--dark-card);
-  color: var(--dark-text);
-  box-shadow: 0 8px 24px rgba(255,255,255,0.1);
-}
-
-/* ✅ Status colors */
-.ok {
-  color: #43a047;  /* green */
-  font-weight: 600;
-}
-.low {
-  color: #ffa726;  /* orange */
-  font-weight: 600;
-}
-.out {
-  color: #e53935;  /* red */
-  font-weight: 700;
-}
-
-/* 🧾 Table Styling */
-table {
-  width: 100%;
-  border-collapse: collapse;
-  margin-top: 14px;
-  border-radius: 10px;
-  overflow: hidden;
-}
-th, td {
-  border: 1px solid #ddd;
-  padding: 8px 10px;
-  text-align: center;
-  font-size: 14px;
-}
-th {
-  background: var(--orange);
-  color: #fff;
-  font-weight: 600;
-  letter-spacing: 0.3px;
-}
-body.dark th {
-  background: var(--orange-dark);
-}
-tr:nth-child(even) {
-  background: #fdfdfd;
-}
-body.dark tr:nth-child(even) {
-  background: #1f1f1f;
-}
-tr:hover {
-  background: #fff3e0;
-  transition: 0.2s;
-}
-#summaryCards {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: flex-end; /* ✅ right side align */
-  text-align: right;
-  gap: 10px;
-}
-#summaryCards .card {
-  text-align: right; /* ✅ individual cards text right */
-}
-#summaryCards .card small {
-  font-size: 13px;
-  opacity: 0.8;
-}
-</style>
+    /* Help Modal */
+    .help-modal {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      background: rgba(0,0,0,0.6);
+      display: none;
+      justify-content: center;
+      align-items: center;
+      z-index: 1000;
+      transition: opacity 0.3s ease;
+    }
+    .help-content {
+      background: var(--card);
+      padding: 24px;
+      max-width: 640px;
+      width: 90%;
+      border-radius: 14px;
+      color: var(--text);
+      overflow-y: auto;
+      max-height: 85vh;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.2);
+    }
+    body.dark .help-content {
+      background: var(--dark-card);
+      color: var(--dark-text);
+      box-shadow: 0 8px 24px rgba(255,255,255,0.1);
+    }
+  </style>
 </head>
 
 <body>
-<div class="topbar">
-  <h1>📦 KharchaSaathi (Offline)</h1>
-  <div style="display:flex;gap:8px;align-items:center">
-    <button class="theme-btn" id="themeBtn">🌙</button>
-    <a class="small-btn" href="../index.html">🏠 Back</a>
-  </div>
-</div>
-
-<div class="tabs" role="tablist">
-  <div class="tab active" data-tab="dashboard">📊 Overview</div>
-  <div class="tab" data-tab="types">🗂 Types</div>
-  <div class="tab" data-tab="stock">📦 Stock</div>
-  <div class="tab" data-tab="sales">📈 Sales</div>
-  <div class="tab" data-tab="wanting">🛒 Wanting</div>
-  <div class="tab" data-tab="analytics">📈 Smart Dashboard</div>
-</div>
-  
-<!-- ===== PART 6 : SMART SUMMARY PANEL ===== -->
-<section id="dashboard" class="section active">
-  <h3>📊 Business Overview</h3>
-  <div id="summaryCards">
-    <div class="card" style="flex:1;min-width:140px;background:#fff3e0;border-radius:12px;padding:12px;">
-      <div>💰</div>
-      <b id="todaySales">₹0</b><br><small>Today's Sales</small>
-    </div>
-    <div class="card" style="flex:1;min-width:140px;background:#e3f2fd;border-radius:12px;padding:12px;">
-      <div>💳</div>
-      <b id="todayCredit">₹0</b><br><small>Today's Credit</small>
-    </div>
-    <div class="card" style="flex:1;min-width:140px;background:#e8f5e9;border-radius:12px;padding:12px;">
-      <div>📦</div>
-      <b id="stockRemain">0%</b><br><small>Stock Remaining</small>
-    </div>
-    <div class="card" style="flex:1;min-width:140px;background:#fffde7;border-radius:12px;padding:12px;">
-      <div>📈</div>
-      <b id="todayProfit">₹0</b><br><small>Today's Profit</small>
+  <!-- 🔝 Topbar -->
+  <div class="topbar">
+    <h1>📦 KharchaSaathi (Offline)</h1>
+    <div style="display:flex;gap:8px;align-items:center">
+      <button class="theme-btn" id="themeBtn">🌙</button>
+      <a class="small-btn" href="../index.html">🏠 Back</a>
     </div>
   </div>
-</section>
 
-<!-- ===== PART 1 : TYPES ===== -->
-<section id="types" class="section">
-  <h3>🗂 Manage Item Types</h3>
-  <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
-    <input type="text" id="typeName" placeholder="Add new type (e.g. Mobiles, Accessories)" style="flex:1;min-width:200px">
-    <button id="addTypeBtn" class="small-btn">Add</button>
-    <button id="clearTypesBtn" class="small-btn">Clear All</button>
+  <!-- 🧭 Tabs -->
+  <div class="tabs" role="tablist">
+    <div class="tab active" data-tab="dashboard">📊 Overview</div>
+    <div class="tab" data-tab="types">🗂 Types</div>
+    <div class="tab" data-tab="stock">📦 Stock</div>
+    <div class="tab" data-tab="sales">💰 Sales</div>
+    <div class="tab" data-tab="wanting">🛒 Wanting</div>
+    <div class="tab" data-tab="analytics">📈 Smart Dashboard</div>
   </div>
-  <ul id="typeList" style="margin-top:10px;padding-left:18px"></ul>
-</section>
+  <!-- ===== 🧩 PART 1 : OVERVIEW / DASHBOARD ===== -->
+  <section id="dashboard" class="section active">
+    <h3>📊 Business Overview</h3>
 
-<!-- ===== PART 2 : STOCK ===== -->
-<section id="stock" class="section">
-  <h3>📦 Current Stock</h3>
-  <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
-    <label>Low Stock Limit:</label>
-    <input type="number" id="globalLimit" placeholder="e.g. 2" style="width:100px">
-    <button id="setLimitBtn" class="small-btn">Set</button>
-    <button id="clearStockBtn" class="small-btn">Clear All</button>
+    <div id="summaryCards">
+      <div class="card" style="flex:1;min-width:140px;background:#fff3e0;">
+        <div>💰</div>
+        <b id="todaySales">₹0</b><br><small>Today's Sales</small>
+      </div>
+      <div class="card" style="flex:1;min-width:140px;background:#e3f2fd;">
+        <div>💳</div>
+        <b id="todayCredit">₹0</b><br><small>Today's Credit</small>
+      </div>
+      <div class="card" style="flex:1;min-width:140px;background:#e8f5e9;">
+        <div>📦</div>
+        <b id="stockRemain">0%</b><br><small>Stock Remaining</small>
+      </div>
+      <div class="card" style="flex:1;min-width:140px;background:#fffde7;">
+        <div>📈</div>
+        <b id="todayProfit">₹0</b><br><small>Today's Profit</small>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== 🗂 PART 2 : TYPES ===== -->
+  <section id="types" class="section">
+    <h3>🗂 Manage Item Types</h3>
+    <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+      <input type="text" id="typeName" placeholder="Add new type (e.g. Mobiles, Accessories)" style="flex:1;min-width:200px">
+      <button id="addTypeBtn" class="small-btn">Add</button>
+      <button id="clearTypesBtn" class="small-btn">Clear All</button>
+    </div>
+    <ul id="typeList" style="margin-top:10px;padding-left:18px"></ul>
+  </section>
+
+  <!-- ===== 📦 PART 3 : STOCK ===== -->
+  <section id="stock" class="section">
+    <h3>📦 Current Stock</h3>
+
+    <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+      <label>Low Stock Limit:</label>
+      <input type="number" id="globalLimit" placeholder="e.g. 2" style="width:100px">
+      <button id="setLimitBtn" class="small-btn">Set</button>
+      <button id="clearStockBtn" class="small-btn">Clear All</button>
+    </div>
+
+    <div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+      <input type="date" id="pdate" style="min-width:150px">
+      <select id="ptype" style="min-width:140px"></select>
+      <input type="text" id="pname" placeholder="Product name" style="min-width:160px">
+      <input type="number" id="pqty" placeholder="Qty" style="width:80px">
+      <input type="number" id="pcost" placeholder="Cost ₹" style="width:100px">
+      <button id="addStockBtn" class="small-btn">Add</button>
+    </div>
+
+    <div style="margin-top:12px">
+      <label><b>Filter by Type:</b></label>
+      <select id="filterType" style="min-width:160px">
+        <option value="all">All Types</option>
+      </select>
+    </div>
+
+    <table id="stockTable">
+      <thead>
+        <tr>
+          <th>Date</th><th>Type</th><th>Product</th><th>Qty</th>
+          <th>Sold</th><th>Remain</th><th>Alert</th><th>Limit</th><th>Action</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+  </section>
+  <!-- ===== 💰 PART 4 : SALES & PROFIT ===== -->
+  <section id="sales" class="section">
+    <h3>💰 Sales & Profit</h3>
+
+    <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:10px;">
+      <label>Sale Date:</label>
+      <input type="date" id="saleDate" style="min-width:150px">
+      <label>Type</label>
+      <select id="saleType" style="min-width:140px"></select>
+      <label>Product</label>
+      <select id="saleProduct" style="min-width:180px"></select>
+      <input type="number" id="saleQty" placeholder="Qty" style="width:80px">
+      <input type="number" id="salePrice" placeholder="Sale ₹" style="width:100px">
+      <select id="saleStatus" style="min-width:100px">
+        <option value="Paid">Paid</option>
+        <option value="Credit">Credit</option>
+      </select>
+      <button id="addSaleBtn" class="small-btn">Add Sale</button>
+    </div>
+
+    <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:8px;">
+      <label>GST?</label>
+      <input type="checkbox" id="includeGst">
+      <input type="number" id="gstPercent" placeholder="GST %" style="width:80px" value="0">
+      <button id="viewSalesBtn" class="small-btn">View by Date</button>
+      <button id="printSalesBtn" class="small-btn">Print</button>
+
+      <!-- Admin controls for profit column -->
+      <div style="margin-left:auto;display:flex;gap:8px;align-items:center;">
+        <button id="toggleProfitBtn" class="small-btn">🔒 Lock/Unlock Profit</button>
+        <button id="setAdminBtn" class="small-btn">Set Admin PW</button>
+      </div>
+    </div>
+
+    <table id="salesTable" aria-label="Sales table">
+      <thead>
+        <tr>
+          <th>Date</th><th>Type</th><th>Product</th><th>Qty</th>
+          <th>Price ₹</th><th>Total ₹</th><th>Profit ₹</th><th>Status</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+      <tfoot>
+        <tr>
+          <td colspan="5" style="text-align:right">Total:</td>
+          <td id="salesTotal">0</td>
+          <td id="profitTotal">0</td>
+          <td></td>
+        </tr>
+      </tfoot>
+    </table>
+  </section>
+
+  <!-- ===== 🧾 PART 5 : HELP ===== -->
+  <div class="footer-btns">
+    <a href="#" id="helpLink">📘 Help & Guide</a>
   </div>
 
-  <div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap;align-items:center">
-    <input type="date" id="pdate" style="min-width:150px">
-    <select id="ptype" style="min-width:140px"></select>
-    <input type="text" id="pname" placeholder="Product name" style="min-width:160px">
-    <input type="number" id="pqty" placeholder="Qty" style="width:80px">
-    <input type="number" id="pcost" placeholder="Cost ₹" style="width:100px">
-    <button id="addStockBtn" class="small-btn">Add</button>
+  <!-- Help Modal -->
+  <div id="helpModal" class="help-modal">
+    <div class="help-content">
+      <h2>📘 Quick Help</h2>
+      <ul style="padding-left:18px;line-height:1.6">
+        <li>🗂 Manage <b>Item Types</b></li>
+        <li>📦 Add & manage <b>Stock</b></li>
+        <li>💰 Record <b>Sales & Profit</b></li>
+        <li>🛒 Auto Wanting when stock ends</li>
+        <li>☁️ Data saved offline in your browser</li>
+      </ul>
+      <button class="small-btn" onclick="toggleHelp()">Close</button>
+    </div>
   </div>
 
-  <div style="margin-top:12px">
-    <label><b>Filter by Type:</b></label>
-    <select id="filterType" style="min-width:160px">
-      <option value="all">All Types</option>
-    </select>
-  </div>
+  <!-- ===== ⚙️ LOGIC SCRIPTS ===== -->
+  <script>
+  /* 🌙 Theme Toggle */
+  if (localStorage.getItem('ks-theme') === 'dark') {
+    document.body.classList.add('dark');
+  }
+  document.getElementById('themeBtn').onclick = () => {
+    document.body.classList.toggle('dark');
+    localStorage.setItem('ks-theme',
+      document.body.classList.contains('dark') ? 'dark' : 'light'
+    );
+  };
 
-  <table id="stockTable">
-    <thead>
-      <tr>
-        <th>Date</th>
-        <th>Type</th>
-        <th>Product</th>
-        <th>Qty</th>
-        <th>Sold</th>
-        <th>Remain</th>
-        <th>Alert</th>
-        <th>Limit</th>
-        <th>Action</th>
-      </tr>
-    </thead>
-    <tbody></tbody>
-  </table>
-</section>
+  /* 📘 Help Modal */
+  function toggleHelp() {
+    const modal = document.getElementById('helpModal');
+    modal.style.display = modal.style.display === 'flex' ? 'none' : 'flex';
+  }
+  document.getElementById('helpLink').onclick = e => {
+    e.preventDefault();
+    toggleHelp();
+  };
 
-<!-- ===== PART 3 : SALES ===== -->
-<section id="sales" class="section">
-  <h3>📈 Sales (coming soon...)</h3>
-  <p>Sales ledger and profit tracking will be added next update.</p>
-</section>
+  /* 🧠 Tabs Switching */
+  const tabs = document.querySelectorAll('.tab');
+  const sections = document.querySelectorAll('.section');
 
-<!-- ===== PART 4 : WANTING ===== -->
-<section id="wanting" class="section">
-  <h3>🛒 Wanting (coming soon...)</h3>
-  <p>Auto wanting & reminders section will appear here.</p>
-</section>
+  tabs.forEach(tab => {
+    tab.addEventListener('click', () => {
+      tabs.forEach(t => t.classList.remove('active'));
+      sections.forEach(s => s.classList.remove('active'));
 
-<!-- ===== PART 5 : HELP ===== -->
-<div class="footer-btns">
-  <a href="#" id="helpLink">📘 Help & Guide</a>
-</div>
+      tab.classList.add('active');
+      const target = document.getElementById(tab.dataset.tab);
+      if (target) target.classList.add('active');
 
-<!-- Help Modal -->
-<div id="helpModal" class="help-modal">
-  <div class="help-content">
-    <h2>📘 Quick Help</h2>
-    <ul style="padding-left:18px;line-height:1.6">
-      <li>🗂 Add & manage item <b>Types</b></li>
-      <li>📦 Add stock, set low limit, auto alert</li>
-      <li>💰 Record Sales (Cash / Credit)</li>
-      <li>🛒 Auto Wanting when stock finishes</li>
-      <li>☁️ Data saved offline</li>
-    </ul>
-    <button class="small-btn" onclick="toggleHelp()">Close</button>
-  </div>
-</div>
-
-<script>
-/* 🌙 Theme Toggle */
-if (localStorage.getItem('ks-theme') === 'dark') {
-  document.body.classList.add('dark');
-}
-document.getElementById('themeBtn').onclick = () => {
-  document.body.classList.toggle('dark');
-  localStorage.setItem(
-    'ks-theme',
-    document.body.classList.contains('dark') ? 'dark' : 'light'
-  );
-};
-
-/* 🔄 Tabs Switching – Fully fixed version */
-const tabs = document.querySelectorAll('.tab');
-const sections = document.querySelectorAll('.section');
-
-tabs.forEach(tab => {
-  tab.addEventListener('click', () => {
-    // deactivate all
-    tabs.forEach(t => t.classList.remove('active'));
-    sections.forEach(s => s.classList.remove('active'));
-
-    // activate clicked
-    tab.classList.add('active');
-    const target = document.getElementById(tab.dataset.tab);
-    if (target) target.classList.add('active');
-
-    // ✅ Auto refresh logic per section
-    switch (tab.dataset.tab) {
-      case 'dashboard':
-        if (typeof updateSummaryCards === 'function') updateSummaryCards();
-        break;
-      case 'types':
-        renderTypes();
-        updateDropdowns();
-        break;
-      case 'stock':
-        renderStock();
-        break;
-      case 'analytics':
-        if (typeof renderAnalytics === 'function') renderAnalytics();
-        break;
-    }
+      switch (tab.dataset.tab) {
+        case 'dashboard':
+          if (typeof updateSummaryCards === 'function') updateSummaryCards();
+          break;
+        case 'types':
+          renderTypes();
+          updateDropdowns();
+          break;
+        case 'stock':
+          renderStock();
+          break;
+        case 'analytics':
+          if (typeof renderAnalytics === 'function') renderAnalytics();
+          break;
+      }
+    });
   });
-});
+  </script>
 
-/* 📘 Help Modal */
-function toggleHelp() {
-  const modal = document.getElementById('helpModal');
-  modal.style.display = modal.style.display === 'flex' ? 'none' : 'flex';
-}
-document.getElementById('helpLink').onclick = e => {
-  e.preventDefault();
-  toggleHelp();
-};
+  <!-- ===== 🔢 TYPES + STOCK LOGIC ===== -->
+  <script>
+  const K_TYPES = 'item-types';
+  const K_STOCK = 'stock-data';
+  const K_LIMIT = 'default-limit';
 
-/* ===== TYPES + STOCK LOGIC ===== */
-const K_TYPES = 'item-types';
-const K_STOCK = 'stock-data';
-const K_LIMIT = 'default-limit';
+  window.types = JSON.parse(localStorage.getItem(K_TYPES) || '["Mobiles","Accessories"]');
+  window.stock = JSON.parse(localStorage.getItem(K_STOCK) || '[]');
 
-window.types = JSON.parse(localStorage.getItem(K_TYPES) || '["Mobiles","Accessories"]');
-window.stock = JSON.parse(localStorage.getItem(K_STOCK) || '[]');
+  function saveAll() {
+    localStorage.setItem(K_TYPES, JSON.stringify(types));
+    localStorage.setItem(K_STOCK, JSON.stringify(stock));
+  }
 
-/* 💾 Save All */
-function saveAll() {
-  localStorage.setItem(K_TYPES, JSON.stringify(types));
-  localStorage.setItem(K_STOCK, JSON.stringify(stock));
-}
+  function renderTypes() {
+    const list = document.getElementById('typeList');
+    if (!list) return;
+    list.innerHTML = types.map(t => `<li>${t}</li>`).join('');
+  }
 
-/* 🔠 Render Types List */
-function renderTypes() {
-  const list = document.getElementById('typeList');
-  if (!list) return;
-  list.innerHTML = types.map(t => `<li>${t}</li>`).join('');
-}
-
-/* ⬇️ Update Dropdowns (Type Filters & Add Product) */
-function updateDropdowns() {
-  ['ptype', 'filterType'].forEach(id => {
-    const el = document.getElementById(id);
-    if (!el) return;
-    const base =
-      id === 'filterType'
+  function updateDropdowns() {
+    ['ptype', 'filterType'].forEach(id => {
+      const el = document.getElementById(id);
+      if (!el) return;
+      const base = id === 'filterType'
         ? '<option value="all">All Types</option>'
         : '<option value="">Select</option>';
-    el.innerHTML =
-      base + types.map(t => `<option value="${t}">${t}</option>`).join('');
-  });
-}
+      el.innerHTML = base + types.map(t => `<option value="${t}">${t}</option>`).join('');
+    });
+  }
 
-/* ➕ Add New Type */
-function addType() {
-  const t = document.getElementById('typeName').value.trim();
-  if (!t) return alert('Enter a type name');
-  if (types.includes(t)) return alert('Type already exists');
-  types.push(t);
-  saveAll();
-  renderTypes();
-  updateDropdowns();
-  document.getElementById('typeName').value = '';
-}
-
-/* ❌ Clear All Types */
-function clearTypes() {
-  if (confirm('Clear all types?')) {
-    types = [];
+  function addType() {
+    const t = document.getElementById('typeName').value.trim();
+    if (!t) return alert('Enter a type name');
+    if (types.includes(t)) return alert('Type already exists');
+    types.push(t);
     saveAll();
     renderTypes();
     updateDropdowns();
+    document.getElementById('typeName').value = '';
   }
-}
 
-/* ⚙️ Set Global Low Stock Limit */
-function setGlobalLimit() {
-  const v = parseInt(document.getElementById('globalLimit').value);
-  if (isNaN(v) || v < 0) return alert('Invalid number');
-  localStorage.setItem(K_LIMIT, v);
-  alert('Limit set: ' + v);
-}
-
-/* 📏 Get Limit */
-function getLimit() {
-  const v = parseInt(localStorage.getItem(K_LIMIT));
-  return isNaN(v) ? 0 : v;
-}
-
-/* ➕ Add Stock Item */
-function addStock() {
-  const d = document.getElementById('pdate').value;
-  const t = document.getElementById('ptype').value;
-  const n = document.getElementById('pname').value.trim();
-  const q = parseInt(document.getElementById('pqty').value);
-  const c = parseFloat(document.getElementById('pcost').value);
-
-  if (!d || !t || !n || !q || !c) return alert('Please fill all fields');
-
-  let ex = stock.find(
-    s => s.type === t && s.name.toLowerCase() === n.toLowerCase()
-  );
-  if (ex) {
-    ex.qty += q;
-    ex.date = d;
-    ex.cost = c;
-    ex.history = ex.history || [];
-    ex.history.push({ date: d, qty: q, cost: c });
-  } else {
-    stock.push({
-      date: d,
-      type: t,
-      name: n,
-      qty: q,
-      sold: 0,
-      cost: c,
-      history: [{ date: d, qty: q, cost: c }]
-    });
+  function clearTypes() {
+    if (confirm('Clear all types?')) {
+      types = [];
+      saveAll();
+      renderTypes();
+      updateDropdowns();
+    }
   }
-  saveAll();
-  renderStock();
-  document.getElementById('pname').value = '';
-  document.getElementById('pqty').value = '';
-  document.getElementById('pcost').value = '';
-}
 
-/* 📋 Render Stock Table */
-function renderStock() {
-  const f = document.getElementById('filterType').value;
-  const tb = document.querySelector('#stockTable tbody');
-  if (!tb) return;
-  tb.innerHTML =
-    stock
+  function setGlobalLimit() {
+    const v = parseInt(document.getElementById('globalLimit').value);
+    if (isNaN(v) || v < 0) return alert('Invalid number');
+    localStorage.setItem(K_LIMIT, v);
+    alert('Limit set: ' + v);
+  }
+
+  function getLimit() {
+    const v = parseInt(localStorage.getItem(K_LIMIT));
+    return isNaN(v) ? 0 : v;
+  }
+
+  function addStock() {
+    const d = document.getElementById('pdate').value;
+    const t = document.getElementById('ptype').value;
+    const n = document.getElementById('pname').value.trim();
+    const q = parseInt(document.getElementById('pqty').value);
+    const c = parseFloat(document.getElementById('pcost').value);
+    if (!d || !t || !n || !q || !c) return alert('Please fill all fields');
+
+    let ex = stock.find(s => s.type === t && s.name.toLowerCase() === n.toLowerCase());
+    if (ex) {
+      ex.qty += q;
+      ex.date = d;
+      ex.cost = c;
+      ex.history = ex.history || [];
+      ex.history.push({ date: d, qty: q, cost: c });
+    } else {
+      stock.push({ date: d, type: t, name: n, qty: q, sold: 0, cost: c, history: [{ date: d, qty: q, cost: c }] });
+    }
+    saveAll();
+    renderStock();
+    document.getElementById('pname').value = '';
+    document.getElementById('pqty').value = '';
+    document.getElementById('pcost').value = '';
+  }
+
+  function renderStock() {
+    const f = document.getElementById('filterType').value;
+    const tb = document.querySelector('#stockTable tbody');
+    if (!tb) return;
+    tb.innerHTML = stock
       .filter(s => f === 'all' || s.type === f)
       .map((s, i) => {
         const sold = s.sold || 0;
         const rem = s.qty - sold;
         const lim = getLimit();
-        let cls = 'ok',
-          msg = 'OK';
-        if (rem <= 0) {
-          cls = 'out';
-          msg = 'OUT';
-        } else if (rem <= lim) {
-          cls = 'low';
-          msg = 'LOW';
-        }
-        return `
-        <tr>
-          <td>${s.date}</td>
-          <td>${s.type}</td>
-          <td>${s.name}</td>
-          <td>${s.qty}</td>
-          <td>${sold}</td>
-          <td>${rem}</td>
-          <td class="${cls}">${msg}</td>
-          <td>${lim}</td>
+        let cls = 'ok', msg = 'OK';
+        if (rem <= 0) { cls = 'out'; msg = 'OUT'; }
+        else if (rem <= lim) { cls = 'low'; msg = 'LOW'; }
+        return `<tr>
+          <td>${s.date}</td><td>${s.type}</td><td>${s.name}</td>
+          <td>${s.qty}</td><td>${sold}</td><td>${rem}</td>
+          <td class="${cls}">${msg}</td><td>${lim}</td>
           <td><button onclick="viewHistory(${i})">📜</button></td>
         </tr>`;
       })
       .join('') || '<tr><td colspan="9">No Data</td></tr>';
-}
-
-/* 📜 View History */
-function viewHistory(i) {
-  const s = stock[i];
-  if (!s || !s.history) return alert('No history available');
-  const list = s.history
-    .map(h => `${h.date} — Qty: ${h.qty} @₹${h.cost}`)
-    .join('\n');
-  alert(`📜 ${s.name} History:\n${list}`);
-}
-
-/* 🖱️ Event Delegation */
-document.addEventListener('click', e => {
-  switch (e.target.id) {
-    case 'addTypeBtn':
-      addType();
-      break;
-    case 'clearTypesBtn':
-      clearTypes();
-      break;
-    case 'setLimitBtn':
-      setGlobalLimit();
-      break;
-    case 'clearStockBtn':
-      if (confirm('Clear all stock?')) {
-        stock = [];
-        saveAll();
-        renderStock();
-      }
-      break;
-    case 'addStockBtn':
-      addStock();
-      break;
-  }
-});
-
-/* 🔁 Live Filter */
-document
-  .getElementById('filterType')
-  ?.addEventListener('change', renderStock);
-
-/* 🚀 On Load */
-window.addEventListener('load', () => {
-  renderTypes();
-  updateDropdowns();
-  renderStock();
-});
-</script>
-  <!-- ===== PART: Sales + Profit Module (STEP 1) ===== -->
-<section id="sales" class="section">
-  <h3>💰 Sales & Profit</h3>
-
-  <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:10px;">
-    <label>Sale Date:</label>
-    <input type="date" id="saleDate" style="min-width:150px">
-    <label>Type</label>
-    <select id="saleType" style="min-width:140px"></select>
-    <label>Product</label>
-    <select id="saleProduct" style="min-width:180px"></select>
-    <input type="number" id="saleQty" placeholder="Qty" style="width:80px">
-    <input type="number" id="salePrice" placeholder="Sale ₹" style="width:100px">
-    <select id="saleStatus" style="min-width:100px">
-      <option value="Paid">Paid</option>
-      <option value="Credit">Credit</option>
-    </select>
-    <button id="addSaleBtn">Add Sale</button>
-  </div>
-
-  <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:8px;">
-    <label>GST?</label>
-    <input type="checkbox" id="includeGst"><input type="number" id="gstPercent" placeholder="GST %" style="width:80px" value="0">
-    <button id="viewSalesBtn" class="small-btn">View by Date</button>
-    <button id="printSalesBtn" class="small-btn">Print</button>
-
-    <!-- Admin controls for profit column -->
-    <div style="margin-left:auto;display:flex;gap:8px;align-items:center;">
-      <button id="toggleProfitBtn" class="small-btn">🔒 Lock/Unlock Profit</button>
-      <button id="setAdminBtn" class="small-btn">Set Admin PW</button>
-    </div>
-  </div>
-
-  <table id="salesTable" aria-label="Sales table">
-    <thead>
-      <tr>
-        <th>Date</th><th>Type</th><th>Product</th><th>Qty</th><th>Price ₹</th><th>Total ₹</th><th>Profit ₹</th><th>Status</th>
-      </tr>
-    </thead>
-    <tbody></tbody>
-    <tfoot>
-      <tr>
-        <td colspan="5" style="text-align:right">Total:</td>
-        <td id="salesTotal">0</td>
-        <td id="profitTotal">0</td>
-        <td></td>
-      </tr>
-    </tfoot>
-  </table>
-</section>
-
-<script>
-/* Sales + Profit Module
-   - plugs into existing window.stock and localStorage
-   - stores sales in localStorage key 'sales-data'
-   - profit column can be locked (admin password)
-*/
-
-/* --- Setup data stores --- */
-window.sales = JSON.parse(localStorage.getItem('sales-data') || '[]');
-const SALES_KEY = 'sales-data';
-const ADMIN_KEY = 'ks-admin-pw'; // stored hashed? using plain here for simplicity (you can replace with better hashing)
-
-/* --- Helper: persist sales --- */
-function saveSales(){
-  localStorage.setItem(SALES_KEY, JSON.stringify(sales));
-  try{ if(typeof saveAllLocal === 'function') saveAllLocal(); }catch(e){}
-}
-
-/* --- Utility: default admin pw if none --- */
-if(!localStorage.getItem(ADMIN_KEY)){
-  localStorage.setItem(ADMIN_KEY, 'admin123'); // default, change via Set Admin PW
-}
-
-/* --- DOM refs --- */
-const saleDate = document.getElementById('saleDate');
-const saleType = document.getElementById('saleType');
-const saleProduct = document.getElementById('saleProduct');
-const saleQty = document.getElementById('saleQty');
-const salePrice = document.getElementById('salePrice');
-const saleStatus = document.getElementById('saleStatus');
-const includeGst = document.getElementById('includeGst');
-const gstPercent = document.getElementById('gstPercent');
-
-const salesTableBody = document.querySelector('#salesTable tbody');
-const salesTotalEl = document.getElementById('salesTotal');
-const profitTotalEl = document.getElementById('profitTotal');
-
-/* --- Init saleDate to today if empty --- */
-const today = new Date().toISOString().split('T')[0];
-if(saleDate && !saleDate.value) saleDate.value = today;
-
-/* --- Populate Type and Product selects from window.stock/types --- */
-function refreshSaleSelectors(){
-  // types
-  const typesList = Array.isArray(window.types) ? window.types : (window.types = JSON.parse(localStorage.getItem('item-types')||'[]'));
-  saleType.innerHTML = `<option value="">All Types</option>` + typesList.map(t=>`<option value="${t}">${t}</option>`).join('');
-  // products (unique across stock)
-  const prodOptions = (window.stock || []).map(s => ({type:s.type,name:s.name})).filter((v,i,a)=>
-    a.findIndex(x=>x.type===v.type&&x.name===v.name)===i
-  );
-  saleProduct.innerHTML = '<option value="">Select</option>' + prodOptions.map(p=>`<option value="${p.type}|||${p.name}">${p.type} — ${p.name}</option>`).join('');
-}
-
-/* on type change, filter products */
-saleType?.addEventListener('change', ()=>{
-  const t = saleType.value;
-  const filtered = (window.stock || []).filter(s=>!t||s.type===t)
-    .map(s=>({type:s.type,name:s.name}))
-    .filter((v,i,a)=>a.findIndex(x=>x.type===v.type&&x.name===v.name)===i);
-  saleProduct.innerHTML = '<option value="">Select</option>' + filtered.map(p=>`<option value="${p.type}|||${p.name}">${p.type} — ${p.name}</option>`).join('');
-});
-
-/* --- Compute average cost for a product (from its history) --- */
-function getProductCost(type, name){
-  const ex = (window.stock || []).find(s => s.type === type && s.name.toLowerCase() === name.toLowerCase());
-  if(!ex) return 0;
-  // Prefer explicit cost if stored
-  if(ex.cost) return parseFloat(ex.cost) || 0;
-  // otherwise use history average
-  if(Array.isArray(ex.history) && ex.history.length){
-    const tot = ex.history.reduce((acc,h)=>acc + (h.qty*(h.cost||0)), 0);
-    const qtot = ex.history.reduce((acc,h)=>acc + (h.qty||0), 0);
-    return qtot ? (tot / qtot) : 0;
-  }
-  return 0;
-}
-
-/* --- Add sale handler --- */
-function addSale(){
-  const d = saleDate.value || today;
-  const prodVal = saleProduct.value;
-  const qty = parseInt(saleQty.value,10);
-  const price = parseFloat(salePrice.value);
-  const status = saleStatus.value || 'Paid';
-  if(!prodVal) return alert('Select product');
-  if(!qty || qty <= 0) return alert('Invalid qty');
-  if(!price || price <= 0) return alert('Invalid price');
-
-  const [type, name] = prodVal.split('|||');
-
-  // find stock item and remaining
-  const sIndex = (window.stock || []).findIndex(s => s.type === type && s.name.toLowerCase() === name.toLowerCase());
-  let remain = 0;
-  if(sIndex >= 0){
-    const stockItem = window.stock[sIndex];
-    const soldSoFar = stockItem.sold || 0;
-    remain = (stockItem.qty || 0) - soldSoFar;
-    if(qty > remain) {
-      if(!confirm(`Only ${remain} remaining in stock. Proceed to sell ${qty} anyway?`)) return;
-    }
-    // Update sold (but don't reduce qty entries — keep original qty + sold)
-    stockItem.sold = (stockItem.sold || 0) + qty;
-    // persist stock
-    try{ if(typeof saveAllLocal === 'function') saveAllLocal(); }catch(e){}
   }
 
-  // cost & profit calculation
-  let cost = getProductCost(type, name) || 0;
-  let netSalePrice = price;
-  if(includeGst.checked){
-    const g = parseFloat(gstPercent.value) || 0;
-    if(g > 0) netSalePrice = price / (1 + (g/100));
-  }
-  const profit = ((netSalePrice - cost) * qty);
-
-  // create sale entry
-  const entry = {
-    date: d,
-    type,
-    product: name,
-    qty,
-    price,
-    amount: price * qty,
-    costPerUnit: cost,
-    profit: Math.round(profit*100)/100,
-    status
-  };
-  sales.push(entry);
-  saveSales();
-
-  // re-render
-  renderSales();
-  // reset inputs
-  saleQty.value = '';
-  salePrice.value = '';
-  // re-render stock table if function exists
-  try{ if(typeof renderStock === 'function') renderStock(); }catch(e){}
-}
-
-/* --- Render sales table (optionally filter by date) --- */
-function renderSales(filterDate){
-  const tb = salesTableBody;
-  const list = (window.sales || []);
-  const rows = (filterDate ? list.filter(s => s.date === filterDate) : list);
-  let total = 0, pTotal = 0;
-  tb.innerHTML = (rows.length ? rows.map((s,i) => {
-    total += (s.amount || 0);
-    pTotal += (s.profit || 0);
-    return `<tr data-index="${i}">
-      <td>${s.date}</td>
-      <td>${escapeHtml(s.type)}</td>
-      <td>${escapeHtml(s.product)}</td>
-      <td>${s.qty}</td>
-      <td>${s.price}</td>
-      <td>${s.amount}</td>
-      <td class="profit-cell">${s.profit}</td>
-      <td>${s.status}</td>
-    </tr>`;
-  }).join('') : '<tr><td colspan="8">No Sales Yet</td></tr>');
-  salesTotalEl.textContent = Math.round(total*100)/100;
-  profitTotalEl.textContent = Math.round(pTotal*100)/100;
-  applyProfitVisibility(); // ensure profit column respects lock state
-}
-
-/* --- Simple escapeHtml for safety --- */
-function escapeHtml(str){
-  if(!str && str !== 0) return '';
-  return String(str).replace(/[&<>'"]/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c];});
-}
-
-/* --- Filter/view by saleDate --- */
-document.getElementById('viewSalesBtn')?.addEventListener('click', ()=>{
-  const d = saleDate.value || today;
-  renderSales(d);
-});
-
-/* --- Print displayed sales (current filter) --- */
-document.getElementById('printSalesBtn')?.addEventListener('click', ()=>{
-  // create printable HTML from current tbody rows
-  const rowsHtml = salesTableBody.innerHTML;
-  const printHtml = `<html><head><title>Sales Print</title>
-    <style>table{width:100%;border-collapse:collapse}th,td{border:1px solid #ccc;padding:6px;text-align:center}</style>
-    </head><body><h3>Sales — ${saleDate.value || 'All'}</h3><table><thead>${document.querySelector('#salesTable thead').innerHTML}</thead><tbody>${rowsHtml}</tbody></table></body></html>`;
-  const w = window.open('', '_blank');
-  w.document.write(printHtml);
-  w.document.close();
-  w.print();
-});
-
-/* --- Profit column locking --- */
-let profitLocked = false;
-function applyProfitVisibility(){
-  const colIndex = 6; // 0-based index of Profit column within table head/rows (here it's 6)
-  // hide/show header cell
-  const ths = document.querySelectorAll('#salesTable thead th');
-  if(ths && ths[colIndex]) ths[colIndex].style.display = profitLocked ? 'none' : '';
-  // rows cells
-  document.querySelectorAll('#salesTable tbody tr').forEach(tr=>{
-    const pc = tr.querySelector('.profit-cell');
-    if(pc) pc.style.display = profitLocked ? 'none' : '';
-  });
-  // footer profit total
-  profitTotalEl.style.display = profitLocked ? 'none' : '';
-}
-
-/* Toggle profit lock — require admin pw to unlock if locked */
-document.getElementById('toggleProfitBtn')?.addEventListener('click', async ()=>{
-  if(!profitLocked){
-    // lock — just hide
-    profitLocked = true;
-    applyProfitVisibility();
-    alert('Profit column locked (hidden). To unlock use the same button and enter admin password.');
-    return;
-  }
-  // unlock -> ask for admin password
-  const pw = prompt('Enter admin password to unlock Profit column:');
-  if(!pw) return;
-  const stored = localStorage.getItem(ADMIN_KEY) || '';
-  if(pw === stored){
-    profitLocked = false;
-    applyProfitVisibility();
-    alert('Profit column unlocked.');
-  } else {
-    alert('Incorrect password.');
-  }
-});
-
-/* --- Set/change admin password --- */
-document.getElementById('setAdminBtn')?.addEventListener('click', ()=>{
-  const cur = localStorage.getItem(ADMIN_KEY) || '';
-  if(cur){
-    const old = prompt('Enter current admin password (leave blank to cancel):');
-    if(!old) return;
-    if(old !== cur){ alert('Wrong password'); return; }
-  }
-  const np = prompt('Enter new admin password (min 4 chars):');
-  if(!np || np.length < 4) return alert('Password too short');
-  localStorage.setItem(ADMIN_KEY, np);
-  alert('Admin password updated.');
-});
-
-/* --- Escape-proof: ensure sales array present --- */
-if(!Array.isArray(window.sales)) window.sales = sales = JSON.parse(localStorage.getItem(SALES_KEY) || '[]');
-else var sales = window.sales;
-
-/* --- Hook Add Sale button --- */
-document.getElementById('addSaleBtn')?.addEventListener('click', addSale);
-
-/* --- Escape: ensure selectors are updated on stock change --- */
-function initSalesModule(){
-  refreshSaleSelectors();
-  renderSales(); // all
-  // Try to keep selectors updated when stock/types change (if those functions call saveAllLocal, we can listen storage)
-  // Also call refreshSaleSelectors periodically / on focus (helps with single-file workflows)
-}
-window.addEventListener('load', initSalesModule);
-window.addEventListener('storage', (e)=>{
-  if(e.key === 'stock-data' || e.key === 'item-types') {
-    try{ window.stock = JSON.parse(localStorage.getItem('stock-data')||'[]'); window.types = JSON.parse(localStorage.getItem('item-types')||'[]'); }catch(e){}
-    refreshSaleSelectors(); renderSales();
-  }
-});
-
-/* expose for debugging */
-window.renderSales = renderSales;
-window.addSale = addSale;
-window.refreshSaleSelectors = refreshSaleSelectors;
-
-/* ensure profit column starts visible/unlocked */
-profitLocked = false;
-applyProfitVisibility();
-</script>
-
-<!-- ===== PART 2 – Smart Sales + Credit + Auto Wanting Module ===== -->
-<script>
-function patchStockActions() {
-  const tb = document.querySelector('#stockTable tbody');
-  if (!tb) return;
-  tb.querySelectorAll('tr').forEach((tr, i) => {
-    // Only add buttons if not already present and not "No Data" row
-    if (!tr.querySelector('.stock-action') && !tr.querySelector('td[colspan]')) {
-      const cell = tr.lastElementChild;
-      cell.innerHTML = `
-        <button class="stock-action history-btn" data-i="${i}" title="View History">📜 History</button>
-        <button class="stock-action sale-btn" data-i="${i}" title="Record Sale">💸 Sale</button>
-        <button class="stock-action credit-btn" data-i="${i}" title="Add Credit Sale">📒 Credit</button>
-      `;
-    }
-  });
-}
-
-/* 📜 HISTORY */
-function handleHistory(i) {
-  const s = window.stock[i];
-  if (!s) return alert('No product found');
-  if (!s.history || !s.history.length)
-    return alert(`${s.name} — No stock added history found.`);
-  const hist = s.history.map(h => `${h.date} — Qty: ${h.qty} @₹${h.cost}`).join('\n');
-  alert(`📜 ${s.name} History:\n${hist}`);
-}
-
-/* 💸 SALE / CREDIT */
-function handleSaleOrCredit(i, mode) {
-  const s = window.stock[i];
-  if (!s) return alert('Invalid item');
-  const remain = (s.qty || 0) - (s.sold || 0);
-  if (remain <= 0) return alert('No stock left!');
-
-  const qty = parseInt(prompt(`Enter qty for ${s.name} (${remain} left):`));
-  if (!qty || qty <= 0 || qty > remain) return;
-
-  const price = parseFloat(prompt('Enter Sale Price ₹:'));
-  if (!price || price <= 0) return;
-
-  const d = new Date().toISOString().split('T')[0];
-  const cost = parseFloat(s.cost) || 0;
-  const profit = Math.round((price - cost) * qty * 100) / 100;
-
-  s.sold = (s.sold || 0) + qty;
-  const sale = { date: d, type: s.type, product: s.name, qty, price, amount: qty * price, profit, status: mode };
-
-  window.sales.push(sale);
-  localStorage.setItem('sales-data', JSON.stringify(window.sales));
-
-  if (s.sold >= s.qty) {
-    alert(`${s.name} is out of stock! Added to Wanting list.`);
-    const wanting = JSON.parse(localStorage.getItem('wanting-data') || '[]');
-    wanting.push({ date: d, type: s.type, name: s.name, note: 'Auto-added' });
-    localStorage.setItem('wanting-data', JSON.stringify(wanting));
+  function viewHistory(i) {
+    const s = stock[i];
+    if (!s || !s.history) return alert('No history available');
+    const list = s.history.map(h => `${h.date} — Qty: ${h.qty} @₹${h.cost}`).join('\n');
+    alert(`📜 ${s.name} History:\n${list}`);
   }
 
-  if (typeof saveAllLocal === 'function') saveAllLocal();
-  renderStock();
-  renderSales();
-  patchStockActions();
-  alert(`${mode} sale recorded for ${s.name}`);
-}
-
-/* 🖱️ Event handling */
-document.addEventListener('click', e => {
-  if (e.target.classList.contains('history-btn')) handleHistory(e.target.dataset.i);
-  if (e.target.classList.contains('sale-btn')) handleSaleOrCredit(e.target.dataset.i, 'Paid');
-  if (e.target.classList.contains('credit-btn')) handleSaleOrCredit(e.target.dataset.i, 'Credit');
-});
-
-/* 🔁 Run after stock load */
-window.addEventListener('load', () => {
-  patchStockActions();
-  setTimeout(patchStockActions, 800);
-});
-</script>
-
-<!-- ===== PART 6 : SUMMARY PANEL LOGIC ===== -->
-<script>
-function updateSummaryCards(){
-  const today = new Date().toISOString().split('T')[0];
-  const sales = JSON.parse(localStorage.getItem('sales-data')||'[]');
-  const stock = JSON.parse(localStorage.getItem('stock-data')||'[]');
-
-  let todaySales = 0, todayCredit = 0, todayProfit = 0;
-  sales.forEach(s=>{
-    if(s.date===today){
-      if(s.status==='Paid') todaySales += s.amount||0;
-      if(s.status==='Credit') todayCredit += s.amount||0;
-      todayProfit += s.profit||0;
+  document.addEventListener('click', e => {
+    switch (e.target.id) {
+      case 'addTypeBtn': addType(); break;
+      case 'clearTypesBtn': clearTypes(); break;
+      case 'setLimitBtn': setGlobalLimit(); break;
+      case 'clearStockBtn':
+        if (confirm('Clear all stock?')) {
+          stock = [];
+          saveAll();
+          renderStock();
+        }
+        break;
+      case 'addStockBtn': addStock(); break;
     }
   });
 
-  const totalQty = stock.reduce((a,b)=>a+(b.qty||0),0);
-  const soldQty = stock.reduce((a,b)=>a+(b.sold||0),0);
-  const remainPct = totalQty>0?Math.round(((totalQty-soldQty)/totalQty)*100):0;
+  document.getElementById('filterType')?.addEventListener('change', renderStock);
 
-  document.getElementById('todaySales').textContent = '₹'+todaySales.toFixed(2);
-  document.getElementById('todayCredit').textContent = '₹'+todayCredit.toFixed(2);
-  document.getElementById('todayProfit').textContent = '₹'+todayProfit.toFixed(2);
-  document.getElementById('stockRemain').textContent = remainPct+'%';
-}
-
-/* Refresh logic */
-window.addEventListener('load',updateSummaryCards);
-window.addEventListener('storage',updateSummaryCards);
-setInterval(updateSummaryCards,60000);
-</script>
-  
-<!-- ===== PART 3: SMART SALES DASHBOARD (AS SEPARATE TAB) ===== -->
-
-<!-- Step 1️⃣: Smart Dashboard Section -->
-<section id="analytics" class="section">
-  <h3>📊 Smart Sales Dashboard</h3>
-  <div style="display:flex;flex-wrap:wrap;gap:20px;justify-content:flex-end;align-items:center;">
-    <div style="flex:1;min-width:320px;max-width:460px;">
-      <canvas id="salesBar"></canvas>
-    </div>
-    <div style="flex:1;min-width:280px;max-width:360px;">
-      <canvas id="salesPie"></canvas>
-    </div>
-  </div>
-  <p style="margin-top:14px;text-align:center;font-size:14px;opacity:0.7;">
-    🔄 Auto-updates every 60 seconds from your sales data.
-  </p>
-</section>
-
-<!-- Step 2️⃣: Smart Dashboard Script -->
+  window.addEventListener('load', () => {
+    renderTypes();
+    updateDropdowns();
+    renderStock();
+  });
+  </script>
+  <!-- ===== PART 4 : SMART SALES DASHBOARD (Chart.js) ===== -->
+<!-- Include Chart.js CDN (only once) -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<!-- Analytics Section (should already exist in your HTML as a section with id="analytics")
+     If you already have the section HTML, keep it — this script will only control rendering. -->
+<style>
+  /* small safety styles for canvas sizing */
+  #analytics .chart-wrap { display:flex; gap:20px; flex-wrap:wrap; justify-content:flex-end; align-items:center; }
+  #analytics canvas { width:100% !important; max-width:460px; height:260px !important; }
+</style>
+
 <script>
-function getSalesData(){
+/* ===== Smart Dashboard: Data + Charts ===== */
+
+/* helper: gather numeric sales stats */
+function getSalesData() {
   const sales = JSON.parse(localStorage.getItem('sales-data') || '[]');
   const today = new Date();
   const todayStr = today.toISOString().split('T')[0];
+
+  // startOfWeek = Sunday (0) to today
   const startOfWeek = new Date(today);
+  startOfWeek.setHours(0,0,0,0);
   startOfWeek.setDate(today.getDate() - today.getDay());
+
+  // startOfMonth
   const startOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+  startOfMonth.setHours(0,0,0,0);
 
   let todaySales = 0, weekSales = 0, monthSales = 0;
   let creditSales = 0, paidSales = 0, totalProfit = 0;
 
   sales.forEach(s => {
+    const amt = Number(s.amount || 0);
+    const prof = Number(s.profit || 0);
     const d = new Date(s.date);
-    const amt = s.amount || 0;
-    const prof = s.profit || 0;
 
     if (s.date === todayStr) todaySales += amt;
     if (d >= startOfWeek) weekSales += amt;
     if (d >= startOfMonth) monthSales += amt;
+
     if (s.status === 'Credit') creditSales += amt; else paidSales += amt;
     totalProfit += prof;
   });
 
-  return { todaySales, weekSales, monthSales, creditSales, paidSales, totalProfit };
+  // round
+  return {
+    todaySales: Math.round(todaySales*100)/100,
+    weekSales: Math.round(weekSales*100)/100,
+    monthSales: Math.round(monthSales*100)/100,
+    creditSales: Math.round(creditSales*100)/100,
+    paidSales: Math.round(paidSales*100)/100,
+    totalProfit: Math.round(totalProfit*100)/100
+  };
 }
 
-function renderAnalytics(){
-  const { todaySales, weekSales, monthSales, creditSales, paidSales, totalProfit } = getSalesData();
-  const ctx1 = document.getElementById('salesBar');
-  const ctx2 = document.getElementById('salesPie');
-  if (!ctx1 || !ctx2) return;
+/* chart instances stored on window for safe destruction */
+window.salesBarChart = window.salesBarChart || null;
+window.salesPieChart = window.salesPieChart || null;
 
-  // Destroy old charts before re-render
-  if (window.salesBarChart) window.salesBarChart.destroy();
-  if (window.salesPieChart) window.salesPieChart.destroy();
+/* render analytics charts - id's: salesBar (bar) and salesPie (pie) */
+function renderAnalytics() {
+  // find canvases
+  const barCanvas = document.getElementById('salesBar');
+  const pieCanvas = document.getElementById('salesPie');
+  if (!barCanvas || !pieCanvas) return;
 
-  // 🟧 Bar Chart
-  window.salesBarChart = new Chart(ctx1, {
+  const data = getSalesData();
+
+  // destroy previous charts if exist
+  try { if (window.salesBarChart) { window.salesBarChart.destroy(); window.salesBarChart = null; } } catch(e){}
+  try { if (window.salesPieChart) { window.salesPieChart.destroy(); window.salesPieChart = null; } } catch(e){}
+
+  // BAR: Today / This Week / This Month
+  window.salesBarChart = new Chart(barCanvas, {
     type: 'bar',
     data: {
       labels: ['Today', 'This Week', 'This Month'],
       datasets: [{
         label: 'Sales ₹',
-        data: [todaySales, weekSales, monthSales],
-        backgroundColor: ['#ffb74d', '#ff9800', '#f57c00'],
+        data: [data.todaySales, data.weekSales, data.monthSales],
+        // Chart.js will use default colors if none specified — that's fine
         borderRadius: 6
       }]
     },
@@ -1199,34 +670,132 @@ function renderAnalytics(){
         title: { display: true, text: 'Sales Summary' },
         legend: { display: false }
       },
-      scales: { y: { beginAtZero: true } }
+      scales: {
+        y: { beginAtZero: true }
+      },
+      maintainAspectRatio: false
     }
   });
 
-  // 🟦 Pie Chart
-  window.salesPieChart = new Chart(ctx2, {
+  // PIE: Paid vs Credit
+  window.salesPieChart = new Chart(pieCanvas, {
     type: 'pie',
     data: {
       labels: ['Paid Sales', 'Credit Sales'],
       datasets: [{
-        data: [paidSales, creditSales],
-        backgroundColor: ['#43a047', '#42a5f5']
+        data: [data.paidSales, data.creditSales]
       }]
     },
     options: {
       plugins: {
-        legend: { position: 'bottom' },
-        title: { display: true, text: `Total Profit ₹${totalProfit.toFixed(2)}` }
-      }
+        title: { display: true, text: `Total Profit ₹${(data.totalProfit || 0).toFixed(2)}` },
+        legend: { position: 'bottom' }
+      },
+      maintainAspectRatio: false
     }
   });
 }
 
-/* 🔁 Initialize after page load */
+/* Only render charts when "analytics" tab becomes active.
+   We already wired tabs to call renderAnalytics() when dataset.tab === 'analytics' in your tab handler.
+   But to be safe (in case user navigates directly), render on load if analytics is active. */
 window.addEventListener('load', () => {
-  renderAnalytics();
-  setInterval(renderAnalytics, 60000);
+  // small delay to ensure DOM canvases exist
+  setTimeout(() => {
+    const analyticsSection = document.getElementById('analytics');
+    if (analyticsSection && analyticsSection.classList.contains('active')) {
+      renderAnalytics();
+    }
+  }, 120);
+
+  // also refresh charts when storage changes (another tab / save)
+  window.addEventListener('storage', (e) => {
+    if (e.key === 'sales-data' || e.key === 'stock-data' || e.key === 'item-types') {
+      // refresh only if analytics currently visible
+      const analyticsSection = document.getElementById('analytics');
+      if (analyticsSection && analyticsSection.classList.contains('active')) {
+        renderAnalytics();
+      }
+    }
+  });
+
+  // optional: refresh charts every 60s only when analytics visible
+  setInterval(() => {
+    const analyticsSection = document.getElementById('analytics');
+    if (analyticsSection && analyticsSection.classList.contains('active')) {
+      renderAnalytics();
+    }
+  }, 60000);
 });
+
+/* Small helper: updateSummaryCards function (keeps the Overview cards fresh) */
+function updateSummaryCards(){
+  const today = new Date().toISOString().split('T')[0];
+  const sales = JSON.parse(localStorage.getItem('sales-data')||'[]');
+  const stock = JSON.parse(localStorage.getItem('stock-data')||'[]');
+
+  let todaySales = 0, todayCredit = 0, todayProfit = 0;
+  sales.forEach(s=>{
+    if(s.date===today){
+      if(s.status==='Paid') todaySales += Number(s.amount || 0);
+      if(s.status==='Credit') todayCredit += Number(s.amount || 0);
+      todayProfit += Number(s.profit || 0);
+    }
+  });
+
+  const totalQty = stock.reduce((a,b)=>a+(Number(b.qty||0)),0);
+  const soldQty = stock.reduce((a,b)=>a+(Number(b.sold||0)),0);
+  const remainPct = totalQty>0?Math.round(((totalQty-soldQty)/totalQty)*100):0;
+
+  const elTodaySales = document.getElementById('todaySales');
+  const elTodayCredit = document.getElementById('todayCredit');
+  const elTodayProfit = document.getElementById('todayProfit');
+  const elStockRemain = document.getElementById('stockRemain');
+
+  if(elTodaySales) elTodaySales.textContent = '₹'+(Math.round(todaySales*100)/100).toFixed(2);
+  if(elTodayCredit) elTodayCredit.textContent = '₹'+(Math.round(todayCredit*100)/100).toFixed(2);
+  if(elTodayProfit) elTodayProfit.textContent = '₹'+(Math.round(todayProfit*100)/100).toFixed(2);
+  if(elStockRemain) elStockRemain.textContent = remainPct+'%';
+}
+
+/* call once on load to initialize summary cards */
+window.addEventListener('load', () => {
+  updateSummaryCards();
+});
+  <!-- ===== ✅ FINAL APP INITIALIZATION & SAFE EXIT ===== -->
+<script>
+/* 🚀 Final init — ensure all summary + charts update once */
+window.addEventListener("load", () => {
+  try { if (typeof updateSummaryCards === "function") updateSummaryCards(); } catch(e){}
+  try { if (typeof renderAnalytics === "function") renderAnalytics(); } catch(e){}
+});
+
+/* 🧹 Optional cleanup: stop intervals when tab hidden (saves battery on mobile) */
+let dashInterval = null;
+document.addEventListener("visibilitychange", () => {
+  if (document.hidden) {
+    if (dashInterval) { clearInterval(dashInterval); dashInterval = null; }
+  } else {
+    if (!dashInterval && typeof renderAnalytics === "function") {
+      dashInterval = setInterval(() => {
+        const active = document.querySelector(".tab.active");
+        if (active && active.dataset.tab === "analytics") renderAnalytics();
+      }, 60000);
+    }
+  }
+});
+
+/* 💾 Before unload — auto-save to localStorage (failsafe) */
+window.addEventListener("beforeunload", () => {
+  try {
+    if (typeof saveAll === "function") saveAll();
+    if (typeof saveSales === "function") saveSales();
+  } catch (e) { console.warn("Auto-save skipped:", e); }
+});
+
+/* 🎉 Console confirmation */
+console.log("%cKharchaSaathi Dashboard Loaded Successfully ✅", "color: #ff7a00; font-weight: bold;");
 </script>
+
 </body>
 </html>
