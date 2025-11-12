@@ -1,146 +1,108 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-  <meta name="google-adsense-account" content="ca-pub-2914631277707668">
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="KharchaSaathi — Smart tools to manage rent, expenses, stock, sales, invoices & ledgers with dark mode support. Perfect for both personal and business use.">
-  <meta name="theme-color" content="#ff7a00">
-  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
-  <meta http-equiv="Pragma" content="no-cache" />
-  <meta http-equiv="Expires" content="0" />
-
-  <!-- ✅ App Manifest (PWA) -->
-  <link rel="manifest" href="manifest.json">
-  <link rel="apple-touch-icon" href="icons/icon-512.png">
-
-  <!-- ✅ Font Preload -->
-  <link rel="preload" href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;800&display=swap" as="style">
-
-  <title>💰 KharchaSaathi — Smart Tools Hub</title>
-
-  <!-- ✅ Google AdSense -->
-  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-2914631277707668" crossorigin="anonymous"></script>
-
-  <style>
-    :root {
-      --orange: #ff7a00;
-      --orange-dark: #cc6300;
-      --bg-light: #fafafa;
-      --bg-dark: #121212;
-      --text-dark: #222;
-      --text-light: #e8e8e8;
-      --card-light: #ffffff;
-      --card-dark: #1e1e1e;
-      --border-light: rgba(0,0,0,0.05);
-      --border-dark: rgba(255,255,255,0.15);
-      --shadow-light: rgba(0,0,0,0.08);
-      --shadow-dark: rgba(255,255,255,0.05);
-    }
-    *{box-sizing:border-box;}
-    body{
-      font-family:"Poppins",Arial,sans-serif;
-      margin:0;padding:0;
-      background:var(--bg-light);color:var(--text-dark);
-      text-align:center;min-height:100vh;
-      display:flex;flex-direction:column;
-      transition:background .4s,color .4s;
-    }
-    body.dark{background:var(--bg-dark);color:var(--text-light);}
-    h1{font-size:38px;font-weight:800;margin:40px 0 10px;color:var(--orange);}
-    p.subtitle{font-size:16px;color:#666;margin-bottom:30px;}
-    body.dark p.subtitle{color:#bbb;}
-    .theme-toggle{
-      position:fixed;top:14px;right:14px;
-      background:var(--orange);color:#fff;border:none;border-radius:8px;
-      padding:8px 14px;font-size:15px;cursor:pointer;z-index:1000;
-      box-shadow:0 2px 6px var(--shadow-light);
-    }
-    .theme-toggle:hover{background:var(--orange-dark);}
-    .section-title{font-size:20px;font-weight:700;margin:40px 0 20px;text-transform:uppercase;letter-spacing:1px;color:var(--orange);}
-    .tools-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:20px;max-width:960px;margin:auto;padding:0 20px;flex:1;}
-    .tool-card{
-      background:var(--card-light);border-radius:16px;padding:24px;
-      box-shadow:0 4px 12px var(--shadow-light);
-      text-decoration:none;color:var(--text-dark);font-weight:600;
-      transition:all .25s;display:flex;flex-direction:column;align-items:center;min-height:160px;
-    }
-    .tool-card:hover{transform:translateY(-6px);box-shadow:0 6px 18px rgba(0,0,0,.1);background:#fff3e6;}
-    .tool-card span{font-size:34px;margin-bottom:10px;}
-    body.dark .tool-card{background:var(--card-dark);color:var(--text-light);box-shadow:0 3px 8px var(--shadow-dark);}
-    body.dark .tool-card:hover{background:#2a2a2a;box-shadow:0 3px 14px rgba(255,255,255,.08);}
-    footer{margin-top:50px;padding:25px 0;font-size:13px;color:#888;border-top:1px solid var(--border-light);}
-    body.dark footer{color:#aaa;border-top:1px solid var(--border-dark);}
-    small.desc{color:#777;font-size:13px;margin-top:8px;text-align:center;display:block;line-height:1.4em;}
-    body.dark small.desc{color:#bbb;}
-    #helpPopup{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.6);justify-content:center;align-items:center;z-index:9999;}
-    .help-box{background:var(--card-light);color:var(--text-dark);padding:20px;border-radius:12px;max-width:700px;width:90%;max-height:85vh;overflow-y:auto;text-align:left;}
-    body.dark .help-box{background:var(--card-dark);color:var(--text-light);}
-    .help-box h2{text-align:center;color:var(--orange);}
-    .close-btn{background:var(--orange);border:none;color:#fff;padding:6px 10px;border-radius:8px;cursor:pointer;float:right;}
-    .close-btn:hover{background:var(--orange-dark);}
-    @media(max-width:600px){h1{font-size:30px;}.section-title{font-size:18px;}.tool-card{padding:18px;}}
-  </style>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>📦 KharchaSaathi — Business Dashboard (Stable)</title>
+  <meta name="theme-color" content="#ff7a00" />
+  <link rel="icon" href="assets/favicon.png" />
+  <!-- main style -->
+  <link rel="stylesheet" href="css/style.css" />
 </head>
-
 <body>
-  <button class="theme-toggle" onclick="toggleTheme()">🌙</button>
-
-  <h1>💰 KharchaSaathi</h1>
-  <p class="subtitle">Your Smart Companion for Daily & Business Calculations</p>
-
-  <div class="section-title">Personal Tools</div>
-  <div class="tools-grid">
-    <a class="tool-card" href="tools/rent-split.html"><span>🏠</span>Rent Split Calculator<small class="desc">Split rent among friends easily.</small></a>
-    <a class="tool-card" href="tools/trip-expense-splitter.html"><span>🚗</span>Trip Expense Splitter<small class="desc">Manage shared trip expenses.</small></a>
-    <a class="tool-card" href="tools/water-bill-split.html"><span>💧</span>Water Bill Splitter<small class="desc">Split household water bills.</small></a>
-    <a class="tool-card" href="tools/grocery-split-pro.html"><span>🛒</span>Grocery Split (Pro)<small class="desc">Divide grocery costs clearly.</small></a>
-    <a class="tool-card" href="tools/roomshare-ledger.html"><span>📒</span>RoomShare Ledger Pro<small class="desc">Track shared expenses room-wise.</small></a>
-  </div>
-
-  <div class="section-title">Business Tools</div>
-  <div class="tools-grid">
-    <a class="tool-card" href="tools/business-dashboard.html"><span>📦</span>Business Dashboard<small class="desc">Manage stock, sales & wanting list with PDF export.</small></a>
-    <a class="tool-card" href="tools/invoice-pro.html"><span>🧾</span>Invoice Pro (Smart Billing)<small class="desc">Create, print & share invoices instantly.</small></a>
-    <a class="tool-card" href="tools/gst-bill.html"><span>📄</span>GST Reverse Calculator<small class="desc">Find GST components from totals.</small></a>
-  </div>
-
-  <div class="section-title">Guides & Help</div>
-  <div class="tools-grid">
-    <a class="tool-card" href="#" onclick="openHelp()"><span>📘</span>Open Help Center</a>
-  </div>
-
-  <footer>© 2025 KharchaSaathi • Built by Abid Ali</footer>
-
-  <div id="helpPopup">
-    <div class="help-box">
-      <button class="close-btn" onclick="closeHelp()">✖ Close</button>
-      <h2>📘 Guides & Help — KharchaSaathi</h2>
-      <ul>
-        <li>🌙 Toggle Dark Mode easily.</li>
-        <li>📦 Manage Stock & Sales in Business Dashboard.</li>
-        <li>📒 Track shared expenses via RoomShare Ledger.</li>
-        <li>🧾 Generate Invoices & GST calculations.</li>
-        <li>💾 All data stored offline in browser.</li>
-      </ul>
+  <div class="topbar">
+    <div class="top-left">
+      <button id="backBtn" class="small-btn">🏠 Back</button>
+      <h1>📦 KharchaSaathi</h1>
+    </div>
+    <div class="top-right">
+      <button id="themeBtn" class="theme-btn">🌙</button>
+      <button id="helpBtn" class="small-btn">📘 Help</button>
     </div>
   </div>
 
-  <script>
-    // 🌙 Theme
-    (()=>{const t=localStorage.getItem('ks-theme');if(t==='dark'){document.body.classList.add('dark');document.querySelector('.theme-toggle').textContent='☀️';}})();
-    function toggleTheme(){const dark=document.body.classList.toggle('dark');localStorage.setItem('ks-theme',dark?'dark':'light');document.querySelector('.theme-toggle').textContent=dark?'☀️':'🌙';}
+  <nav class="tabs" role="tablist" aria-label="Main tabs">
+    <div class="tab active" data-tab="dashboard">📊 Overview</div>
+    <div class="tab" data-tab="types">🗂 Types</div>
+    <div class="tab" data-tab="stock">📦 Stock</div>
+    <div class="tab" data-tab="sales">📈 Sales</div>
+    <div class="tab" data-tab="wanting">🛒 Wanting</div>
+    <div class="tab" data-tab="analytics">📈 Smart Dashboard</div>
+  </nav>
 
-    // 📘 Help Popup
-    function openHelp(){document.getElementById('helpPopup').style.display='flex';}
-    function closeHelp(){document.getElementById('helpPopup').style.display='none';}
+  <main id="mainContent">
+    <!-- Sections are placeholders — content for each section will either be inline (small) or loaded by module files -->
+    <section id="dashboard" class="section active" aria-labelledby="overviewTitle">
+      <h2 id="overviewTitle">📊 Business Overview</h2>
+      <div id="summaryCards" class="summary-cards">
+        <!-- cards filled by updateSummaryCards() -->
+        <div class="card card-sales">
+          <div class="card-emoji">💰</div>
+          <div class="card-value"><b id="todaySales">₹0</b></div>
+          <div class="card-label"><small>Today's Sales</small></div>
+        </div>
+        <div class="card card-credit">
+          <div class="card-emoji">💳</div>
+          <div class="card-value"><b id="todayCredit">₹0</b></div>
+          <div class="card-label"><small>Today's Credit</small></div>
+        </div>
+        <div class="card card-stock">
+          <div class="card-emoji">📦</div>
+          <div class="card-value"><b id="stockRemain">0%</b></div>
+          <div class="card-label"><small>Stock Remaining</small></div>
+        </div>
+        <div class="card card-profit">
+          <div class="card-emoji">📈</div>
+          <div class="card-value"><b id="todayProfit">₹0</b></div>
+          <div class="card-label"><small>Today's Profit</small></div>
+        </div>
+      </div>
+      <!-- A compact area where analytics small preview can show (but full charts in analytics tab) -->
+      <div id="analyticsPreview" class="analytics-preview" aria-hidden="true">
+        <small>Smart Dashboard preview — click Smart Dashboard tab to open full charts</small>
+      </div>
+    </section>
 
-    // ⚙️ Register Service Worker for PWA
-    if('serviceWorker' in navigator){
-      navigator.serviceWorker.register('service-worker.js')
-        .then(()=>console.log('✅ Service Worker Registered'))
-        .catch(err=>console.log('❌ SW Error:',err));
-    }
-  </script>
+    <section id="types" class="section" aria-hidden="true">
+      <!-- simple placeholder: detailed UI loaded by types.js (Part2) -->
+      <h2>🗂 Types</h2>
+      <div id="typesContainer">Loading types module…</div>
+    </section>
+
+    <section id="stock" class="section" aria-hidden="true">
+      <h2>📦 Stock</h2>
+      <div id="stockContainer">Loading stock module…</div>
+    </section>
+
+    <section id="sales" class="section" aria-hidden="true">
+      <h2>📈 Sales & Profit</h2>
+      <div id="salesContainer">Loading sales module…</div>
+    </section>
+
+    <section id="wanting" class="section" aria-hidden="true">
+      <h2>🛒 Wanting</h2>
+      <div id="wantingContainer">Loading wanting module…</div>
+    </section>
+
+    <section id="analytics" class="section" aria-hidden="true">
+      <h2>📊 Smart Dashboard</h2>
+      <div id="analyticsContainer">Loading analytics module…</div>
+    </section>
+  </main>
+
+  <!-- Help modal (simple) -->
+  <div id="helpModal" class="help-modal" aria-hidden="true">
+    <div class="help-content">
+      <h3>Quick Help</h3>
+      <ul>
+        <li>Manage Types, Stock, Sales and Wanting lists.</li>
+        <li>Smart Dashboard uses your sales data to render charts (loads only when needed).</li>
+      </ul>
+      <button id="closeHelp" class="small-btn">Close</button>
+    </div>
+  </div>
+
+  <!-- Core script (tabs + theme + lazy module loader + safe init) -->
+  <script src="js/core.js"></script>
 </body>
 </html>
