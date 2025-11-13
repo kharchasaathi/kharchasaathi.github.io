@@ -1,86 +1,118 @@
-// security.js — Admin PIN + Role-based Access Layer for KharchaSaathi
-(function () {
-  console.log("%c🔐 Security module initialized", "color:#007bff;font-weight:bold;");
+/* ==========================================================
+   🔐 security.js — Admin Password + Lock System
+   Works with: core.js (KEY_ADMIN, setAdminPassword, validateAdminPassword)
+   ========================================================== */
 
-  const ADMIN_PIN = "1234"; // 🔑 You can change this anytime (owner only)
-  const STORAGE_KEY = "adminMode";
+const ADMIN_KEY = "ks-admin-pw";
 
-  // --- Setup UI Elements ---
-  const topBar = document.querySelector(".topbar");
-  if (!topBar) return console.warn("⚠️ Security: topbar not found");
+/* ----------------------------------------------------------
+   CHECK PASSWORD EXISTS (if not → set default)
+---------------------------------------------------------- */
+function ensureAdminPassword() {
+  let pw = localStorage.getItem(ADMIN_KEY);
 
-  // Admin tag (indicator)
-  const adminTag = document.createElement("div");
-  adminTag.id = "adminIndicator";
-  adminTag.style.cssText = `
-    font-size: 13px;
-    color: #fff;
-    background: #007bff;
-    padding: 3px 8px;
-    border-radius: 8px;
-    margin-left: auto;
-    display: none;
-    user-select: none;
-  `;
-  adminTag.textContent = "Admin Mode ✅";
-  topBar.appendChild(adminTag);
+  if (!pw) {
+    // default password if none exists
+    localStorage.setItem(ADMIN_KEY, "admin123");
+  }
+}
+ensureAdminPassword();
 
-  // Logout button
-  const logoutBtn = document.createElement("button");
-  logoutBtn.textContent = "Logout Admin";
-  logoutBtn.className = "small-btn admin-only";
-  logoutBtn.style.display = "none";
-  logoutBtn.onclick = deactivateAdmin;
-  topBar.appendChild(logoutBtn);
+/* ----------------------------------------------------------
+   SET NEW ADMIN PASSWORD
+---------------------------------------------------------- */
+function updateAdminPassword() {
+  const oldPw = localStorage.getItem(ADMIN_KEY);
 
-  // --- Activation Shortcut (Double-tap on title) ---
-  const title = topBar.querySelector("h1");
-  if (title) {
-    title.addEventListener("dblclick", () => {
-      const pin = prompt("🔐 Enter Admin PIN to unlock:");
-      if (pin === ADMIN_PIN) {
-        localStorage.setItem(STORAGE_KEY, "true");
-        alert("✅ Admin Mode Activated");
-        enableAdminUI();
-      } else {
-        alert("❌ Incorrect PIN!");
-      }
-    });
+  // ask old password first
+  const oldInput = prompt("Enter current admin password:");
+  if (!oldInput) return;
+
+  if (oldInput !== oldPw) {
+    alert("Incorrect password!");
+    return;
   }
 
-  // --- Initialize State ---
-  if (localStorage.getItem(STORAGE_KEY) === "true") {
-    enableAdminUI();
+  // ask new password
+  const newPw = prompt("Enter new admin password (min 4 characters):");
+  if (!newPw || newPw.length < 4) {
+    alert("Password too short!");
+    return;
   }
 
-  // --- Core Functions ---
-  function enableAdminUI() {
-    adminTag.style.display = "inline-block";
-    logoutBtn.style.display = "inline-block";
-    showAdminOnlyButtons();
+  localStorage.setItem(ADMIN_KEY, newPw);
+  alert("Admin password updated successfully!");
+}
+
+/* ----------------------------------------------------------
+   VERIFY PASSWORD (for unlocking features)
+---------------------------------------------------------- */
+function askAdminPassword() {
+  const pw = prompt("Enter admin password:");
+  if (!pw) return false;
+
+  return pw === localStorage.getItem(ADMIN_KEY);
+}
+
+/* ----------------------------------------------------------
+   SECURE TOGGLE — SHOW/HIDE ANY ELEMENT
+---------------------------------------------------------- */
+function secureToggle(elementId) {
+  if (!askAdminPassword()) {
+    alert("Wrong password!");
+    return;
   }
 
-  function deactivateAdmin() {
-    localStorage.removeItem(STORAGE_KEY);
-    alert("🔒 Admin Mode Deactivated");
-    location.reload();
+  const el = document.getElementById(elementId);
+  if (!el) return;
+
+  el.style.display = el.style.display === "none" ? "" : "none";
+}
+
+/* ----------------------------------------------------------
+   LOCK/UNLOCK PROFIT COLUMN (GLOBAL)
+   (Used in sales.js automatically)
+---------------------------------------------------------- */
+function unlockProfitWithPassword() {
+  if (askAdminPassword()) {
+    window.profitLocked = false;
+    if (typeof applyProfitVisibility === "function") {
+      applyProfitVisibility();
+    }
+    alert("Profit column unlocked.");
+  } else {
+    alert("Incorrect password.");
+  }
+}
+
+/* ----------------------------------------------------------
+   CLEAR ADMIN PASSWORD (Only with old password)
+---------------------------------------------------------- */
+function resetAdminPassword() {
+  const cur = localStorage.getItem(ADMIN_KEY);
+
+  const old = prompt("Enter current password for reset:");
+  if (!old) return;
+
+  if (old !== cur) {
+    alert("Incorrect password!");
+    return;
   }
 
-  function showAdminOnlyButtons() {
-    const adminBtns = document.querySelectorAll(".admin-only");
-    adminBtns.forEach(btn => (btn.style.display = "inline-block"));
+  const newPw = prompt("Enter new password:");
+  if (!newPw || newPw.length < 4) {
+    alert("Invalid new password.");
+    return;
   }
 
-  // --- Secure Action Wrapper ---
-  window.confirmAdminAction = function (message, callback) {
-    const isAdmin = localStorage.getItem(STORAGE_KEY) === "true";
-    if (!isAdmin) return alert("⛔ Only Admin can perform this action!");
-    const ok = confirm("⚠️ " + message);
-    if (ok && typeof callback === "function") callback();
-  };
+  localStorage.setItem(ADMIN_KEY, newPw);
+  alert("Password successfully reset.");
+}
 
-  // --- Expose Logout Globally ---
-  window.deactivateAdmin = deactivateAdmin;
-
-  console.log("%c✅ Security system active", "color:#28a745;font-weight:bold;");
-})();
+/* ----------------------------------------------------------
+   EXPORT TO WINDOW
+---------------------------------------------------------- */
+window.updateAdminPassword = updateAdminPassword;
+window.unlockProfitWithPassword = unlockProfitWithPassword;
+window.secureToggle = secureToggle;
+window.resetAdminPassword = resetAdminPassword;
