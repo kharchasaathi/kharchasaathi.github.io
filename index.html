@@ -3,89 +3,146 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>📦 KharchaSaathi — Business Dashboard</title>
+  <title>💰 KharchaSaathi — Smart Tools Hub</title>
   <meta name="theme-color" content="#ff7a00" />
+
+  <!-- Favicon -->
   <link rel="icon" href="assets/favicon.png" />
-  <link rel="stylesheet" href="css/style.css" />
+
+  <!-- Fonts -->
+  <link rel="preload" href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;800&display=swap" as="style">
+
+  <style>
+    :root{
+      --orange:#ff7a00;
+      --orange-dark:#cc6300;
+      --bg-light:#fafafa;
+      --bg-dark:#121212;
+      --text-light:#e8e8e8;
+      --text-dark:#222;
+      --card-light:#ffffff;
+      --card-dark:#1e1e1e;
+    }
+
+    body{
+      margin:0;padding:0;
+      font-family:Poppins,Arial,sans-serif;
+      background:var(--bg-light);color:var(--text-dark);
+      text-align:center;
+      transition:background .3s,color .3s;
+    }
+    body.dark{background:var(--bg-dark);color:var(--text-light)}
+
+    h1{margin-top:28px;font-size:34px;color:var(--orange)}
+    p.subtitle{color:#666;font-size:15px}
+    body.dark p.subtitle{color:#bbb}
+
+    /* Theme toggle */
+    #themeBtn{
+      position:fixed;top:14px;right:14px;
+      background:var(--orange);color:#fff;
+      border:none;padding:8px 14px;
+      border-radius:8px;cursor:pointer;
+      font-size:15px;
+    }
+    #themeBtn:hover{background:var(--orange-dark)}
+
+    /* Tools Grid */
+    .section-title{font-size:20px;font-weight:700;margin:35px 0 14px;color:var(--orange)}
+    .tools-grid{
+      display:grid;
+      grid-template-columns:repeat(auto-fit,minmax(200px,1fr));
+      gap:18px;
+      max-width:920px;margin:auto;padding:0 20px;
+    }
+    .tool-card{
+      background:var(--card-light);
+      padding:22px;border-radius:14px;
+      text-decoration:none;color:var(--text-dark);
+      box-shadow:0 4px 12px rgba(0,0,0,.07);
+      transition:.25s;
+      display:flex;flex-direction:column;align-items:center;
+    }
+    .tool-card:hover{transform:translateY(-6px);background:#fff3e5}
+    .tool-card span{font-size:32px;margin-bottom:8px}
+    small.desc{font-size:13px;color:#777;text-align:center;display:block;margin-top:6px}
+
+    body.dark .tool-card{background:var(--card-dark);color:var(--text-light)}
+    body.dark .tool-card:hover{background:#2a2a2a}
+
+    footer{margin-top:45px;padding:28px 0;font-size:12px;color:#888}
+    body.dark footer{color:#bbb}
+  </style>
+
 </head>
 
 <body>
 
-  <!-- TOP BAR -->
-  <div class="topbar">
-    <div class="top-left">
-      <h1>📦 KharchaSaathi</h1>
-    </div>
-    <div class="top-right">
-      <button id="themeBtn" class="theme-btn">🌙</button>
-      <button id="helpBtn" class="small-btn">📘 Help</button>
-    </div>
+  <button id="themeBtn">🌙</button>
+
+  <h1>💰 KharchaSaathi</h1>
+  <p class="subtitle">Your Smart Companion for Daily & Business Tools</p>
+
+  <!-- PERSONAL TOOLS -->
+  <div class="section-title">Personal Tools</div>
+  <div class="tools-grid">
+    <a class="tool-card" href="tools/rent-split.html">
+      <span>🏠</span>Rent Split<small class="desc">Split rent easily.</small>
+    </a>
+    <a class="tool-card" href="tools/trip-expense-splitter.html">
+      <span>🚗</span>Trip Split<small class="desc">Group trip expenses.</small>
+    </a>
+    <a class="tool-card" href="tools/water-bill-split.html">
+      <span>💧</span>Water Bill<small class="desc">Shared bills.</small>
+    </a>
+    <a class="tool-card" href="tools/grocery-split-pro.html">
+      <span>🛒</span>Grocery Split<small class="desc">Advanced grocery sharing.</small>
+    </a>
+    <a class="tool-card" href="tools/roomshare-ledger.html">
+      <span>📒</span>RoomShare Ledger<small class="desc">Shared expenses tracker.</small>
+    </a>
   </div>
 
-  <!-- TABS -->
-  <nav class="tabs">
-    <div class="tab active" data-tab="dashboard">📊 Overview</div>
-    <div class="tab" data-tab="types">🗂 Types</div>
-    <div class="tab" data-tab="stock">📦 Stock</div>
-    <div class="tab" data-tab="sales">📈 Sales</div>
-    <div class="tab" data-tab="wanting">🛒 Wanting</div>
-    <div class="tab" data-tab="analytics">📊 Smart Dashboard</div>
-  </nav>
-
-  <!-- SECTIONS -->
-  <main>
-
-    <section id="dashboard" class="section active">
-      <h2>📊 Business Overview</h2>
-
-      <div class="summary-cards">
-        <div class="card"><div class="card-emoji">💰</div><b id="todaySales">₹0</b><small>Today's Sales</small></div>
-        <div class="card"><div class="card-emoji">💳</div><b id="todayCredit">₹0</b><small>Today's Credit</small></div>
-        <div class="card"><div class="card-emoji">📦</div><b id="stockRemain">0%</</b><small>Stock Remaining</small></div>
-        <div class="card"><div class="card-emoji">📈</div><b id="todayProfit">₹0</b><small>Today's Profit</small></div>
-      </div>
-    </section>
-
-    <section id="types" class="section">
-      <h2>🗂 Types</h2>
-      <div id="typesContainer">Loading…</div>
-    </section>
-
-    <section id="stock" class="section">
-      <h2>📦 Stock</h2>
-      <div id="stockContainer">Loading…</div>
-    </section>
-
-    <section id="sales" class="section">
-      <h2>📈 Sales</h2>
-      <div id="salesContainer">Loading…</div>
-    </section>
-
-    <section id="wanting" class="section">
-      <h2>🛒 Wanting</h2>
-      <div id="wantingContainer">Loading…</div>
-    </section>
-
-    <section id="analytics" class="section">
-      <h2>📊 Smart Dashboard</h2>
-      <div id="analyticsContainer">Loading…</div>
-    </section>
-
-  </main>
-
-  <!-- HELP MODAL -->
-  <div id="helpModal" class="help-modal" aria-hidden="true">
-    <div class="help-content">
-      <h3>Quick Help</h3>
-      <p>Manage types, stock, sales & wanting list.</p>
-      <button id="closeHelp" class="small-btn">Close</button>
-    </div>
+  <!-- BUSINESS TOOLS -->
+  <div class="section-title">Business Tools</div>
+  <div class="tools-grid">
+    <a class="tool-card" href="tools/business-dashboard.html">
+      <span>📦</span>Business Dashboard
+      <small class="desc">Stock, Sales, Wanting, Analytics.</small>
+    </a>
+    <a class="tool-card" href="tools/invoice-pro.html">
+      <span>🧾</span>Invoice Pro<small class="desc">Create & print invoices.</small>
+    </a>
+    <a class="tool-card" href="tools/gst-bill.html">
+      <span>📄</span>GST Calculator<small class="desc">Reverse GST tool.</small>
+    </a>
   </div>
 
-  <!-- SCRIPTS -->
-  <script src="js/core.js"></script>
-  <script src="js/security.js"></script>
-  <script type="module" src="js/firebase.js"></script>
+  <!-- HELP -->
+  <div class="section-title">Help & Docs</div>
+  <div class="tools-grid">
+    <a class="tool-card" href="help.html">
+      <span>📘</span>Help Center<small class="desc">Guides & tutorials.</small>
+    </a>
+  </div>
+
+  <footer>© 2025 KharchaSaathi • Built by Abid Ali</footer>
+
+  <script>
+    // Dark Mode
+    (function(){
+      if(localStorage.getItem('ks-theme') === 'dark'){
+        document.body.classList.add('dark');
+        document.getElementById("themeBtn").textContent = "☀️";
+      }
+    })();
+
+    document.getElementById("themeBtn").addEventListener("click",()=>{
+      const d = document.body.classList.toggle("dark");
+      localStorage.setItem("ks-theme", d ? "dark" : "light");
+      document.getElementById("themeBtn").textContent = d ? "☀️" : "🌙";
+    });
+  </script>
 
 </body>
 </html>
