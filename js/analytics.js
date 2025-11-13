@@ -1,19 +1,22 @@
-console.log("analytics.js module loaded");
+console.log("analytics.js loaded");
 
 window.renderAnalytics = function () {
-  const container = document.getElementById("analyticsContainer");
-
+  const box = document.getElementById("analyticsContainer");
   let sales = JSON.parse(localStorage.getItem("sales-data") || "[]");
 
   if (sales.length === 0) {
-    container.innerHTML = `<p>No sales data available yet 📉</p>`;
+    box.innerHTML = "<p>No sales data yet</p>";
     return;
   }
 
-  const total = sales.reduce((a, b) => a + Number(b.amount), 0);
+  const total = sales.reduce((a,b)=>a + Number(b.amount), 0);
 
-  container.innerHTML = `
-    <h3>Smart Sales Dashboard</h3>
+  box.innerHTML = `
+    <h3>Smart Dashboard</h3>
     <p>Total Revenue: ₹${total}</p>
   `;
+};
+
+window.moduleInit = id => {
+  if (id === "analytics") renderAnalytics();
 };
