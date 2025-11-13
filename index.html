@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>📦 KharchaSaathi — Business Dashboard (Stable)</title>
+  <title>📦 KharchaSaathi — Business Dashboard</title>
   <meta name="theme-color" content="#ff7a00" />
   <link rel="icon" href="assets/favicon.png" />
   <link rel="stylesheet" href="css/style.css" />
@@ -14,7 +14,6 @@
   <!-- TOP BAR -->
   <div class="topbar">
     <div class="top-left">
-      <button id="backBtn" class="small-btn">🏠 Back</button>
       <h1>📦 KharchaSaathi</h1>
     </div>
     <div class="top-right">
@@ -23,77 +22,53 @@
     </div>
   </div>
 
-  <!-- NAV TABS -->
-  <nav class="tabs" role="tablist" aria-label="Main tabs">
+  <!-- TABS -->
+  <nav class="tabs">
     <div class="tab active" data-tab="dashboard">📊 Overview</div>
     <div class="tab" data-tab="types">🗂 Types</div>
     <div class="tab" data-tab="stock">📦 Stock</div>
     <div class="tab" data-tab="sales">📈 Sales</div>
     <div class="tab" data-tab="wanting">🛒 Wanting</div>
-    <div class="tab" data-tab="analytics">📈 Smart Dashboard</div>
+    <div class="tab" data-tab="analytics">📊 Smart Dashboard</div>
   </nav>
 
-  <main id="mainContent">
+  <!-- SECTIONS -->
+  <main>
 
-    <!-- DASHBOARD -->
-    <section id="dashboard" class="section active" aria-hidden="false">
+    <section id="dashboard" class="section active">
       <h2>📊 Business Overview</h2>
 
-      <div id="summaryCards" class="summary-cards">
-        <div class="card card-sales">
-          <div class="card-emoji">💰</div>
-          <div class="card-value"><b id="todaySales">₹0</b></div>
-          <div class="card-label"><small>Today's Sales</small></div>
-        </div>
-
-        <div class="card card-credit">
-          <div class="card-emoji">💳</div>
-          <div class="card-value"><b id="todayCredit">₹0</b></div>
-          <div class="card-label"><small>Today's Credit</small></div>
-        </div>
-
-        <div class="card card-stock">
-          <div class="card-emoji">📦</div>
-          <div class="card-value"><b id="stockRemain">0%</b></div>
-          <div class="card-label"><small>Stock Remaining</small></div>
-        </div>
-
-        <div class="card card-profit">
-          <div class="card-emoji">📈</div>
-          <div class="card-value"><b id="todayProfit">₹0</b></div>
-          <div class="card-label"><small>Today's Profit</small></div>
-        </div>
+      <div class="summary-cards">
+        <div class="card"><div class="card-emoji">💰</div><b id="todaySales">₹0</b><small>Today's Sales</small></div>
+        <div class="card"><div class="card-emoji">💳</div><b id="todayCredit">₹0</b><small>Today's Credit</small></div>
+        <div class="card"><div class="card-emoji">📦</div><b id="stockRemain">0%</</b><small>Stock Remaining</small></div>
+        <div class="card"><div class="card-emoji">📈</div><b id="todayProfit">₹0</b><small>Today's Profit</small></div>
       </div>
     </section>
 
-    <!-- TYPES -->
-    <section id="types" class="section" aria-hidden="true">
+    <section id="types" class="section">
       <h2>🗂 Types</h2>
-      <div id="typesContainer">Loading types module…</div>
+      <div id="typesContainer">Loading…</div>
     </section>
 
-    <!-- STOCK -->
-    <section id="stock" class="section" aria-hidden="true">
+    <section id="stock" class="section">
       <h2>📦 Stock</h2>
-      <div id="stockContainer">Loading stock module…</div>
+      <div id="stockContainer">Loading…</div>
     </section>
 
-    <!-- SALES -->
-    <section id="sales" class="section" aria-hidden="true">
-      <h2>📈 Sales & Profit</h2>
-      <div id="salesContainer">Loading sales module…</div>
+    <section id="sales" class="section">
+      <h2>📈 Sales</h2>
+      <div id="salesContainer">Loading…</div>
     </section>
 
-    <!-- WANTING -->
-    <section id="wanting" class="section" aria-hidden="true">
+    <section id="wanting" class="section">
       <h2>🛒 Wanting</h2>
-      <div id="wantingContainer">Loading wanting module…</div>
+      <div id="wantingContainer">Loading…</div>
     </section>
 
-    <!-- ANALYTICS -->
-    <section id="analytics" class="section" aria-hidden="true">
+    <section id="analytics" class="section">
       <h2>📊 Smart Dashboard</h2>
-      <div id="analyticsContainer">Loading analytics module…</div>
+      <div id="analyticsContainer">Loading…</div>
     </section>
 
   </main>
@@ -102,39 +77,14 @@
   <div id="helpModal" class="help-modal" aria-hidden="true">
     <div class="help-content">
       <h3>Quick Help</h3>
-      <ul>
-        <li>Manage Types, Stock, Sales and Wanting lists.</li>
-        <li>Smart Dashboard uses your data to show charts.</li>
-      </ul>
+      <p>Manage types, stock, sales & wanting list.</p>
       <button id="closeHelp" class="small-btn">Close</button>
     </div>
   </div>
 
-  <!-- CORE JS -->
+  <!-- SCRIPTS -->
   <script src="js/core.js"></script>
-
-  <!-- SAFETY BLOCK -->
-  <script>
-  (function(){
-    console.log('%c🧩 Running Closing Safety Script...', 'color:#ff7a00;font-weight:bold;');
-
-    window.addEventListener('beforeunload', function(){
-      try {
-        if (typeof window.saveAll === 'function') window.saveAll();
-        if (typeof window.saveSales === 'function') window.saveSales();
-        if (typeof window.saveWanting === 'function') window.saveWanting();
-        console.log('%c💾 All data saved before unload','color:#43a047;font-weight:bold;');
-      } catch (e) {}
-    });
-
-    console.log('%c✅ KharchaSaathi - Closing safety active','color:#4caf50;font-weight:bold;');
-  })();
-  </script>
-
-  <!-- SECURITY JS -->
   <script src="js/security.js"></script>
-
-  <!-- FIREBASE JS -->
   <script type="module" src="js/firebase.js"></script>
 
 </body>
