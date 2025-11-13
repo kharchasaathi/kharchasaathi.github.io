@@ -1,7 +1,15 @@
 // firebase.js — Cloud Sync Layer for KharchaSaathi
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.0/firebase-app.js";
-import { getFirestore, collection, setDoc, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.14.0/firebase-firestore.js";
 
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.0/firebase-app.js";
+import {
+  getFirestore,
+  collection,
+  setDoc,
+  doc,
+  getDoc
+} from "https://www.gstatic.com/firebasejs/10.14.0/firebase-firestore.js";
+
+// --- Firebase Config ---
 const firebaseConfig = {
   apiKey: "AIzaSyC1TSwODhcD88-IizbtZkh3DLWMWR4CV9o",
   authDomain: "kharchasaathi-main.firebaseapp.com",
@@ -12,13 +20,13 @@ const firebaseConfig = {
   measurementId: "G-7F1V1N1YTR"
 };
 
-// Initialize Firebase
+// --- Init Firebase ---
 const app = initializeApp(firebaseConfig);
 export const db = getFirestore(app);
 
 console.log("%c☁️ Firebase connected successfully!", "color:#4caf50;font-weight:bold;");
 
-// --- Cloud Sync Helpers --- //
+// --- CLOUD SAVE ---
 window.cloudSave = async function (collectionName, data) {
   try {
     const userId = localStorage.getItem("userId") || "owner";
@@ -29,11 +37,11 @@ window.cloudSave = async function (collectionName, data) {
   }
 };
 
+// --- CLOUD LOAD ---
 window.cloudLoad = async function (collectionName) {
   try {
     const userId = localStorage.getItem("userId") || "owner";
-    const docRef = doc(db, collectionName, userId);
-    const snap = await getDoc(docRef);
+    const snap = await getDoc(doc(db, collectionName, userId));
     if (snap.exists()) {
       console.log(`☁️ Loaded ${collectionName} from Cloud`);
       return snap.data();
