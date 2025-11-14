@@ -1,16 +1,6 @@
-// firebase.js - Cloud Sync Layer (SAFE VERSION for Browser)
+// firebase.js - SAFE NON-MODULE VERSION (Works in all browsers)
 
-import { initializeApp } 
-  from "https://www.gstatic.com/firebasejs/10.14.0/firebase-app.js";
-
-import { 
-  getFirestore, 
-  setDoc, 
-  doc, 
-  getDoc 
-} from "https://www.gstatic.com/firebasejs/10.14.0/firebase-firestore.js";
-
-// Firebase config
+// Firebase Config
 const firebaseConfig = {
   apiKey: "AIzaSyC1TSwODhcD88-IizbtZkh3DLWMWR4CV9o",
   authDomain: "kharchasaathi-main.firebaseapp.com",
@@ -21,31 +11,44 @@ const firebaseConfig = {
   measurementId: "G-7F1V1N1YTR"
 };
 
-// Initialize Firebase
-const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
+// Initialize Firebase using compat API
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
 
+// Status message
 console.log("%c☁️ Firebase connected successfully!", "color:#4caf50;font-weight:bold;");
 
-// --- Cloud Save ---
+// -------------------------
+// CLOUD SAVE
+// -------------------------
 window.cloudSave = async function (collectionName, data) {
   try {
     const userId = localStorage.getItem("userId") || "owner";
-    await setDoc(doc(db, collectionName, userId), data, { merge: true });
-    console.log("Saved to cloud:", collectionName);
+
+    await db.collection(collectionName)
+      .doc(userId)
+      .set(data, { merge: true });
+
+    console.log("☁️ Cloud Save:", collectionName);
   } catch (e) {
-    console.error("Cloud Save Error:", e);
+    console.error("❌ Cloud Save Error:", e);
   }
 };
 
-// --- Cloud Load ---
+// -------------------------
+// CLOUD LOAD
+// -------------------------
 window.cloudLoad = async function (collectionName) {
   try {
     const userId = localStorage.getItem("userId") || "owner";
-    const snap = await getDoc(doc(db, collectionName, userId));
-    return snap.exists() ? snap.data() : null;
+
+    const snap = await db.collection(collectionName)
+      .doc(userId)
+      .get();
+
+    return snap.exists ? snap.data() : null;
   } catch (e) {
-    console.error("Cloud Load Error:", e);
+    console.error("❌ Cloud Load Error:", e);
     return null;
   }
 };
