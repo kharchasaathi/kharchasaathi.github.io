@@ -1,6 +1,11 @@
-// firebase.js - SAFE NON-MODULE VERSION (Works in all browsers)
+// firebase.js - FINAL STABLE VERSION (Non-Module, Works Everywhere)
 
+// Quick check that the file loaded
+console.log("%c🔥 firebase.js loaded", "color:#ff9800;font-weight:bold;");
+
+// -------------------------
 // Firebase Config
+// -------------------------
 const firebaseConfig = {
   apiKey: "AIzaSyC1TSwODhcD88-IizbtZkh3DLWMWR4CV9o",
   authDomain: "kharchasaathi-main.firebaseapp.com",
@@ -11,44 +16,50 @@ const firebaseConfig = {
   measurementId: "G-7F1V1N1YTR"
 };
 
-// Initialize Firebase using compat API
-firebase.initializeApp(firebaseConfig);
-const db = firebase.firestore();
-
-// Status message
-console.log("%c☁️ Firebase connected successfully!", "color:#4caf50;font-weight:bold;");
-
 // -------------------------
-// CLOUD SAVE
+// Initialize Firebase
 // -------------------------
-window.cloudSave = async function (collectionName, data) {
-  try {
-    const userId = localStorage.getItem("userId") || "owner";
+try {
+  firebase.initializeApp(firebaseConfig);
+  const db = firebase.firestore();
 
-    await db.collection(collectionName)
-      .doc(userId)
-      .set(data, { merge: true });
+  console.log("%c☁️ Firebase connected successfully!", "color:#4caf50;font-weight:bold;");
 
-    console.log("☁️ Cloud Save:", collectionName);
-  } catch (e) {
-    console.error("❌ Cloud Save Error:", e);
-  }
-};
+  // -------------------------
+  // CLOUD SAVE
+  // -------------------------
+  window.cloudSave = async function (collectionName, data) {
+    try {
+      const userId = localStorage.getItem("userId") || "owner";
 
-// -------------------------
-// CLOUD LOAD
-// -------------------------
-window.cloudLoad = async function (collectionName) {
-  try {
-    const userId = localStorage.getItem("userId") || "owner";
+      await db.collection(collectionName)
+              .doc(userId)
+              .set(data, { merge: true });
 
-    const snap = await db.collection(collectionName)
-      .doc(userId)
-      .get();
+      console.log("☁️ Cloud Save:", collectionName);
+    } catch (e) {
+      console.error("❌ Cloud Save Error:", e);
+    }
+  };
 
-    return snap.exists ? snap.data() : null;
-  } catch (e) {
-    console.error("❌ Cloud Load Error:", e);
-    return null;
-  }
-};
+  // -------------------------
+  // CLOUD LOAD
+  // -------------------------
+  window.cloudLoad = async function (collectionName) {
+    try {
+      const userId = localStorage.getItem("userId") || "owner";
+
+      const snap = await db.collection(collectionName)
+                            .doc(userId)
+                            .get();
+
+      return snap.exists ? snap.data() : null;
+    } catch (e) {
+      console.error("❌ Cloud Load Error:", e);
+      return null;
+    }
+  };
+
+} catch (error) {
+  console.error("❌ Firebase init error:", error);
+}
