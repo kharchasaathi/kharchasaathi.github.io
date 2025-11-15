@@ -1,11 +1,13 @@
-// firebase.js - FINAL STABLE VERSION (Non-Module, Works Everywhere)
+/* ===========================================================
+   firebase.js — FINAL STABLE VERSION (For Email Login System)
+   Works with Firebase v9 compat + Firestore + Auto Cloud Sync
+   =========================================================== */
 
-// Quick check that the file loaded
 console.log("%c🔥 firebase.js loaded", "color:#ff9800;font-weight:bold;");
 
-// -------------------------
+// --------------------------------------------------
 // Firebase Config
-// -------------------------
+// --------------------------------------------------
 const firebaseConfig = {
   apiKey: "AIzaSyC1TSwODhcD88-IizbtZkh3DLWMWR4CV9o",
   authDomain: "kharchasaathi-main.firebaseapp.com",
@@ -16,50 +18,85 @@ const firebaseConfig = {
   measurementId: "G-7F1V1N1YTR"
 };
 
-// -------------------------
-// Initialize Firebase
-// -------------------------
+// --------------------------------------------------
+// Initialize Firebase (Compat Mode for Safety)
+// --------------------------------------------------
+let db = null;
+
 try {
   firebase.initializeApp(firebaseConfig);
-  const db = firebase.firestore();
+  db = firebase.firestore();
 
   console.log("%c☁️ Firebase connected successfully!", "color:#4caf50;font-weight:bold;");
+} 
+catch (e) {
+  console.error("❌ Firebase initialization failed:", e);
+}
 
-  // -------------------------
-  // CLOUD SAVE
-  // -------------------------
-  window.cloudSave = async function (collectionName, data) {
-    try {
-      const userId = localStorage.getItem("userId") || "owner";
 
-      await db.collection(collectionName)
-              .doc(userId)
-              .set(data, { merge: true });
 
-      console.log("☁️ Cloud Save:", collectionName);
-    } catch (e) {
-      console.error("❌ Cloud Save Error:", e);
-    }
-  };
+// --------------------------------------------------
+// Helper: Get Logged-in Email (User ID)
+// --------------------------------------------------
+function getCloudUser() {
+  const email = localStorage.getItem("ks-user-email");
+  return email ? email : "guest-user";   // fallback (should never happen ideally)
+}
 
-  // -------------------------
-  // CLOUD LOAD
-  // -------------------------
-  window.cloudLoad = async function (collectionName) {
-    try {
-      const userId = localStorage.getItem("userId") || "owner";
 
-      const snap = await db.collection(collectionName)
-                            .doc(userId)
-                            .get();
 
-      return snap.exists ? snap.data() : null;
-    } catch (e) {
-      console.error("❌ Cloud Load Error:", e);
+// --------------------------------------------------
+// CLOUD SAVE  (Saves entire module data)
+// --------------------------------------------------
+window.cloudSave = async function (collectionName, data) {
+  if (!db) return console.error("❌ Firestore unavailable");
+
+  try {
+    const userId = getCloudUser();
+
+    await db.collection(collectionName)
+            .doc(userId)
+            .set(data, { merge: true });
+
+    console.log(`☁️ Cloud Save OK → [${collectionName}] for ${userId}`);
+  } 
+  catch (e) {
+    console.error("❌ Cloud Save Error:", e);
+  }
+};
+
+
+
+// --------------------------------------------------
+// CLOUD LOAD (Loads entire module data)
+// --------------------------------------------------
+window.cloudLoad = async function (collectionName) {
+  if (!db) return console.error("❌ Firestore unavailable");
+
+  try {
+    const userId = getCloudUser();
+
+    const snap = await db.collection(collectionName)
+                         .doc(userId)
+                         .get();
+
+    if (!snap.exists) {
+      console.warn(`⚠️ No cloud data found for ${collectionName}`);
       return null;
     }
-  };
 
-} catch (error) {
-  console.error("❌ Firebase init error:", error);
-}
+    console.log(`☁️ Cloud Load OK → [${collectionName}] for ${userId}`);
+    return snap.data();
+  } 
+  catch (e) {
+    console.error("❌ Cloud Load Error:", e);
+    return null;
+  }
+};
+
+
+
+// --------------------------------------------------
+// OPTIONAL: Test auto-start (ONLY logs)
+// --------------------------------------------------
+console.log("%c⚙️ firebase.js ready (Email-based mode active)", "color:#03a9f4;font-weight:bold;");
