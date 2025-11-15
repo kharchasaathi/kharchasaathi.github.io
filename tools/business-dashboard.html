@@ -5,8 +5,8 @@
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>📦 KharchaSaathi — Business Dashboard (v1.3)</title>
   <meta name="theme-color" content="#ff7a00" />
-  <link rel="icon" href="../favicon.png" />
-  <link rel="apple-touch-icon" href="../favicon.png" />
+  <link rel="icon" href="/favicon.png" />
+  <link rel="apple-touch-icon" href="/favicon.png" />
 
   <style>
     :root{
@@ -34,6 +34,7 @@
       padding:8px 10px;border-radius:8px;cursor:pointer
     }
     .theme-btn:hover,.small-btn:hover{background:var(--orange-dark)}
+
     #emailTag{
       font-size:13px;opacity:.75;margin-right:8px;
       background:#eee;padding:4px 8px;border-radius:6px;
@@ -108,10 +109,6 @@
       padding:6px;border-radius:6px;border:1px solid #ddd
     }
 
-    .ok{color:#43a047;font-weight:600}
-    .low{color:#ffa726;font-weight:600}
-    .out{color:#e53935;font-weight:700}
-
     /* Wanting */
     .want-form{
       display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px;align-items:center
@@ -119,28 +116,23 @@
     .want-form input,.want-form select{
       padding:7px;border-radius:6px;border:1px solid #ddd
     }
-
   </style>
 </head>
 
 <body>
 
-  <!-- 🔐 TOPBAR WITH LOGOUT + EMAIL -->
+  <!-- 🔐 TOPBAR -->
   <div class="topbar">
     <h1>📦 KharchaSaathi (Offline)</h1>
 
     <div style="display:flex;gap:10px;align-items:center">
 
-      <!-- Logged-in Email -->
       <span id="emailTag">Loading...</span>
 
-      <!-- Theme -->
       <button id="themeBtn" class="theme-btn">🌙</button>
 
-      <!-- Back -->
-      <a class="small-btn" href="../index.html">🏠 Back</a>
+      <a class="small-btn" href="/index.html">🏠 Back</a>
 
-      <!-- LOGOUT -->
       <button id="logoutBtn" class="small-btn" style="background:#e53935">
         🔓 Logout
       </button>
@@ -156,7 +148,7 @@
     <div class="tab" data-tab="analytics">📈 Smart Dashboard</div>
   </div>
 
-  <!-- ===== TYPES SECTION ===== -->
+  <!-- ===== TYPES ===== -->
   <section id="types" class="section active">
     <h3>🗂 Manage Item Types</h3>
     <div class="row-inline" style="margin-top:8px">
@@ -167,32 +159,29 @@
     <ul id="typeList" style="margin-top:10px;padding-left:18px"></ul>
   </section>
 
-
-  <!-- ===== STOCK SECTION ===== -->
+  <!-- ===== STOCK ===== -->
   <section id="stock" class="section">
     <h3>📦 Current Stock</h3>
 
     <div class="row-inline" style="margin-top:6px">
-      <label>Low Stock Limit:</label>
-      <input id="globalLimit" type="number" placeholder="e.g. 2" style="width:100px">
+      <label>Low Stock:</label>
+      <input id="globalLimit" type="number" placeholder="2" style="width:80px">
       <button id="setLimitBtn" class="small-btn">Set</button>
       <button id="clearStockBtn" class="small-btn">Clear All</button>
     </div>
 
     <div class="row-inline" style="margin-top:12px">
-      <input id="pdate" type="date" style="min-width:140px">
-      <select id="ptype" style="min-width:140px"></select>
-      <input id="pname" type="text" placeholder="Product" style="min-width:160px">
-      <input id="pqty" type="number" placeholder="Qty" style="width:90px">
-      <input id="pcost" type="number" placeholder="Cost ₹" style="width:100px">
+      <input id="pdate" type="date">
+      <select id="ptype"></select>
+      <input id="pname" type="text" placeholder="Product">
+      <input id="pqty" type="number" placeholder="Qty" style="width:80px">
+      <input id="pcost" type="number" placeholder="Cost ₹" style="width:90px">
       <button id="addStockBtn" class="small-btn">Add</button>
     </div>
 
     <div style="margin-top:12px">
-      <label><b>Filter by Type:</b></label>
-      <select id="filterType" style="min-width:160px">
-        <option value="all">All Types</option>
-      </select>
+      <b>Filter Type:</b>
+      <select id="filterType"><option value="all">All</option></select>
     </div>
 
     <table id="stockTable">
@@ -206,25 +195,18 @@
     </table>
   </section>
 
-
-  <!-- ===== SALES SECTION ===== -->
+  <!-- ===== SALES ===== -->
   <section id="sales" class="section">
     <h3>💰 Sales & Profit</h3>
 
     <div class="row-inline" style="margin:10px 0">
-      <label>Date:</label>
-      <input id="saleDate" type="date">
-
-      <label>Type</label>
-      <select id="saleType"></select>
-
-      <label>Product</label>
-      <select id="saleProduct"></select>
-
+      <label>Date:</label><input id="saleDate" type="date">
+      <label>Type</label><select id="saleType"></select>
+      <label>Product</label><select id="saleProduct"></select>
       <input id="saleQty" type="number" placeholder="Qty" style="width:70px">
-      <input id="salePrice" type="number" placeholder="Sale ₹" style="width:90px">
+      <input id="salePrice" type="number" placeholder="₹" style="width:90px">
 
-      <select id="saleStatus" style="min-width:100px">
+      <select id="saleStatus">
         <option value="Paid">Paid</option>
         <option value="Credit">Credit</option>
       </select>
@@ -236,199 +218,177 @@
       <thead>
         <tr>
           <th>Date</th><th>Type</th><th>Product</th><th>Qty</th>
-          <th>Price ₹</th><th>Total ₹</th><th>Profit ₹</th><th>Status</th>
+          <th>Price</th><th>Total</th><th>Profit</th><th>Status</th>
         </tr>
       </thead>
       <tbody></tbody>
-      <tfoot>
-        <tr>
-          <td colspan="5" style="text-align:right">Total:</td>
-          <td id="salesTotal">0</td>
-          <td id="profitTotal">0</td><td></td>
-        </tr>
-      </tfoot>
+      <tfoot><tr>
+        <td colspan="5" style="text-align:right">Total:</td>
+        <td id="salesTotal">0</td>
+        <td id="profitTotal">0</td>
+        <td></td>
+      </tr></tfoot>
     </table>
   </section>
 
-
-  <!-- ===== WANTING SECTION ===== -->
+  <!-- ===== WANTING ===== -->
   <section id="wanting" class="section">
     <h3>🛒 Wanting List</h3>
 
     <div class="want-form">
-      <select id="wantType" style="min-width:140px">
-        <option value="">Type</option>
-      </select>
-      <input id="wantName" type="text" placeholder="Product" style="min-width:180px">
-      <input id="wantNote" type="text" placeholder="Note (optional)" style="min-width:160px">
+      <select id="wantType"></select>
+      <input id="wantName" type="text" placeholder="Product">
+      <input id="wantNote" type="text" placeholder="Note">
       <button id="addWantBtn" class="small-btn">Add</button>
       <button id="clearWantBtn" class="small-btn">Clear</button>
       <button id="printWantBtn" class="small-btn">Print</button>
     </div>
 
     <table id="wantingTable">
-      <thead>
-        <tr><th>Date</th><th>Type</th><th>Product</th><th>Note</th><th>Action</th></tr>
-      </thead>
+      <thead><tr>
+        <th>Date</th><th>Type</th><th>Product</th><th>Note</th><th>Action</th>
+      </tr></thead>
       <tbody></tbody>
     </table>
   </section>
 
-
-  <!-- ===== OVERVIEW SECTION ===== -->
+  <!-- ===== OVERVIEW ===== -->
   <section id="dashboard" class="section">
     <h3>📊 Business Overview</h3>
 
     <div class="flex-row">
       <div id="overview-left">
         <div id="summaryCards">
-          <div class="card">
-            <div style="font-size:20px">💰</div>
-            <b id="todaySales">₹0</b><br><small>Today's Sales</small>
-          </div>
-          <div class="card">
-            <div style="font-size:20px">💳</div>
-            <b id="todayCredit">₹0</b><br><small>Today's Credit</small>
-          </div>
-          <div class="card">
-            <div style="font-size:20px">📦</div>
-            <b id="stockRemain">0%</b><br><small>Stock Remaining</small>
-          </div>
-          <div class="card">
-            <div style="font-size:20px">📈</div>
-            <b id="todayProfit">₹0</b><br><small>Today's Profit</small>
-          </div>
+
+          <div class="card"><div>💰</div>
+            <b id="todaySales">₹0</b><br><small>Today's Sales</small></div>
+
+          <div class="card"><div>💳</div>
+            <b id="todayCredit">₹0</b><br><small>Today's Credit</small></div>
+
+          <div class="card"><div>📦</div>
+            <b id="stockRemain">0%</</b><br><small>Stock Remaining</small></div>
+
+          <div class="card"><div>📈</div>
+            <b id="todayProfit">₹0</b><br><small>Today's Profit</small></div>
+
         </div>
       </div>
     </div>
   </section>
 
-
-  <!-- ===== ANALYTICS SECTION ===== -->
+  <!-- ===== ANALYTICS ===== -->
   <section id="analytics" class="section">
     <h3>📊 Smart Sales Dashboard</h3>
-
-    <div style="display:flex;flex-wrap:wrap;gap:20px;justify-content:flex-end;">
-      <div style="flex:1;min-width:320px;max-width:520px">
+    <div style="display:flex;flex-wrap:wrap;gap:20px">
+      <div style="flex:1;min-width:320px">
         <canvas id="salesBar" height="220"></canvas>
       </div>
-      <div style="flex:1;min-width:240px;max-width:360px">
+      <div style="flex:1;min-width:240px">
         <canvas id="salesPie" height="220"></canvas>
       </div>
     </div>
+    <p style="text-align:center;opacity:.7;font-size:13px">Auto updates every 60s</p>
   </section>
 
-
-  <!-- ===== HELP SECTION ===== -->
+  <!-- HELP -->
   <div class="footer-btns" style="margin-top:18px">
     <a href="#" id="helpLink" class="small-btn">📘 Help & Guide</a>
-    <div class="version-info">v1.3 — login integrated, logout, email display</div>
+    <div class="version-info">v1.3 — Login + Logout + Email</div>
   </div>
 
   <div id="helpModal" class="help-modal" style="display:none">
     <div class="help-content">
       <h2>📘 Quick Help</h2>
       <ul style="line-height:1.6">
-        <li>Types → Add & manage categories</li>
-        <li>Stock → Add purchases, update, set limits</li>
-        <li>Sales → Add daily sales & profit</li>
-        <li>Wanting → Auto or manual reorder list</li>
-        <li>Dashboard → Today's stats</li>
-        <li>Analytics → Full charts</li>
+        <li>Types — manage categories</li>
+        <li>Stock — add/update inventory</li>
+        <li>Sales — track daily profit</li>
+        <li>Wanting — reorder items</li>
+        <li>Overview — today summary</li>
+        <li>Analytics — charts</li>
       </ul>
       <button class="small-btn" onclick="toggleHelp()">Close</button>
     </div>
   </div>
 
+  <!-- ===== JS LOGIC ===== -->
 
-
-  <!-- ===== JS SCRIPTS ===== -->
-
-  <!-- UI Helpers -->
+  <!-- Helpers + Theme -->
   <script>
     const qs = s => document.querySelector(s);
     const qsa = s => Array.from(document.querySelectorAll(s));
 
     function toggleHelp(){
       const m = qs('#helpModal');
-      m.style.display = (m.style.display === 'flex' ? 'none' : 'flex');
+      m.style.display = (m.style.display==='flex'?'none':'flex');
     }
     qs('#helpLink').addEventListener('click', e=>{
       e.preventDefault(); toggleHelp();
     });
 
-    // theme
-    (function(){
-      if(localStorage.getItem('ks-theme') === 'dark') document.body.classList.add('dark');
-      qs('#themeBtn').addEventListener('click', ()=>{
-        const dark = document.body.classList.toggle('dark');
-        localStorage.setItem('ks-theme', dark ? 'dark' : 'light');
-      });
-    })();
+    if(localStorage.getItem('ks-theme')==='dark'){
+      document.body.classList.add('dark');
+    }
+
+    qs('#themeBtn').addEventListener('click', ()=>{
+      const d = document.body.classList.toggle('dark');
+      localStorage.setItem('ks-theme', d?'dark':'light');
+    });
   </script>
 
   <!-- Tabs -->
   <script>
     (function(){
-      const tabs = qsa('.tab'),
-            sections = qsa('.section');
+      const tabs=qsa('.tab'), sections=qsa('.section');
 
       function activate(name){
-        tabs.forEach(t=> t.classList.toggle('active', t.dataset.tab === name));
-        sections.forEach(s=> s.classList.toggle('active', s.id === name));
+        tabs.forEach(t=> t.classList.toggle('active',t.dataset.tab===name));
+        sections.forEach(s=> s.classList.toggle('active',s.id===name));
 
-        if(name==='types' && typeof renderTypes==='function') renderTypes();
-        if(name==='stock' && typeof renderStock==='function') renderStock();
-        if(name==='sales' && typeof initSalesModule==='function') initSalesModule();
-        if(name==='wanting' && typeof renderWanting==='function') renderWanting();
-        if(name==='dashboard' && typeof updateSummaryCards==='function') updateSummaryCards();
-        if(name==='analytics' && typeof ensureChartsLoadedAndRender==='function') ensureChartsLoadedAndRender();
+        if(name==='types' && renderTypes) renderTypes();
+        if(name==='stock' && renderStock) renderStock();
+        if(name==='sales' && initSalesModule) initSalesModule();
+        if(name==='wanting' && renderWanting) renderWanting();
+        if(name==='dashboard' && updateSummaryCards) updateSummaryCards();
+        if(name==='analytics' && ensureChartsLoadedAndRender) ensureChartsLoadedAndRender();
       }
 
-      tabs.forEach(t=> t.addEventListener('click', ()=>activate(t.dataset.tab)));
+      tabs.forEach(t=> t.addEventListener('click',()=>activate(t.dataset.tab)));
       window.activateTab = activate;
     })();
   </script>
 
-
-  <!-- 🔐 LOGIN CHECK + LOGOUT + EMAIL DISPLAY -->
+  <!-- 🔐 LOGIN CHECK + LOGOUT -->
   <script>
-    // user not logged in → send to login
     if (!isLoggedIn()) {
-      window.location.href = "../login.html";
+      window.location.href = "/login.html";
     }
 
-    // show email
-    qs("#emailTag").textContent = "Logged in as: " + getUserEmail();
+    qs("#emailTag").textContent = "Logged in: " + getUserEmail();
 
-    // logout
     qs("#logoutBtn").addEventListener("click", () => {
       if(confirm("Logout now?")){
         logoutUser();
-        window.location.href = "../login.html";
+        window.location.href="/login.html";
       }
     });
   </script>
 
-
-
-  <!-- CHART.JS -->
+  <!-- CHARTS + FIREBASE + MODULES -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
-  <!-- Firebase -->
   <script src="https://www.gstatic.com/firebasejs/9.6.11/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.6.11/firebase-firestore-compat.js"></script>
 
-  <script src="../js/firebase.js"></script>
-  <script src="../js/core.js"></script>
-
-  <!-- Old Modules (still working) -->
-  <script src="../js/types.js"></script>
-  <script src="../js/stock.js"></script>
-  <script src="../js/sales.js"></script>
-  <script src="../js/wanting.js"></script>
-  <script src="../js/analytics.js"></script>
-  <script src="../js/security.js"></script>
+  <script src="/js/firebase.js"></script>
+  <script src="/js/core.js"></script>
+  <script src="/js/types.js"></script>
+  <script src="/js/stock.js"></script>
+  <script src="/js/sales.js"></script>
+  <script src="/js/wanting.js"></script>
+  <script src="/js/analytics.js"></script>
+  <script src="/js/security.js"></script>
 
 </body>
 </html>
