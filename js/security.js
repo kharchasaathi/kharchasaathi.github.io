@@ -1,52 +1,72 @@
 /* ==========================================================
-   🔐 security.js — Admin Password + Lock System
-   Works with: core.js (KEY_ADMIN, setAdminPassword, validateAdminPassword)
+   🔐 security.js — Login + Logout + Email + Admin Password
+   Combines:
+     ✔ Login System
+     ✔ Logout System
+     ✔ Email Handling
+     ✔ Profit Lock / Unlock
+     ✔ Admin Password Tools
    ========================================================== */
+
+/* --------------------------
+   🔐 LOGIN SYSTEM
+--------------------------- */
+function isLoggedIn() {
+  return !!localStorage.getItem("ks-user-email");
+}
+
+function loginUser(email) {
+  if (!email) return false;
+  localStorage.setItem("ks-user-email", email);
+  return true;
+}
+
+function getUserEmail() {
+  return localStorage.getItem("ks-user-email") || "";
+}
+
+function logoutUser() {
+  localStorage.removeItem("ks-user-email");
+}
+
+/* ==========================================================
+   🔐 ADMIN PASSWORD (for Profit Lock)
+========================================================== */
 
 const ADMIN_KEY = "ks-admin-pw";
 
-/* ----------------------------------------------------------
-   CHECK PASSWORD EXISTS (if not → set default)
----------------------------------------------------------- */
+/* Set default password if not exists */
 function ensureAdminPassword() {
   let pw = localStorage.getItem(ADMIN_KEY);
 
   if (!pw) {
-    // default password if none exists
-    localStorage.setItem(ADMIN_KEY, "admin123");
+    localStorage.setItem(ADMIN_KEY, "admin123"); // default
   }
 }
 ensureAdminPassword();
 
-/* ----------------------------------------------------------
-   SET NEW ADMIN PASSWORD
----------------------------------------------------------- */
+/* Update admin password */
 function updateAdminPassword() {
   const oldPw = localStorage.getItem(ADMIN_KEY);
-
-  // ask old password first
   const oldInput = prompt("Enter current admin password:");
-  if (!oldInput) return;
 
+  if (!oldInput) return;
   if (oldInput !== oldPw) {
     alert("Incorrect password!");
     return;
   }
 
-  // ask new password
-  const newPw = prompt("Enter new admin password (min 4 characters):");
+  const newPw = prompt("Enter new admin password (min 4 chars):");
   if (!newPw || newPw.length < 4) {
     alert("Password too short!");
     return;
   }
 
   localStorage.setItem(ADMIN_KEY, newPw);
-  alert("Admin password updated successfully!");
+  alert("Admin password updated!");
 }
 
-/* ----------------------------------------------------------
-   VERIFY PASSWORD (for unlocking features)
----------------------------------------------------------- */
+/* Ask password for unlocking */
 function askAdminPassword() {
   const pw = prompt("Enter admin password:");
   if (!pw) return false;
@@ -54,9 +74,7 @@ function askAdminPassword() {
   return pw === localStorage.getItem(ADMIN_KEY);
 }
 
-/* ----------------------------------------------------------
-   SECURE TOGGLE — SHOW/HIDE ANY ELEMENT
----------------------------------------------------------- */
+/* Secure Toggle (if needed) */
 function secureToggle(elementId) {
   if (!askAdminPassword()) {
     alert("Wrong password!");
@@ -69,31 +87,27 @@ function secureToggle(elementId) {
   el.style.display = el.style.display === "none" ? "" : "none";
 }
 
-/* ----------------------------------------------------------
-   LOCK/UNLOCK PROFIT COLUMN (GLOBAL)
-   (Used in sales.js automatically)
----------------------------------------------------------- */
+/* Unlock profit column */
 function unlockProfitWithPassword() {
   if (askAdminPassword()) {
     window.profitLocked = false;
+
     if (typeof applyProfitVisibility === "function") {
       applyProfitVisibility();
     }
+
     alert("Profit column unlocked.");
   } else {
     alert("Incorrect password.");
   }
 }
 
-/* ----------------------------------------------------------
-   CLEAR ADMIN PASSWORD (Only with old password)
----------------------------------------------------------- */
+/* Reset admin password */
 function resetAdminPassword() {
   const cur = localStorage.getItem(ADMIN_KEY);
+  const old = prompt("Enter current password:");
 
-  const old = prompt("Enter current password for reset:");
   if (!old) return;
-
   if (old !== cur) {
     alert("Incorrect password!");
     return;
@@ -109,9 +123,12 @@ function resetAdminPassword() {
   alert("Password successfully reset.");
 }
 
-/* ----------------------------------------------------------
-   EXPORT TO WINDOW
----------------------------------------------------------- */
+/* EXPORT */
+window.isLoggedIn = isLoggedIn;
+window.loginUser = loginUser;
+window.logoutUser = logoutUser;
+window.getUserEmail = getUserEmail;
+
 window.updateAdminPassword = updateAdminPassword;
 window.unlockProfitWithPassword = unlockProfitWithPassword;
 window.secureToggle = secureToggle;
