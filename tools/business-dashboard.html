@@ -383,7 +383,10 @@
 <script src="https://www.gstatic.com/firebasejs/9.6.11/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.6.11/firebase-firestore-compat.js"></script>
 
-<!-- LOCAL PROJECT JS (correct paths with ../js/) -->
+<!-- LOGIN UTILS (must load before dashboard logic) -->
+<script src="../js/login-utils.js"></script>
+
+<!-- LOCAL PROJECT JS (correct order) -->
 <script src="../js/firebase.js"></script>
 <script src="../js/core.js"></script>
 <script src="../js/types.js"></script>
