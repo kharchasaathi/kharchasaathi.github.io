@@ -1,0 +1,109 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>KharchaSaathi — Login</title>
+
+<style>
+  body{
+    margin:0;
+    font-family:Poppins,Arial,sans-serif;
+    height:100vh;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    background:linear-gradient(135deg,#ff7a00,#1a1a1a);
+    color:#fff;
+  }
+
+  .box{
+    background:rgba(0,0,0,0.25);
+    padding:32px;
+    width:90%;
+    max-width:380px;
+    border-radius:18px;
+    text-align:center;
+    box-shadow:0 8px 25px rgba(0,0,0,0.25);
+    backdrop-filter:blur(8px);
+  }
+
+  .logo{
+    width:110px;
+    height:110px;
+    border-radius:14px;
+    object-fit:contain;
+    margin-bottom:18px;
+  }
+
+  h2{
+    margin:0 0 12px;
+    font-size:26px;
+    font-weight:700;
+  }
+
+  p{
+    margin:0 0 20px;
+    font-size:14px;
+    opacity:0.9;
+  }
+
+  input{
+    width:100%;
+    padding:12px;
+    border-radius:10px;
+    border:none;
+    font-size:15px;
+  }
+
+  button{
+    width:100%;
+    margin-top:15px;
+    background:#ff7a00;
+    border:none;
+    padding:12px;
+    font-size:16px;
+    font-weight:600;
+    color:#fff;
+    border-radius:10px;
+    cursor:pointer;
+  }
+  
+  button:hover{
+    background:#e96a00;
+  }
+</style>
+</head>
+
+<body>
+
+<div class="box">
+
+  <img src="icons/icon-192.png" class="logo">
+
+  <h2>Welcome to KharchaSaathi</h2>
+  <p>Your Smart Business Companion</p>
+
+  <input id="email" type="email" placeholder="Enter your email" />
+
+  <button onclick="login()">Continue</button>
+
+</div>
+
+<script>
+function login(){
+  let email = document.getElementById("email").value.trim();
+
+  if(!email || !email.includes("@")){
+    alert("Please enter a valid email!");
+    return;
+  }
+
+  localStorage.setItem("ks-user-email", email);
+
+  location.href = "tools/business-dashboard.html";
+}
+</script>
+
+</body>
+</html>
