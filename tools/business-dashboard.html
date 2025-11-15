@@ -360,20 +360,21 @@
   </script>
 
   <!-- 🔐 LOGIN CHECK + LOGOUT -->
-  <script>
-    if (!isLoggedIn()) {
-      window.location.href = "/login.html";
+<script>
+  if (!isLoggedIn()) {
+    window.location.href = "/login.html";
+  }
+
+  qs("#emailTag").textContent = "Logged in: " + getUserEmail();
+
+  qs("#logoutBtn").addEventListener("click", () => {
+    if(confirm("Logout now?")){
+      logoutUser();
+      window.location.href="/login.html";
     }
+  });
+</script>
 
-    qs("#emailTag").textContent = "Logged in: " + getUserEmail();
-
-    qs("#logoutBtn").addEventListener("click", () => {
-      if(confirm("Logout now?")){
-        logoutUser();
-        window.location.href="/login.html";
-      }
-    });
-  
 <!-- CHARTS -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
@@ -381,7 +382,7 @@
 <script src="https://www.gstatic.com/firebasejs/9.6.11/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.6.11/firebase-firestore-compat.js"></script>
 
-<!-- ORDER MATTERS 🚨 -->
+<!-- ORDER MATTERS -->
 <script src="../js/login-utils.js"></script>
 <script src="../js/firebase.js"></script>
 <script src="../js/core.js"></script>
