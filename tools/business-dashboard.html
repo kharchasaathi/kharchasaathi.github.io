@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>📦 KharchaSaathi — Business Dashboard (v1.2 Updated)</title>
+  <title>📦 KharchaSaathi — Business Dashboard (v1.3)</title>
   <meta name="theme-color" content="#ff7a00" />
   <link rel="icon" href="../favicon.png" />
   <link rel="apple-touch-icon" href="../favicon.png" />
@@ -23,36 +23,73 @@
     body.dark{background:var(--dark-bg);color:var(--dark-text)}
 
     /* Topbar */
-    .topbar{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:12px}
+    .topbar{
+      display:flex;justify-content:space-between;
+      align-items:center;gap:10px;flex-wrap:wrap;
+      margin-bottom:12px
+    }
     h1{margin:0;font-size:20px;color:var(--orange)}
-    .theme-btn,.small-btn{background:var(--orange);color:#fff;border:none;padding:8px 10px;border-radius:8px;cursor:pointer}
+    .theme-btn,.small-btn{
+      background:var(--orange);color:#fff;border:none;
+      padding:8px 10px;border-radius:8px;cursor:pointer
+    }
     .theme-btn:hover,.small-btn:hover{background:var(--orange-dark)}
+    #emailTag{
+      font-size:13px;opacity:.75;margin-right:8px;
+      background:#eee;padding:4px 8px;border-radius:6px;
+    }
+    body.dark #emailTag{background:#222;color:#ddd}
 
     /* Tabs */
-    .tabs{display:flex;gap:8px;margin:8px 0 16px;justify-content:center;flex-wrap:nowrap;overflow-x:auto}
+    .tabs{
+      display:flex;gap:8px;margin:8px 0 16px;
+      justify-content:center;flex-wrap:nowrap;overflow-x:auto
+    }
     .tabs::-webkit-scrollbar{display:none}
-    .tab{background:#eee;padding:8px 12px;border-radius:10px;cursor:pointer;font-weight:600;white-space:nowrap}
+    .tab{
+      background:#eee;padding:8px 12px;border-radius:10px;
+      cursor:pointer;font-weight:600;white-space:nowrap
+    }
     .tab.active{background:var(--orange);color:#fff}
     body.dark .tab{background:#222;color:#ccc}
     body.dark .tab.active{background:var(--orange-dark);color:#fff}
 
     /* Sections */
-    .section{display:none;background:var(--card);padding:14px;border-radius:12px;box-shadow:0 6px 20px rgba(0,0,0,0.05);margin-bottom:18px}
+    .section{
+      display:none;background:var(--card);padding:14px;
+      border-radius:12px;box-shadow:0 6px 20px rgba(0,0,0,0.05);
+      margin-bottom:18px
+    }
     .section.active{display:block}
-    body.dark .section{background:var(--dark-card);border:1px solid var(--dark-border);color:var(--dark-text)}
+    body.dark .section{
+      background:var(--dark-card);
+      border:1px solid var(--dark-border);color:var(--dark-text)
+    }
 
     /* Summary + layout */
     .flex-row{display:flex;gap:18px;flex-wrap:wrap;align-items:flex-start}
     #overview-left{flex:1;min-width:280px}
     #overview-right{flex:1;min-width:320px;max-width:620px}
 
-    #summaryCards{display:flex;flex-wrap:wrap;gap:10px;justify-content:flex-start}
-    #summaryCards .card{flex:1;min-width:140px;border-radius:12px;padding:12px;text-align:center;background:var(--card);box-shadow:0 6px 14px rgba(0,0,0,0.04)}
+    #summaryCards{
+      display:flex;flex-wrap:wrap;gap:10px;justify-content:flex-start
+    }
+    #summaryCards .card{
+      flex:1;min-width:140px;border-radius:12px;padding:12px;
+      text-align:center;background:var(--card);
+      box-shadow:0 6px 14px rgba(0,0,0,0.04)
+    }
     #summaryCards .card small{font-size:13px;opacity:.85}
-    body.dark #summaryCards .card{background:var(--dark-card);color:var(--dark-text);border:1px solid var(--dark-border)}
+    body.dark #summaryCards .card{
+      background:var(--dark-card);
+      color:var(--dark-text);border:1px solid var(--dark-border)
+    }
 
     /* Table */
-    table{width:100%;border-collapse:collapse;margin-top:12px;font-size:14px;border-radius:8px;overflow:hidden}
+    table{
+      width:100%;border-collapse:collapse;margin-top:12px;
+      font-size:14px;border-radius:8px;overflow:hidden
+    }
     th,td{padding:8px;border:1px solid #ddd;text-align:center}
     th{background:var(--orange);color:#fff}
     body.dark th{background:var(--orange-dark)}
@@ -61,45 +98,56 @@
     tr:hover{background:#fff3e0}
 
     /* small forms */
-    .row-inline{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
-    .row-inline input[type="text"], .row-inline input[type="number"], .row-inline select, .row-inline input[type="date"]{padding:6px;border-radius:6px;border:1px solid #ddd}
-
-    /* status */
-    .ok{color:#43a047;font-weight:600}.low{color:#ffa726;font-weight:600}.out{color:#e53935;font-weight:700}
-
-    /* help modal */
-    .help-modal{position:fixed;left:0;top:0;right:0;bottom:0;background:rgba(0,0,0,0.6);display:none;justify-content:center;align-items:center;z-index:1000}
-    .help-content{background:var(--card);padding:22px;border-radius:12px;max-width:720px;width:92%}
-    body.dark .help-content{background:var(--dark-card);color:var(--dark-text);border:1px solid var(--dark-border)}
-
-    /* small responsive */
-    @media (max-width:820px){
-      #overview-right{order:2}
-      #overview-left{order:1}
-      .tab{padding:6px 10px}
+    .row-inline{
+      display:flex;gap:8px;align-items:center;flex-wrap:wrap
     }
-    .version-info{font-size:12px;text-align:center;opacity:.7;margin-top:6px}
+    .row-inline input[type="text"],
+    .row-inline input[type="number"],
+    .row-inline select,
+    .row-inline input[type="date"]{
+      padding:6px;border-radius:6px;border:1px solid #ddd
+    }
 
-    /* action buttons inside table */
-    .action-btn{padding:6px 8px;border-radius:6px;border:none;background:#eee;cursor:pointer}
-    .action-btn:hover{background:#ddd}
+    .ok{color:#43a047;font-weight:600}
+    .low{color:#ffa726;font-weight:600}
+    .out{color:#e53935;font-weight:700}
 
-    /* Wanting inputs */
-    .want-form { display:flex; gap:8px; flex-wrap:wrap; margin-bottom:8px; align-items:center; }
-    .want-form input, .want-form select { padding:7px; border-radius:6px; border:1px solid #ddd; }
+    /* Wanting */
+    .want-form{
+      display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px;align-items:center
+    }
+    .want-form input,.want-form select{
+      padding:7px;border-radius:6px;border:1px solid #ddd
+    }
+
   </style>
 </head>
+
 <body>
+
+  <!-- 🔐 TOPBAR WITH LOGOUT + EMAIL -->
   <div class="topbar">
     <h1>📦 KharchaSaathi (Offline)</h1>
-    <div style="display:flex;gap:8px;align-items:center">
+
+    <div style="display:flex;gap:10px;align-items:center">
+
+      <!-- Logged-in Email -->
+      <span id="emailTag">Loading...</span>
+
+      <!-- Theme -->
       <button id="themeBtn" class="theme-btn">🌙</button>
+
+      <!-- Back -->
       <a class="small-btn" href="../index.html">🏠 Back</a>
+
+      <!-- LOGOUT -->
+      <button id="logoutBtn" class="small-btn" style="background:#e53935">
+        🔓 Logout
+      </button>
     </div>
   </div>
-
-  <!-- NEW TAB ORDER: Types, Stock, Sales, Wanting, Overview, Smart dashboard -->
-  <div class="tabs" role="tablist" aria-label="Main tabs">
+  <!-- ===== TABS ===== -->
+  <div class="tabs" role="tablist">
     <div class="tab active" data-tab="types">🗂 Types</div>
     <div class="tab" data-tab="stock">📦 Stock</div>
     <div class="tab" data-tab="sales">📈 Sales</div>
@@ -108,18 +156,19 @@
     <div class="tab" data-tab="analytics">📈 Smart Dashboard</div>
   </div>
 
-  <!-- ===== TYPES ===== -->
+  <!-- ===== TYPES SECTION ===== -->
   <section id="types" class="section active">
     <h3>🗂 Manage Item Types</h3>
     <div class="row-inline" style="margin-top:8px">
-      <input id="typeName" type="text" placeholder="Add new type (e.g. Mobiles)" style="flex:1;min-width:160px">
+      <input id="typeName" type="text" placeholder="Add new type" style="flex:1;min-width:160px">
       <button id="addTypeBtn" class="small-btn">Add</button>
       <button id="clearTypesBtn" class="small-btn">Clear All</button>
     </div>
     <ul id="typeList" style="margin-top:10px;padding-left:18px"></ul>
   </section>
 
-  <!-- ===== STOCK ===== -->
+
+  <!-- ===== STOCK SECTION ===== -->
   <section id="stock" class="section">
     <h3>📦 Current Stock</h3>
 
@@ -133,7 +182,7 @@
     <div class="row-inline" style="margin-top:12px">
       <input id="pdate" type="date" style="min-width:140px">
       <select id="ptype" style="min-width:140px"></select>
-      <input id="pname" type="text" placeholder="Product name" style="min-width:160px">
+      <input id="pname" type="text" placeholder="Product" style="min-width:160px">
       <input id="pqty" type="number" placeholder="Qty" style="width:90px">
       <input id="pcost" type="number" placeholder="Cost ₹" style="width:100px">
       <button id="addStockBtn" class="small-btn">Add</button>
@@ -146,67 +195,78 @@
       </select>
     </div>
 
-    <table id="stockTable" aria-label="Stock table">
+    <table id="stockTable">
       <thead>
-        <tr><th>Date</th><th>Type</th><th>Product</th><th>Qty</th><th>Sold</th><th>Remain</th><th>Alert</th><th>Limit</th><th>Action</th></tr>
+        <tr>
+          <th>Date</th><th>Type</th><th>Product</th><th>Qty</th>
+          <th>Sold</th><th>Remain</th><th>Alert</th><th>Limit</th><th>Action</th>
+        </tr>
       </thead>
       <tbody></tbody>
     </table>
   </section>
 
-  <!-- ===== SALES ===== -->
+
+  <!-- ===== SALES SECTION ===== -->
   <section id="sales" class="section">
     <h3>💰 Sales & Profit</h3>
 
-    <div class="row-inline" style="margin-top:8px;margin-bottom:8px">
-      <label>Sale Date:</label>
-      <input id="saleDate" type="date" style="min-width:150px">
+    <div class="row-inline" style="margin:10px 0">
+      <label>Date:</label>
+      <input id="saleDate" type="date">
+
       <label>Type</label>
-      <select id="saleType" style="min-width:140px"></select>
+      <select id="saleType"></select>
+
       <label>Product</label>
-      <select id="saleProduct" style="min-width:180px"></select>
-      <input id="saleQty" type="number" placeholder="Qty" style="width:80px">
-      <input id="salePrice" type="number" placeholder="Sale ₹" style="width:100px">
-      <select id="saleStatus" style="min-width:100px"><option value="Paid">Paid</option><option value="Credit">Credit</option></select>
+      <select id="saleProduct"></select>
+
+      <input id="saleQty" type="number" placeholder="Qty" style="width:70px">
+      <input id="salePrice" type="number" placeholder="Sale ₹" style="width:90px">
+
+      <select id="saleStatus" style="min-width:100px">
+        <option value="Paid">Paid</option>
+        <option value="Credit">Credit</option>
+      </select>
+
       <button id="addSaleBtn" class="small-btn">Add Sale</button>
     </div>
 
-    <div class="row-inline" style="margin-bottom:8px;align-items:center">
-      <label>GST?</label>
-      <input id="includeGst" type="checkbox"><input id="gstPercent" type="number" placeholder="GST %" style="width:80px" value="0">
-      <button id="viewSalesBtn" class="small-btn">View by Date</button>
-      <button id="printSalesBtn" class="small-btn">Print</button>
-
-      <div style="margin-left:auto;display:flex;gap:8px;align-items:center">
-        <button id="toggleProfitBtn" class="small-btn">🔒 Lock/Unlock Profit</button>
-        <button id="setAdminBtn" class="small-btn">Set Admin PW</button>
-      </div>
-    </div>
-
-    <table id="salesTable" aria-label="Sales table">
-      <thead><tr><th>Date</th><th>Type</th><th>Product</th><th>Qty</th><th>Price ₹</th><th>Total ₹</th><th>Profit ₹</th><th>Status</th></tr></thead>
+    <table id="salesTable">
+      <thead>
+        <tr>
+          <th>Date</th><th>Type</th><th>Product</th><th>Qty</th>
+          <th>Price ₹</th><th>Total ₹</th><th>Profit ₹</th><th>Status</th>
+        </tr>
+      </thead>
       <tbody></tbody>
-      <tfoot><tr><td colspan="5" style="text-align:right">Total:</td><td id="salesTotal">0</td><td id="profitTotal">0</td><td></td></tr></tfoot>
+      <tfoot>
+        <tr>
+          <td colspan="5" style="text-align:right">Total:</td>
+          <td id="salesTotal">0</td>
+          <td id="profitTotal">0</td><td></td>
+        </tr>
+      </tfoot>
     </table>
   </section>
 
-  <!-- ===== WANTING ===== -->
+
+  <!-- ===== WANTING SECTION ===== -->
   <section id="wanting" class="section">
     <h3>🛒 Wanting List</h3>
 
-    <!-- Full UI for Wanting (type select, name, note) -->
     <div class="want-form">
-      <select id="wantType" style="min-width:160px">
-        <option value="">Select Type</option>
+      <select id="wantType" style="min-width:140px">
+        <option value="">Type</option>
       </select>
-      <input id="wantName" type="text" placeholder="Product name" style="min-width:200px">
-      <input id="wantNote" type="text" placeholder="Note (optional)" style="min-width:200px">
-      <button id="addWantBtn" class="small-btn">➕ Add Item</button>
-      <button id="clearWantBtn" class="small-btn">🗑 Clear All</button>
-      <button id="printWantBtn" class="small-btn">🖨 Print</button>
+      <input id="wantName" type="text" placeholder="Product" style="min-width:180px">
+      <input id="wantNote" type="text" placeholder="Note (optional)" style="min-width:160px">
+      <button id="addWantBtn" class="small-btn">Add</button>
+      <button id="clearWantBtn" class="small-btn">Clear</button>
+      <button id="printWantBtn" class="small-btn">Print</button>
     </div>
 
-    <table id="wantingTable" style="width:100%;border-collapse:collapse;">
+    <table id="wantingTable">
       <thead>
         <tr><th>Date</th><th>Type</th><th>Product</th><th>Note</th><th>Action</th></tr>
       </thead>
@@ -214,12 +274,14 @@
     </table>
   </section>
 
-  <!-- ===== OVERVIEW ===== -->
+
+  <!-- ===== OVERVIEW SECTION ===== -->
   <section id="dashboard" class="section">
     <h3>📊 Business Overview</h3>
-    <div class="flex-row" id="overview-row">
+
+    <div class="flex-row">
       <div id="overview-left">
-        <div id="summaryCards" aria-live="polite">
+        <div id="summaryCards">
           <div class="card">
             <div style="font-size:20px">💰</div>
             <b id="todaySales">₹0</b><br><small>Today's Sales</small>
@@ -238,105 +300,135 @@
           </div>
         </div>
       </div>
+    </div>
+  </section>
 
-      <div id="overview-right">
-        <div style="display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap">
-          <div style="flex:1;min-width:140px;background:#fff;padding:12px;border-radius:10px;box-shadow:0 4px 12px rgba(0,0,0,0.05)">
-            <div style="font-size:14px;font-weight:600">Quick</div>
-            <div id="quickInfo" style="margin-top:6px;opacity:.85">No data yet</div>
-          </div>
-          <div style="flex:1;min-width:140px;background:#fff;padding:12px;border-radius:10px;box-shadow:0 4px 12px rgba(0,0,0,0.05)">
-            <div style="font-size:14px;font-weight:600">Status</div>
-            <div id="quickStatus" style="margin-top:6px;opacity:.85">Idle</div>
-          </div>
-        </div>
+
+  <!-- ===== ANALYTICS SECTION ===== -->
+  <section id="analytics" class="section">
+    <h3>📊 Smart Sales Dashboard</h3>
+
+    <div style="display:flex;flex-wrap:wrap;gap:20px;justify-content:flex-end;">
+      <div style="flex:1;min-width:320px;max-width:520px">
+        <canvas id="salesBar" height="220"></canvas>
+      </div>
+      <div style="flex:1;min-width:240px;max-width:360px">
+        <canvas id="salesPie" height="220"></canvas>
       </div>
     </div>
   </section>
 
-  <!-- ===== SMART DASHBOARD / ANALYTICS ===== -->
-  <section id="analytics" class="section">
-    <h3>📊 Smart Sales Dashboard</h3>
-    <div style="display:flex;flex-wrap:wrap;gap:20px;justify-content:flex-end;align-items:center">
-      <div style="flex:1;min-width:320px;max-width:520px"><canvas id="salesBar" height="220"></canvas></div>
-      <div style="flex:1;min-width:240px;max-width:360px"><canvas id="salesPie" height="220"></canvas></div>
-    </div>
-    <p style="text-align:center;margin-top:12px;opacity:.75;font-size:13px">🔄 Auto-updates every 60s</p>
-  </section>
 
-  <!-- HELP -->
+  <!-- ===== HELP SECTION ===== -->
   <div class="footer-btns" style="margin-top:18px">
     <a href="#" id="helpLink" class="small-btn">📘 Help & Guide</a>
-    <div class="version-info">v1.2 — updated 700-line model</div>
+    <div class="version-info">v1.3 — login integrated, logout, email display</div>
   </div>
 
-  <div id="helpModal" class="help-modal" role="dialog" aria-hidden="true">
+  <div id="helpModal" class="help-modal" style="display:none">
     <div class="help-content">
       <h2>📘 Quick Help</h2>
       <ul style="line-height:1.6">
-        <li>Types → add and manage item categories</li>
-        <li>Stock → add stock, set low limits, quick actions</li>
-        <li>Sales → record Paid / Credit sales, print & filter</li>
-        <li>Wanting → add reorder items manually or auto-add when stock ends</li>
-        <li>Smart Dashboard → charts auto-update</li>
+        <li>Types → Add & manage categories</li>
+        <li>Stock → Add purchases, update, set limits</li>
+        <li>Sales → Add daily sales & profit</li>
+        <li>Wanting → Auto or manual reorder list</li>
+        <li>Dashboard → Today's stats</li>
+        <li>Analytics → Full charts</li>
       </ul>
-      <div style="text-align:right;margin-top:12px"><button class="small-btn" onclick="toggleHelp()">Close</button></div>
+      <button class="small-btn" onclick="toggleHelp()">Close</button>
     </div>
   </div>
 
-  <!-- SCRIPTS: minimal UI glue + module includes (order matters) -->
+
+
+  <!-- ===== JS SCRIPTS ===== -->
+
+  <!-- UI Helpers -->
   <script>
-    // minimal helpers
     const qs = s => document.querySelector(s);
     const qsa = s => Array.from(document.querySelectorAll(s));
-    function toggleHelp(){ const m = qs('#helpModal'); m.style.display = (m.style.display==='flex'?'none':'flex'); }
-    qs('#helpLink').addEventListener('click', e=>{ e.preventDefault(); toggleHelp(); });
 
-    // theme toggle (keeps CSS rules already defined)
+    function toggleHelp(){
+      const m = qs('#helpModal');
+      m.style.display = (m.style.display === 'flex' ? 'none' : 'flex');
+    }
+    qs('#helpLink').addEventListener('click', e=>{
+      e.preventDefault(); toggleHelp();
+    });
+
+    // theme
     (function(){
       if(localStorage.getItem('ks-theme') === 'dark') document.body.classList.add('dark');
       qs('#themeBtn').addEventListener('click', ()=>{
-        const isDark = document.body.classList.toggle('dark');
-        localStorage.setItem('ks-theme', isDark ? 'dark' : 'light');
+        const dark = document.body.classList.toggle('dark');
+        localStorage.setItem('ks-theme', dark ? 'dark' : 'light');
       });
     })();
+  </script>
 
-    // Tabs switching (custom order as requested)
+  <!-- Tabs -->
+  <script>
     (function(){
-      const tabs = qsa('.tab'), sections = qsa('.section');
+      const tabs = qsa('.tab'),
+            sections = qsa('.section');
+
       function activate(name){
-        tabs.forEach(t=>t.classList.toggle('active', t.dataset.tab===name));
-        sections.forEach(s=>s.classList.toggle('active', s.id===name));
-        // call some on-demand renders if functions available
-        if(name==='types' && typeof renderTypes==='function'){ renderTypes(); if(typeof updateDropdowns==='function') updateDropdowns(); }
-        if(name==='stock' && typeof renderStock==='function'){ renderStock(); if(typeof patchStockActions==='function') patchStockActions(); }
-        if(name==='sales' && typeof initSalesModule==='function'){ initSalesModule(); }
-        if(name==='wanting' && typeof renderWanting==='function'){ renderWanting(); if(typeof updateTypeDropdowns==='function') updateTypeDropdowns(); }
-        if(name==='dashboard' && typeof updateSummaryCards==='function'){ updateSummaryCards(); }
-        if(name==='analytics' && typeof ensureChartsLoadedAndRender==='function'){ ensureChartsLoadedAndRender(); }
+        tabs.forEach(t=> t.classList.toggle('active', t.dataset.tab === name));
+        sections.forEach(s=> s.classList.toggle('active', s.id === name));
+
+        if(name==='types' && typeof renderTypes==='function') renderTypes();
+        if(name==='stock' && typeof renderStock==='function') renderStock();
+        if(name==='sales' && typeof initSalesModule==='function') initSalesModule();
+        if(name==='wanting' && typeof renderWanting==='function') renderWanting();
+        if(name==='dashboard' && typeof updateSummaryCards==='function') updateSummaryCards();
+        if(name==='analytics' && typeof ensureChartsLoadedAndRender==='function') ensureChartsLoadedAndRender();
       }
-      tabs.forEach(t=> t.addEventListener('click', ()=> activate(t.dataset.tab)));
-      // expose
+
+      tabs.forEach(t=> t.addEventListener('click', ()=>activate(t.dataset.tab)));
       window.activateTab = activate;
     })();
   </script>
-<!-- Chart.js -->
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
-<!-- Firebase Compat Libraries (FINAL FIX) -->
-<script src="https://www.gstatic.com/firebasejs/9.6.11/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.6.11/firebase-firestore-compat.js"></script>
 
-<!-- Your Firebase logic -->
-<script src="../js/firebase.js"></script>
+  <!-- 🔐 LOGIN CHECK + LOGOUT + EMAIL DISPLAY -->
+  <script>
+    // user not logged in → send to login
+    if (!isLoggedIn()) {
+      window.location.href = "../login.html";
+    }
 
-<!-- Project Modules in correct order -->
-<script src="../js/core.js"></script>
-<script src="../js/types.js"></script>
-<script src="../js/stock.js"></script>
-<script src="../js/sales.js"></script>
-<script src="../js/wanting.js"></script>
-<script src="../js/analytics.js"></script>
-<script src="../js/security.js"></script>
+    // show email
+    qs("#emailTag").textContent = "Logged in as: " + getUserEmail();
+
+    // logout
+    qs("#logoutBtn").addEventListener("click", () => {
+      if(confirm("Logout now?")){
+        logoutUser();
+        window.location.href = "../login.html";
+      }
+    });
+  </script>
+
+
+
+  <!-- CHART.JS -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <!-- Firebase -->
+  <script src="https://www.gstatic.com/firebasejs/9.6.11/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.6.11/firebase-firestore-compat.js"></script>
+
+  <script src="../js/firebase.js"></script>
+  <script src="../js/core.js"></script>
+
+  <!-- Old Modules (still working) -->
+  <script src="../js/types.js"></script>
+  <script src="../js/stock.js"></script>
+  <script src="../js/sales.js"></script>
+  <script src="../js/wanting.js"></script>
+  <script src="../js/analytics.js"></script>
+  <script src="../js/security.js"></script>
+
 </body>
 </html>
