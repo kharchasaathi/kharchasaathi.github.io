@@ -462,6 +462,17 @@
 <script src="/js/analytics.js"></script>
 <script src="/js/security.js"></script>
 <script src="/js/expenses.js"></script>
+  <!-- AFTER ALL MODULES: SAFE INITIAL RENDER -->
+<script>
+  // First load all data to screen
+  if (typeof renderTypes === 'function') renderTypes();
+  if (typeof renderStock === 'function') renderStock();
+  if (typeof renderSales === 'function') renderSales();
+  if (typeof renderWanting === 'function') renderWanting();
+  if (typeof renderExpenses === 'function') renderExpenses();
+  if (typeof renderAnalytics === 'function') renderAnalytics();
+  if (typeof updateSummaryCards === 'function') updateSummaryCards();
+</script>
 </body>
 </html>
 
