@@ -19,14 +19,13 @@ const firebaseConfig = {
 };
 
 // --------------------------------------------------
-// Initialize Firebase (Compat Mode for Safety)
+// Initialize Firebase (Compat Mode)
 // --------------------------------------------------
 let db = null;
 
 try {
   firebase.initializeApp(firebaseConfig);
   db = firebase.firestore();
-
   console.log("%c☁️ Firebase connected successfully!", "color:#4caf50;font-weight:bold;");
 } 
 catch (e) {
@@ -36,17 +35,17 @@ catch (e) {
 
 
 // --------------------------------------------------
-// Helper: Get Logged-in Email (User ID)
+// Helper: Cloud User Email (Used as Document ID)
 // --------------------------------------------------
 function getCloudUser() {
   const email = localStorage.getItem("ks-user-email");
-  return email ? email : "guest-user";   // fallback (should never happen ideally)
+  return email ? email : "guest-user";   // fallback
 }
 
 
 
 // --------------------------------------------------
-// CLOUD SAVE  (Saves entire module data)
+// CLOUD SAVE (Immediately Saves Full Module Data)
 // --------------------------------------------------
 window.cloudSave = async function (collectionName, data) {
   if (!db) return console.error("❌ Firestore unavailable");
@@ -68,8 +67,8 @@ window.cloudSave = async function (collectionName, data) {
 
 
 // --------------------------------------------------
-// CLOUD LOAD (Loads entire module data)
-// --------------------------------------------------
+// CLOUD LOAD
+//---------------------------------------------------
 window.cloudLoad = async function (collectionName) {
   if (!db) return console.error("❌ Firestore unavailable");
 
@@ -81,7 +80,7 @@ window.cloudLoad = async function (collectionName) {
                          .get();
 
     if (!snap.exists) {
-      console.warn(`⚠️ No cloud data found for ${collectionName}`);
+      console.warn(`⚠️ No cloud data found for "${collectionName}"`);
       return null;
     }
 
@@ -97,6 +96,24 @@ window.cloudLoad = async function (collectionName) {
 
 
 // --------------------------------------------------
-// OPTIONAL: Test auto-start (ONLY logs)
+// ✅ DEBOUNCED CLOUD SAVE (Your Request)
+// Prevents multiple fast writes → Saves after 500ms
 // --------------------------------------------------
-console.log("%c⚙️ firebase.js ready (Email-based mode active)", "color:#03a9f4;font-weight:bold;");
+let _cloudSaveTimer = null;
+
+window.cloudSaveDebounced = function (collection, data) {
+  clearTimeout(_cloudSaveTimer);
+
+  _cloudSaveTimer = setTimeout(() => {
+    if (typeof window.cloudSave === "function") {
+      window.cloudSave(collection, data);
+    }
+  }, 500); // saves only once after 0.5 sec
+};
+
+
+
+// --------------------------------------------------
+// READY LOG
+// --------------------------------------------------
+console.log("%c⚙️ firebase.js ready (Email Login + Cloud Sync Active)", "color:#03a9f4;font-weight:bold;");
