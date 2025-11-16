@@ -361,6 +361,9 @@
 
 <!-- 🔐 LOGIN CHECK + LOGOUT (ONLY ONCE, Correct Version) -->
 <script>
+  // ఈ ఫంక్షన్స్ ఇప్పటికే login-utils.js లో ఉండాలి:
+  // isLoggedIn(), getUserEmail(), logoutUser()
+
   if (!isLoggedIn()) {
     window.location.href = "/login.html";
   }
@@ -375,23 +378,29 @@
   });
 </script>
 
-<!-- CHARTS -->
-
+<!-- ==============================
+     📊 CHARTS  (Correct CDN)
+================================= -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js/dist/chart.umd.min.js"></script>
-<!-- FIREBASE -->
+
+<!-- ==============================
+     🔥 FIREBASE
+================================= -->
 <script src="https://www.gstatic.com/firebasejs/9.6.11/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.6.11/firebase-firestore-compat.js"></script>
 
-<!-- ORDER MATTERS 🚨 -->
-<script src="../js/login-utils.js"></script>
-<script src="../js/firebase.js"></script>
-<script src="../js/core.js"></script>
-<script src="../js/types.js"></script>
-<script src="../js/stock.js"></script>
-<script src="../js/sales.js"></script>
-<script src="../js/wanting.js"></script>
-<script src="../js/analytics.js"></script>
-<script src="../js/security.js"></script>
+<!-- ==============================
+     📌 ORDER MATTERS (MUST BE THIS ORDER)
+================================= -->
+<script src="../js/login-utils.js"></script>   <!-- isLoggedIn, logoutUser, getUserEmail -->
+<script src="../js/firebase.js"></script>      <!-- Firestore -->
+<script src="../js/core.js"></script>          <!-- Storage helpers -->
+<script src="../js/types.js"></script>         <!-- Types -->
+<script src="../js/stock.js"></script>         <!-- Stock -->
+<script src="../js/sales.js"></script>         <!-- Sales + Profit -->
+<script src="../js/wanting.js"></script>       <!-- Wanting -->
+<script src="../js/analytics.js"></script>     <!-- Charts -->
+<script src="../js/security.js"></script>      <!-- Admin Password -->
 
 </body>
 </html>
