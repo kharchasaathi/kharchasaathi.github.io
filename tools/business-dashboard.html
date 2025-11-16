@@ -338,28 +338,59 @@
   </script>
 
   <!-- Tabs -->
-  <script>
-    (function(){
-      const tabs=qsa('.tab'), sections=qsa('.section');
+  
+<script>
+(function () {
+  const tabs = qsa('.tab'),
+        sections = qsa('.section');
 
-      function activate(name){
-        tabs.forEach(t=> t.classList.toggle('active',t.dataset.tab===name));
-        sections.forEach(s=> s.classList.toggle('active',s.id===name));
+  function activate(name) {
 
-        if(name==='types' && renderTypes) renderTypes();
-        if(name==='stock' && renderStock) renderStock();
-        if(name==='sales' && initSalesModule) initSalesModule();
-        if(name==='wanting' && renderWanting) renderWanting();
-        if(name==='dashboard' && updateSummaryCards) updateSummaryCards();
-        if(name==='analytics' && ensureChartsLoadedAndRender) ensureChartsLoadedAndRender();
-      }
+    // Switch tab highlight
+    tabs.forEach(t =>
+      t.classList.toggle('active', t.dataset.tab === name)
+    );
 
-      tabs.forEach(t=> t.addEventListener('click',()=>activate(t.dataset.tab)));
-      window.activateTab = activate;
-    })();
-  </script>
+    // Switch visible section
+    sections.forEach(s =>
+      s.classList.toggle('active', s.id === name)
+    );
 
-<!-- LOGIN UTILS (FIRST) -->
+    // Now call real module functions (safe check)
+    if (name === 'types' && typeof renderTypes === "function") {
+      renderTypes();
+    }
+
+    if (name === 'stock' && typeof renderStock === "function") {
+      renderStock();
+    }
+
+    if (name === 'sales' && typeof renderSales === "function") {
+      renderSales();
+    }
+
+    if (name === 'wanting' && typeof renderWanting === "function") {
+      renderWanting();
+    }
+
+    if (name === 'dashboard' && typeof updateSummaryCards === "function") {
+      updateSummaryCards();
+    }
+
+    if (name === 'analytics' && typeof renderAnalytics === "function") {
+      renderAnalytics();
+    }
+  }
+
+  tabs.forEach(t =>
+    t.addEventListener('click', () => activate(t.dataset.tab))
+  );
+
+  window.activateTab = activate;
+})();
+</script>
+
+<!-- LOGIN UTILS FIRST -->
 <script src="/js/login-utils.js"></script>
 
 <!-- LOGIN CHECK -->
@@ -367,7 +398,9 @@
   if (!isLoggedIn()) {
     window.location.href = "/login.html";
   }
+
   qs("#emailTag").textContent = "Logged in: " + getUserEmail();
+
   qs("#logoutBtn").addEventListener("click", () => {
     logoutUser();
     window.location.href = "/login.html";
@@ -381,7 +414,7 @@
 <script src="https://www.gstatic.com/firebasejs/9.6.11/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.6.11/firebase-firestore-compat.js"></script>
 
-<!-- MAIN MODULES: ABSOLUTE PATHS (ROOT BASED) -->
+<!-- MAIN MODULES -->
 <script src="/js/firebase.js"></script>
 <script src="/js/core.js"></script>
 <script src="/js/types.js"></script>
@@ -390,5 +423,7 @@
 <script src="/js/wanting.js"></script>
 <script src="/js/analytics.js"></script>
 <script src="/js/security.js"></script>
+
 </body>
 </html>
+
