@@ -467,6 +467,57 @@
 <script src="/js/analytics.js"></script>
 <script src="/js/security.js"></script>
 <script src="/js/expenses.js"></script>
+  <script>
+function updateSummaryCards() {
+
+  /* Today's date */
+  const today = todayDate();
+
+  /* ---- TODAY SALES ---- */
+  let todaySales = 0;
+  let todayCredit = 0;
+  let todayProfit = 0;
+
+  window.sales.forEach(s => {
+    if (s.date === today) {
+      todaySales += s.amount;
+      if (s.status === "Credit") todayCredit += s.amount;
+      todayProfit += s.profit;
+    }
+  });
+
+  /* ---- TODAY EXPENSES ---- */
+  let todayExpenses = 0;
+  if (window.expenses && window.expenses.length) {
+    window.expenses.forEach(e => {
+      if (e.date === today) {
+        todayExpenses += Number(e.amount || 0);
+      }
+    });
+  }
+
+  /* ---- NET PROFIT ---- */
+  let netProfit = todayProfit - todayExpenses;
+
+  /* ---- STOCK REMAINING % ---- */
+  let totalQty = 0, soldQty = 0;
+
+  window.stock.forEach(item => {
+    totalQty += Number(item.qty || 0);
+    soldQty += Number(item.sold || 0);
+  });
+
+  let remainPct = (totalQty > 0)
+    ? Math.round(((totalQty - soldQty) / totalQty) * 100)
+    : 0;
+
+  /* ---- UPDATE UI ---- */
+  qs("#todaySales").textContent = "₹" + todaySales;
+  qs("#todayCredit").textContent = "₹" + todayCredit;
+  qs("#todayProfit").textContent = "₹" + netProfit;
+  qs("#stockRemain").textContent = remainPct + "%";
+}
+</script>
   <!-- AFTER ALL MODULES: SAFE INITIAL RENDER -->
 <script>
   // First load all data to screen
