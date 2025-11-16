@@ -202,19 +202,24 @@
     <h3>💰 Sales & Profit</h3>
 
     <div class="row-inline" style="margin:10px 0">
-      <label>Date:</label><input id="saleDate" type="date">
-      <label>Type</label><select id="saleType"></select>
-      <label>Product</label><select id="saleProduct"></select>
-      <input id="saleQty" type="number" placeholder="Qty" style="width:70px">
-      <input id="salePrice" type="number" placeholder="₹" style="width:90px">
+  <label>Date:</label><input id="saleDate" type="date">
+  <label>Type</label><select id="saleType"></select>
+  <label>Product</label><select id="saleProduct"></select>
+  <input id="saleQty" type="number" placeholder="Qty" style="width:70px">
+  <input id="salePrice" type="number" placeholder="₹" style="width:90px">
 
-      <select id="saleStatus">
-        <option value="Paid">Paid</option>
-        <option value="Credit">Credit</option>
-      </select>
+  <select id="saleStatus">
+    <option value="Paid">Paid</option>
+    <option value="Credit">Credit</option>
+  </select>
 
-      <button id="addSaleBtn" class="small-btn">Add Sale</button>
-    </div>
+  <button id="addSaleBtn" class="small-btn">Add Sale</button>
+
+  <!-- ⭐ NEW BUTTON: CLEAR ALL SALES -->
+  <button id="clearSalesBtn" class="danger-btn" style="background:#c62828;color:#fff;margin-left:10px">
+    🗑️ Clear All
+  </button>
+</div>
 
     <table id="salesTable">
       <thead>
