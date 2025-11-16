@@ -390,30 +390,35 @@
     // Correct functions for v1.3
     // --------------------------
 
-    if (name === 'types' && typeof renderTypes === "function") {
-      renderTypes();
-    }
-
-    if (name === 'stock' && typeof renderStock === "function") {
-      renderStock();
-    }
-
-    if (name === 'sales' && typeof renderSales === "function") {
-      renderSales();        /* UPDATED */
-    }
-
-    if (name === 'wanting' && typeof renderWanting === "function") {
-      renderWanting();
-    }
-
-    if (name === 'dashboard' && typeof updateSummaryCards === "function") {
-      updateSummaryCards();  /* KEEP THIS */
-    }
-
-    if (name === 'analytics' && typeof renderAnalytics === "function") {
-      renderAnalytics();      /* UPDATED */
-    }
+  if (name === 'types' && typeof renderTypes === "function") {
+    renderTypes();
   }
+
+  if (name === 'stock' && typeof renderStock === "function") {
+    renderStock();
+  }
+
+  if (name === 'sales' && typeof renderSales === "function") {
+    renderSales();
+  }
+
+  if (name === 'wanting' && typeof renderWanting === "function") {
+    renderWanting();
+  }
+
+  if (name === 'dashboard' && typeof updateSummaryCards === "function") {
+    updateSummaryCards();
+  }
+
+  if (name === 'analytics' && typeof renderAnalytics === "function") {
+    renderAnalytics();
+  }
+
+  /* ⭐ EXPENSES TAB */
+  if (name === 'expenses' && typeof renderExpenses === "function") {
+    renderExpenses();
+  }
+}
 
   tabs.forEach(t =>
     t.addEventListener('click', () => activate(t.dataset.tab))
