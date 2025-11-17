@@ -314,7 +314,50 @@
 
     </div>
   </section>
-  
+  <!-- ===== ANALYTICS (SMART DASHBOARD) ===== -->
+<section id="analytics" class="section">
+  <h3>📈 Smart Dashboard</h3>
+
+  <!-- Summary Cards -->
+  <div class="flex-row" style="margin-bottom:18px">
+    <div class="card" style="flex:1;min-width:140px">
+      <h4>Today Sales</h4>
+      <b id="sumToday">₹0</b>
+    </div>
+
+    <div class="card" style="flex:1;min-width:140px">
+      <h4>This Week</h4>
+      <b id="sumWeek">₹0</b>
+    </div>
+
+    <div class="card" style="flex:1;min-width:140px">
+      <h4>This Month</h4>
+      <b id="sumMonth">₹0</b>
+    </div>
+
+    <div class="card" style="flex:1;min-width:140px">
+      <h4>Gross Profit</h4>
+      <b id="sumGross">₹0</b>
+    </div>
+
+    <div class="card" style="flex:1;min-width:140px">
+      <h4>Net Profit</h4>
+      <b id="sumNet">₹0</b>
+    </div>
+  </div>
+
+  <!-- Bar Chart -->
+  <div style="max-width:900px;margin:auto">
+    <canvas id="salesBar" height="150"></canvas>
+  </div>
+
+  <br>
+
+  <!-- Pie Chart -->
+  <div style="max-width:600px;margin:auto">
+    <canvas id="salesPie" height="150"></canvas>
+  </div>
+</section>
   <!-- ===== EXPENSES ===== -->
   <section id="expenses" class="section">
     <h3>🧾 Expenses</h3>
