@@ -1,13 +1,7 @@
 /* =======================================================
-   📦 stock.js — Product Stock Manager (Final v2.1)
-   Works with: core.js, types.js, sales.js, wanting.js
+   📦 stock.js — Inventory Manager (FINAL v2.1)
    ======================================================= */
 
-/* window.stock is already loaded from core.js */
-
-/* -------------------------------------------------------
-   ➕ ADD / UPDATE STOCK
-------------------------------------------------------- */
 function addStock() {
   const date = qs("#pdate")?.value;
   const type = qs("#ptype")?.value;
@@ -34,46 +28,35 @@ function addStock() {
 function renderStock() {
   const filter = qs("#filterType")?.value || "all";
   const tbody = qs("#stockTable tbody");
-
   if (!tbody) return;
 
   let html = "";
 
   window.stock
-    .filter(item => filter === "all" || item.type === filter)
-    .forEach((item, i) => {
-      const sold   = Number(item.sold || 0);
-      const remain = Number(item.qty) - sold;
-
-      const limit = (typeof item.limit !== "undefined")
-        ? Number(item.limit)
-        : getGlobalLimit();
+    .filter(p => filter === "all" || p.type === filter)
+    .forEach((p, i) => {
+      const sold   = Number(p.sold || 0);
+      const remain = Number(p.qty) - sold;
+      const limit  = Number(p.limit ?? getGlobalLimit());
 
       let status = "OK", cls = "ok";
-
-      if (remain <= 0) {
-        status = "OUT";
-        cls = "out";
-      }
-      else if (remain <= limit) {
-        status = "LOW";
-        cls = "low";
-      }
+      if (remain <= 0) { status = "OUT"; cls = "out"; }
+      else if (remain <= limit) { status = "LOW"; cls = "low"; }
 
       html += `
       <tr>
-        <td>${item.date}</td>
-        <td>${esc(item.type)}</td>
-        <td>${esc(item.name)}</td>
-        <td>${item.qty}</td>
+        <td>${p.date}</td>
+        <td>${esc(p.type)}</td>
+        <td>${esc(p.name)}</td>
+        <td>${p.qty}</td>
         <td>${sold}</td>
         <td>${remain}</td>
         <td class="${cls}">${status}</td>
         <td>${limit}</td>
         <td>
-          <button class="history-btn" data-i="${i}" title="View History">📜 History</button>
-          <button class="sale-btn" data-i="${i}" title="Quick Sale">💰 Sale</button>
-          <button class="credit-btn" data-i="${i}" title="Quick Credit">💳 Credit</button>
+          <button class="history-btn" data-i="${i}">📜</button>
+          <button class="sale-btn" data-i="${i}">💰</button>
+          <button class="credit-btn" data-i="${i}">💳</button>
         </td>
       </tr>`;
     });
@@ -85,15 +68,15 @@ function renderStock() {
 }
 
 /* -------------------------------------------------------
-   📜 SHOW HISTORY
+   📜 HISTORY
 ------------------------------------------------------- */
 function showHistory(i) {
   const p = window.stock[i];
-  if (!p || !p.history) return alert("No history found.");
+  if (!p?.history?.length) return alert("No history found.");
 
   let msg = `History for ${p.name}:\n\n`;
   p.history.forEach(h => {
-    msg += `${h.date} — Qty: ${h.qty} @ ₹${h.cost}\n`;
+    msg += `${h.date} — Qty ${h.qty} @ ₹${h.cost}\n`;
   });
 
   alert(msg);
@@ -112,17 +95,15 @@ function stockQuickSale(i, mode) {
   const qty = Number(prompt(`Enter Qty (Available: ${remain})`));
   if (!qty || qty <= 0 || qty > remain) return;
 
-  const price = Number(prompt("Enter Selling Price ₹:"));
+  const price = Number(prompt("Enter Sale Price ₹:"));
   if (!price || price <= 0) return;
 
   const date = todayDate();
   const cost = getProductCost(p.type, p.name);
   const profit = (price - cost) * qty;
 
-  // update stock
   p.sold = (p.sold || 0) + qty;
 
-  // save sale entry
   window.sales.push({
     id: uid("sale"),
     date,
@@ -162,17 +143,17 @@ document.addEventListener("click", e => {
   }
 
   if (e.target.classList.contains("history-btn"))
-    return showHistory(e.target.dataset.i);
+    return showHistory(Number(e.target.dataset.i));
 
   if (e.target.classList.contains("sale-btn"))
-    return stockQuickSale(e.target.dataset.i, "Paid");
+    return stockQuickSale(Number(e.target.dataset.i), "Paid");
 
   if (e.target.classList.contains("credit-btn"))
-    return stockQuickSale(e.target.dataset.i, "Credit");
+    return stockQuickSale(Number(e.target.dataset.i), "Credit");
 });
 
 /* -------------------------------------------------------
-   🚀 INITIAL LOAD
+   🚀 INITIAL
 ------------------------------------------------------- */
 window.addEventListener("load", () => {
   updateTypeDropdowns?.();
