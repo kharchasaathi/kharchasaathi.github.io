@@ -1,7 +1,7 @@
 /* ==========================================================
-   💰 sales.js — Sales Viewer + Profit Manager (FINAL v4.0)
-   Pure VIEW MODE — No manual product adding
-   Sales only come from:
+   💰 sales.js — Sales Viewer + Profit Manager (FINAL v5.0)
+   PURE VIEW MODE — No manual sale adding
+   Sales come only from:
      ✔ Stock Quick Sale
      ✔ Stock Quick Credit
 ========================================================== */
@@ -17,37 +17,25 @@ function saveSales() {
 }
 
 /* ----------------------------------------------------------
-   REFRESH FILTER DROPDOWNS (TYPE + PRODUCT)
+   REFRESH TYPE FILTER DROPDOWN
 ---------------------------------------------------------- */
-function refreshSaleSelectors() {
+function refreshSaleTypeSelector() {
   const tdd = qs("#saleType");
-  const pdd = qs("#saleProduct");
+  if (!tdd) return;
 
-  if (!tdd || !pdd) return;
-
-  /* TYPE FILTER */
   tdd.innerHTML =
     `<option value="all">All Types</option>` +
     window.types
       .map(t => `<option value="${esc(t.name)}">${esc(t.name)}</option>`)
       .join("");
-
-  /* PRODUCT FILTER */
-  const uniqueProducts = [...new Set(window.sales.map(s => s.product))];
-
-  pdd.innerHTML =
-    `<option value="all">All Products</option>` +
-    uniqueProducts
-      .map(p => `<option value="${esc(p)}">${esc(p)}</option>`)
-      .join("");
 }
 
 /* ----------------------------------------------------------
-   FILTER TRIGGER
+   FILTER TRIGGER (DATE + TYPE)
 ---------------------------------------------------------- */
-function filterSales() {
+qs("#filterSalesBtn")?.addEventListener("click", () => {
   renderSales();
-}
+});
 
 /* ----------------------------------------------------------
    MARK CREDIT → PAID
@@ -61,6 +49,7 @@ function markSalePaid(id) {
   if (!confirm("Mark this entry as PAID?")) return;
 
   s.status = "Paid";
+
   saveSales();
   renderSales();
   updateSummaryCards?.();
@@ -68,22 +57,9 @@ function markSalePaid(id) {
 }
 
 /* ----------------------------------------------------------
-   DELETE A SALE (OPTIONAL)
+   DELETE ALL SALES
 ---------------------------------------------------------- */
-function deleteSale(id) {
-  if (!confirm("Delete this sale entry?")) return;
-
-  window.sales = window.sales.filter(s => s.id !== id);
-  saveSales();
-  renderSales();
-  updateSummaryCards?.();
-  renderAnalytics?.();
-}
-
-/* ----------------------------------------------------------
-   CLEAR ALL SALES
----------------------------------------------------------- */
-qs('#clearSalesBtn')?.addEventListener('click', () => {
+qs("#clearSalesBtn")?.addEventListener("click", () => {
   if (!confirm("Delete ALL sales permanently?")) return;
 
   window.sales = [];
@@ -104,7 +80,7 @@ function renderSales() {
   if (!tbody) return;
 
   const typeFilter = qs("#saleType")?.value || "all";
-  const prodFilter = qs("#saleProduct")?.value || "all";
+  const dateFilter = qs("#saleDate")?.value || "";
 
   let total = 0;
   let profit = 0;
@@ -112,33 +88,27 @@ function renderSales() {
 
   window.sales
     .filter(s => typeFilter === "all" || s.type === typeFilter)
-    .filter(s => prodFilter === "all" || s.product === prodFilter)
+    .filter(s => !dateFilter || s.date === dateFilter)
     .forEach(s => {
       total += Number(s.amount);
       profit += Number(s.profit);
 
       rows += `
-      <tr>
-        <td>${s.date}</td>
-        <td>${esc(s.type)}</td>
-        <td>${esc(s.product)}</td>
-        <td>${s.qty}</td>
-        <td>${s.price}</td>
-        <td>${s.amount}</td>
-        <td>${s.profit}</td>
-        <td>${s.status === "Credit" ? "💳 Credit" : "💰 Paid"}</td>
-        <td>
-          ${
-            s.status === "Credit"
-              ? `<button class="small-btn" onclick="markSalePaid('${s.id}')">Mark Paid</button>`
-              : ``
-          }
-        </td>
-      </tr>`;
+        <tr>
+          <td>${s.date}</td>
+          <td>${esc(s.type)}</td>
+          <td>${esc(s.product)}</td>
+          <td>${s.qty}</td>
+          <td>${s.price}</td>
+          <td>${s.amount}</td>
+          <td>${s.profit}</td>
+          <td>${s.status === "Credit" ? "💳 Credit" : "💰 Paid"}</td>
+        </tr>
+      `;
     });
 
   if (!rows)
-    rows = `<tr><td colspan="9">No sales found</td></tr>`;
+    rows = `<tr><td colspan="8">No sales found</td></tr>`;
 
   tbody.innerHTML = rows;
   totalEl.textContent = total;
@@ -149,6 +119,6 @@ function renderSales() {
    INITIAL LOAD
 ---------------------------------------------------------- */
 window.addEventListener("load", () => {
-  refreshSaleSelectors();
+  refreshSaleTypeSelector();
   renderSales();
 });
