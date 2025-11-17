@@ -177,6 +177,9 @@ document.addEventListener("click", e => {
   if (e.target.classList.contains("credit-btn"))
     return stockQuickSale(Number(e.target.dataset.i), "Credit");
 });
+qs("#filterType")?.addEventListener("change", () => {
+  renderStock();
+});
 
 /* -------------------------------------------------------
    🚀 INITIAL
