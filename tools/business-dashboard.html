@@ -316,7 +316,7 @@
   <h3>🧾 Expenses</h3>
 
   <div class="row-inline" style="margin-bottom:8px">
-    <input id="expDate" type="date" value="">
+    <input id="expDate" type="date" value="" onfocus="if(!this.value)this.value=todayDate()">
     <input id="expCategory" type="text" placeholder="Category" style="min-width:140px">
     <input id="expAmount" type="number" placeholder="Amount" style="width:120px">
     <input id="expNote" type="text" placeholder="Note" style="min-width:200px">
