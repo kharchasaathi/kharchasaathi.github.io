@@ -1,39 +1,36 @@
 /* ===========================================================
-   📊 analytics.js — Smart Dashboard (PRO v3.0)
-   Fully compatible with: core.js v3.1, sales.js v3.0, expenses.js v3.0
-   Uses: Chart.js
+   📊 analytics.js — Smart Dashboard (FINAL v4.0)
+   Fully Synced with: core.js + sales.js + expenses.js
+   Uses: Chart.js (auto-refresh)
    =========================================================== */
 
 let salesBarChart = null;
 let salesPieChart = null;
 
 /* ----------------------------------------------------------
-   📌 HELPERS
+   HELPERS
 ---------------------------------------------------------- */
-function formatDate(date) {
-  return new Date(date).toISOString().split("T")[0];
+function formatDate(d) {
+  return new Date(d).toISOString().split("T")[0];
 }
-
 function getStartOfWeek() {
-  const d = new Date();
-  const day = d.getDay();
-  d.setDate(d.getDate() - day);
-  return formatDate(d);
+  const t = new Date();
+  const day = t.getDay();  // 0 = Sunday
+  t.setDate(t.getDate() - day);
+  return formatDate(t);
 }
-
 function getStartOfMonth() {
   const d = new Date();
   return formatDate(new Date(d.getFullYear(), d.getMonth(), 1));
 }
-
 function getExpensesByDate(date) {
   return (window.expenses || [])
     .filter(e => e.date === date)
-    .reduce((sum, e) => sum + Number(e.amount || 0), 0);
+    .reduce((s, e) => s + Number(e.amount || 0), 0);
 }
 
 /* ----------------------------------------------------------
-   📊 COLLECT FULL ANALYTICS
+   CALCULATE FULL ANALYTICS DATA
 ---------------------------------------------------------- */
 function getAnalyticsData() {
   const sales = window.sales || [];
@@ -79,22 +76,26 @@ function getAnalyticsData() {
 }
 
 /* ----------------------------------------------------------
-   📈 RENDER SMART DASHBOARD CHARTS
+   MAIN RENDER FUNCTION
 ---------------------------------------------------------- */
 function renderAnalytics() {
-  const data = getAnalyticsData();
-
   const barCanvas = document.getElementById("salesBar");
   const pieCanvas = document.getElementById("salesPie");
 
-  // If analytics tab not opened yet → skip safely
-  if (!barCanvas || !pieCanvas) return;
+  if (!barCanvas || !pieCanvas) {
+    console.warn("Analytics canvas not found (salesBar / salesPie)");
+    return;
+  }
 
-  // Destroy previous charts to avoid duplicates
+  const data = getAnalyticsData();
+
+  /* --- Destroy Old Charts Before Re-render --- */
   if (salesBarChart) salesBarChart.destroy();
   if (salesPieChart) salesPieChart.destroy();
 
-  /* ------------------ BAR CHART ------------------ */
+  /* ----------------------------------------------------
+     BAR CHART — Today / Week / Month Sales
+  ---------------------------------------------------- */
   salesBarChart = new Chart(barCanvas, {
     type: "bar",
     data: {
@@ -102,28 +103,30 @@ function renderAnalytics() {
       datasets: [{
         label: "Sales ₹",
         data: [data.todaySales, data.weekSales, data.monthSales],
-        backgroundColor: ["#ff9800", "#fb8c00", "#ef6c00"],
-        borderRadius: 10
+        backgroundColor: ["#ff9800", "#fb8c00", "#f57c00"],
+        borderRadius: 8
       }]
     },
     options: {
       responsive: true,
+      scales: { y: { beginAtZero: true } },
       plugins: {
-        legend: { display: false },
-        title: { display: true, text: "Sales Summary" }
-      },
-      scales: { y: { beginAtZero: true } }
+        title: { display: true, text: "Sales Summary" },
+        legend: { display: false }
+      }
     }
   });
 
-  /* ------------------ PIE CHART ------------------ */
+  /* ----------------------------------------------------
+     PIE CHART — Paid vs Credit Sales
+  ---------------------------------------------------- */
   salesPieChart = new Chart(pieCanvas, {
     type: "pie",
     data: {
       labels: ["Paid Sales", "Credit Sales"],
       datasets: [{
         data: [data.paidSales, data.creditSales],
-        backgroundColor: ["#4caf50", "#42a5f5"]
+        backgroundColor: ["#4caf50", "#2196f3"]
       }]
     },
     options: {
@@ -138,29 +141,30 @@ function renderAnalytics() {
     }
   });
 
-  // Update Summary Cards (Dashboard page)
-  updateSummaryCards?.();
+  /* Update summary cards (Overview) */
+  if (typeof updateSummaryCards === "function") updateSummaryCards();
 }
 
 /* ----------------------------------------------------------
-   🔁 AUTO REFRESH EVERY 60 SECONDS
+   AUTO REFRESH EVERY 60 SECONDS
 ---------------------------------------------------------- */
 setInterval(() => {
-  try { renderAnalytics(); } catch (e) {}
+  try { renderAnalytics(); } catch {}
 }, 60000);
 
 /* ----------------------------------------------------------
-   🔄 LOCAL STORAGE SYNC
+   LOCAL STORAGE SYNC
 ---------------------------------------------------------- */
 window.addEventListener("storage", () => {
-  try { renderAnalytics(); } catch (e) {}
+  try { renderAnalytics(); } catch {}
 });
 
 /* ----------------------------------------------------------
-   🚀 INITIAL LOAD
+   INITIAL
 ---------------------------------------------------------- */
 window.addEventListener("load", () => {
-  try { renderAnalytics(); } catch (e) {}
+  try { renderAnalytics(); } catch {}
 });
 
+/* expose */
 window.renderAnalytics = renderAnalytics;
