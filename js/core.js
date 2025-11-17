@@ -1,5 +1,5 @@
 /* ===========================================================
-   📌 core.js — Master Storage + Utility Engine (v3.1 CLEAN)
+   📌 core.js — Master Storage + Utility Engine (v3.2 PRO)
    =========================================================== */
 
 /* LOCAL STORAGE KEYS */
@@ -24,7 +24,7 @@ function toArray(v) {
   return [];
 }
 
-/* LOAD GLOBAL ARRAYS */
+/* GLOBAL ARRAYS (Always safe) */
 window.types    = toArray(safeParse(localStorage.getItem(KEY_TYPES)));
 window.stock    = toArray(safeParse(localStorage.getItem(KEY_STOCK)));
 window.sales    = toArray(safeParse(localStorage.getItem(KEY_SALES)));
@@ -87,7 +87,7 @@ function findProduct(type, name) {
 }
 window.findProduct = findProduct;
 
-/* GET PRODUCT COST */
+/* GET PRODUCT COST (FIXED) */
 function getProductCost(type, name) {
   const p = findProduct(type, name);
   if (!p) return 0;
@@ -95,22 +95,23 @@ function getProductCost(type, name) {
   // latest cost
   if (p.cost) return Number(p.cost);
 
-  // average history
-  if (p.history?.length) {
+  // history average
+  if (Array.isArray(p.history) && p.history.length > 0) {
     let total = 0, qty = 0;
     p.history.forEach(h => {
-      total += (Number(h.cost) * Number(h.qty));
+      total += Number(h.cost) * Number(h.qty);
       qty += Number(h.qty);
     });
-    return qty ? (total / qty) : 0;
+    return qty ? total / qty : 0;
   }
+
   return 0;
 }
 window.getProductCost = getProductCost;
 
 /* TYPES */
 function addType(name) {
-  name = name.trim();
+  name = (name || "").trim();
   if (!name) return;
 
   if (window.types.find(t => t.name.toLowerCase() === name.toLowerCase()))
@@ -121,24 +122,34 @@ function addType(name) {
 }
 window.addType = addType;
 
-/* ADD/UPDATE STOCK */
+/* STOCK ENTRY */
 function addStockEntry({ date, type, name, qty, cost }) {
   date = date || todayDate();
-  qty  = Number(qty);
-  cost = Number(cost);
+  qty  = Number(qty || 0);
+  cost = Number(cost || 0);
+
+  if (!type || !name || qty <= 0) return;
 
   let p = findProduct(type, name);
 
   if (!p) {
-    p = { 
-      id: uid("stk"), date, type, name, 
-      qty, cost, sold: 0, limit: getGlobalLimit(), 
-      history: [{ date, qty, cost }] 
+    p = {
+      id: uid("stk"),
+      date,
+      type,
+      name,
+      qty,
+      cost,
+      sold: 0,
+      limit: getGlobalLimit(),
+      history: [{ date, qty, cost }]
     };
     window.stock.push(p);
+
   } else {
     p.qty += qty;
     p.cost = cost;
+    if (!Array.isArray(p.history)) p.history = [];
     p.history.push({ date, qty, cost });
   }
 
@@ -146,11 +157,27 @@ function addStockEntry({ date, type, name, qty, cost }) {
 }
 window.addStockEntry = addStockEntry;
 
+/* UPDATE QTY */
+function updateStockQty(type, name, delta) {
+  let p = findProduct(type, name);
+  if (!p) return;
+
+  p.qty = Number(p.qty) + Number(delta);
+  if (p.qty < 0) p.qty = 0;
+
+  saveStock();
+}
+window.updateStockQty = updateStockQty;
+
 /* WANTING */
 function autoAddWanting(type, name, note="low stock") {
   if (!window.wanting.find(w => w.type === type && w.name === name)) {
     window.wanting.push({
-      id: uid("want"), date: todayDate(), type, name, note
+      id: uid("want"),
+      date: todayDate(),
+      type,
+      name,
+      note
     });
     saveWanting();
   }
@@ -172,7 +199,7 @@ window.addExpense = addExpense;
 
 /* LIMIT */
 function setGlobalLimit(v) { localStorage.setItem(KEY_LIMIT, v); }
-function getGlobalLimit() { return Number(localStorage.getItem(KEY_LIMIT) || 0); }
+function getGlobalLimit()  { return Number(localStorage.getItem(KEY_LIMIT) || 0); }
 
 window.setGlobalLimit = setGlobalLimit;
 window.getGlobalLimit = getGlobalLimit;
