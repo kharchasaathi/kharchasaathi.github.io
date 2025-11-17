@@ -1,7 +1,6 @@
 /* ===========================================================
-   📊 analytics.js — Smart Dashboard (FINAL v4.0)
-   Fully Synced with: core.js + sales.js + expenses.js
-   Uses: Chart.js (auto-refresh)
+   📊 analytics.js — Smart Dashboard (FINAL v4.1)
+   Sync fixed for today/week/month + overview
    =========================================================== */
 
 let salesBarChart = null;
@@ -13,16 +12,19 @@ let salesPieChart = null;
 function formatDate(d) {
   return new Date(d).toISOString().split("T")[0];
 }
+
 function getStartOfWeek() {
   const t = new Date();
-  const day = t.getDay();  // 0 = Sunday
+  const day = t.getDay(); // 0 = Sunday
   t.setDate(t.getDate() - day);
   return formatDate(t);
 }
+
 function getStartOfMonth() {
   const d = new Date();
   return formatDate(new Date(d.getFullYear(), d.getMonth(), 1));
 }
+
 function getExpensesByDate(date) {
   return (window.expenses || [])
     .filter(e => e.date === date)
@@ -30,23 +32,26 @@ function getExpensesByDate(date) {
 }
 
 /* ----------------------------------------------------------
-   CALCULATE FULL ANALYTICS DATA
+   COLLECT ANALYTICS DATA
 ---------------------------------------------------------- */
 function getAnalyticsData() {
   const sales = window.sales || [];
+
   const today = todayDate();
   const weekStart = getStartOfWeek();
   const monthStart = getStartOfMonth();
 
-  let todaySales = 0,
-      weekSales = 0,
-      monthSales = 0,
-      paidSales = 0,
-      creditSales = 0,
-      grossProfit = 0;
+  let todaySales = 0;
+  let weekSales = 0;
+  let monthSales = 0;
+  let paidSales = 0;
+  let creditSales = 0;
+  let grossProfit = 0;
 
   sales.forEach(s => {
-    const d = s.date;
+    if (!s.date) return;  // Skip invalid
+
+    const d = String(s.date).slice(0, 10);
     const amt = Number(s.amount || 0);
     const prof = Number(s.profit || 0);
 
@@ -79,8 +84,8 @@ function getAnalyticsData() {
    MAIN RENDER FUNCTION
 ---------------------------------------------------------- */
 function renderAnalytics() {
-  const barCanvas = document.getElementById("salesBar");
-  const pieCanvas = document.getElementById("salesPie");
+  const barCanvas = qs("#salesBar");
+  const pieCanvas = qs("#salesPie");
 
   if (!barCanvas || !pieCanvas) {
     console.warn("Analytics canvas not found (salesBar / salesPie)");
@@ -89,13 +94,11 @@ function renderAnalytics() {
 
   const data = getAnalyticsData();
 
-  /* --- Destroy Old Charts Before Re-render --- */
+  /* Destroy previous charts */
   if (salesBarChart) salesBarChart.destroy();
   if (salesPieChart) salesPieChart.destroy();
 
-  /* ----------------------------------------------------
-     BAR CHART — Today / Week / Month Sales
-  ---------------------------------------------------- */
+  /* ------------------ BAR CHART ------------------- */
   salesBarChart = new Chart(barCanvas, {
     type: "bar",
     data: {
@@ -117,13 +120,11 @@ function renderAnalytics() {
     }
   });
 
-  /* ----------------------------------------------------
-     PIE CHART — Paid vs Credit Sales
-  ---------------------------------------------------- */
+  /* ------------------ PIE CHART ------------------- */
   salesPieChart = new Chart(pieCanvas, {
     type: "pie",
     data: {
-      labels: ["Paid Sales", "Credit Sales"],
+      labels: ["Paid", "Credit"],
       datasets: [{
         data: [data.paidSales, data.creditSales],
         backgroundColor: ["#4caf50", "#2196f3"]
@@ -135,25 +136,24 @@ function renderAnalytics() {
         legend: { position: "bottom" },
         title: {
           display: true,
-          text: `Gross Profit: ₹${data.grossProfit} | Net Profit: ₹${data.netProfit}`
+          text: `Gross: ₹${data.grossProfit} | Net: ₹${data.netProfit}`
         }
       }
     }
   });
 
-  /* Update summary cards (Overview) */
-  if (typeof updateSummaryCards === "function") updateSummaryCards();
+  updateSummaryCards?.();
 }
 
 /* ----------------------------------------------------------
-   AUTO REFRESH EVERY 60 SECONDS
+   AUTO REFRESH
 ---------------------------------------------------------- */
 setInterval(() => {
   try { renderAnalytics(); } catch {}
-}, 60000);
+}, 45000);
 
 /* ----------------------------------------------------------
-   LOCAL STORAGE SYNC
+   STORAGE SYNC
 ---------------------------------------------------------- */
 window.addEventListener("storage", () => {
   try { renderAnalytics(); } catch {}
@@ -166,5 +166,4 @@ window.addEventListener("load", () => {
   try { renderAnalytics(); } catch {}
 });
 
-/* expose */
 window.renderAnalytics = renderAnalytics;
