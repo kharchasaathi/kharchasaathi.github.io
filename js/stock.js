@@ -1,19 +1,20 @@
 /* =======================================================
-   📦 stock.js — Inventory Manager (v3.0 PRO)
-   Works with: core.js v3.2
+   📦 stock.js — Inventory Manager (FINAL v4.0)
+   Fully Fixed for: Filter, Limit, Buttons, History,
+   Smart Dashboard Sync, Core.js v4.0
    ======================================================= */
 
 /* -------------------------------------------------------
    ➕ ADD STOCK
 ------------------------------------------------------- */
 function addStock() {
-  const date = qs("#pdate")?.value;
+  const date = qs("#pdate")?.value || todayDate();
   const type = qs("#ptype")?.value;
   const name = qs("#pname")?.value.trim();
   const qty  = Number(qs("#pqty")?.value || 0);
   const cost = Number(qs("#pcost")?.value || 0);
 
-  if (!date || !type || !name || qty <= 0 || cost <= 0)
+  if (!type || !name || qty <= 0 || cost <= 0)
     return alert("Please fill all fields.");
 
   addStockEntry({ date, type, name, qty, cost });
@@ -27,7 +28,7 @@ function addStock() {
 }
 
 /* -------------------------------------------------------
-   📊 RENDER STOCK TABLE
+   📊 RENDER STOCK TABLE (Filter + Limit FIXED)
 ------------------------------------------------------- */
 function renderStock() {
   const filter = qs("#filterType")?.value || "all";
@@ -37,24 +38,19 @@ function renderStock() {
   let html = "";
 
   window.stock
-    .filter(p => filter === "all" || p.type === filter)
+    .filter(item => filter === "all" || item.type === filter)
     .forEach((p, i) => {
+
       const sold   = Number(p.sold || 0);
       const remain = Number(p.qty) - sold;
 
-      const limit  = Number(p.limit ?? getGlobalLimit());
+      const limit = Number(
+        p.limit ?? getGlobalLimit()
+      );
 
-      let status = "OK"; 
-      let cls = "ok";
-
-      if (remain <= 0) {
-        status = "OUT";
-        cls = "out";
-      } 
-      else if (remain <= limit) {
-        status = "LOW";
-        cls = "low";
-      }
+      let status = "OK", cls = "ok";
+      if (remain <= 0) { status = "OUT"; cls = "out"; }
+      else if (remain <= limit) { status = "LOW"; cls = "low"; }
 
       html += `
       <tr>
@@ -81,29 +77,30 @@ function renderStock() {
 }
 
 /* -------------------------------------------------------
-   📜 PRODUCT HISTORY
+   📜 SHOW HISTORY
 ------------------------------------------------------- */
 function showHistory(i) {
   const p = window.stock[i];
   if (!p?.history?.length)
     return alert("No history found.");
 
-  let msg = `📜 History for ${p.name}\n\n`;
+  let msg = `Purchase History of ${p.name}:\n\n`;
+
   p.history.forEach(h => {
-    msg += `${h.date} → Qty: ${h.qty} @ ₹${h.cost}\n`;
+    msg += `${h.date} — Qty ${h.qty} @ ₹${h.cost}\n`;
   });
 
   alert(msg);
 }
 
 /* -------------------------------------------------------
-   💸 QUICK SALE / CREDIT
+   💰 QUICK SALE / CREDIT
 ------------------------------------------------------- */
 function stockQuickSale(i, mode) {
   const p = window.stock[i];
   if (!p) return;
 
-  const remain = p.qty - (p.sold || 0);
+  const remain = Number(p.qty) - Number(p.sold || 0);
   if (remain <= 0) return alert("No stock left!");
 
   const qty = Number(prompt(`Enter Qty (Available: ${remain})`));
@@ -116,8 +113,10 @@ function stockQuickSale(i, mode) {
   const cost = getProductCost(p.type, p.name);
   const profit = (price - cost) * qty;
 
+  // update stock
   p.sold = (p.sold || 0) + qty;
 
+  // save sale entry
   window.sales.push({
     id: uid("sale"),
     date,
@@ -139,14 +138,26 @@ function stockQuickSale(i, mode) {
   renderStock();
   renderSales?.();
   updateSummaryCards?.();
+  renderAnalytics?.();
 }
 
 /* -------------------------------------------------------
-   🖱 BUTTON EVENTS
+   🖱 EVENTS
 ------------------------------------------------------- */
 document.addEventListener("click", e => {
+
   if (e.target.id === "addStockBtn")
     return addStock();
+
+  if (e.target.id === "setLimitBtn") {
+    const v = Number(qs("#globalLimit")?.value);
+    if (v >= 0) {
+      setGlobalLimit(v);
+      alert("Global limit updated.");
+      renderStock();
+    }
+    return;
+  }
 
   if (e.target.id === "clearStockBtn") {
     if (confirm("Clear ALL stock?")) {
@@ -168,7 +179,7 @@ document.addEventListener("click", e => {
 });
 
 /* -------------------------------------------------------
-   🚀 INITIAL LOAD
+   🚀 INITIAL
 ------------------------------------------------------- */
 window.addEventListener("load", () => {
   updateTypeDropdowns?.();
