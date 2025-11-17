@@ -95,6 +95,11 @@ function renderStock() {
           <button class="sale-btn" data-i="${index}">💸</button>
           <button class="credit-btn" data-i="${index}">📒</button>
         </td>
+        <td>
+  <button onclick="viewHistory('${p.id}')" class="small-btn">📜 History</button>
+  <button onclick="quickSale('${p.id}')" class="small-btn">💰 Sale</button>
+  <button onclick="addCredit('${p.id}')" class="small-btn">💳 Credit</button>
+</td>
       </tr>`;
     });
 
