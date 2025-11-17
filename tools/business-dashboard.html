@@ -476,16 +476,11 @@
 <script src="/js/analytics.js"></script>
 <script src="/js/security.js"></script>
 <script src="/js/expenses.js"></script>
-  <script>
+ <script>
 function updateSummaryCards() {
-
-  /* Today's date */
   const today = todayDate();
 
-  /* ---- TODAY SALES ---- */
-  let todaySales = 0;
-  let todayCredit = 0;
-  let todayProfit = 0;
+  let todaySales = 0, todayCredit = 0, todayProfit = 0;
 
   window.sales.forEach(s => {
     if (s.date === today) {
@@ -495,36 +490,29 @@ function updateSummaryCards() {
     }
   });
 
-  /* ---- TODAY EXPENSES ---- */
   let todayExpenses = 0;
-  if (window.expenses && window.expenses.length) {
-    window.expenses.forEach(e => {
-      if (e.date === today) {
-        todayExpenses += Number(e.amount || 0);
-      }
-    });
-  }
-
-  /* ---- NET PROFIT ---- */
-  let netProfit = todayProfit - todayExpenses;
-
-  /* ---- STOCK REMAINING % ---- */
-  let totalQty = 0, soldQty = 0;
-
-  window.stock.forEach(item => {
-    totalQty += Number(item.qty || 0);
-    soldQty += Number(item.sold || 0);
+  window.expenses.forEach(e => {
+    if (e.date === today) todayExpenses += Number(e.amount || 0);
   });
 
-  let remainPct = (totalQty > 0)
-    ? Math.round(((totalQty - soldQty) / totalQty) * 100)
-    : 0;
+  let todayNet = todayProfit - todayExpenses;
 
-  /* ---- UPDATE UI ---- */
+  // stock %
+  let total = 0, remain = 0;
+  window.stock.forEach(s => {
+    total += Number(s.qty || 0) + Number(s.sold || 0);
+    remain += Number(s.qty || 0);
+  });
+
+  let pct = total ? Math.round((remain / total) * 100) : 0;
+
   qs("#todaySales").textContent = "₹" + todaySales;
   qs("#todayCredit").textContent = "₹" + todayCredit;
-  qs("#todayProfit").textContent = "₹" + netProfit;
-  qs("#stockRemain").textContent = remainPct + "%";
+  qs("#todayExpenses").textContent = "₹" + todayExpenses;
+  qs("#todayGross").textContent = "₹" + todayProfit;
+  qs("#todayNet").textContent = "₹" + todayNet;
+  qs("#stockRemainValue").textContent = pct + "%";
+  qs("#stockRemainBar").style.width = pct + "%";
 }
 </script>
   <!-- AFTER ALL MODULES: SAFE INITIAL RENDER -->
