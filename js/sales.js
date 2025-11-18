@@ -1,12 +1,13 @@
 /* ==========================================================
-   💰 sales.js — Sales Viewer + Profit Manager (FINAL v5.0)
-   PURE VIEW MODE — No manual sale adding
+   💰 sales.js — Sales Viewer + Profit Manager (FINAL v6.0)
+   PURE VIEW MODE — No manual manual sale adding.
    Sales come only from:
      ✔ Stock Quick Sale
      ✔ Stock Quick Credit
+   FULL dd-mm-yyyy SUPPORT
 ========================================================== */
 
-/* window.sales already loaded from core.js */
+/* window.sales already loaded + normalized in core.js */
 
 /* ----------------------------------------------------------
    SAVE SALES
@@ -25,26 +26,21 @@ function refreshSaleTypeSelector() {
 
   tdd.innerHTML =
     `<option value="all">All Types</option>` +
-    window.types
-      .map(t => `<option value="${esc(t.name)}">${esc(t.name)}</option>`)
+    (window.types || [])
+      .map(t => `<option value="${esc(t.name || t)}">${esc(t.name || t)}</option>`)
       .join("");
 }
 
 /* ----------------------------------------------------------
-   FILTER TRIGGER (DATE + TYPE)
-   - If user prefers immediate filter on change, also add change listeners
+   IMMEDIATE FILTERING (Type + Date)
 ---------------------------------------------------------- */
-/* Button-triggered filter (exists if you keep a "Filter" button) */
-qs("#filterSalesBtn")?.addEventListener("click", () => {
-  renderSales();
-});
-
-/* Optional: immediate filtering when dropdown / date changes.
-   (recommended — uncomment/add in HTML script area)
-*/
 function attachImmediateSalesFilters() {
-  qs("#saleType")?.addEventListener("change", () => renderSales());
-  qs("#saleDate")?.addEventListener("change", () => renderSales());
+  qs("#saleType")?.addEventListener("change", renderSales);
+  qs("#saleDate")?.addEventListener("change", () => {
+    let d = qs("#saleDate").value;
+    qs("#saleDate").value = d; // stays yyyy-mm-dd internally
+    renderSales();
+  });
 }
 
 /* ----------------------------------------------------------
@@ -67,7 +63,7 @@ function markSalePaid(id) {
 }
 
 /* ----------------------------------------------------------
-   DELETE ALL SALES
+   CLEAR ALL SALES
 ---------------------------------------------------------- */
 qs("#clearSalesBtn")?.addEventListener("click", () => {
   if (!confirm("Delete ALL sales permanently?")) return;
@@ -86,11 +82,10 @@ function renderSales() {
   const tbody = qs("#salesTable tbody");
   const totalEl = qs("#salesTotal");
   const profitEl = qs("#profitTotal");
-
-  if (!tbody) return;
-
   const typeFilter = qs("#saleType")?.value || "all";
   const dateFilter = qs("#saleDate")?.value || "";
+
+  if (!tbody) return;
 
   let total = 0;
   let profit = 0;
@@ -100,12 +95,14 @@ function renderSales() {
     .filter(s => typeFilter === "all" || s.type === typeFilter)
     .filter(s => !dateFilter || s.date === dateFilter)
     .forEach(s => {
+      const dispDate = toDisplay(s.date); // always dd-mm-yyyy in UI
+
       total += Number(s.amount || 0);
       profit += Number(s.profit || 0);
 
       rows += `
         <tr>
-          <td>${s.date}</td>
+          <td>${dispDate}</td>
           <td>${esc(s.type)}</td>
           <td>${esc(s.product)}</td>
           <td>${s.qty}</td>
@@ -121,8 +118,8 @@ function renderSales() {
     rows = `<tr><td colspan="8">No sales found</td></tr>`;
 
   tbody.innerHTML = rows;
-  if (totalEl) totalEl.textContent = total;
-  if (profitEl) profitEl.textContent = profit;
+  totalEl.textContent = total;
+  profitEl.textContent = profit;
 }
 
 /* ----------------------------------------------------------
@@ -130,11 +127,11 @@ function renderSales() {
 ---------------------------------------------------------- */
 window.addEventListener("load", () => {
   refreshSaleTypeSelector();
-  attachImmediateSalesFilters(); // comment out if you prefer "Filter" button only
+  attachImmediateSalesFilters();
   renderSales();
 });
 
-/* Expose functions if needed elsewhere */
+/* Expose functions */
 window.refreshSaleTypeSelector = refreshSaleTypeSelector;
 window.renderSales = renderSales;
 window.markSalePaid = markSalePaid;
