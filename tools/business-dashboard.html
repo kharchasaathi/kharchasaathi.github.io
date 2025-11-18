@@ -247,6 +247,70 @@
       <tbody></tbody>
     </table>
   </section>
+  <!-- ===== SERVICE / REPAIR (insert AFTER Wanting) ===== -->
+<!-- Also ensure a <div class="tab" data-tab="service">🛠 Service</div> is added in the top tabs area (right after Wanting tab) -->
+<section id="service" class="section">
+  <h3>🛠 Service / Repair Manager</h3>
+
+  <!-- REGISTER NEW JOB -->
+  <div class="row-inline" style="margin:10px 0;align-items:center;gap:10px">
+    <input id="svcReceivedDate" type="date" placeholder="Received date" style="width:160px">
+    <input id="svcCustomer" type="text" placeholder="Customer name" style="min-width:160px">
+    <input id="svcPhone" type="text" placeholder="Phone" style="width:140px">
+    <select id="svcItemType" style="width:120px">
+      <option value="Mobile">Mobile</option>
+      <option value="Laptop">Laptop</option>
+      <option value="Other">Other</option>
+    </select>
+    <input id="svcModel" type="text" placeholder="Model" style="min-width:130px">
+    <input id="svcProblem" type="text" placeholder="Problem / Complaint" style="min-width:220px">
+    <input id="svcAdvance" type="number" placeholder="Advance ₹ (0)" style="width:120px">
+    <button id="addServiceBtn" class="small-btn">Add Job</button>
+  </div>
+
+  <!-- SUMMARY -->
+  <div class="flex-row" style="margin:8px 0;">
+    <div class="card" style="min-width:140px">
+      <small>Pending</small>
+      <div id="svcPendingCount">0</div>
+    </div>
+    <div class="card" style="min-width:140px">
+      <small>Completed</small>
+      <div id="svcCompletedCount">0</div>
+    </div>
+    <div class="card" style="min-width:140px">
+      <small>Total Repair Profit</small>
+      <div id="svcTotalProfit">₹0</div>
+    </div>
+  </div>
+
+  <!-- PENDING JOBS TABLE -->
+  <h4>Pending / Active Jobs</h4>
+  <table id="svcTable">
+    <thead>
+      <tr>
+        <th>Job ID</th><th>Received</th><th>Customer</th><th>Phone</th><th>Item</th><th>Model</th><th>Problem</th><th>Status</th><th>Action</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+
+  <!-- COMPLETED JOBS / HISTORY -->
+  <h4 style="margin-top:14px">Completed / History</h4>
+  <table id="svcHistoryTable">
+    <thead>
+      <tr>
+        <th>Job ID</th><th>Received</th><th>Completed</th><th>Customer</th><th>Item</th><th>Invest</th><th>Paid</th><th>Profit</th><th>Status</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+
+  <!-- PIE CHART (Status) -->
+  <div style="max-width:520px;margin:14px auto;">
+    <canvas id="svcPie" height="150"></canvas>
+  </div>
+</section>
 
   <!-- ===== OVERVIEW ===== -->
   <section id="dashboard" class="section">
