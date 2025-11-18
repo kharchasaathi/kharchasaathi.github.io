@@ -482,27 +482,27 @@
     });
 
     // Date format helpers (display: dd-mm-yyyy ; internal: yyyy-mm-dd)
-    function toDisplay(d) {
-      if (!d) return "";
-      if (d.includes("-")) {
-        const [y,m,dd] = d.split("-");
-        return `${dd}-${m}-${y}`;
-      }
-      return d;
+    window.toDisplay = function(d) {
+  if (!d) return "";
+  if (d.includes("-")) {
+    const [y,m,dd] = d.split("-");
+    return `${dd}-${m}-${y}`;
+  }
+  return d;
+};
+
+window.toInternal = function(d) {
+  if (!d) return "";
+  if (d.includes("-")) {
+    const parts = d.split("-");
+    if (parts[0].length === 2) {  // means dd-mm-yyyy
+      const [dd,m,y] = parts;
+      return `${y}-${m}-${dd}`;
     }
-    function toInternal(d) {
-      if (!d) return "";
-      if (d.includes("-")) {
-        const parts = d.split("-");
-        // if already dd-mm-yyyy then convert
-        if (parts[0].length === 2) {
-          const [dd,m,y] = parts;
-          return `${y}-${m}-${dd}`;
-        }
-        return d; // assume already yyyy-mm-dd
-      }
-      return d;
-    }
+    return d; // already yyyy-mm-dd
+  }
+  return d;
+};
 
     // Theme
     if(localStorage.getItem('ks-theme')==='dark'){
