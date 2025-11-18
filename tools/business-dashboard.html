@@ -494,8 +494,8 @@ if (name === 'expenses') {
     })();
 
     // LOGIN CHECK + UI email
-    // login-utils.js should expose isLoggedIn, getUserEmail, logoutUser
-    window.addEventListener("load", () => {
+// login-utils.js should expose isLoggedIn, getUserEmail, logoutUser
+window.addEventListener("load", () => {
 
   // login check
   if (typeof isLoggedIn === "function" && !isLoggedIn()) {
@@ -511,7 +511,7 @@ if (name === 'expenses') {
   }
 
   // logout
-  qs("#logoutBtn")?.addEventListener("click", ()=>{
+  qs("#logoutBtn")?.addEventListener("click", () => {
     if (typeof logoutUser === "function") logoutUser();
     window.location.href = "/login.html";
   });
