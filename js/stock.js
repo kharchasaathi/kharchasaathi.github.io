@@ -1,6 +1,7 @@
 /* =======================================================
    📦 stock.js — Inventory Manager (FINAL v6.0)
    FULL SUPPORT: dd-mm-yyyy UI, yyyy-mm-dd internal
+   (with row coloring fallback for LOW/OUT)
 ======================================================= */
 
 /* Convert for safety */
@@ -38,6 +39,7 @@ function addStock() {
 /* -------------------------------------------------------
    📊 RENDER STOCK TABLE
    SHOW DATES IN dd-mm-yyyy FORMAT
+   Adds row class + inline fallback colors for LOW/OUT
 ------------------------------------------------------- */
 function renderStock() {
   const filter = qs("#filterType")?.value || "all";
@@ -59,17 +61,22 @@ function renderStock() {
       if (remain <= 0) { status = "OUT"; cls = "out"; }
       else if (remain <= limit) { status = "LOW"; cls = "low"; }
 
+      // Inline fallback styles (in case CSS missing)
+      let rowStyle = "";
+      if (cls === "low") rowStyle = 'style="background:#fff8ec"';
+      if (cls === "out") rowStyle = 'style="background:#ffecec;color:#a00;font-weight:600"';
+
       const dispDate = toDisp(p.date); // show dd-mm-yyyy
 
       html += `
-      <tr>
+      <tr class="${cls}" ${rowStyle}>
         <td>${dispDate}</td>
         <td>${esc(p.type)}</td>
         <td>${esc(p.name)}</td>
         <td>${p.qty}</td>
         <td>${sold}</td>
         <td>${remain}</td>
-        <td class="${cls}">${status}</td>
+        <td class="status-cell">${status}</td>
         <td>${limit}</td>
         <td>
           <button class="history-btn" data-i="${i}">📜 History</button>
