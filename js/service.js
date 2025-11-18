@@ -1,10 +1,12 @@
 /* =======================================================
-   🛠 service.js — Service / Repair Manager (v3.0 FINAL)
-   Improvements:
-   ✔ Failed/Returned → ask "advance returned"
-   ✔ Pending list shows Advance ₹
-   ✔ Pie chart: Pending | Completed | Failed/Returned
-   ✔ Clear All button supported
+   🛠 service.js — Service / Repair Manager (v4.0 FINAL)
+   ✔ Completed = asks investment + remaining payment
+   ✔ Total Paid = advance + remaining
+   ✔ Profit = totalPaid – investment
+   ✔ Pending table shows Advance clearly
+   ✔ Failed/Returned asks advance returned
+   ✔ Pie Chart: Pending | Completed | Failed/Returned
+   ✔ Clear All Supported
    ======================================================= */
 
 (function(){
@@ -25,16 +27,18 @@
     window.dispatchEvent(new Event("storage"));
   }
 
-  // Simple auto number generator
+  /* -----------------------------------------
+       AUTO JOB ID (01, 02, 03 ...)
+  ----------------------------------------- */
   function nextJobId() {
     if (!window.services.length) return "01";
     const max = Math.max(...window.services.map(s => Number(s.jobNum || 0)));
     return String(max + 1).padStart(2, "0");
   }
 
-  /* ------------------------------
+  /* -----------------------------------------
         ADD NEW JOB
-  ------------------------------ */
+  ----------------------------------------- */
   function addJob() {
     const date = qs("#svcReceivedDate").value || today();
     const customer = qs("#svcCustomer").value.trim();
@@ -83,9 +87,9 @@
     qs("#svcAdvance").value = "";
   }
 
-  /* ------------------------------
-      RENDER TABLES
-  ------------------------------ */
+  /* -----------------------------------------
+        RENDER TABLES
+  ----------------------------------------- */
   function renderTables() {
     const tb = qs("#svcTable tbody");
     const hist = qs("#svcHistoryTable tbody");
@@ -93,6 +97,7 @@
     const pend = window.services.filter(s => s.status === "Pending");
     const comp = window.services.filter(s => s.status !== "Pending");
 
+    // Pending table
     tb.innerHTML =
       pend.map(s => `
       <tr>
@@ -111,6 +116,7 @@
       </tr>`).join("") ||
       `<tr><td colspan="9">No pending jobs</td></tr>`;
 
+    // History table
     hist.innerHTML =
       comp.map(s => `
         <tr>
@@ -122,7 +128,7 @@
           <td>₹${s.invest}</td>
           <td>₹${s.paid}</td>
           <td>₹${s.profit}</td>
-          <td>${s.status} (Advance Returned: ₹${s.advance})</td>
+          <td>${s.status} (Advance Returned: ₹${s.status==="Failed/Returned"?s.advance:0})</td>
         </tr>`).join("") ||
       `<tr><td colspan="9">No completed/failed jobs</td></tr>`;
 
@@ -134,9 +140,9 @@
     renderPie();
   }
 
-  /* ------------------------------
+  /* -----------------------------------------
         PIE CHART
-  ------------------------------ */
+  ----------------------------------------- */
   function renderPie() {
     const c = qs("#svcPie");
     if (!c) return;
@@ -161,9 +167,9 @@
     });
   }
 
-  /* ------------------------------
+  /* -----------------------------------------
        ACTION MENU
-  ------------------------------ */
+  ----------------------------------------- */
   function openJob(id) {
     const s = window.services.find(x => x.id === id);
     if (!s) return alert("Not found");
@@ -188,19 +194,21 @@ Choose action:
     else if (choice === "2") markFailed(id);
   }
 
-  /* ------------------------------
-       COMPLETED
-  ------------------------------ */
+  /* -----------------------------------------
+       COMPLETED (Advance + Remaining)
+  ----------------------------------------- */
   function markCompleted(id) {
     const s = window.services.find(x => x.id === id);
     if (!s) return;
 
-    const inv = Number(prompt("Investment spent ₹:", s.invest || 0) || 0);
-    const paid = Number(prompt("Final Amount received from customer ₹:", s.paid || 0) || 0);
+    const invest = Number(prompt("Investment (cost) ₹:", s.invest || 0) || 0);
+    const remaining = Number(prompt("Remaining amount to collect (except advance) ₹:", 0) || 0);
 
-    s.invest = inv;
-    s.paid = paid;
-    s.profit = paid - inv;
+    const totalPaid = s.advance + remaining;
+
+    s.invest = invest;
+    s.paid = totalPaid;
+    s.profit = totalPaid - invest;
     s.status = "Completed";
     s.date_out = today();
 
@@ -208,16 +216,16 @@ Choose action:
     renderTables();
   }
 
-  /* ------------------------------
+  /* -----------------------------------------
        FAILED / RETURNED
-  ------------------------------ */
+  ----------------------------------------- */
   function markFailed(id) {
     const s = window.services.find(x => x.id === id);
     if (!s) return;
 
     const returnedAdv = Number(prompt("Advance returned to customer ₹:", s.advance || 0) || 0);
 
-    s.advance = returnedAdv;   // show how much returned
+    s.advance = returnedAdv;
     s.invest = 0;
     s.paid = 0;
     s.profit = 0;
@@ -228,9 +236,9 @@ Choose action:
     renderTables();
   }
 
-  /* ------------------------------
-       DELETE JOB
-  ------------------------------ */
+  /* -----------------------------------------
+       DELETE SINGLE JOB
+  ----------------------------------------- */
   function deleteJob(id){
     if(!confirm("Delete this job?")) return;
     window.services = window.services.filter(s => s.id !== id);
@@ -238,9 +246,9 @@ Choose action:
     renderTables();
   }
 
-  /* ------------------------------
-       CLEAR ALL (Button enabled)
-  ------------------------------ */
+  /* -----------------------------------------
+       CLEAR ALL JOBS
+  ----------------------------------------- */
   window.clearAllServices = function(){
     if(!confirm("Delete ALL service jobs?")) return;
     window.services = [];
@@ -253,8 +261,9 @@ Choose action:
     if (e.target.id === "addServiceBtn") addJob();
     if (e.target.classList.contains("svc-view")) openJob(e.target.dataset.id);
     if (e.target.classList.contains("svc-del")) deleteJob(e.target.dataset.id);
-    if (e.target.id === "clearServiceBtn") clearAllServices(); // NEW
+    if (e.target.id === "clearServiceBtn") clearAllServices();
   });
 
   window.addEventListener("load", renderTables);
+
 })();
