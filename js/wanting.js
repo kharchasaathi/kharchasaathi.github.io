@@ -1,10 +1,9 @@
 /* =======================================================
-   🛒 wanting.js — Wanting / Reorder Manager (FINAL v6.0)
-   FIXED: Type dropdown, dd-mm-yyyy display, internal dates
+   🛒 wanting.js — Wanting / Reorder Manager (FINAL v6.1 FIXED)
 ======================================================= */
 
-const toDisp = window.toDisplay;
-const toInt  = window.toInternal;
+const wToDisp = window.toDisplay;
+const wToInt  = window.toInternal;
 
 /* -------------------------------------------------------
    🔁 RENDER WANTING TABLE
@@ -15,14 +14,12 @@ function renderWanting() {
 
   if (!tbody || !typeDrop) return;
 
-  /* ---------- Fill Type Dropdown (Correct: t.name) ---------- */
   typeDrop.innerHTML =
     `<option value="">Select Type</option>` +
     window.types
       .map(t => `<option value="${esc(t.name)}">${esc(t.name)}</option>`)
       .join("");
 
-  /* ---------- Build Table ---------- */
   if (!window.wanting.length) {
     tbody.innerHTML = `<tr><td colspan="5">No wanting items</td></tr>`;
     return;
@@ -33,7 +30,7 @@ function renderWanting() {
   window.wanting.forEach((w, i) => {
     html += `
       <tr>
-        <td>${toDisp(w.date)}</td>
+        <td>${wToDisp(w.date)}</td>
         <td>${esc(w.type)}</td>
         <td>${esc(w.name)}</td>
         <td>${esc(w.note || "")}</td>
@@ -49,7 +46,7 @@ function renderWanting() {
 }
 
 /* -------------------------------------------------------
-   ➕ ADD NEW WANTING ITEM (date in internal format)
+   ➕ ADD NEW WANTING ITEM 
 ------------------------------------------------------- */
 function addWantingItem() {
   const type = qs("#wantType")?.value;
@@ -60,7 +57,7 @@ function addWantingItem() {
 
   window.wanting.push({
     id: uid("want"),
-    date: todayDate(),   // saved internal yyyy-mm-dd
+    date: todayDate(),
     type,
     name,
     note
@@ -74,7 +71,7 @@ function addWantingItem() {
 }
 
 /* -------------------------------------------------------
-   🔥 MOVE "WANTED ITEM" → STOCK
+   🔥 WANTING → STOCK
 ------------------------------------------------------- */
 function wantingToStock(i) {
   const w = window.wanting[i];
@@ -86,16 +83,14 @@ function wantingToStock(i) {
   const cost = Number(prompt("Enter purchase cost ₹ each:"));
   if (!cost || cost <= 0) return alert("Invalid cost");
 
-  /* Add to Stock */
   addStockEntry({
-    date: todayDate(),     // internal yyyy-mm-dd
+    date: todayDate(),
     type: w.type,
     name: w.name,
     qty,
     cost
   });
 
-  /* Remove from Wanting */
   window.wanting.splice(i, 1);
   saveWanting();
 
@@ -106,41 +101,34 @@ function wantingToStock(i) {
 }
 
 /* -------------------------------------------------------
-   ❌ DELETE WANTING ENTRY
+   ❌ DELETE
 ------------------------------------------------------- */
 function deleteWantingItem(i) {
   if (!confirm("Delete this item?")) return;
-
   window.wanting.splice(i, 1);
   saveWanting();
   renderWanting();
 }
 
 /* -------------------------------------------------------
-   🖱 BUTTON EVENTS
+   🖱 EVENTS
 ------------------------------------------------------- */
 document.addEventListener("click", e => {
-
-  if (e.target.id === "addWantBtn")
-    return addWantingItem();
-
+  if (e.target.id === "addWantBtn") return addWantingItem();
   if (e.target.id === "clearWantBtn") {
     if (!confirm("Clear entire wanting list?")) return;
     window.wanting = [];
     saveWanting();
     renderWanting();
-    return;
   }
-
   if (e.target.classList.contains("want-add-btn"))
     return wantingToStock(Number(e.target.dataset.i));
-
   if (e.target.classList.contains("want-del-btn"))
     return deleteWantingItem(Number(e.target.dataset.i));
 });
 
 /* -------------------------------------------------------
-   🚀 INITIAL LOAD
+   🚀 INIT
 ------------------------------------------------------- */
 window.addEventListener("load", () => {
   renderWanting();
