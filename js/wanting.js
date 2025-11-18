@@ -1,7 +1,10 @@
 /* =======================================================
-   🛒 wanting.js — Wanting / Reorder Manager (FINAL v4.0)
-   Fully Synced with: core.js + stock.js + analytics + overview
-   ======================================================= */
+   🛒 wanting.js — Wanting / Reorder Manager (FINAL v6.0)
+   FIXED: Type dropdown, dd-mm-yyyy display, internal dates
+======================================================= */
+
+const toDisp = window.toDisplay;
+const toInt  = window.toInternal;
 
 /* -------------------------------------------------------
    🔁 RENDER WANTING TABLE
@@ -12,10 +15,12 @@ function renderWanting() {
 
   if (!tbody || !typeDrop) return;
 
-  /* ---------- Fill Type Dropdown ---------- */
+  /* ---------- Fill Type Dropdown (Correct: t.name) ---------- */
   typeDrop.innerHTML =
     `<option value="">Select Type</option>` +
-    window.types.map(t => `<option value="${esc(t.name)}">${esc(t.name)}</option>`).join("");
+    window.types
+      .map(t => `<option value="${esc(t.name)}">${esc(t.name)}</option>`)
+      .join("");
 
   /* ---------- Build Table ---------- */
   if (!window.wanting.length) {
@@ -28,7 +33,7 @@ function renderWanting() {
   window.wanting.forEach((w, i) => {
     html += `
       <tr>
-        <td>${w.date}</td>
+        <td>${toDisp(w.date)}</td>
         <td>${esc(w.type)}</td>
         <td>${esc(w.name)}</td>
         <td>${esc(w.note || "")}</td>
@@ -44,7 +49,7 @@ function renderWanting() {
 }
 
 /* -------------------------------------------------------
-   ➕ ADD NEW WANTING ITEM
+   ➕ ADD NEW WANTING ITEM (date in internal format)
 ------------------------------------------------------- */
 function addWantingItem() {
   const type = qs("#wantType")?.value;
@@ -55,7 +60,7 @@ function addWantingItem() {
 
   window.wanting.push({
     id: uid("want"),
-    date: todayDate(),
+    date: todayDate(),   // saved internal yyyy-mm-dd
     type,
     name,
     note
@@ -83,7 +88,7 @@ function wantingToStock(i) {
 
   /* Add to Stock */
   addStockEntry({
-    date: todayDate(),
+    date: todayDate(),     // internal yyyy-mm-dd
     type: w.type,
     name: w.name,
     qty,
