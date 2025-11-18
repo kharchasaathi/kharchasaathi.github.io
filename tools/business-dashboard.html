@@ -495,8 +495,7 @@ if (name === 'expenses') {
 
     // LOGIN CHECK + UI email
     // login-utils.js should expose isLoggedIn, getUserEmail, logoutUser
-    
-window.addEventListener("load", () => {
+    window.addEventListener("load", () => {
 
   // login check
   if (typeof isLoggedIn === "function" && !isLoggedIn()) {
@@ -518,9 +517,7 @@ window.addEventListener("load", () => {
   });
 
 });
-</script>
   
-</script>
     // When filterType changes in stock, ensure sales type also updated (keeps in sync)
     qs("#filterType")?.addEventListener("change", () => {
       // if sales selector exists, refresh it (sales.js will read types)
