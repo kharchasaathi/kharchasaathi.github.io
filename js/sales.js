@@ -1,24 +1,16 @@
 /* ==========================================================
-   💰 sales.js — Sales Viewer + Profit Manager (FINAL v6.0)
-   PURE VIEW MODE — No manual manual sale adding.
-   Sales come only from:
-     ✔ Stock Quick Sale
-     ✔ Stock Quick Credit
-   FULL dd-mm-yyyy SUPPORT
+   💰 sales.js — Sales Viewer + Profit Manager (FINAL v7.0)
+   Added: Credit → PAID button inside table
 ========================================================== */
 
-/* window.sales already loaded + normalized in core.js */
-
-/* ----------------------------------------------------------
-   SAVE SALES
----------------------------------------------------------- */
+/* SAVE SALES */
 function saveSales() {
   localStorage.setItem("sales-data", JSON.stringify(window.sales));
   window.dispatchEvent(new Event("storage"));
 }
 
 /* ----------------------------------------------------------
-   REFRESH TYPE FILTER DROPDOWN
+   TYPE FILTER DROPDOWN
 ---------------------------------------------------------- */
 function refreshSaleTypeSelector() {
   const tdd = qs("#saleType");
@@ -32,15 +24,11 @@ function refreshSaleTypeSelector() {
 }
 
 /* ----------------------------------------------------------
-   IMMEDIATE FILTERING (Type + Date)
+   LIVE FILTER
 ---------------------------------------------------------- */
 function attachImmediateSalesFilters() {
   qs("#saleType")?.addEventListener("change", renderSales);
-  qs("#saleDate")?.addEventListener("change", () => {
-    let d = qs("#saleDate").value;
-    qs("#saleDate").value = d; // stays yyyy-mm-dd internally
-    renderSales();
-  });
+  qs("#saleDate")?.addEventListener("change", () => renderSales());
 }
 
 /* ----------------------------------------------------------
@@ -55,7 +43,6 @@ function markSalePaid(id) {
   if (!confirm("Mark this entry as PAID?")) return;
 
   s.status = "Paid";
-
   saveSales();
   renderSales();
   updateSummaryCards?.();
@@ -63,7 +50,7 @@ function markSalePaid(id) {
 }
 
 /* ----------------------------------------------------------
-   CLEAR ALL SALES
+   CLEAR SALES
 ---------------------------------------------------------- */
 qs("#clearSalesBtn")?.addEventListener("click", () => {
   if (!confirm("Delete ALL sales permanently?")) return;
@@ -76,12 +63,13 @@ qs("#clearSalesBtn")?.addEventListener("click", () => {
 });
 
 /* ----------------------------------------------------------
-   RENDER SALES TABLE
+   RENDER SALES TABLE (with PAY button)
 ---------------------------------------------------------- */
 function renderSales() {
   const tbody = qs("#salesTable tbody");
   const totalEl = qs("#salesTotal");
   const profitEl = qs("#profitTotal");
+
   const typeFilter = qs("#saleType")?.value || "all";
   const dateFilter = qs("#saleDate")?.value || "";
 
@@ -95,10 +83,16 @@ function renderSales() {
     .filter(s => typeFilter === "all" || s.type === typeFilter)
     .filter(s => !dateFilter || s.date === dateFilter)
     .forEach(s => {
-      const dispDate = toDisplay(s.date); // always dd-mm-yyyy in UI
+      const dispDate = toDisplay(s.date);
 
       total += Number(s.amount || 0);
       profit += Number(s.profit || 0);
+
+      const statusHtml =
+        s.status === "Credit"
+          ? `<button class="small-btn" style="background:#2e7d32;color:#fff"
+               onclick="markSalePaid('${s.id}')">✔ Pay Now</button>`
+          : `💰 Paid`;
 
       rows += `
         <tr>
@@ -109,7 +103,7 @@ function renderSales() {
           <td>${s.price}</td>
           <td>${s.amount}</td>
           <td>${s.profit}</td>
-          <td>${s.status === "Credit" ? "💳 Credit" : "💰 Paid"}</td>
+          <td>${statusHtml}</td>
         </tr>
       `;
     });
@@ -123,7 +117,7 @@ function renderSales() {
 }
 
 /* ----------------------------------------------------------
-   INITIAL LOAD
+   INITIAL
 ---------------------------------------------------------- */
 window.addEventListener("load", () => {
   refreshSaleTypeSelector();
@@ -131,7 +125,6 @@ window.addEventListener("load", () => {
   renderSales();
 });
 
-/* Expose functions */
 window.refreshSaleTypeSelector = refreshSaleTypeSelector;
 window.renderSales = renderSales;
 window.markSalePaid = markSalePaid;
