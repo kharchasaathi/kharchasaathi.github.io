@@ -1,11 +1,10 @@
 /* =======================================================
-   🛠 service.js — Service / Repair Manager (v2.1 FINAL)
-   Ultra-clean workflow:
-   ✔ Only 2 actions: Completed / Failed-Returned
-   ✔ Failed → invest=0, paid=0, profit=0, advance=0
-   ✔ Completed → ask invest + paid
-   ✔ Advance shown in pending table
-   ✔ Pie chart: Pending / Completed / Failed-Returned
+   🛠 service.js — Service / Repair Manager (v3.0 FINAL)
+   Improvements:
+   ✔ Failed/Returned → ask "advance returned"
+   ✔ Pending list shows Advance ₹
+   ✔ Pie chart: Pending | Completed | Failed/Returned
+   ✔ Clear All button supported
    ======================================================= */
 
 (function(){
@@ -26,7 +25,7 @@
     window.dispatchEvent(new Event("storage"));
   }
 
-  // Generate simple 01,02,03 IDs
+  // Simple auto number generator
   function nextJobId() {
     if (!window.services.length) return "01";
     const max = Math.max(...window.services.map(s => Number(s.jobNum || 0)));
@@ -104,7 +103,7 @@
         <td>${esc(s.itemType)}</td>
         <td>${esc(s.model)}</td>
         <td>${esc(s.problem)}</td>
-        <td>${s.status}</td>
+        <td>Advance: ₹${s.advance}</td>
         <td>
           <button class="svc-view small-btn" data-id="${s.id}">Open</button>
           <button class="svc-del small-btn" data-id="${s.id}" style="background:#d32f2f">Delete</button>
@@ -123,7 +122,7 @@
           <td>₹${s.invest}</td>
           <td>₹${s.paid}</td>
           <td>₹${s.profit}</td>
-          <td>${s.status}</td>
+          <td>${s.status} (Advance Returned: ₹${s.advance})</td>
         </tr>`).join("") ||
       `<tr><td colspan="9">No completed/failed jobs</td></tr>`;
 
@@ -163,7 +162,7 @@
   }
 
   /* ------------------------------
-       ACTION: VIEW JOB
+       ACTION MENU
   ------------------------------ */
   function openJob(id) {
     const s = window.services.find(x => x.id === id);
@@ -180,52 +179,48 @@ Received: ${toDisplay(s.date_in)}
 
 Choose action:
 1 - Mark Completed
-2 - Mark Failed/Returned
-(Enter number)`;
+2 - Mark Failed/Returned`;
 
-    const ch = prompt(msg,"2");
-    if (!ch) return;
+    const choice = prompt(msg,"1");
+    if (!choice) return;
 
-    if (ch === "1") return markCompleted(id);
-    if (ch === "2") return markFailed(id);
+    if (choice === "1") markCompleted(id);
+    else if (choice === "2") markFailed(id);
   }
 
   /* ------------------------------
-     COMPLETED: ask invest & paid
+       COMPLETED
   ------------------------------ */
   function markCompleted(id) {
     const s = window.services.find(x => x.id === id);
     if (!s) return;
 
-    const invest = Number(prompt("Enter investment (cost) ₹:", s.invest || 0) || 0);
-    const paid = Number(prompt("Enter amount received from customer ₹:", s.paid || 0) || 0);
+    const inv = Number(prompt("Investment spent ₹:", s.invest || 0) || 0);
+    const paid = Number(prompt("Final Amount received from customer ₹:", s.paid || 0) || 0);
 
-    s.invest = invest;
+    s.invest = inv;
     s.paid = paid;
-    s.profit = paid - invest;
+    s.profit = paid - inv;
     s.status = "Completed";
     s.date_out = today();
-
-    // advance contributed, so subtract only from net customer pay? NO
-    // You already got advance → treat "paid" as FULL amount (advance included or not, your choice)
-    // This makes logic very simple.
 
     save();
     renderTables();
   }
 
   /* ------------------------------
-     FAILED / RETURNED:
-     Everything becomes ZERO (advance returned)
+       FAILED / RETURNED
   ------------------------------ */
   function markFailed(id) {
     const s = window.services.find(x => x.id === id);
     if (!s) return;
 
+    const returnedAdv = Number(prompt("Advance returned to customer ₹:", s.advance || 0) || 0);
+
+    s.advance = returnedAdv;   // show how much returned
     s.invest = 0;
     s.paid = 0;
     s.profit = 0;
-    s.advance = 0;
     s.status = "Failed/Returned";
     s.date_out = today();
 
@@ -234,7 +229,7 @@ Choose action:
   }
 
   /* ------------------------------
-        DELETE JOB
+       DELETE JOB
   ------------------------------ */
   function deleteJob(id){
     if(!confirm("Delete this job?")) return;
@@ -244,7 +239,7 @@ Choose action:
   }
 
   /* ------------------------------
-       CLEAR ALL (optional)
+       CLEAR ALL (Button enabled)
   ------------------------------ */
   window.clearAllServices = function(){
     if(!confirm("Delete ALL service jobs?")) return;
@@ -253,13 +248,13 @@ Choose action:
     renderTables();
   };
 
-  /* EVENT BINDING */
+  /* EVENTS */
   document.addEventListener("click", e => {
     if (e.target.id === "addServiceBtn") addJob();
     if (e.target.classList.contains("svc-view")) openJob(e.target.dataset.id);
     if (e.target.classList.contains("svc-del")) deleteJob(e.target.dataset.id);
+    if (e.target.id === "clearServiceBtn") clearAllServices(); // NEW
   });
 
   window.addEventListener("load", renderTables);
-
 })();
