@@ -532,7 +532,7 @@
           todayProfit = 0;
 
       window.sales.forEach(s => {
-        if (s.date === today) {
+       if (String(s.date).slice(0,10) === today)  {
           todaySales += s.amount;
           if (s.status === "Credit") todayCredit += s.amount;
           todayProfit += s.profit;
