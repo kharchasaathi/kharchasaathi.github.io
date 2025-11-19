@@ -606,38 +606,38 @@ window.addEventListener("load", () => {
         qs("#filterSalesBtn")?.addEventListener("click", () => renderSales?.());
       }
     })();
-
-function updateSummaryCards() {
+  
+    function updateSummaryCards() {
 
   if (typeof getAnalyticsData !== "function") return;
 
-  const data = getAnalyticsData();
+  const data = getAnalyticsData(); // includes todayExpenses also
 
-  // Today’s summary
-  qs("#todaySales").textContent = "₹" + data.todaySales;
-  qs("#todayCredit").textContent = "₹" + data.creditSales;
-  qs("#todayExpenses").textContent = "₹" + data.todayExpenses;
-  qs("#todayGross").textContent = "₹" + data.grossProfit;
-  qs("#todayNet").textContent = "₹" + data.netProfit;
+  // Today values
+  qs("#todaySales").textContent   = "₹" + data.todaySales;
+  qs("#todayCredit").textContent  = "₹" + data.creditSales;
+  qs("#todayExpenses").textContent = "₹" + data.todayExpenses;  // FIXED
+  qs("#todayGross").textContent   = "₹" + data.grossProfit;
+  qs("#todayNet").textContent     = "₹" + data.netProfit;
 
-  // Stock percentage
+  // Stock %
   let total = 0, remain = 0;
   (window.stock || []).forEach(s => {
-    total += Number(s.qty || 0) + Number(s.sold || 0);
+    total  += Number(s.qty || 0) + Number(s.sold || 0);
     remain += Number(s.qty || 0);
   });
-
   const pct = total ? Math.round((remain / total) * 100) : 0;
   qs("#stockRemainValue").textContent = pct + "%";
-  qs("#stockRemainBar").style.width = pct + "%";
+  qs("#stockRemainBar").style.width   = pct + "%";
 
-  // Analytics small cards
+  // Smart dashboard cards (top)
   qs("#sumToday")  && (qs("#sumToday").textContent  = "₹" + data.todaySales);
   qs("#sumWeek")   && (qs("#sumWeek").textContent   = "₹" + data.weekSales);
   qs("#sumMonth")  && (qs("#sumMonth").textContent  = "₹" + data.monthSales);
   qs("#sumGross")  && (qs("#sumGross").textContent  = "₹" + data.grossProfit);
   qs("#sumNet")    && (qs("#sumNet").textContent    = "₹" + data.netProfit);
 }
+
     // SAFE initial render after modules loaded
     function safeInitialRender() {
       try { renderTypes?.(); } catch {}
