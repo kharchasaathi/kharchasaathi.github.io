@@ -1,6 +1,8 @@
 /* ==========================================================
-   💰 sales.js — Sales Viewer + Profit Manager (FINAL v7.1)
-   Button label changed → "CREDIT" (not Pay Now)
+   💰 sales.js — Sales Viewer + Profit Manager (FINAL v8.0)
+   ✔ Credit sale profit excluded
+   ✔ Profit counted ONLY after marking "Paid"
+   ✔ Overview + Smart Dashboard auto update
 ========================================================== */
 
 function saveSales() {
@@ -26,23 +28,38 @@ function attachImmediateSalesFilters() {
   qs("#saleDate")?.addEventListener("change", renderSales);
 }
 
-/* MARK CREDIT → PAID */
+/* ----------------------------------------------------------
+   MARK CREDIT → PAID  (Main logic)
+---------------------------------------------------------- */
 function markSalePaid(id) {
   const s = window.sales.find(x => x.id === id);
   if (!s) return;
 
-  if (s.status === "Paid") return alert("Already Paid");
+  if (s.status === "Paid") {
+    alert("Already Paid");
+    return;
+  }
 
-  if (!confirm("Mark this entry as PAID?")) return;
+  if (!confirm("Mark this CREDIT sale as PAID?")) return;
 
+  // ✔ Change only status
   s.status = "Paid";
+
+  // DO NOT change:
+  // s.amount
+  // s.profit
+  // s.qty
+  // s.price
+
   saveSales();
   renderSales();
   updateSummaryCards?.();
   renderAnalytics?.();
 }
 
-/* CLEAR ALL SALES */
+/* ----------------------------------------------------------
+   CLEAR ALL SALES
+---------------------------------------------------------- */
 qs("#clearSalesBtn")?.addEventListener("click", () => {
   if (!confirm("Delete ALL sales permanently?")) return;
 
@@ -54,17 +71,17 @@ qs("#clearSalesBtn")?.addEventListener("click", () => {
 });
 
 /* ----------------------------------------------------------
-   RENDER SALES TABLE — CREDIT BUTTON FIXED
+   RENDER SALES TABLE (Credit profit excluded)
 ---------------------------------------------------------- */
 function renderSales() {
   const tbody = qs("#salesTable tbody");
   const totalEl = qs("#salesTotal");
   const profitEl = qs("#profitTotal");
 
+  if (!tbody) return;
+
   const typeFilter = qs("#saleType")?.value || "all";
   const dateFilter = qs("#saleDate")?.value || "";
-
-  if (!tbody) return;
 
   let total = 0;
   let profit = 0;
@@ -74,15 +91,19 @@ function renderSales() {
     .filter(s => typeFilter === "all" || s.type === typeFilter)
     .filter(s => !dateFilter || s.date === dateFilter)
     .forEach(s => {
+
       const dispDate = toDisplay(s.date);
 
       total += Number(s.amount || 0);
-      profit += Number(s.profit || 0);
 
-      /* BUTTON TEXT = "CREDIT" */
-      const statusHtml =
+      // ⭐ CREDIT కే profit add అవ్వదు
+      if (String(s.status).toLowerCase() !== "credit") {
+        profit += Number(s.profit || 0);
+      }
+
+      const statusBtn =
         s.status === "Credit"
-          ? `<button class="small-btn" 
+          ? `<button class="small-btn"
                style="background:#ff9800;color:#fff"
                onclick="markSalePaid('${s.id}')">CREDIT</button>`
           : `💰 Paid`;
@@ -96,7 +117,7 @@ function renderSales() {
           <td>${s.price}</td>
           <td>${s.amount}</td>
           <td>${s.profit}</td>
-          <td>${statusHtml}</td>
+          <td>${statusBtn}</td>
         </tr>
       `;
     });
@@ -109,7 +130,9 @@ function renderSales() {
   profitEl.textContent = profit;
 }
 
-/* INITIAL */
+/* ----------------------------------------------------------
+   INITIAL LOAD
+---------------------------------------------------------- */
 window.addEventListener("load", () => {
   refreshSaleTypeSelector();
   attachImmediateSalesFilters();
