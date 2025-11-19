@@ -95,6 +95,77 @@
 
     /* small helper */
     .muted { color:#666; font-size:13px; }
+    /* =======================================================
+   📱 MOBILE RESPONSIVE PATCH (DOES NOT CHANGE DESKTOP UI)
+   ======================================================= */
+
+@media (max-width: 600px) {
+
+  /* Tabs – neat wrapping + centered */
+  .tabs {
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 6px;
+  }
+  .tab {
+    padding: 6px 10px;
+    font-size: 12px;
+  }
+
+  /* Summary cards – 2 columns */
+  .flex-row {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+  }
+  .flex-row .card {
+    width: 100%;
+    text-align: center;
+  }
+
+  /* Forms – full width fields */
+  .row-inline {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .row-inline input,
+  .row-inline select,
+  .row-inline button {
+    width: 100% !important;
+    min-width: unset !important;
+  }
+
+  /* Tables – horizontal scroll without breaking */
+  table {
+    display: block;
+    overflow-x: auto;
+    white-space: nowrap;
+    font-size: 12px;
+  }
+
+  th, td {
+    padding: 6px;
+  }
+
+  /* Help modal small padding */
+  .help-content {
+    width: 90%;
+  }
+
+  /* Version text center-align */
+  .version-info {
+    text-align: center;
+    display: block;
+    margin-top: 6px;
+    font-size: 12px;
+  }
+
+  /* Profit summary bar smaller font */
+  #tabSummaryBar {
+    font-size: 16px;
+    padding: 8px;
+  }
+}
   </style>
 </head>
 
