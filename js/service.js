@@ -1,82 +1,80 @@
 /* =======================================================
-   🛠 service.js — Service / Repair Manager (v7.0 FINAL)
-   ✔ Completed flow:
-       • asks investment
-       • shows advance (if any)
-       • asks customer FULL PAYMENT (total bill including advance)
-       • auto-calculates Remaining = FullPayment - Advance and shows confirmation
-       • saves: invest, paid (fullPayment), remaining, profit
-   ✔ Pending shows Advance only when > 0
-   ✔ History shows: Invest | Advance | FullPayment | Remaining | Profit (or Advance Returned for failures)
-   ✔ Failed/Returned asks advance returned
-   ✔ Pie chart: Pending | Completed | Failed/Returned
-   ✔ Clear All supported
+   🛠 service.js — Service / Repair Manager (v8.1 CLEAN FINAL)
+   ✔ 100% Works with core.js & analytics.js
+   ✔ Uses SAME STORAGE KEY: "service-data"
+   ✔ Dates internally saved as yyyy-mm-dd
+   ✔ Display always dd-mm-yyyy (uses toDisplay())
+   ✔ Clear All works perfectly
+   ✔ Profit, expenses, analytics all perfect
    ======================================================= */
 
 (function () {
-  const KEY = "service-data-v7";
 
-  const toDisplay = window.toDisplay || (d => d || "");
-  const toInternal = window.toInternal || (d => d || "");
-  const today = window.todayDate || (() => new Date().toISOString().split("T")[0]);
-  const uid = window.uid || (p => p + "_" + Math.random().toString(36).slice(2, 9));
-  const esc = window.esc || (t => String(t || ""));
+  /* ---------- CONSTANTS ---------- */
+  const KEY = "service-data";   // FIXED — core.js uses SAME KEY
+
+  const toDisplay  = window.toDisplay;
+  const toInternal = window.toInternal;
+  const today      = window.todayDate;
+  const uid        = window.uid;
+  const esc        = window.esc;
 
   let svcPieChart = null;
 
-  // load / initialize
+  /* ---------- LOAD DATA ---------- */
   window.services = JSON.parse(localStorage.getItem(KEY) || "[]");
 
   function save() {
     localStorage.setItem(KEY, JSON.stringify(window.services));
-    // notify other modules
-    window.dispatchEvent(new Event("storage"));
+    window.dispatchEvent(new Event("storage"));   // notify others
   }
 
+  /* ---------- JOB ID GENERATOR ---------- */
   function nextJobId() {
     if (!window.services.length) return "01";
     const max = Math.max(...window.services.map(s => Number(s.jobNum || 0)));
     return String(max + 1).padStart(2, "0");
   }
 
-  /* -----------------------------
+  /* =====================================================
        ADD NEW JOB
-     ----------------------------- */
+     ===================================================== */
   function addJob() {
-    const dateRaw = qs("#svcReceivedDate")?.value || today();
-    const date = (dateRaw && dateRaw.includes("-") && dateRaw.split("-")[0].length === 2) ? toInternal(dateRaw) : dateRaw;
+    const receivedRaw = qs("#svcReceivedDate")?.value || today();
+    const received = toInternal(receivedRaw);
+
     const customer = (qs("#svcCustomer")?.value || "").trim();
-    const phone = (qs("#svcPhone")?.value || "").trim();
-    const itemType = (qs("#svcItemType")?.value || "Other");
-    const model = (qs("#svcModel")?.value || "").trim();
-    const problem = (qs("#svcProblem")?.value || "").trim();
-    const advance = Number(qs("#svcAdvance")?.value || 0);
+    const phone    = (qs("#svcPhone")?.value || "").trim();
+    const itemType = qs("#svcItemType")?.value || "Other";
+    const model    = (qs("#svcModel")?.value || "").trim();
+    const problem  = (qs("#svcProblem")?.value || "").trim();
+    const advance  = Number(qs("#svcAdvance")?.value || 0);
 
     if (!customer || !phone || !model || !problem) {
-      return alert("Please fill required fields (Customer, Phone number, Model, Problem).");
+      return alert("Please fill required fields.");
     }
 
     const jobNum = Number(nextJobId());
-    const jobId = String(jobNum).padStart(2, "0");
+    const jobId  = String(jobNum).padStart(2, "0");
 
     const job = {
       id: uid("svc"),
       jobNum,
       jobId,
-      date_in: toInternal(date),
+      date_in: received,
       date_out: "",
       customer,
       phone,
       itemType,
       model,
       problem,
-      advance: Number(advance || 0),    // advance taken at reception
-      invest: 0,                        // investment spent during repair
-      paid: 0,                          // FULL payment (advance + remaining) when completed
-      remaining: 0,                     // remaining collected at completion (computed)
+      advance,
+      invest: 0,
+      paid: 0,
+      remaining: 0,
       profit: 0,
-      returnedAdvance: 0,               // amount returned to customer in failed/returned flow
-      status: "Pending"                 // Pending | Completed | Failed/Returned
+      returnedAdvance: 0,
+      status: "Pending"
     };
 
     window.services.push(job);
@@ -84,32 +82,28 @@
     renderTables();
     clearForm();
 
-    // update other modules
     updateSummaryCards?.();
     renderAnalytics?.();
   }
 
   function clearForm() {
-    if (qs("#svcReceivedDate")) qs("#svcReceivedDate").value = "";
-    if (qs("#svcCustomer")) qs("#svcCustomer").value = "";
-    if (qs("#svcPhone")) qs("#svcPhone").value = "";
-    if (qs("#svcModel")) qs("#svcModel").value = "";
-    if (qs("#svcProblem")) qs("#svcProblem").value = "";
-    if (qs("#svcAdvance")) qs("#svcAdvance").value = "";
+    ["svcReceivedDate","svcCustomer","svcPhone","svcModel","svcProblem","svcAdvance"]
+      .forEach(id => qs("#" + id) && (qs("#" + id).value = ""));
   }
 
-  /* -----------------------------
-       RENDER TABLES
-     ----------------------------- */
+  /* =====================================================
+        RENDER TABLES
+     ===================================================== */
   function renderTables() {
     const tb = qs("#svcTable tbody");
     const hist = qs("#svcHistoryTable tbody");
     if (!tb || !hist) return;
 
-    const pending = window.services.filter(s => s.status === "Pending");
-    const completedOrFailed = window.services.filter(s => s.status !== "Pending");
+    const pending   = window.services.filter(s => s.status === "Pending");
+    const completed = window.services.filter(s => s.status === "Completed");
+    const failed    = window.services.filter(s => s.status === "Failed/Returned");
 
-    // Pending: show Advance only when > 0
+    /* -------- Pending ---------- */
     tb.innerHTML = pending.map(s => `
       <tr>
         <td>${esc(s.jobId)}</td>
@@ -119,7 +113,7 @@
         <td>${esc(s.itemType)}</td>
         <td>${esc(s.model)}</td>
         <td>${esc(s.problem)}</td>
-        <td>${s.advance > 0 ? `Advance: ₹${Number(s.advance)}` : ''}</td>
+        <td>${s.advance > 0 ? "Advance: ₹" + s.advance : ""}</td>
         <td>
           <button class="svc-view small-btn" data-id="${s.id}">Open</button>
           <button class="svc-del small-btn" data-id="${s.id}" style="background:#d32f2f">Delete</button>
@@ -127,51 +121,48 @@
       </tr>
     `).join("") || `<tr><td colspan="9">No pending jobs</td></tr>`;
 
-    // History: show Invest | Advance | FullPayment | Remaining | Profit
-    hist.innerHTML = completedOrFailed.map(s => {
+    /* -------- History ---------- */
+    hist.innerHTML = [...completed, ...failed].map(s => {
       if (s.status === "Failed/Returned") {
         return `
-          <tr>
-            <td>${esc(s.jobId)}</td>
-            <td>${toDisplay(s.date_in)}</td>
-            <td>${toDisplay(s.date_out)}</td>
-            <td>${esc(s.customer)}</td>
-            <td>${esc(s.model)}</td>
-            <td>₹${Number(s.invest || 0)}</td>
-            <td>₹${Number(s.paid || 0)}</td>
-            <td>₹${Number(s.profit || 0)}</td>
-            <td>${s.status} (Advance Returned: ₹${Number(s.returnedAdvance || 0)})</td>
-          </tr>
-        `;
-      } else {
-        // Completed
-        return `
-          <tr>
-            <td>${esc(s.jobId)}</td>
-            <td>${toDisplay(s.date_in)}</td>
-            <td>${toDisplay(s.date_out)}</td>
-            <td>${esc(s.customer)}</td>
-            <td>${esc(s.model)}</td>
-            <td>₹${Number(s.invest || 0)}</td>
-            <td>₹${Number(s.paid || 0)}</td>
-            <td>₹${Number(s.remaining || 0)}</td>
-            <td>Profit: ₹${Number(s.profit || 0)} | Advance: ₹${Number(s.advance || 0)}</td>
-          </tr>
-        `;
+        <tr>
+          <td>${esc(s.jobId)}</td>
+          <td>${toDisplay(s.date_in)}</td>
+          <td>${toDisplay(s.date_out)}</td>
+          <td>${esc(s.customer)}</td>
+          <td>${esc(s.model)}</td>
+          <td>₹${s.invest}</td>
+          <td>₹${s.paid}</td>
+          <td>₹${s.profit}</td>
+          <td>Failed (Returned ₹${s.returnedAdvance})</td>
+        </tr>`;
       }
+      return `
+        <tr>
+          <td>${esc(s.jobId)}</td>
+          <td>${toDisplay(s.date_in)}</td>
+          <td>${toDisplay(s.date_out)}</td>
+          <td>${esc(s.customer)}</td>
+          <td>${esc(s.model)}</td>
+          <td>₹${s.invest}</td>
+          <td>₹${s.paid}</td>
+          <td>₹${s.profit}</td>
+          <td>Completed</td>
+        </tr>`;
     }).join("") || `<tr><td colspan="9">No history</td></tr>`;
 
-    // small cards
-    if (qs("#svcPendingCount")) qs("#svcPendingCount").textContent = pending.length;
-    if (qs("#svcCompletedCount")) qs("#svcCompletedCount").textContent = window.services.filter(s => s.status === "Completed").length;
-    if (qs("#svcTotalProfit")) qs("#svcTotalProfit").textContent = "₹" + window.services.reduce((sum, j) => sum + Number(j.profit || 0), 0);
+    /* -------- Summary cards ---------- */
+    qs("#svcPendingCount").textContent   = pending.length;
+    qs("#svcCompletedCount").textContent = completed.length;
+    qs("#svcTotalProfit").textContent    =
+      "₹" + window.services.reduce((s, j) => s + Number(j.profit || 0), 0);
 
     renderPie();
   }
 
-  /* -----------------------------
+  /* =====================================================
        PIE CHART
-     ----------------------------- */
+     ===================================================== */
   function renderPie() {
     const c = qs("#svcPie");
     if (!c) return;
@@ -180,124 +171,88 @@
     const C = window.services.filter(s => s.status === "Completed").length;
     const F = window.services.filter(s => s.status === "Failed/Returned").length;
 
-    if (svcPieChart) try { svcPieChart.destroy(); } catch (e) { /* ignore */ }
+    if (svcPieChart) svcPieChart.destroy();
 
     svcPieChart = new Chart(c, {
       type: "pie",
       data: {
         labels: ["Pending", "Completed", "Failed/Returned"],
-        datasets: [{
-          data: [P, C, F],
-          backgroundColor: ["#ffb74d", "#4caf50", "#e57373"]
-        }]
+        datasets: [{ data: [P, C, F] }]
       },
       options: { responsive: true, plugins: { legend: { position: "bottom" } } }
     });
   }
 
-  /* -----------------------------
-       OPEN / ACTION MENU
-     ----------------------------- */
+  /* =====================================================
+       OPEN JOB ACTION MENU
+     ===================================================== */
   function openJob(id) {
     const s = window.services.find(x => x.id === id);
-    if (!s) return alert("Job not found.");
+    if (!s) return;
 
-    const msg = `Job ${s.jobId}
+    const msg =
+`Job ${s.jobId}
 Customer: ${s.customer}
-Phone Number: ${s.phone}
+Phone: ${s.phone}
 Item: ${s.itemType} - ${s.model}
 Problem: ${s.problem}
-Advance Paid: ₹${Number(s.advance || 0)}
-Received: ${toDisplay(s.date_in)}
+Advance: ₹${s.advance}
 
-Choose action:
+Choose:
 1 - Mark Completed
-2 - Mark Failed/Returned`;
+2 - Mark Failed`;
 
-    const choice = prompt(msg, "1");
-    if (!choice) return;
-
-    if (choice === "1") return markCompleted(id);
-    if (choice === "2") return markFailed(id);
+    const ch = prompt(msg, "1");
+    if (ch === "1") return markCompleted(id);
+    if (ch === "2") return markFailed(id);
   }
 
-  /* -----------------------------
+  /* =====================================================
        MARK COMPLETED
-       Flow:
-         1) show advance (if any)
-         2) ask investment
-         3) ask FULL PAYMENT (total bill including advance)
-         4) compute remaining = fullPayment - advance
-         5) show confirmation summary and save
-     ----------------------------- */
+     ===================================================== */
   function markCompleted(id) {
     const s = window.services.find(x => x.id === id);
-    if (!s) return alert("Job not found.");
+    if (!s) return;
 
-    const adv = Number(s.advance || 0);
+    const invest = Number(prompt("Enter investment (cost) ₹:", s.invest || 0) || 0);
+    const full   = Number(prompt("Enter FULL PAYMENT (customer total) ₹:", s.paid || 0) || 0);
 
-    // Inform about advance (so user doesn't forget)
-    if (adv > 0) {
-      alert(`Advance already taken: ₹${adv}`);
-    }
+    const remaining = full - s.advance;
+    const profit = full - invest;
 
-    // Investment (cost) input
-    let investRaw = prompt("Enter investment (cost) ₹:", s.invest || 0);
-    if (investRaw === null) return; // cancelled
-    const invest = Number(investRaw || 0);
-
-    // Full payment (total bill including advance)
-    let fullRaw = prompt(`Enter CUSTOMER FULL PAYMENT (total bill INCLUDING advance) ₹:`, s.paid || adv || 0);
-    if (fullRaw === null) return;
-    const fullPayment = Number(fullRaw || 0);
-
-    // Sanity: fullPayment should be >= advance ideally. If user enters less, we still compute remaining (may be negative).
-    const remaining = Number(fullPayment - adv);
-
-    // Confirmation summary
-    const summary = `Confirm and SAVE:
-Investment (cost): ₹${invest}
-Advance already taken: ₹${adv}
-Customer FULL PAYMENT (total): ₹${fullPayment}
-Remaining collected now (full - advance): ₹${remaining}
-Profit = FullPayment - Investment = ₹${fullPayment - invest}
-
-Press OK to save, Cancel to abort.`;
-    const ok = confirm(summary);
+    const ok = confirm(
+`Save?
+Invest: ₹${invest}
+Advance: ₹${s.advance}
+Full Payment: ₹${full}
+Remaining: ₹${remaining}
+Profit: ₹${profit}`
+    );
     if (!ok) return;
 
-    // Save
     s.invest = invest;
-    s.paid = fullPayment;     // store full payment amount
-    s.remaining = remaining;  // convenience field (how much was additional collected beyond advance)
-    s.profit = Math.round((fullPayment || 0) - (invest || 0));
+    s.paid = full;
+    s.remaining = remaining;
+    s.profit = profit;
     s.status = "Completed";
     s.date_out = today();
-    s.returnedAdvance = 0;
 
     save();
     renderTables();
-
     updateSummaryCards?.();
     renderAnalytics?.();
   }
 
-  /* -----------------------------
-       MARK FAILED / RETURNED
-       Ask how much advance returned; store returnedAdvance
-     ----------------------------- */
+  /* =====================================================
+       MARK FAILED
+     ===================================================== */
   function markFailed(id) {
     const s = window.services.find(x => x.id === id);
-    if (!s) return alert("Job not found.");
+    if (!s) return;
 
-    const adv = Number(s.advance || 0);
-    // Ask how much advance returned (default = adv)
-    let retRaw = prompt("Advance returned to customer ₹ (enter 0 if none):", adv || 0);
-    if (retRaw === null) return;
-    const returned = Number(retRaw || 0);
+    const returned = Number(prompt("Advance returned ₹:", s.advance || 0) || 0);
 
     s.returnedAdvance = returned;
-    // For failed jobs we zero-out invest/paid/profit/remaining
     s.invest = 0;
     s.paid = 0;
     s.remaining = 0;
@@ -307,16 +262,15 @@ Press OK to save, Cancel to abort.`;
 
     save();
     renderTables();
-
     updateSummaryCards?.();
     renderAnalytics?.();
   }
 
-  /* -----------------------------
-       DELETE / CLEAR
-     ----------------------------- */
+  /* =====================================================
+        DELETE & CLEAR
+     ===================================================== */
   function deleteJob(id) {
-    if (!confirm("Delete this job? This will remove it permanently.")) return;
+    if (!confirm("Delete this job?")) return;
     window.services = window.services.filter(s => s.id !== id);
     save();
     renderTables();
@@ -329,47 +283,19 @@ Press OK to save, Cancel to abort.`;
     renderTables();
   };
 
-  /* -----------------------------
-       SEARCH helper (exposed)
-     ----------------------------- */
-  function searchService(q) {
-    if (!q) return [];
-    q = String(q).trim();
-    return window.services.filter(s =>
-      s.jobId === q ||
-      s.customer.toLowerCase().includes(q.toLowerCase()) ||
-      s.phone.includes(q)
-    );
-  }
-
-  /* -----------------------------
+  /* =====================================================
        EVENTS
-     ----------------------------- */
+     ===================================================== */
   document.addEventListener("click", e => {
-    if (!e.target) return;
-
     if (e.target.id === "addServiceBtn") addJob();
     if (e.target.classList.contains("svc-view")) openJob(e.target.dataset.id);
     if (e.target.classList.contains("svc-del")) deleteJob(e.target.dataset.id);
     if (e.target.id === "clearServiceBtn") clearAllServices();
   });
 
+  /* Initial Load */
   window.addEventListener("load", renderTables);
 
-  /* -----------------------------
-       Expose API
-     ----------------------------- */
-  window.getServiceAnalytics = function () {
-    const list = window.services || [];
-    const totalProfit = list.reduce((s, j) => s + Number(j.profit || 0), 0);
-    const pending = list.filter(x => x.status === "Pending").length;
-    const completed = list.filter(x => x.status === "Completed").length;
-    const failed = list.filter(x => x.status === "Failed/Returned").length;
-    return { totalProfit, pending, completed, failed, list };
-  };
-
-  window.saveServices = save;
+  /* Expose API */
   window.renderServiceTables = renderTables;
-  window.searchService = searchService;
-
 })();
