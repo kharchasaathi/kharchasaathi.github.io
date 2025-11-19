@@ -154,8 +154,13 @@ window.saveServices = saveServices;
 /* ===========================================================
    🔥 BASICS
 =========================================================== */
+/* IMPORTANT: use local date (respect timezone) — avoid UTC iso mismatch */
 function todayDate() {
-  return new Date().toISOString().split("T")[0]; // always yyyy-mm-dd
+  // Create local-date yyyy-mm-dd (avoid toISOString UTC shift)
+  const d = new Date();
+  // adjust so that toISOString reflects local date
+  d.setMinutes(d.getMinutes() - d.getTimezoneOffset());
+  return d.toISOString().split("T")[0];
 }
 window.todayDate = todayDate;
 
