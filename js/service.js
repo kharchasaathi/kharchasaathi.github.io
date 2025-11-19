@@ -1,17 +1,14 @@
 /* =======================================================
-   🛠 service.js — Service / Repair Manager (v8.1 CLEAN FINAL)
-   ✔ 100% Works with core.js & analytics.js
-   ✔ Uses SAME STORAGE KEY: "service-data"
-   ✔ Dates internally saved as yyyy-mm-dd
-   ✔ Display always dd-mm-yyyy (uses toDisplay())
-   ✔ Clear All works perfectly
-   ✔ Profit, expenses, analytics all perfect
-   ======================================================= */
+   🛠 service.js — Service / Repair Manager (v8.2 FINAL)
+   ✔ Date input fixed
+   ✔ Display = dd-mm-yyyy (core.js handles it)
+   ✔ Internal = yyyy-mm-dd
+   ✔ Fully compatible with core.js & analytics.js
+======================================================= */
 
 (function () {
 
-  /* ---------- CONSTANTS ---------- */
-  const KEY = "service-data";   // FIXED — core.js uses SAME KEY
+  const KEY = "service-data";
 
   const toDisplay  = window.toDisplay;
   const toInternal = window.toInternal;
@@ -21,15 +18,15 @@
 
   let svcPieChart = null;
 
-  /* ---------- LOAD DATA ---------- */
+  /* -------- LOAD DATA -------- */
   window.services = JSON.parse(localStorage.getItem(KEY) || "[]");
 
   function save() {
     localStorage.setItem(KEY, JSON.stringify(window.services));
-    window.dispatchEvent(new Event("storage"));   // notify others
+    window.dispatchEvent(new Event("storage"));
   }
 
-  /* ---------- JOB ID GENERATOR ---------- */
+  /* -------- JOB ID -------- */
   function nextJobId() {
     if (!window.services.length) return "01";
     const max = Math.max(...window.services.map(s => Number(s.jobNum || 0)));
@@ -37,11 +34,17 @@
   }
 
   /* =====================================================
-       ADD NEW JOB
+       ADD JOB (DATE FIXED)
      ===================================================== */
   function addJob() {
-    const receivedRaw = qs("#svcReceivedDate")?.value || today();
-    const received = toInternal(receivedRaw);
+
+    let receivedRaw = qs("#svcReceivedDate")?.value || today();
+
+    // FIX: Convert only if dd-mm-yyyy manually entered
+    let received =
+      receivedRaw.split("-")[0].length === 2
+        ? toInternal(receivedRaw)
+        : receivedRaw;
 
     const customer = (qs("#svcCustomer")?.value || "").trim();
     const phone    = (qs("#svcPhone")?.value || "").trim();
@@ -51,7 +54,7 @@
     const advance  = Number(qs("#svcAdvance")?.value || 0);
 
     if (!customer || !phone || !model || !problem) {
-      return alert("Please fill required fields.");
+      return alert("Please fill all required fields.");
     }
 
     const jobNum = Number(nextJobId());
@@ -92,18 +95,19 @@
   }
 
   /* =====================================================
-        RENDER TABLES
+       RENDER TABLES
      ===================================================== */
   function renderTables() {
     const tb = qs("#svcTable tbody");
     const hist = qs("#svcHistoryTable tbody");
+
     if (!tb || !hist) return;
 
     const pending   = window.services.filter(s => s.status === "Pending");
     const completed = window.services.filter(s => s.status === "Completed");
     const failed    = window.services.filter(s => s.status === "Failed/Returned");
 
-    /* -------- Pending ---------- */
+    /* Pending Jobs */
     tb.innerHTML = pending.map(s => `
       <tr>
         <td>${esc(s.jobId)}</td>
@@ -116,12 +120,12 @@
         <td>${s.advance > 0 ? "Advance: ₹" + s.advance : ""}</td>
         <td>
           <button class="svc-view small-btn" data-id="${s.id}">Open</button>
-          <button class="svc-del small-btn" data-id="${s.id}" style="background:#d32f2f">Delete</button>
+          <button class="svc-del small-btn" style="background:#d32f2f" data-id="${s.id}">Delete</button>
         </td>
       </tr>
     `).join("") || `<tr><td colspan="9">No pending jobs</td></tr>`;
 
-    /* -------- History ---------- */
+    /* Completed + Failed */
     hist.innerHTML = [...completed, ...failed].map(s => {
       if (s.status === "Failed/Returned") {
         return `
@@ -151,11 +155,11 @@
         </tr>`;
     }).join("") || `<tr><td colspan="9">No history</td></tr>`;
 
-    /* -------- Summary cards ---------- */
-    qs("#svcPendingCount").textContent   = pending.length;
+    /* Summary */
+    qs("#svcPendingCount").textContent = pending.length;
     qs("#svcCompletedCount").textContent = completed.length;
-    qs("#svcTotalProfit").textContent    =
-      "₹" + window.services.reduce((s, j) => s + Number(j.profit || 0), 0);
+    qs("#svcTotalProfit").textContent =
+      "₹" + window.services.reduce((s,j)=>s+Number(j.profit||0),0);
 
     renderPie();
   }
@@ -167,68 +171,65 @@
     const c = qs("#svcPie");
     if (!c) return;
 
-    const P = window.services.filter(s => s.status === "Pending").length;
-    const C = window.services.filter(s => s.status === "Completed").length;
-    const F = window.services.filter(s => s.status === "Failed/Returned").length;
+    const P = window.services.filter(s=>s.status==="Pending").length;
+    const C = window.services.filter(s=>s.status==="Completed").length;
+    const F = window.services.filter(s=>s.status==="Failed/Returned").length;
 
     if (svcPieChart) svcPieChart.destroy();
 
-    svcPieChart = new Chart(c, {
-      type: "pie",
-      data: {
-        labels: ["Pending", "Completed", "Failed/Returned"],
-        datasets: [{ data: [P, C, F] }]
+    svcPieChart = new Chart(c,{
+      type:"pie",
+      data:{
+        labels:["Pending","Completed","Failed/Returned"],
+        datasets:[{data:[P,C,F]}]
       },
-      options: { responsive: true, plugins: { legend: { position: "bottom" } } }
+      options:{responsive:true,plugins:{legend:{position:"bottom"}}}
     });
   }
 
   /* =====================================================
-       OPEN JOB ACTION MENU
+       OPEN JOB
      ===================================================== */
   function openJob(id) {
-    const s = window.services.find(x => x.id === id);
+    const s = window.services.find(x=>x.id===id);
     if (!s) return;
 
-    const msg =
+    const ch = prompt(
 `Job ${s.jobId}
 Customer: ${s.customer}
-Phone: ${s.phone}
 Item: ${s.itemType} - ${s.model}
 Problem: ${s.problem}
 Advance: ₹${s.advance}
 
-Choose:
-1 - Mark Completed
-2 - Mark Failed`;
+1 - Completed
+2 - Failed
+`, "1");
 
-    const ch = prompt(msg, "1");
-    if (ch === "1") return markCompleted(id);
-    if (ch === "2") return markFailed(id);
+    if (ch==="1") return markCompleted(id);
+    if (ch==="2") return markFailed(id);
   }
 
   /* =====================================================
-       MARK COMPLETED
+       COMPLETED
      ===================================================== */
   function markCompleted(id) {
-    const s = window.services.find(x => x.id === id);
+    const s = window.services.find(x=>x.id===id);
     if (!s) return;
 
-    const invest = Number(prompt("Enter investment (cost) ₹:", s.invest || 0) || 0);
-    const full   = Number(prompt("Enter FULL PAYMENT (customer total) ₹:", s.paid || 0) || 0);
+    const invest = Number(prompt("Enter investment ₹:", s.invest||0) || 0);
+    const full   = Number(prompt("Enter FULL PAYMENT ₹:", s.paid||0) || 0);
 
     const remaining = full - s.advance;
-    const profit = full - invest;
+    const profit    = full - invest;
 
-    const ok = confirm(
+    if (!confirm(
 `Save?
 Invest: ₹${invest}
 Advance: ₹${s.advance}
 Full Payment: ₹${full}
 Remaining: ₹${remaining}
 Profit: ₹${profit}`
-    );
-    if (!ok) return;
+    )) return;
 
     s.invest = invest;
     s.paid = full;
@@ -244,13 +245,13 @@ Profit: ₹${profit}`
   }
 
   /* =====================================================
-       MARK FAILED
+       FAILED / RETURNED
      ===================================================== */
   function markFailed(id) {
-    const s = window.services.find(x => x.id === id);
+    const s = window.services.find(x=>x.id===id);
     if (!s) return;
 
-    const returned = Number(prompt("Advance returned ₹:", s.advance || 0) || 0);
+    const returned = Number(prompt("Advance returned ₹:", s.advance||0) || 0);
 
     s.returnedAdvance = returned;
     s.invest = 0;
@@ -267,11 +268,11 @@ Profit: ₹${profit}`
   }
 
   /* =====================================================
-        DELETE & CLEAR
+       DELETE / CLEAR
      ===================================================== */
   function deleteJob(id) {
     if (!confirm("Delete this job?")) return;
-    window.services = window.services.filter(s => s.id !== id);
+    window.services = window.services.filter(s=>s.id!==id);
     save();
     renderTables();
   }
@@ -287,15 +288,14 @@ Profit: ₹${profit}`
        EVENTS
      ===================================================== */
   document.addEventListener("click", e => {
-    if (e.target.id === "addServiceBtn") addJob();
+    if (e.target.id==="addServiceBtn") addJob();
     if (e.target.classList.contains("svc-view")) openJob(e.target.dataset.id);
     if (e.target.classList.contains("svc-del")) deleteJob(e.target.dataset.id);
-    if (e.target.id === "clearServiceBtn") clearAllServices();
+    if (e.target.id==="clearServiceBtn") clearAllServices();
   });
 
-  /* Initial Load */
   window.addEventListener("load", renderTables);
 
-  /* Expose API */
   window.renderServiceTables = renderTables;
+
 })();
