@@ -1,11 +1,12 @@
 /* ===========================================================
-   📌 core.js — Master Engine (v5.0 FINAL)
-   Added:
-   ✔ dd-mm-yyyy support everywhere
-   ✔ auto normalization for old saved data
-   ✔ toDisplay() + toInternal()
-   ✔ Smart Dashboard compatibility
-   =========================================================== */
+   📌 core.js — Master Engine (v6.0 ULTRA CLEAN FINAL)
+   ✔ Global date normalization (stock, sales, expenses, wanting, services)
+   ✔ dd-mm-yyyy <-> yyyy-mm-dd full support
+   ✔ Safe load + safe parse
+   ✔ Stable toDisplay() + toInternal()
+   ✔ Service module compatible
+   ✔ Smart Dashboard compatible
+=========================================================== */
 
 /* ---------- LOCAL STORAGE KEYS ---------- */
 const KEY_TYPES      = "item-types";
@@ -13,54 +14,62 @@ const KEY_STOCK      = "stock-data";
 const KEY_SALES      = "sales-data";
 const KEY_WANTING    = "wanting-data";
 const KEY_EXPENSES   = "expenses-data";
+const KEY_SERVICES   = "service-data";      // NEW — service included
 const KEY_LIMIT      = "default-limit";
 const KEY_USER_EMAIL = "ks-user-email";
 
 /* ---------- SAFE PARSE ---------- */
 function safeParse(raw) {
-  try { return JSON.parse(raw); } 
+  try { return JSON.parse(raw); }
   catch { return []; }
 }
 function toArray(v) {
   return Array.isArray(v) ? v : [];
 }
 
-/* ---------- DATE HELPERS (NEW) ---------- */
-// Convert yyyy-mm-dd → dd-mm-yyyy (FOR DISPLAY)
+/* ===========================================================
+   🔥 UNIVERSAL DATE CONVERTERS
+=========================================================== */
+
+/* Convert yyyy-mm-dd → dd-mm-yyyy (FOR DISPLAY ONLY) */
 function toDisplay(d) {
   if (!d) return "";
   if (d.includes("/") || d.includes(".")) return d;
-  const parts = d.split("-");
-  if (parts.length !== 3) return d;
-  return `${parts[2]}-${parts[1]}-${parts[0]}`;
+  const p = d.split("-");
+  if (p.length !== 3) return d;
+  return `${p[2]}-${p[1]}-${p[0]}`;
 }
 
-// Convert dd-mm-yyyy → yyyy-mm-dd (FOR SAVING)
+/* Convert dd-mm-yyyy → yyyy-mm-dd (FOR STORAGE ONLY) */
 function toInternal(d) {
   if (!d) return "";
-  const parts = d.split("-");
-  if (parts.length !== 3) return d;
-  return `${parts[2]}-${parts[1]}-${parts[0]}`;
+  const p = d.split("-");
+  if (p.length !== 3) return d;
+  return `${p[2]}-${p[1]}-${p[0]}`;
 }
 
-// Accept both formats
+/* Detect format & convert if needed */
 function toInternalIfNeeded(d) {
   if (!d) return "";
   const p = d.split("-");
-  // already yyyy-mm-dd
-  if (p[0].length === 4) return d;
-  // convert dd-mm-yyyy
-  return toInternal(d);
+  if (p[0].length === 4) return d;     // already yyyy-mm-dd
+  if (p[0].length === 2) return toInternal(d); // dd-mm-yyyy → convert
+  return d;
 }
 
-/* ---------- LOAD GLOBAL ARRAYS ---------- */
-window.types    = toArray(safeParse(localStorage.getItem(KEY_TYPES)));
-window.stock    = toArray(safeParse(localStorage.getItem(KEY_STOCK)));
-window.sales    = toArray(safeParse(localStorage.getItem(KEY_SALES)));
-window.wanting  = toArray(safeParse(localStorage.getItem(KEY_WANTING)));
-window.expenses = toArray(safeParse(localStorage.getItem(KEY_EXPENSES)));
+/* ===========================================================
+   🔥 LOAD GLOBAL ARRAYS
+=========================================================== */
+window.types     = toArray(safeParse(localStorage.getItem(KEY_TYPES)));
+window.stock     = toArray(safeParse(localStorage.getItem(KEY_STOCK)));
+window.sales     = toArray(safeParse(localStorage.getItem(KEY_SALES)));
+window.wanting   = toArray(safeParse(localStorage.getItem(KEY_WANTING)));
+window.expenses  = toArray(safeParse(localStorage.getItem(KEY_EXPENSES)));
+window.services  = toArray(safeParse(localStorage.getItem(KEY_SERVICES))); // NEW
 
-/* ---------- NORMALIZE ALL EXISTING DATA (NEW IMPORTANT FIX) ---------- */
+/* ===========================================================
+   🔥 AUTO-NORMALIZE ALL DATES (SUPER IMPORTANT)
+=========================================================== */
 function normalizeAllDates() {
 
   if (window.stock)
@@ -86,11 +95,21 @@ function normalizeAllDates() {
       ...w,
       date: toInternalIfNeeded(w.date)
     }));
+
+  /* NEW — service/repair module date normalization */
+  if (window.services)
+    window.services = window.services.map(j => ({
+      ...j,
+      date_in:  toInternalIfNeeded(j.date_in),
+      date_out: toInternalIfNeeded(j.date_out)
+    }));
 }
 
-try { normalizeAllDates(); } catch(e){}
+try { normalizeAllDates(); } catch(e){ console.warn("Normalize failed", e); }
 
-/* ---------- LOGIN ---------- */
+/* ===========================================================
+   🔥 LOGIN SYSTEM
+=========================================================== */
 function loginUser(email) {
   if (!email.includes("@")) return false;
   localStorage.setItem(KEY_USER_EMAIL, email);
@@ -105,41 +124,46 @@ window.isLoggedIn = isLoggedIn;
 window.getUserEmail = getUserEmail;
 window.logoutUser = logoutUser;
 
-/* ---------- SAVE HELPERS ---------- */
+/* ===========================================================
+   🔥 SAVE HELPERS
+=========================================================== */
 function saveTypes()    { localStorage.setItem(KEY_TYPES, JSON.stringify(window.types)); }
 function saveStock()    { localStorage.setItem(KEY_STOCK, JSON.stringify(window.stock)); }
 function saveSales()    { localStorage.setItem(KEY_SALES, JSON.stringify(window.sales)); }
 function saveWanting()  { localStorage.setItem(KEY_WANTING, JSON.stringify(window.wanting)); }
 function saveExpenses() { localStorage.setItem(KEY_EXPENSES, JSON.stringify(window.expenses)); }
+function saveServices() { localStorage.setItem(KEY_SERVICES, JSON.stringify(window.services)); } // NEW
 
 window.saveTypes = saveTypes;
 window.saveStock = saveStock;
 window.saveSales = saveSales;
 window.saveWanting = saveWanting;
 window.saveExpenses = saveExpenses;
+window.saveServices = saveServices;
 
-/* ---------- TODAY DATE ---------- */
+/* ===========================================================
+   🔥 BASIC UTILITIES (ESC, UID, TODAY)
+=========================================================== */
 function todayDate() {
-  const d = new Date().toISOString().split("T")[0];
-  return d; // stored as yyyy-mm-dd internally
+  return new Date().toISOString().split("T")[0];
 }
 window.todayDate = todayDate;
 
-/* ---------- UID ---------- */
 function uid(p="id") {
   return p + "_" + Math.random().toString(36).slice(2, 9);
 }
 window.uid = uid;
 
-/* ---------- ESC ---------- */
-function esc(t){ 
+function esc(t){
   return String(t||"").replace(/[&<>"']/g, m => ({
     "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;", "'":"&#39;"
-  }[m])); 
+  }[m]));
 }
 window.esc = esc;
 
-/* ---------- FIND PRODUCT ---------- */
+/* ===========================================================
+   🔥 STOCK HELPERS
+=========================================================== */
 function findProduct(type, name) {
   return window.stock.find(
     p => p.type === type && p.name.toLowerCase() === name.toLowerCase()
@@ -147,7 +171,6 @@ function findProduct(type, name) {
 }
 window.findProduct = findProduct;
 
-/* ---------- GET PRODUCT COST ---------- */
 function getProductCost(type, name) {
   const p = findProduct(type, name);
   if (!p) return 0;
@@ -162,12 +185,13 @@ function getProductCost(type, name) {
     });
     return q ? (t / q) : 0;
   }
-
   return 0;
 }
 window.getProductCost = getProductCost;
 
-/* ---------- ADD TYPE ---------- */
+/* ===========================================================
+   🔥 ADD TYPE
+=========================================================== */
 function addType(name) {
   name = name.trim();
   if (!name) return;
@@ -180,11 +204,12 @@ function addType(name) {
 }
 window.addType = addType;
 
-/* ---------- ADD STOCK ---------- */
+/* ===========================================================
+   🔥 ADD STOCK
+=========================================================== */
 function addStockEntry({ date, type, name, qty, cost }) {
 
   date = toInternalIfNeeded(date);
-
   qty  = Number(qty);
   cost = Number(cost);
 
@@ -222,7 +247,9 @@ function getGlobalLimit()  { return Number(localStorage.getItem(KEY_LIMIT) || 0)
 window.setGlobalLimit = setGlobalLimit;
 window.getGlobalLimit = getGlobalLimit;
 
-/* ---------- WANTING ---------- */
+/* ===========================================================
+   🔥 WANTING AUTO ADD
+=========================================================== */
 function autoAddWanting(type, name, note="Low Stock") {
   if (!window.wanting.find(w => w.type === type && w.name === name)) {
     window.wanting.push({
@@ -237,7 +264,9 @@ function autoAddWanting(type, name, note="Low Stock") {
 }
 window.autoAddWanting = autoAddWanting;
 
-/* ---------- EXPENSES ---------- */
+/* ===========================================================
+   🔥 EXPENSES
+=========================================================== */
 function addExpense({ date, category, amount, note }) {
   window.expenses.push({
     id: uid("exp"),
@@ -250,19 +279,24 @@ function addExpense({ date, category, amount, note }) {
 }
 window.addExpense = addExpense;
 
-/* ---------- STORAGE SYNC ---------- */
+/* ===========================================================
+   🔥 STORAGE SYNC — all modules auto refresh
+=========================================================== */
 window.addEventListener("storage", () => {
-  window.types    = toArray(safeParse(localStorage.getItem(KEY_TYPES)));
-  window.stock    = toArray(safeParse(localStorage.getItem(KEY_STOCK)));
-  window.sales    = toArray(safeParse(localStorage.getItem(KEY_SALES)));
-  window.wanting  = toArray(safeParse(localStorage.getItem(KEY_WANTING)));
-  window.expenses = toArray(safeParse(localStorage.getItem(KEY_EXPENSES)));
+
+  window.types     = toArray(safeParse(localStorage.getItem(KEY_TYPES)));
+  window.stock     = toArray(safeParse(localStorage.getItem(KEY_STOCK)));
+  window.sales     = toArray(safeParse(localStorage.getItem(KEY_SALES)));
+  window.wanting   = toArray(safeParse(localStorage.getItem(KEY_WANTING)));
+  window.expenses  = toArray(safeParse(localStorage.getItem(KEY_EXPENSES)));
+  window.services  = toArray(safeParse(localStorage.getItem(KEY_SERVICES)));
 
   renderTypes?.();
   renderStock?.();
   renderSales?.();
   renderWanting?.();
   renderExpenses?.();
+  renderServiceTables?.();
   renderAnalytics?.();
   updateSummaryCards?.();
 });
