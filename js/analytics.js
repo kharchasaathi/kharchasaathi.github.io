@@ -1,16 +1,15 @@
 /* ===========================================================
-   📊 analytics.js — Smart Dashboard (FINAL v7.0)
-   ✔ Full dd-mm-yyyy / yyyy-mm-dd internal support
-   ✔ Includes Service/Repair Profits
-   ✔ Works with stock, sales, expenses, service modules
+   📊 analytics.js — Smart Dashboard (OPTION - A FINAL v8.0)
+   ✔ Sales + Service Profit + Expenses Included
+   ✔ Bar: Today / Week / Month Sales
+   ✔ Pie: Profit vs Expenses
+   ✔ Clean & Minimal Dashboard
 =========================================================== */
 
 let salesBarChart = null;
 let salesPieChart = null;
 
-/* ----------------------------------------------------------
-   DATE HELPERS
----------------------------------------------------------- */
+/* -------------------- HELPERS -------------------- */
 
 function toNum(d) {
   return d ? Number(d.replace(/-/g, "")) : 0;
@@ -22,7 +21,7 @@ function formatDate(d) {
 
 function getStartOfWeek() {
   const t = new Date();
-  const day = t.getDay(); 
+  const day = t.getDay();
   t.setDate(t.getDate() - day);
   return formatDate(t);
 }
@@ -39,14 +38,14 @@ function getExpensesByDate(date) {
 }
 
 /* ----------------------------------------------------------
-   COLLECT ANALYTICS DATA
-   (SALES + SERVICE PROFIT INCLUDED)
+   COLLECT ANALYTICS (SALES + SERVICE + EXPENSES)
 ---------------------------------------------------------- */
 function getAnalyticsData() {
   const sales = window.sales || [];
   const services = window.services || [];
+  const expenses = window.expenses || [];
 
-  const today = todayDate(); 
+  const today = todayDate();
   const weekStart = getStartOfWeek();
   const monthStart = getStartOfMonth();
 
@@ -54,58 +53,55 @@ function getAnalyticsData() {
   const weekN = toNum(weekStart);
   const monthN = toNum(monthStart);
 
-  let todaySales = 0;
-  let weekSales = 0;
-  let monthSales = 0;
-  let paidSales = 0;
-  let creditSales = 0;
-  let grossProfit = 0;
-  let serviceProfitTotal = 0;
+  let todaySales = 0,
+      weekSales = 0,
+      monthSales = 0,
+      totalProfitSales = 0,
+      totalProfitService = 0,
+      totalExpenses = 0;
 
-  /* ----- SALES DATA ----- */
+  /* ----- SALES PROFITS ----- */
   sales.forEach(s => {
-    if (!s.date) return;
-
     const d = s.date;
-    const dNum = toNum(d);
+    if (!d) return;
+
     const amt = Number(s.amount || 0);
     const prof = Number(s.profit || 0);
+
+    const dNum = toNum(d);
 
     if (d === today) todaySales += amt;
     if (dNum >= weekN) weekSales += amt;
     if (dNum >= monthN) monthSales += amt;
 
-    if (s.status === "Credit") creditSales += amt;
-    else paidSales += amt;
-
-    grossProfit += prof;
+    totalProfitSales += prof;
   });
 
   /* ----- SERVICE PROFITS ----- */
-  services.forEach(j => {
-    serviceProfitTotal += Number(j.profit || 0);
+  services.forEach(s => {
+    totalProfitService += Number(s.profit || 0);
   });
 
-  grossProfit += serviceProfitTotal; // add repair profit
+  /* ----- EXPENSES ----- */
+  expenses.forEach(e => {
+    totalExpenses += Number(e.amount || 0);
+  });
 
-  const todayExpenses = getExpensesByDate(today);
-  const netProfit = grossProfit - todayExpenses;
+  const totalProfit = totalProfitSales + totalProfitService;
+  const netProfit = totalProfit - totalExpenses;
 
   return {
     todaySales,
     weekSales,
     monthSales,
-    paidSales,
-    creditSales,
-    serviceProfitTotal,
-    grossProfit,
-    todayExpenses,
+    totalProfit,
+    totalExpenses,
     netProfit
   };
 }
 
 /* ----------------------------------------------------------
-   MAIN RENDER FUNCTION
+   RENDER DASHBOARD
 ---------------------------------------------------------- */
 function renderAnalytics() {
   const barCanvas = qs("#salesBar");
@@ -113,45 +109,41 @@ function renderAnalytics() {
 
   if (!barCanvas || !pieCanvas) return;
 
-  const data = getAnalyticsData();
+  const d = getAnalyticsData();
 
   if (salesBarChart) salesBarChart.destroy();
   if (salesPieChart) salesPieChart.destroy();
 
-  /* ------------------ BAR CHART ------------------- */
+  /* ---------- BAR CHART (SALES) ---------- */
   salesBarChart = new Chart(barCanvas, {
     type: "bar",
     data: {
-      labels: ["Today", "This Week", "This Month"],
+      labels: ["Today", "Week", "Month"],
       datasets: [{
         label: "Sales ₹",
-        data: [data.todaySales, data.weekSales, data.monthSales],
+        data: [d.todaySales, d.weekSales, d.monthSales],
         backgroundColor: ["#ff9800", "#fb8c00", "#f57c00"],
         borderRadius: 8
       }]
     },
     options: {
       responsive: true,
-      scales: { y: { beginAtZero: true } },
       plugins: {
-        title: { display: true, text: "Sales Summary" },
+        title: { display: true, text: "Sales Overview" },
         legend: { display: false }
-      }
+      },
+      scales: { y: { beginAtZero: true } }
     }
   });
 
-  /* ------------------ PIE CHART ------------------- */
+  /* ---------- PIE CHART (PROFIT vs EXPENSES) ---------- */
   salesPieChart = new Chart(pieCanvas, {
     type: "pie",
     data: {
-      labels: ["Paid Sales", "Credit Sales", "Service Profit"],
+      labels: ["Total Profit", "Expenses"],
       datasets: [{
-        data: [
-          data.paidSales,
-          data.creditSales,
-          data.serviceProfitTotal
-        ],
-        backgroundColor: ["#4caf50", "#2196f3", "#9c27b0"]
+        data: [d.totalProfit, d.totalExpenses],
+        backgroundColor: ["#4caf50", "#e53935"]
       }]
     },
     options: {
@@ -160,7 +152,7 @@ function renderAnalytics() {
         legend: { position: "bottom" },
         title: {
           display: true,
-          text: `Gross: ₹${data.grossProfit} | Net: ₹${data.netProfit}`
+          text: `Net Profit: ₹${d.netProfit}`
         }
       }
     }
@@ -177,14 +169,14 @@ setInterval(() => {
 }, 45000);
 
 /* ----------------------------------------------------------
-   STORAGE SYNC
+   SYNC STORAGE
 ---------------------------------------------------------- */
 window.addEventListener("storage", () => {
   try { renderAnalytics(); } catch {}
 });
 
 /* ----------------------------------------------------------
-   INITIAL LOAD
+   ON LOAD
 ---------------------------------------------------------- */
 window.addEventListener("load", () => {
   try { renderAnalytics(); } catch {}
