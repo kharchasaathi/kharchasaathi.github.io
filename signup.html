@@ -1,44 +1,150 @@
 <!doctype html>
-<html>
+<html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Sign up — KharchaSaathi</title>
-  <style>
-    body{font-family:Arial;padding:20px;background:#f7f7f7}
-    .card{max-width:420px;margin:40px auto;background:#fff;padding:20px;border-radius:8px;box-shadow:0 6px 20px rgba(0,0,0,0.06)}
-    input{width:100%;padding:10px;margin:8px 0;border-radius:6px;border:1px solid #ddd}
-    button{padding:10px 14px;border:none;background:#4caf50;color:#fff;border-radius:6px;cursor:pointer}
-    .muted{font-size:13px;color:#666;margin-top:8px}
-  </style>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Create Account — KharchaSaathi</title>
+
+<style>
+  body{
+    margin:0;
+    font-family:Poppins,Arial,sans-serif;
+    background:#f2f2f2;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    height:100vh;
+  }
+
+  .card{
+    background:white;
+    padding:28px;
+    width:320px;
+    border-radius:14px;
+    box-shadow:0 6px 30px rgba(0,0,0,0.15);
+  }
+
+  h2{
+    margin:0 0 16px;
+    color:#ff7a00;
+    text-align:center;
+  }
+
+  input{
+    width:100%;
+    padding:10px;
+    margin:8px 0;
+    border-radius:8px;
+    border:1px solid #ddd;
+    font-size:15px;
+  }
+
+  .pass-wrap{
+    position:relative;
+  }
+
+  .pass-wrap .eye{
+    position:absolute;
+    right:12px;
+    top:50%;
+    transform:translateY(-50%);
+    cursor:pointer;
+    font-size:18px;
+    color:#888;
+  }
+
+  button{
+    width:100%;
+    padding:10px;
+    background:#28a745;
+    color:white;
+    border:none;
+    border-radius:8px;
+    font-size:16px;
+    cursor:pointer;
+    margin-top:10px;
+  }
+
+  button:hover{
+    background:#1f8b39;
+  }
+
+  .login-link{
+    margin-top:12px;
+    font-size:14px;
+    text-align:center;
+  }
+
+  .login-link a{
+    color:#ff7a00;
+    text-decoration:none;
+  }
+
+</style>
 </head>
+
 <body>
-  <div class="card">
-    <h3>Create account</h3>
-    <input id="email" type="email" placeholder="Email" />
-    <input id="password" type="password" placeholder="Password (min 6 chars)" />
-    <button id="signUpBtn">Create account & Send verification</button>
-    <div id="msg" class="muted"></div>
+
+<div class="card">
+  <h2>Create Account</h2>
+
+  <input id="email" type="email" placeholder="Email">
+
+  <div class="pass-wrap">
+    <input id="password" type="password" placeholder="Password (min 6 chars)">
+    <span class="eye" onclick="togglePass()">👁️</span>
   </div>
 
-  <script src="https://www.gstatic.com/firebasejs/9.6.11/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.6.11/firebase-auth-compat.js"></script>
-  <script src="/js/firebase.js"></script>
+  <button id="signupBtn">Create Account</button>
 
-  <script>
-    const qs = s => document.querySelector(s);
-    qs('#signUpBtn').addEventListener('click', async () => {
-      const email = qs('#email').value.trim();
-      const pw = qs('#password').value;
-      if (!email || !pw) { qs('#msg').textContent = "Fill email & password"; return; }
-      try {
-        await window.fsSignUp(email, pw);
-        qs('#msg').textContent = "Account created. Verification email sent. Check inbox.";
-      } catch (e) {
-        qs('#msg').textContent = "Sign up failed: " + (e.message || e);
-        console.error(e);
-      }
-    });
-  </script>
+  <div class="login-link">
+    Already have an account? <a href="login.html">Login</a>
+  </div>
+</div>
+
+<script>
+function togglePass(){
+  const pass = document.getElementById("password");
+  pass.type = pass.type === "password" ? "text" : "password";
+}
+
+document.getElementById("signupBtn").addEventListener("click", async ()=>{
+
+  const email = document.getElementById("email").value.trim();
+  const pass  = document.getElementById("password").value.trim();
+
+  if(!email || !pass){
+    alert("Enter email & password");
+    return;
+  }
+
+  if(pass.length < 6){
+    alert("Password must be at least 6 characters");
+    return;
+  }
+
+  // FIREBASE SIGNUP
+  try{
+    const user = await firebase.auth().createUserWithEmailAndPassword(email, pass);
+
+    alert("Account created successfully!");
+
+    // Save login locally
+    localStorage.setItem("ks-user-email", email);
+
+    window.location.href = "/tools/business-dashboard.html";
+  }catch(err){
+    alert("Signup failed: " + err.message);
+  }
+
+});
+</script>
+
+<!-- Firebase Auth -->
+<script src="https://www.gstatic.com/firebasejs/9.6.11/firebase-auth-compat.js"></script>
+
+<!-- Firebase config + init -->
+<script src="/js/firebase.js"></script>
+
 </body>
 </html>
