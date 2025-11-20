@@ -1,16 +1,13 @@
 /* ===========================================================
-   firebase.js — Firebase Auth + Firestore + Debounced Cloud Save
-   - Email/Password sign-up, sign-in
-   - Email verification required (optional-check)
-   - Password reset
-   - onAuthStateChanged -> sets localStorage ks-user-email
-   - cloudSave / cloudLoad helpers (Firestore)
+   🔥 firebase.js — FINAL (Compat Version)
+   Works perfectly with business-dashboard (Option A)
    =========================================================== */
 
 console.log("%c🔥 firebase.js loaded", "color:#ff9800;font-weight:bold;");
 
-// --------------------------------------------------
-// Firebase Config (keep your keys here)
+/* -----------------------------------------------------------
+   Firebase Config (YOUR APP KEYS)
+----------------------------------------------------------- */
 const firebaseConfig = {
   apiKey: "AIzaSyC1TSwODhcD88-IizbtZkh3DLWMWR4CV9o",
   authDomain: "kharchasaathi-main.firebaseapp.com",
@@ -21,8 +18,9 @@ const firebaseConfig = {
   measurementId: "G-7F1V1N1YTR"
 };
 
-// --------------------------------------------------
-// Initialize Firebase (Compat Mode)
+/* -----------------------------------------------------------
+   Initialize Firebase (Compat Mode)
+----------------------------------------------------------- */
 let db = null;
 let auth = null;
 
@@ -35,150 +33,130 @@ try {
   console.error("❌ Firebase initialization failed:", e);
 }
 
-// --------------------------------------------------
-// AUTH HELPERS
-// --------------------------------------------------
+/* -----------------------------------------------------------
+   AUTH FUNCTIONS
+----------------------------------------------------------- */
 
-/**
- * Sign up with email & password.
- * - sends verification email automatically.
- * - returns a Promise that resolves with the userCredential.
- */
+// SIGN UP
 window.fsSignUp = async function (email, password) {
   if (!auth) throw new Error("Auth not available");
+
   const cred = await auth.createUserWithEmailAndPassword(email, password);
-  // send verification
-  try { await cred.user.sendEmailVerification(); }
-  catch (e) { console.warn("Verification send failed", e); }
+
+  try {
+    await cred.user.sendEmailVerification();
+  } catch (e) {
+    console.warn("Email verification send failed:", e);
+  }
   return cred;
 };
 
-/**
- * Sign in with email & password.
- * - If email not verified, you can optionally block sign-in (we allow sign-in but check).
- */
+// SIGN IN
 window.fsSignIn = async function (email, password) {
   if (!auth) throw new Error("Auth not available");
-  const cred = await auth.signInWithEmailAndPassword(email, password);
-  return cred;
+  return auth.signInWithEmailAndPassword(email, password);
 };
 
-/**
- * Sign out current user
- */
+// SIGN OUT
 window.fsSignOut = async function () {
-  if (!auth) throw new Error("Auth not available");
+  if (!auth) return;
   await auth.signOut();
-  // remove local email
   localStorage.removeItem("ks-user-email");
-  // optional: notify app
   window.dispatchEvent(new Event("storage"));
 };
 
-/**
- * Send password reset email
- */
+// RESET PASSWORD
 window.fsSendPasswordReset = async function (email) {
   if (!auth) throw new Error("Auth not available");
   return auth.sendPasswordResetEmail(email);
 };
 
-/**
- * Get current Firebase user (or null)
- */
+// Get firebase user
 window.getFirebaseUser = function () {
   return auth ? auth.currentUser : null;
 };
 
-// --------------------------------------------------
-// onAuthStateChanged -> keep localStorage key set and run cloud pull
-// --------------------------------------------------
+/* -----------------------------------------------------------
+   Auth State Listener
+----------------------------------------------------------- */
 if (auth) {
   auth.onAuthStateChanged(async (user) => {
     if (user) {
-      // If email is verified OR you want to force verification:
-      // if (!user.emailVerified) { console.warn("Email not verified"); }
       localStorage.setItem("ks-user-email", user.email || "");
-      console.log("%c🔐 Signed in as:", "color:#03a9f4;font-weight:bold;", user.email);
-      // After user signs-in, pull cloud data and merge
+
+      console.log("%c🔐 Logged in:", "color:#03a9f4;font-weight:bold;", user.email);
+
+      // auto cloud pull
       if (typeof window.cloudPullAllIfAvailable === "function") {
-        try { await window.cloudPullAllIfAvailable(); } catch (e) { console.warn("cloudPull failed", e); }
+        try { await window.cloudPullAllIfAvailable(); } catch {}
       }
-      // notify other modules
+
       window.dispatchEvent(new Event("storage"));
     } else {
-      // signed out
       localStorage.removeItem("ks-user-email");
-      console.log("%c🔓 Signed out", "color:#999");
+      console.log("%c🔓 Logged out", "color:#999");
       window.dispatchEvent(new Event("storage"));
     }
   });
 }
 
-// --------------------------------------------------
-// Helper: Cloud User Email (Used as Document ID)
-// --------------------------------------------------
+/* -----------------------------------------------------------
+   Helper – get user email for Firestore
+----------------------------------------------------------- */
 function getCloudUser() {
-  // Prefer firebase auth currentUser.email if available
-  try {
-    const fu = (auth && auth.currentUser && auth.currentUser.email) ? auth.currentUser.email : null;
-    if (fu) return fu;
-  } catch (e) { /* ignore */ }
-
+  if (auth && auth.currentUser && auth.currentUser.email) {
+    return auth.currentUser.email;
+  }
   const email = localStorage.getItem("ks-user-email");
-  return email ? email : "guest-user";
+  return email || "guest-user";
 }
 
-// --------------------------------------------------
-// CLOUD SAVE & LOAD (Firestore)
-// --------------------------------------------------
-window.cloudSave = async function (collectionName, data) {
-  if (!db) return console.error("❌ Firestore unavailable");
+/* -----------------------------------------------------------
+   CLOUD SAVE & CLOUD LOAD (per collection)
+----------------------------------------------------------- */
+window.cloudSave = async function (collection, data) {
+  if (!db) return;
+
+  const user = getCloudUser();
+
   try {
-    const userId = getCloudUser();
-    await db.collection(collectionName)
-            .doc(userId)
+    await db.collection(collection)
+            .doc(user)
             .set({ items: data }, { merge: true });
-    console.log(`☁️ Cloud Save OK → [${collectionName}] for ${userId}`);
+
+    console.log(`☁️ Cloud Save OK → [${collection}] for ${user}`);
   } catch (e) {
     console.error("❌ Cloud Save Error:", e);
   }
 };
 
-window.cloudLoad = async function (collectionName) {
-  if (!db) return console.error("❌ Firestore unavailable");
+window.cloudLoad = async function (collection) {
+  if (!db) return null;
+
+  const user = getCloudUser();
   try {
-    const userId = getCloudUser();
-    const snap = await db.collection(collectionName).doc(userId).get();
+    const snap = await db.collection(collection).doc(user).get();
     if (!snap.exists) {
-      console.warn(`⚠️ No cloud data found for "${collectionName}"`);
+      console.warn(`⚠️ No cloud data for ${collection}`);
       return null;
     }
     const data = snap.data();
-    // If we stored { items: [...] } use that
-    if (data && Array.isArray(data.items)) return data.items;
-    // fallback: return data as-is (if old format)
-    return data;
+    return Array.isArray(data.items) ? data.items : data;
   } catch (e) {
     console.error("❌ Cloud Load Error:", e);
     return null;
   }
 };
 
-// --------------------------------------------------
-// DEBOUNCED CLOUD SAVE (prevents rapid writes)
-// --------------------------------------------------
-let _cloudSaveTimer = null;
-window.cloudSaveDebounced = function (collection, data) {
-  clearTimeout(_cloudSaveTimer);
-  _cloudSaveTimer = setTimeout(() => {
-    if (typeof window.cloudSave === "function") {
-      window.cloudSave(collection, data);
-    }
+/* -----------------------------------------------------------
+   Debounced Cloud Save
+----------------------------------------------------------- */
+let _cloudSaveTimer = {};
+window.cloudSaveDebounced = function (col, data) {
+  clearTimeout(_cloudSaveTimer[col]);
+  _cloudSaveTimer[col] = setTimeout(() => {
+    window.cloudSave(col, data);
   }, 500);
 };
 
-// --------------------------------------------------
-// READY LOG
-// --------------------------------------------------
-console.log("%c⚙️ firebase.js ready (Auth + Firestore + Cloud Sync enabled)", "color:#03a9f4;font-weight:bold;");
+console.log("%c⚙️ firebase.js READY (Auth + Cloud Sync ON)", "color:#03a9f4;font-weight:bold;");
