@@ -1,22 +1,36 @@
 /* ==========================================================
-   💰 sales.js — Sales Viewer + Profit Manager (CLOUD v9.0)
-   ✔ Credit profit excluded until Paid
-   ✔ Auto Sync → Firebase Cloud (Debounced)
-   ✔ No UI changes — drop-in replacement
+   💰 sales.js — Sales Viewer + Profit Manager (FINAL v8.1)
+   • Compatible with core.saveSales (cloud-enabled) if present
+   • Falls back to localStorage when core is absent
+   • Credit sale profit excluded until marked Paid
 ========================================================== */
 
-function saveSales() {
-  localStorage.setItem("sales-data", JSON.stringify(window.sales));
+/* ----- helpers / compatibility ----- */
+const _SALES_KEY = "sales-data";
 
-  // 🔥 NEW: Cloud Sync
-  if (typeof cloudSaveDebounced === "function") {
-    cloudSaveDebounced("sales", { items: window.sales });
+/* Persist sales: if core/window.saveSales exists, prefer that (it does cloud sync).
+   Otherwise fallback to localStorage and dispatch storage event. */
+function persistSales() {
+  try {
+    // If core provided a saveSales function (cloud-enabled), call it
+    if (typeof window.saveSales === "function" && window.saveSales !== persistSales) {
+      // core.saveSales will handle local + cloud saving
+      return window.saveSales();
+    }
+  } catch (e) {
+    // ignore and fallback
   }
 
-  window.dispatchEvent(new Event("storage"));
+  // fallback: write to localStorage
+  try {
+    localStorage.setItem(_SALES_KEY, JSON.stringify(window.sales || []));
+    window.dispatchEvent(new Event("storage"));
+  } catch (e) {
+    console.error("Fallback saveSales failed:", e);
+  }
 }
 
-/* TYPE FILTER */
+/* ----- TYPE FILTER ----- */
 function refreshSaleTypeSelector() {
   const tdd = qs("#saleType");
   if (!tdd) return;
@@ -28,29 +42,31 @@ function refreshSaleTypeSelector() {
       .join("");
 }
 
-/* LIVE FILTER */
+/* ----- LIVE FILTER ----- */
 function attachImmediateSalesFilters() {
   qs("#saleType")?.addEventListener("change", renderSales);
   qs("#saleDate")?.addEventListener("change", renderSales);
 }
 
 /* ----------------------------------------------------------
-   MARK CREDIT → PAID
+   MARK CREDIT → PAID  (Main logic)
 ---------------------------------------------------------- */
 function markSalePaid(id) {
-  const s = window.sales.find(x => x.id === id);
+  const s = (window.sales || []).find(x => x.id === id);
   if (!s) return;
 
-  if (s.status === "Paid") {
+  if (String(s.status || "").toLowerCase() === "paid") {
     alert("Already Paid");
     return;
   }
 
   if (!confirm("Mark this CREDIT sale as PAID?")) return;
 
+  // Only change status to Paid — do not alter amount/profit/qty fields
   s.status = "Paid";
 
-  saveSales();
+  // Persist & re-render (uses core save if present)
+  persistSales();
   renderSales();
   updateSummaryCards?.();
   renderAnalytics?.();
@@ -63,14 +79,14 @@ qs("#clearSalesBtn")?.addEventListener("click", () => {
   if (!confirm("Delete ALL sales permanently?")) return;
 
   window.sales = [];
-  saveSales();
+  persistSales();
   renderSales();
   updateSummaryCards?.();
   renderAnalytics?.();
 });
 
 /* ----------------------------------------------------------
-   RENDER SALES TABLE
+   RENDER SALES TABLE (Credit profit excluded)
 ---------------------------------------------------------- */
 function renderSales() {
   const tbody = qs("#salesTable tbody");
@@ -95,12 +111,13 @@ function renderSales() {
 
       total += Number(s.amount || 0);
 
-      if (String(s.status).toLowerCase() !== "credit") {
+      // CREDIT sales do not contribute to profit until marked Paid
+      if (String(s.status || "").toLowerCase() !== "credit") {
         profit += Number(s.profit || 0);
       }
 
       const statusBtn =
-        s.status === "Credit"
+        String(s.status || "").toLowerCase() === "credit"
           ? `<button class="small-btn"
                style="background:#ff9800;color:#fff"
                onclick="markSalePaid('${s.id}')">CREDIT</button>`
@@ -111,10 +128,10 @@ function renderSales() {
           <td>${dispDate}</td>
           <td>${esc(s.type)}</td>
           <td>${esc(s.product)}</td>
-          <td>${s.qty}</td>
-          <td>${s.price}</td>
-          <td>${s.amount}</td>
-          <td>${s.profit}</td>
+          <td>${esc(s.qty)}</td>
+          <td>${esc(s.price)}</td>
+          <td>${esc(s.amount)}</td>
+          <td>${esc(s.profit)}</td>
           <td>${statusBtn}</td>
         </tr>
       `;
@@ -130,6 +147,7 @@ function renderSales() {
 
 /* ----------------------------------------------------------
    INITIAL LOAD
+   - ensure selector + listeners + initial render
 ---------------------------------------------------------- */
 window.addEventListener("load", () => {
   refreshSaleTypeSelector();
@@ -137,7 +155,8 @@ window.addEventListener("load", () => {
   renderSales();
 });
 
+/* expose for other modules */
 window.refreshSaleTypeSelector = refreshSaleTypeSelector;
 window.renderSales = renderSales;
 window.markSalePaid = markSalePaid;
-window.saveSales = saveSales;
+window.persistSales = persistSales;
