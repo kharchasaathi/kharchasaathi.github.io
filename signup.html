@@ -22,6 +22,7 @@
     width:320px;
     border-radius:14px;
     box-shadow:0 6px 30px rgba(0,0,0,0.15);
+    border:2px solid #ddd; /* better border */
   }
 
   h2{
@@ -35,7 +36,7 @@
     padding:10px;
     margin:8px 0;
     border-radius:8px;
-    border:1px solid #ddd;
+    border:1.8px solid #ccc;
     font-size:15px;
   }
 
@@ -92,7 +93,7 @@
 
   <div class="pass-wrap">
     <input id="password" type="password" placeholder="Password (min 6 chars)">
-    <span class="eye" onclick="togglePass()">👁️</span>
+    <span class="eye" id="pwEye">👁️</span>
   </div>
 
   <button id="signupBtn">Create Account</button>
@@ -103,38 +104,42 @@
 </div>
 
 <script>
-function togglePass(){
-  const pass = document.getElementById("password");
-  pass.type = pass.type === "password" ? "text" : "password";
-}
+  // Password show/hide
+  document.getElementById("pwEye").addEventListener("click", () => {
+    const pw = document.getElementById("password");
+    pw.type = pw.type === "password" ? "text" : "password";
+  });
 
-document.getElementById("signupBtn").addEventListener("click", async ()=>{
+  // Sign Up
+  document.getElementById("signupBtn").addEventListener("click", async ()=>{
 
-  const email = document.getElementById("email").value.trim();
-  const pass  = document.getElementById("password").value.trim();
+    const email = document.getElementById("email").value.trim();
+    const pass  = document.getElementById("password").value.trim();
 
-  if(!email || !pass){
-    alert("Enter email & password");
-    return;
-  }
+    if(!email || !pass){
+      alert("Enter email & password");
+      return;
+    }
 
-  if(pass.length < 6){
-    alert("Password must be at least 6 characters");
-    return;
-  }
+    if(pass.length < 6){
+      alert("Password must be at least 6 characters");
+      return;
+    }
 
-  try{
-    const user = await firebase.auth().createUserWithEmailAndPassword(email, pass);
+    try{
+      const userCred = await window.fsSignUp(email, pass);
+      alert("Account created successfully!");
 
-    alert("Account created successfully!");
+      localStorage.setItem("ks-user-email", email);
 
-    localStorage.setItem("ks-user-email", email);
+      // -------- Correct Redirect --------
+      window.location.href = "/tools/business-dashboard.html";
+      // ----------------------------------
 
-    window.location.href = "/tools/business-dashboard.html";
-  }catch(err){
-    alert("Signup failed: " + err.message);
-  }
-});
+    }catch(err){
+      alert("Signup failed: " + err.message);
+    }
+  });
 </script>
 
 <!-- Firebase Core -->
