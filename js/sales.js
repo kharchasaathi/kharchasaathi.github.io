@@ -1,12 +1,18 @@
 /* ==========================================================
-   💰 sales.js — Sales Viewer + Profit Manager (FINAL v8.0)
-   ✔ Credit sale profit excluded
-   ✔ Profit counted ONLY after marking "Paid"
-   ✔ Overview + Smart Dashboard auto update
+   💰 sales.js — Sales Viewer + Profit Manager (CLOUD v9.0)
+   ✔ Credit profit excluded until Paid
+   ✔ Auto Sync → Firebase Cloud (Debounced)
+   ✔ No UI changes — drop-in replacement
 ========================================================== */
 
 function saveSales() {
   localStorage.setItem("sales-data", JSON.stringify(window.sales));
+
+  // 🔥 NEW: Cloud Sync
+  if (typeof cloudSaveDebounced === "function") {
+    cloudSaveDebounced("sales", { items: window.sales });
+  }
+
   window.dispatchEvent(new Event("storage"));
 }
 
@@ -29,7 +35,7 @@ function attachImmediateSalesFilters() {
 }
 
 /* ----------------------------------------------------------
-   MARK CREDIT → PAID  (Main logic)
+   MARK CREDIT → PAID
 ---------------------------------------------------------- */
 function markSalePaid(id) {
   const s = window.sales.find(x => x.id === id);
@@ -42,14 +48,7 @@ function markSalePaid(id) {
 
   if (!confirm("Mark this CREDIT sale as PAID?")) return;
 
-  // ✔ Change only status
   s.status = "Paid";
-
-  // DO NOT change:
-  // s.amount
-  // s.profit
-  // s.qty
-  // s.price
 
   saveSales();
   renderSales();
@@ -71,7 +70,7 @@ qs("#clearSalesBtn")?.addEventListener("click", () => {
 });
 
 /* ----------------------------------------------------------
-   RENDER SALES TABLE (Credit profit excluded)
+   RENDER SALES TABLE
 ---------------------------------------------------------- */
 function renderSales() {
   const tbody = qs("#salesTable tbody");
@@ -96,7 +95,6 @@ function renderSales() {
 
       total += Number(s.amount || 0);
 
-      // ⭐ CREDIT కే profit add అవ్వదు
       if (String(s.status).toLowerCase() !== "credit") {
         profit += Number(s.profit || 0);
       }
