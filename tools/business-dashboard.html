@@ -865,15 +865,14 @@ window.addEventListener("load", () => {
   });
 
   qs("#collectSvcInvBtn")?.addEventListener("click", () => {
-    window.collected.svcInv += window.getServiceInvestmentCollected();
+    window.collected.svcInv += window.getServiceInvestment();
     alert("Service Investment Collected!");
   });
 
   qs("#collectSvcProfitBtn")?.addEventListener("click", () => {
-    window.collected.svcProfit += window.getServiceProfitCollected();
+    window.collected.svcProfit += window.getServiceProfit();
     alert("Service Profit Collected!");
   });
 </script>
-
 </body>
 </html>
