@@ -10,14 +10,14 @@
 
   <style>
     :root{
-      --orange:#ff7a00; 
+      --orange:#ff7a00;
       --orange-dark:#cc6300;
-      --bg:#f8f9fa; 
-      --card:#ffffff; 
+      --bg:#f8f9fa;
+      --card:#ffffff;
       --text:#222;
-      --dark-bg:#0f0f0f; 
-      --dark-card:#1a1a1a; 
-      --dark-text:#f2f2f2; 
+      --dark-bg:#0f0f0f;
+      --dark-card:#1a1a1a;
+      --dark-text:#f2f2f2;
       --dark-border:#333;
     }
 
@@ -136,6 +136,18 @@
       align-items:flex-start
     }
 
+    .card{
+      background:var(--card);
+      padding:12px;
+      border-radius:10px;
+      box-shadow:0 4px 12px rgba(0,0,0,0.05);
+      min-width:140px;
+    }
+    body.dark .card{
+      background:var(--dark-card);
+      border:1px solid var(--dark-border);
+    }
+
     /* ---------- TABLE ---------- */
     table{
       width:100%;
@@ -185,6 +197,36 @@
       padding:6px;
       border-radius:6px;
       border:1px solid #ddd
+    }
+
+    /* ---------- HELP MODAL ---------- */
+    .help-modal{
+      position:fixed;
+      inset:0;
+      display:none;
+      align-items:center;
+      justify-content:center;
+      background:rgba(0,0,0,0.6);
+      z-index:999;
+    }
+    .help-content{
+      background:var(--card);
+      padding:16px;
+      border-radius:12px;
+      max-width:520px;
+      max-height:80vh;
+      overflow:auto;
+    }
+    body.dark .help-content{
+      background:var(--dark-card);
+      color:var(--dark-text);
+    }
+    .version-info{
+      font-size:10px;
+      color:#999;
+      margin-top:6px;
+      display:block;
+      text-align:center;
     }
 
     /* ---------- MOBILE FIXES ---------- */
@@ -252,7 +294,7 @@
     </div>
   </div>
 
-  <!-- ===== TABS (Profit tab included correctly inside the group) ===== -->
+  <!-- ===== TABS (Profit tab inside group) ===== -->
   <div class="tabs" role="tablist">
     <div class="tab active" data-tab="types">🗂 Types</div>
     <div class="tab" data-tab="stock">📦 Stock</div>
@@ -272,6 +314,7 @@
               text-align:center;">
     Profit: ₹0
   </div>
+
   <!-- ===== TYPES ===== -->
   <section id="types" class="section active">
     <h3>🗂 Manage Item Types</h3>
@@ -327,6 +370,7 @@
       <tbody></tbody>
     </table>
   </section>
+
   <!-- ===== SALES ===== -->
   <section id="sales" class="section">
     <h3>💰 Sales & Profit</h3>
@@ -377,7 +421,6 @@
     </table>
   </section>
 
-
   <!-- ===== WANTING ===== -->
   <section id="wanting" class="section">
     <h3>🛒 Wanting List</h3>
@@ -404,682 +447,635 @@
       <tbody></tbody>
     </table>
   </section>
+
   <!-- ===== SERVICE / REPAIR ===== -->
-<section id="service" class="section">
-  <h3>🛠 Service / Repair Manager</h3>
+  <section id="service" class="section">
+    <h3>🛠 Service / Repair Manager</h3>
 
-  <!-- REGISTER NEW JOB -->
-  <div class="row-inline" style="margin:10px 0;align-items:center;gap:10px">
-    <input id="svcReceivedDate" type="date" placeholder="Received date" style="width:160px">
-    <input id="svcCustomer" type="text" placeholder="Customer name" style="min-width:160px">
-    <input id="svcPhone" type="text" placeholder="Phone Number" style="width:140px">
-    <select id="svcItemType" style="width:120px">
-      <option value="Mobile">Mobile</option>
-      <option value="Laptop">Laptop</option>
-      <option value="Other">Other</option>
-    </select>
-    <input id="svcModel" type="text" placeholder="Model" style="min-width:130px">
-    <input id="svcProblem" type="text" placeholder="Problem / Complaint" style="min-width:220px">
-    <input id="svcAdvance" type="number" placeholder="Advance ₹ (0)" style="width:120px">
-    <button id="addServiceBtn" class="small-btn">Add Job</button>
-  </div>
-
-  <!-- SUMMARY -->
-  <div class="flex-row" style="margin:8px 0;">
-    <div class="card" style="min-width:140px">
-      <small>Pending</small>
-      <div id="svcPendingCount">0</div>
-    </div>
-    <div class="card" style="min-width:140px">
-      <small>Completed</small>
-      <div id="svcCompletedCount">0</div>
-    </div>
-    <div class="card" style="min-width:140px">
-      <small>Total Repair Profit</small>
-      <div id="svcTotalProfit">₹0</div>
-    </div>
-  </div>
-
-  <!-- PENDING JOBS TABLE -->
-  <h4>Pending / Active Jobs</h4>
-  <table id="svcTable">
-    <thead>
-      <tr>
-        <th>Job ID</th>
-        <th>Received</th>
-        <th>Customer</th>
-        <th>Phone</th>
-        <th>Item</th>
-        <th>Model</th>
-        <th>Problem</th>
-        <th>Status</th>
-        <th>Action</th>
-      </tr>
-    </thead>
-    <tbody></tbody>
-  </table>
-
-  <button id="clearServiceBtn"
-    class="small-btn"
-    style="background:#b71c1c;color:white;margin:10px 0;">
-    🗑️ Clear All Jobs
-  </button>
-
-  <!-- COMPLETED JOBS / HISTORY -->
-  <h4 style="margin-top:14px">Completed / History</h4>
-  <table id="svcHistoryTable">
-    <thead>
-      <tr>
-        <th>Job ID</th>
-        <th>Received</th>
-        <th>Completed</th>
-        <th>Customer</th>
-        <th>Item</th>
-        <th>Invest</th>
-        <th>Paid</th>
-        <th>Profit</th>
-        <th>Status</th>
-      </tr>
-    </thead>
-    <tbody></tbody>
-  </table>
-
-  <!-- PIE CHART (Status) -->
-  <div style="max-width:520px;margin:14px auto;">
-    <canvas id="svcPie" height="150"></canvas>
-  </div>
-
-</section>
-  <!-- ===== OVERVIEW ===== -->
-<section id="dashboard" class="section">
-  <h3>📊 Business Overview</h3>
-
-  <div id="summaryCards" class="flex-row" style="margin-top:10px">
-
-    <div class="card">
-      <div style="font-size:26px">💰</div>
-      <b id="todaySales" style="font-size:20px;color:var(--orange)">₹0</b><br>
-      <small>Today's Sales</small>
+    <!-- REGISTER NEW JOB -->
+    <div class="row-inline" style="margin:10px 0;align-items:center;gap:10px">
+      <input id="svcReceivedDate" type="date" placeholder="Received date" style="width:160px">
+      <input id="svcCustomer" type="text" placeholder="Customer name" style="min-width:160px">
+      <input id="svcPhone" type="text" placeholder="Phone Number" style="width:140px">
+      <select id="svcItemType" style="width:120px">
+        <option value="Mobile">Mobile</option>
+        <option value="Laptop">Laptop</option>
+        <option value="Other">Other</option>
+      </select>
+      <input id="svcModel" type="text" placeholder="Model" style="min-width:130px">
+      <input id="svcProblem" type="text" placeholder="Problem / Complaint" style="min-width:220px">
+      <input id="svcAdvance" type="number" placeholder="Advance ₹ (0)" style="width:120px">
+      <button id="addServiceBtn" class="small-btn">Add Job</button>
     </div>
 
-    <div class="card">
-      <div style="font-size:26px">💳</div>
-      <b id="todayCredit" style="font-size:20px;color:var(--orange)">₹0</b><br>
-      <small>Today's Credit</small>
-    </div>
-
-    <div class="card">
-      <div style="font-size:26px">🧾</div>
-      <b id="todayExpenses" style="font-size:20px;color:var(--orange)">₹0</b><br>
-      <small>Today's Expenses</small>
-    </div>
-
-    <div class="card">
-      <div style="font-size:26px">📈</div>
-      <b id="todayGross" style="font-size:20px;color:var(--orange)">₹0</b><br>
-      <small>Today's Gross Profit</small>
-    </div>
-
-    <div class="card">
-      <div style="font-size:26px">💹</div>
-      <b id="todayNet" style="font-size:20px;color:var(--orange)">₹0</b><br>
-      <small>Today's NET Profit</small>
-    </div>
-
-    <div class="card">
-      <div style="font-size:26px">📦</div>
-      <b id="stockRemainValue" style="font-size:20px;color:var(--orange)">0%</b><br>
-      <small>Stock Remaining</small>
-
-      <div style="margin-top:6px;height:6px;background:#ddd;border-radius:4px">
-        <div id="stockRemainBar"
-             style="height:6px;width:0%;background:var(--orange);border-radius:4px">
-        </div>
+    <!-- SUMMARY -->
+    <div class="flex-row" style="margin:8px 0;">
+      <div class="card" style="min-width:140px">
+        <small>Pending</small>
+        <div id="svcPendingCount">0</div>
+      </div>
+      <div class="card" style="min-width:140px">
+        <small>Completed</small>
+        <div id="svcCompletedCount">0</div>
+      </div>
+      <div class="card" style="min-width:140px">
+        <small>Total Repair Profit</small>
+        <div id="svcTotalProfit">₹0</div>
       </div>
     </div>
 
-  </div>
-</section>
-  <!-- ===== ANALYTICS (SMART DASHBOARD) ===== -->
-<section id="analytics" class="section">
-  <h3>📈 Smart Dashboard</h3>
+    <!-- PENDING JOBS TABLE -->
+    <h4>Pending / Active Jobs</h4>
+    <table id="svcTable">
+      <thead>
+        <tr>
+          <th>Job ID</th>
+          <th>Received</th>
+          <th>Customer</th>
+          <th>Phone</th>
+          <th>Item</th>
+          <th>Model</th>
+          <th>Problem</th>
+          <th>Status</th>
+          <th>Action</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
 
-  <!-- Summary Cards -->
-  <div class="flex-row" style="margin-bottom:18px">
-
-    <div class="card" style="flex:1;min-width:140px">
-      <h4>Today Sales</h4>
-      <b id="sumToday">₹0</b>
-    </div>
-
-    <div class="card" style="flex:1;min-width:140px">
-      <h4>This Week</h4>
-      <b id="sumWeek">₹0</b>
-    </div>
-
-    <div class="card" style="flex:1;min-width:140px">
-      <h4>This Month</h4>
-      <b id="sumMonth">₹0</b>
-    </div>
-
-    <div class="card" style="flex:1;min-width:140px">
-      <h4>Gross Profit</h4>
-      <b id="sumGross">₹0</b>
-    </div>
-
-    <div class="card" style="flex:1;min-width:140px">
-      <h4>Net Profit</h4>
-      <b id="sumNet">₹0</b>
-    </div>
-
-  </div>
-
-  <!-- Bar Chart -->
-  <div style="max-width:900px;margin:auto">
-    <canvas id="salesBar" height="150"></canvas>
-  </div>
-  <br>
-
-  <!-- Pie Chart -->
-  <div style="max-width:600px;margin:auto">
-    <canvas id="salesPie" height="150"></canvas>
-  </div>
-
-  <!-- ===== COLLECT BUTTONS ROW ===== -->
-  <div style="
-        margin-top:18px;
-        text-align:center;
-        display:flex;
-        gap:10px;
-        flex-wrap:wrap;
-        justify-content:center">
-
-    <button id="collectSalesInvBtn" class="small-btn" style="background:#ff9800">
-      Collect Stock Investment
+    <button id="clearServiceBtn"
+      class="small-btn"
+      style="background:#b71c1c;color:white;margin:10px 0;">
+      🗑️ Clear All Jobs
     </button>
 
-    <button id="collectSalesProfitBtn" class="small-btn" style="background:#4caf50">
-      Collect Sales Profit
-    </button>
+    <!-- COMPLETED JOBS / HISTORY -->
+    <h4 style="margin-top:14px">Completed / History</h4>
+    <table id="svcHistoryTable">
+      <thead>
+        <tr>
+          <th>Job ID</th>
+          <th>Received</th>
+          <th>Completed</th>
+          <th>Customer</th>
+          <th>Item</th>
+          <th>Invest</th>
+          <th>Paid</th>
+          <th>Profit</th>
+          <th>Status</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
 
-    <button id="collectSvcInvBtn" class="small-btn" style="background:#03a9f4">
-      Collect Service Investment
-    </button>
+    <!-- PIE CHART (Status) -->
+    <div style="max-width:520px;margin:14px auto;">
+      <canvas id="svcPie" height="150"></canvas>
+    </div>
 
-    <button id="collectSvcProfitBtn" class="small-btn" style="background:#01579b">
-      Collect Service Profit
-    </button>
+  </section>
 
-  </div>
+  <!-- ===== OVERVIEW ===== -->
+  <section id="dashboard" class="section">
+    <h3>📊 Business Overview</h3>
 
-</section>
-  
+    <div id="summaryCards" class="flex-row" style="margin-top:10px">
+
+      <div class="card">
+        <div style="font-size:26px">💰</div>
+        <b id="todaySales" style="font-size:20px;color:var(--orange)">₹0</b><br>
+        <small>Today's Sales</small>
+      </div>
+
+      <div class="card">
+        <div style="font-size:26px">💳</div>
+        <b id="todayCredit" style="font-size:20px;color:var(--orange)">₹0</b><br>
+        <small>Today's Credit</small>
+      </div>
+
+      <div class="card">
+        <div style="font-size:26px">🧾</div>
+        <b id="todayExpenses" style="font-size:20px;color:var(--orange)">₹0</b><br>
+        <small>Today's Expenses</small>
+      </div>
+
+      <div class="card">
+        <div style="font-size:26px">📈</div>
+        <b id="todayGross" style="font-size:20px;color:var(--orange)">₹0</b><br>
+        <small>Today's Gross Profit</small>
+      </div>
+
+      <div class="card">
+        <div style="font-size:26px">💹</div>
+        <b id="todayNet" style="font-size:20px;color:var(--orange)">₹0</b><br>
+        <small>Today's NET Profit</small>
+      </div>
+
+      <div class="card">
+        <div style="font-size:26px">📦</div>
+        <b id="stockRemainValue" style="font-size:20px;color:var(--orange)">0%</b><br>
+        <small>Stock Remaining</small>
+
+        <div style="margin-top:6px;height:6px;background:#ddd;border-radius:4px">
+          <div id="stockRemainBar"
+               style="height:6px;width:0%;background:var(--orange);border-radius:4px">
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ===== SMART DASHBOARD (CLEAN 4 ITEMS) ===== -->
+  <section id="analytics" class="section">
+    <h3>📈 Smart Dashboard (Clean)</h3>
+
+    <div class="flex-row" style="margin-bottom:18px">
+
+      <div class="card" style="flex:1;min-width:160px">
+        <h4>Total Profit</h4>
+        <b id="dashProfit" style="font-size:22px;color:#2e7d32">₹0</b>
+      </div>
+
+      <div class="card" style="flex:1;min-width:160px">
+        <h4>Total Expenses</h4>
+        <b id="dashExpenses" style="font-size:22px;color:#c62828">₹0</b>
+      </div>
+
+      <div class="card" style="flex:1;min-width:160px">
+        <h4>Credit Sales</h4>
+        <b id="dashCredit" style="font-size:22px;color:#1565c0">₹0</b>
+      </div>
+
+      <div class="card" style="flex:1;min-width:160px">
+        <h4>Total Investment</h4>
+        <b id="dashInv" style="font-size:22px;color:#fbc02d">₹0</b>
+      </div>
+
+    </div>
+
+    <div style="max-width:600px;margin:auto">
+      <canvas id="cleanPie" height="150"></canvas>
+    </div>
+
+    <!-- COLLECT BUTTONS ROW (Analytics tab) -->
+    <div style="
+          margin-top:18px;
+          text-align:center;
+          display:flex;
+          gap:10px;
+          flex-wrap:wrap;
+          justify-content:center">
+
+      <button id="collectSalesInvBtn" class="small-btn" style="background:#ff9800">
+        Collect Stock Investment
+      </button>
+
+      <button id="collectSalesProfitBtn" class="small-btn" style="background:#4caf50">
+        Collect Sales Profit
+      </button>
+
+      <button id="collectSvcInvBtn" class="small-btn" style="background:#03a9f4">
+        Collect Service Investment
+      </button>
+
+      <button id="collectSvcProfitBtn" class="small-btn" style="background:#01579b">
+        Collect Service Profit
+      </button>
+
+    </div>
+  </section>
+
   <!-- ===== EXPENSES ===== -->
-<section id="expenses" class="section">
-  <h3>🧾 Expenses</h3>
+  <section id="expenses" class="section">
+    <h3>🧾 Expenses</h3>
 
-  <div class="row-inline" style="margin-bottom:8px">
-    <input id="expDate" type="date" onfocus="if(!this.value)this.value=todayDate()">
-    <input id="expCategory" type="text" placeholder="Category" style="min-width:140px">
-    <input id="expAmount" type="number" placeholder="Amount" style="width:120px">
-    <input id="expNote" type="text" placeholder="Note" style="min-width:200px">
-    <button id="addExpBtn" class="small-btn">Add Expense</button>
+    <div class="row-inline" style="margin-bottom:8px">
+      <input id="expDate" type="date" onfocus="if(!this.value)this.value=todayDate()">
+      <input id="expCategory" type="text" placeholder="Category" style="min-width:140px">
+      <input id="expAmount" type="number" placeholder="Amount" style="width:120px">
+      <input id="expNote" type="text" placeholder="Note" style="min-width:200px">
+      <button id="addExpBtn" class="small-btn">Add Expense</button>
+    </div>
+
+    <table id="expensesTable">
+      <thead>
+        <tr>
+          <th>Date</th>
+          <th>Category</th>
+          <th>Amount</th>
+          <th>Note</th>
+          <th>Action</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+
+      <tfoot>
+        <tr>
+          <td colspan="2" style="text-align:right">Total:</td>
+          <td id="expensesTotal">0</td>
+          <td></td><td></td>
+        </tr>
+      </tfoot>
+    </table>
+  </section>
+
+  <!-- ===== PROFIT TAB ===== -->
+  <section id="profit" class="section">
+    <h3>💰 Profit Manager</h3>
+
+    <div class="flex-row" style="margin-top:12px">
+
+      <div class="card" style="flex:1;min-width:180px">
+        <h4>📦 Stock Investment (After Sale)</h4>
+        <b id="pStockInv" style="font-size:22px;color:#ff9800">₹0</b><br>
+        <button id="collectStockInvBtn" class="small-btn" style="margin-top:6px;background:#ff9800">
+          Collect
+        </button>
+      </div>
+
+      <div class="card" style="flex:1;min-width:180px">
+        <h4>💰 Sales Profit</h4>
+        <b id="pSalesProfit" style="font-size:22px;color:#4caf50">₹0</b><br>
+        <button id="collectSalesProfitBtn2" class="small-btn" style="margin-top:6px;background:#4caf50">
+          Collect
+        </button>
+      </div>
+
+      <div class="card" style="flex:1;min-width:180px">
+        <h4>🛠 Service Investment</h4>
+        <b id="pSvcInv" style="font-size:22px;color:#03a9f4">₹0</b><br>
+        <button id="collectSvcInvBtn2" class="small-btn" style="margin-top:6px;background:#03a9f4">
+          Collect
+        </button>
+      </div>
+
+      <div class="card" style="flex:1;min-width:180px">
+        <h4>⚙️ Service Profit</h4>
+        <b id="pSvcProfit" style="font-size:22px;color:#01579b">₹0</b><br>
+        <button id="collectSvcProfitBtn2" class="small-btn" style="margin-top:6px;background:#01579b">
+          Collect
+        </button>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- HELP + VERSION -->
+  <div class="footer-btns" style="margin-top:18px; text-align:center;">
+    <a href="#" id="helpLink" class="small-btn">📘 Help & Guide</a>
+    <div class="version-info">v2.0 — Fixed filters & dates + Profit tab</div>
   </div>
 
-  <table id="expensesTable">
-    <thead>
-      <tr>
-        <th>Date</th>
-        <th>Category</th>
-        <th>Amount</th>
-        <th>Note</th>
-        <th>Action</th>
-      </tr>
-    </thead>
-    <tbody></tbody>
-
-    <tfoot>
-      <tr>
-        <td colspan="2" style="text-align:right">Total:</td>
-        <td id="expensesTotal">0</td>
-        <td></td><td></td>
-      </tr>
-    </tfoot>
-  </table>
-</section>
-  <!-- ===== PROFIT (NEW TAB) ===== -->
-<section id="profit" class="section">
-  <h3>💰 Profit Manager</h3>
-
-  <div class="flex-row" style="margin-top:12px">
-
-    <!-- STOCK INVESTMENT -->
-    <div class="card" style="flex:1;min-width:180px">
-      <h4>📦 Stock Investment (After Sale)</h4>
-      <b id="pStockInv" style="font-size:22px;color:#ff9800">₹0</b><br>
-      <button id="collectStockInvBtn" class="small-btn" style="margin-top:6px;background:#ff9800">
-        Collect
-      </button>
+  <div id="helpModal" class="help-modal">
+    <div class="help-content">
+      <h2>📘 Quick Help & User Guide</h2>
+      <ul style="line-height:1.6;font-size:15px">
+        <li><b>Types</b> — Create and manage product categories.</li>
+        <li><b>Stock</b> — Add items to inventory, track qty and cost.</li>
+        <li><b>Sales</b> — Paid & Credit sales, profit auto-calculated.</li>
+        <li><b>Wanting</b> — List of items to purchase / restock.</li>
+        <li><b>Service</b> — Repair jobs, investment, payment & profit.</li>
+        <li><b>Expenses</b> — Daily expenses; reduces net profit.</li>
+        <li><b>Overview</b> — Today’s sales, credit, expenses & stock.</li>
+        <li><b>Smart Dashboard</b> — Pie: Profit, Expenses, Credit, Investment.</li>
+        <li><b>Profit</b> — Pending amounts to collect (4 blocks).</li>
+      </ul>
+      <button class="small-btn" onclick="toggleHelp()">Close</button>
     </div>
-
-    <!-- SALES PROFIT -->
-    <div class="card" style="flex:1;min-width:180px">
-      <h4>💰 Sales Profit</h4>
-      <b id="pSalesProfit" style="font-size:22px;color:#4caf50">₹0</b><br>
-      <button id="collectSalesProfitBtn2" class="small-btn" style="margin-top:6px;background:#4caf50">
-        Collect
-      </button>
-    </div>
-
-    <!-- SERVICE INVESTMENT -->
-    <div class="card" style="flex:1;min-width:180px">
-      <h4>🛠 Service Investment</h4>
-      <b id="pSvcInv" style="font-size:22px;color:#03a9f4">₹0</b><br>
-      <button id="collectSvcInvBtn2" class="small-btn" style="margin-top:6px;background:#03a9f4">
-        Collect
-      </button>
-    </div>
-
-    <!-- SERVICE PROFIT -->
-    <div class="card" style="flex:1;min-width:180px">
-      <h4>⚙️ Service Profit</h4>
-      <b id="pSvcProfit" style="font-size:22px;color:#01579b">₹0</b><br>
-      <button id="collectSvcProfitBtn2" class="small-btn" style="margin-top:6px;background:#01579b">
-        Collect
-      </button>
-    </div>
-
   </div>
-</section>
+
+  <!-- ========== JS LOGIC (BASE) ========== -->
   <script>
-window.renderProfitTab = function () {
-  qs("#pStockInv").textContent   = "₹" + (window.getStockInvestmentCollected?.() || 0);
-  qs("#pSalesProfit").textContent = "₹" + (window.getSalesProfitCollected?.() || 0);
-  qs("#pSvcInv").textContent      = "₹" + (window.getServiceInvestmentCollected?.() || 0);
-  qs("#pSvcProfit").textContent   = "₹" + (window.getServiceProfitCollected?.() || 0);
-};
+    // helpers
+    const qs  = s => document.querySelector(s);
+    const qsa = s => Array.from(document.querySelectorAll(s));
 
-/* ------- BUTTON ACTIONS ------- */
+    function toggleHelp(){
+      const m = qs('#helpModal');
+      if (!m) return;
+      m.style.display = (m.style.display==='flex' ? 'none' : 'flex');
+    }
 
-qs("#collectStockInvBtn")?.addEventListener("click", () => {
-  if (confirm("Collect Stock Investment?")) {
-    localStorage.setItem("collected_stock_inv", Date.now());
-    renderProfitTab();
-    renderAnalytics?.();
-  }
-});
+    qs('#helpLink')?.addEventListener('click', e=>{
+      e.preventDefault();
+      toggleHelp();
+    });
 
-qs("#collectSalesProfitBtn2")?.addEventListener("click", () => {
-  if (confirm("Collect Sales Profit?")) {
-    localStorage.setItem("collected_sales_profit", Date.now());
-    renderProfitTab();
-    renderAnalytics?.();
-  }
-});
-
-qs("#collectSvcInvBtn2")?.addEventListener("click", () => {
-  if (confirm("Collect Service Investment?")) {
-    localStorage.setItem("collected_svc_inv", Date.now());
-    renderProfitTab();
-    renderAnalytics?.();
-  }
-});
-
-qs("#collectSvcProfitBtn2")?.addEventListener("click", () => {
-  if (confirm("Collect Service Profit?")) {
-    localStorage.setItem("collected_svc_profit", Date.now());
-    renderProfitTab();
-    renderAnalytics?.();
-  }
-});
-</script>
-  <!-- ===== ANALYTICS (SMART DASHBOARD - CLEAN 4 ITEMS) ===== -->
-<section id="analytics" class="section">
-  <h3>📈 Smart Dashboard (Clean)</h3>
-
-  <div class="flex-row" style="margin-bottom:18px">
-
-    <div class="card" style="flex:1;min-width:160px">
-      <h4>Total Profit</h4>
-      <b id="dashProfit" style="font-size:22px;color:#2e7d32">₹0</b>
-    </div>
-
-    <div class="card" style="flex:1;min-width:160px">
-      <h4>Total Expenses</h4>
-      <b id="dashExpenses" style="font-size:22px;color:#c62828">₹0</b>
-    </div>
-
-    <div class="card" style="flex:1;min-width:160px">
-      <h4>Credit Sales</h4>
-      <b id="dashCredit" style="font-size:22px;color:#1565c0">₹0</b>
-    </div>
-
-    <div class="card" style="flex:1;min-width:160px">
-      <h4>Total Investment</h4>
-      <b id="dashInv" style="font-size:22px;color:#fbc02d">₹0</b>
-    </div>
-
-  </div>
-
-  <div style="max-width:600px;margin:auto">
-    <canvas id="cleanPie" height="150"></canvas>
-  </div>
-</section>
-  <script>
-let cleanPieChart = null;
-
-window.renderAnalytics = function () {
-
-  // --- Collect totals ---
-  const profit  = window.getSalesProfitCollected?.() + window.getServiceProfitCollected?.();
-  const expense = (window.expenses || []).reduce((a,b) => a + Number(b.amount||0), 0);
-  const credit  = (window.sales || []).filter(s => s.status==="Credit")
-                        .reduce((a,b) => a + Number(b.amount||0), 0);
-
-  const inv = 
-    window.getSalesInvestmentCollected?.() +
-    window.getServiceInvestmentCollected?.();
-
-  // --- Update cards ---
-  qs("#dashProfit").textContent   = "₹" + profit;
-  qs("#dashExpenses").textContent = "₹" + expense;
-  qs("#dashCredit").textContent   = "₹" + credit;
-  qs("#dashInv").textContent      = "₹" + inv;
-
-  // --- PIE CHART DATA ---
-  const data = {
-    labels: ["Profit", "Expenses", "Credit Sales", "Investment"],
-    datasets: [{
-      data: [profit, expense, credit, inv],
-      backgroundColor: ["#2e7d32", "#c62828", "#1565c0", "#fbc02d"]
-    }]
-  };
-
-  // --- Destroy old chart ---
-  if (cleanPieChart) cleanPieChart.destroy();
-
-  // --- Render new chart ---
-  const ctx = document.getElementById("cleanPie").getContext("2d");
-
-  cleanPieChart = new Chart(ctx, {
-    type: "pie",
-    data,
-    options: {
-      responsive: true,
-      plugins: {
-        legend: { position: "bottom" }
+    // date helpers (dd-mm-yyyy <-> yyyy-mm-dd)
+    window.toDisplay = function(d) {
+      if (!d) return "";
+      if (d.includes("-")) {
+        const [y,m,dd] = d.split("-");
+        if (y.length === 4) return `${dd}-${m}-${y}`;
       }
-    }
-  });
-};
-</script>
-  <script>
-(function () {
-  const COLLECT_KEY = "ks-collected";
-
-  /* -----------------------------
-     1) LOAD / SAVE COLLECTED DATA
-  ----------------------------- */
-  function loadCollected() {
-    try {
-      const raw = localStorage.getItem(COLLECT_KEY);
-      const obj = raw ? JSON.parse(raw) : {};
-      window.collected = {
-        stockInv:   Number(obj.stockInv   || 0),
-        salesProfit:Number(obj.salesProfit|| 0),
-        svcInv:     Number(obj.svcInv     || 0),
-        svcProfit:  Number(obj.svcProfit  || 0),
-      };
-    } catch (e) {
-      window.collected = { stockInv:0, salesProfit:0, svcInv:0, svcProfit:0 };
-    }
-  }
-
-  function saveCollected() {
-    try {
-      localStorage.setItem(COLLECT_KEY, JSON.stringify(window.collected));
-    } catch (e) {
-      // ignore
-    }
-  }
-
-  function clamp(v) { return v < 0 ? 0 : v; }
-
-  /* -----------------------------
-     2) PENDING (NOT COLLECTED) VALUES
-  ----------------------------- */
-  window.getPendingStockInvestment = function () {
-    // "after sale" = SOLD stock investment
-    const total = window.getSalesInvestmentCollected?.() || 0;
-    return clamp(total - (window.collected.stockInv || 0));
-  };
-
-  window.getPendingSalesProfit = function () {
-    const total = window.getSalesProfitCollected?.() || 0;
-    return clamp(total - (window.collected.salesProfit || 0));
-  };
-
-  window.getPendingServiceInvestment = function () {
-    const total = window.getServiceInvestmentCollected?.() || 0;
-    return clamp(total - (window.collected.svcInv || 0));
-  };
-
-  window.getPendingServiceProfit = function () {
-    const total = window.getServiceProfitCollected?.() || 0;
-    return clamp(total - (window.collected.svcProfit || 0));
-  };
-
-  /* -----------------------------
-     3) PROFIT TAB RENDER
-  ----------------------------- */
-  window.renderProfitTab = function () {
-    const elStock = qs("#pStockInv");
-    const elSales = qs("#pSalesProfit");
-    const elSvcInv = qs("#pSvcInv");
-    const elSvcProfit = qs("#pSvcProfit");
-
-    if (elStock)    elStock.textContent    = "₹" + window.getPendingStockInvestment();
-    if (elSales)    elSales.textContent    = "₹" + window.getPendingSalesProfit();
-    if (elSvcInv)   elSvcInv.textContent   = "₹" + window.getPendingServiceInvestment();
-    if (elSvcProfit)elSvcProfit.textContent= "₹" + window.getPendingServiceProfit();
-  };
-
-  /* -----------------------------
-     4) COLLECT HELPERS
-  ----------------------------- */
-  function collectAndRefresh(type) {
-    let add = 0;
-    let label = "";
-
-    if (type === "stockInv") {
-      add = window.getPendingStockInvestment();
-      label = "Stock Investment";
-    } else if (type === "salesProfit") {
-      add = window.getPendingSalesProfit();
-      label = "Sales Profit";
-    } else if (type === "svcInv") {
-      add = window.getPendingServiceInvestment();
-      label = "Service Investment";
-    } else if (type === "svcProfit") {
-      add = window.getPendingServiceProfit();
-      label = "Service Profit";
-    }
-
-    if (!add) {
-      alert("Nothing pending to collect.");
-      return;
-    }
-
-    if (!confirm(`Collect ₹${add} from ${label}?`)) return;
-
-    if (type === "stockInv")       window.collected.stockInv   += add;
-    else if (type === "salesProfit") window.collected.salesProfit += add;
-    else if (type === "svcInv")    window.collected.svcInv     += add;
-    else if (type === "svcProfit") window.collected.svcProfit  += add;
-
-    saveCollected();
-    window.renderProfitTab?.();
-    window.renderAnalytics?.();
-  }
-
-  /* -----------------------------
-     5) CLEAN SMART DASHBOARD (4 ITEMS)
-     (OVERRIDES renderAnalytics)
-  ----------------------------- */
-  let cleanPieChart = null;
-
-  window.renderAnalytics = function () {
-    const profit =
-      window.getPendingSalesProfit() +
-      window.getPendingServiceProfit();
-
-    const expenses = (window.expenses || [])
-      .reduce((a, b) => a + Number(b.amount || 0), 0);
-
-    const credit = (window.sales || [])
-      .filter(s => String(s.status || "").toLowerCase() === "credit")
-      .reduce((a, b) => a + Number(b.amount || 0), 0);
-
-    const investment =
-      window.getPendingStockInvestment() +
-      window.getPendingServiceInvestment();
-
-    // Top cards in Smart Dashboard
-    qs("#dashProfit")   && (qs("#dashProfit").textContent   = "₹" + profit);
-    qs("#dashExpenses") && (qs("#dashExpenses").textContent = "₹" + expenses);
-    qs("#dashCredit")   && (qs("#dashCredit").textContent   = "₹" + credit);
-    qs("#dashInv")      && (qs("#dashInv").textContent      = "₹" + investment);
-
-    const canvas = document.getElementById("cleanPie");
-    if (!canvas) return;
-
-    const ctx = canvas.getContext("2d");
-    if (cleanPieChart) cleanPieChart.destroy();
-
-    cleanPieChart = new Chart(ctx, {
-      type: "pie",
-      data: {
-        labels: ["Profit", "Expenses", "Credit Sales", "Investment"],
-        datasets: [{
-          data: [profit, expenses, credit, investment],
-          backgroundColor: ["#2e7d32", "#c62828", "#1565c0", "#fbc02d"]
-        }]
-      },
-      options: {
-        responsive: true,
-        plugins: {
-          legend: { position: "bottom" }
+      return d;
+    };
+    window.toInternal = function(d) {
+      if (!d) return "";
+      if (d.includes("-")) {
+        const parts = d.split("-");
+        if (parts[0].length === 2) {
+          const [dd,m,y] = parts;
+          return `${y}-${m}-${dd}`;
         }
       }
-    });
-  };
-
-  /* -----------------------------
-     6) INIT + BUTTON EVENTS
-  ----------------------------- */
-  window.addEventListener("load", () => {
-    loadCollected();
-
-    // Profit tab buttons
-    qs("#collectStockInvBtn")?.addEventListener("click", () =>
-      collectAndRefresh("stockInv")
-    );
-    qs("#collectSalesProfitBtn2")?.addEventListener("click", () =>
-      collectAndRefresh("salesProfit")
-    );
-    qs("#collectSvcInvBtn2")?.addEventListener("click", () =>
-      collectAndRefresh("svcInv")
-    );
-    qs("#collectSvcProfitBtn2")?.addEventListener("click", () =>
-      collectAndRefresh("svcProfit")
-    );
-
-    // First time render
-    window.renderProfitTab?.();
-    window.renderAnalytics?.();
-  });
-
-  // Whenever localStorage changes (stock/sales/service/expenses), update Profit tab
-  window.addEventListener("storage", () => {
-    window.renderProfitTab?.();
-    window.renderAnalytics?.();
-  });
-
-})();
-</script>
-  <!-- 🚀 Collect Buttons Logic (Analytics Tab) -->
-  <script>
-    window.collected = {
-      stockInv: 0,
-      salesProfit: 0,
-      svcInv: 0,
-      svcProfit: 0
+      return d;
     };
 
-    qs("#collectSalesInvBtn")?.addEventListener("click", () => {
-      window.collected.stockInv += window.getSalesInvestmentCollected();
-      alert("Stock Investment Collected!");
+    // Theme
+    if(localStorage.getItem('ks-theme')==='dark'){
+      document.body.classList.add('dark');
+    }
+    qs('#themeBtn')?.addEventListener('click', ()=>{
+      const d = document.body.classList.toggle('dark');
+      localStorage.setItem('ks-theme', d?'dark':'light');
     });
 
-    qs("#collectSalesProfitBtn")?.addEventListener("click", () => {
-      window.collected.salesProfit += window.getSalesProfitCollected();
-      alert("Sales Profit Collected!");
+    // Tabs switcher
+    (function () {
+      const tabs = qsa('.tab'),
+            sections = qsa('.section');
+
+      function activate(name) {
+        tabs.forEach(t => t.classList.toggle('active', t.dataset.tab === name));
+        sections.forEach(s => s.classList.toggle('active', s.id === name));
+
+        if (name === 'types')   { renderTypes?.(); }
+        if (name === 'stock')   { updateTypeDropdowns?.(); renderStock?.(); }
+        if (name === 'sales')   { refreshSaleTypeSelector?.(); renderSales?.(); }
+        if (name === 'wanting') { renderWanting?.(); }
+        if (name === 'dashboard'){ updateSummaryCards?.(); }
+        if (name === 'analytics'){ renderAnalytics?.(); }
+        if (name === 'expenses'){ renderExpenses?.(); }
+        if (name === 'service') { renderServiceTables?.(); }
+        if (name === 'profit')  { renderProfitTab?.(); }
+      }
+
+      tabs.forEach(t =>
+        t.addEventListener('click', () => activate(t.dataset.tab))
+      );
+
+      window.activateTab = activate;
+    })();
+
+    // LOGIN CHECK + email
+    window.addEventListener("load", () => {
+
+      if (typeof isLoggedIn === "function" && !isLoggedIn()) {
+        window.location.href = "/login.html";
+        return;
+      }
+
+      const tag = qs("#emailTag");
+      if (tag && typeof getUserEmail === "function") {
+        const mail = getUserEmail();
+        tag.textContent = "Logged in: " + (mail || "Unknown User");
+      }
+
+      qs("#logoutBtn")?.addEventListener("click", () => {
+        if (typeof logoutUser === "function") logoutUser();
+        window.location.href = "/login.html";
+      });
     });
 
-    qs("#collectSvcInvBtn")?.addEventListener("click", () => {
-      window.collected.svcInv += window.getServiceInvestmentCollected();
-      alert("Service Investment Collected!");
+    // stock filter -> refresh sales types
+    qs("#filterType")?.addEventListener("change", () => {
+      if (typeof refreshSaleTypeSelector === "function") refreshSaleTypeSelector();
+      renderStock?.();
     });
 
-    qs("#collectSvcProfitBtn")?.addEventListener("click", () => {
-      window.collected.svcProfit += window.getServiceProfitCollected();
-      alert("Service Profit Collected!");
+    // Sales filters immediate render
+    (function attachSalesInputs() {
+      if (typeof attachImmediateSalesFilters === "function") {
+        try { attachImmediateSalesFilters(); } catch (e) {}
+      } else {
+        qs("#saleType")?.addEventListener("change", () => renderSales?.());
+        qs("#saleDate")?.addEventListener("change", () => renderSales?.());
+        qs("#filterSalesBtn")?.addEventListener("click", () => renderSales?.());
+      }
+    })();
+
+    // Overview + Smart summary cards
+    function updateSummaryCards() {
+      if (typeof getAnalyticsData !== "function") return;
+      const data = getAnalyticsData();
+
+      qs("#todaySales")    && (qs("#todaySales").textContent   = "₹" + data.todaySales);
+      qs("#todayCredit")   && (qs("#todayCredit").textContent  = "₹" + data.creditSales);
+      qs("#todayExpenses") && (qs("#todayExpenses").textContent= "₹" + data.todayExpenses);
+      qs("#todayGross")    && (qs("#todayGross").textContent   = "₹" + data.grossProfit);
+      qs("#todayNet")      && (qs("#todayNet").textContent     = "₹" + data.netProfit);
+
+      let total = 0, remain = 0;
+      (window.stock || []).forEach(s => {
+        total  += Number(s.qty || 0) + Number(s.sold || 0);
+        remain += Number(s.qty || 0);
+      });
+      const pct = total ? Math.round((remain / total) * 100) : 0;
+      qs("#stockRemainValue") && (qs("#stockRemainValue").textContent = pct + "%");
+      qs("#stockRemainBar")   && (qs("#stockRemainBar").style.width   = pct + "%");
+    }
+    window.updateSummaryCards = updateSummaryCards;
+
+    // initial render after modules
+    function safeInitialRender() {
+      try { renderTypes?.(); } catch {}
+      try { updateTypeDropdowns?.(); } catch {}
+      try { renderStock?.(); } catch {}
+      try { refreshSaleTypeSelector?.(); } catch {}
+      try { renderSales?.(); } catch {}
+      try { renderWanting?.(); } catch {}
+      try { renderExpenses?.(); } catch {}
+      try { renderServiceTables?.(); } catch {}
+      try { renderAnalytics?.(); } catch {}
+      try { updateSummaryCards?.(); } catch {}
+      try { updateTabSummaryBar?.(); } catch {}
+    }
+    window.addEventListener("load", () => {
+      setTimeout(safeInitialRender, 80);
     });
   </script>
 
-  <!-- 🚀 Profit Tab Logic -->
+  <!-- EXTERNAL LIBS + APP SCRIPTS -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js/dist/chart.umd.min.js"></script>
+
+  <!-- Firebase -->
+  <script src="https://www.gstatic.com/firebasejs/9.6.11/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.6.11/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.6.11/firebase-firestore-compat.js"></script>
+
+  <!-- CORE + MODULES -->
+  <script src="/js/core.js"></script>
+  <script src="/js/firebase.js"></script>
+  <script src="/js/types.js"></script>
+  <script src="/js/stock.js"></script>
+  <script src="/js/sales.js"></script>
+  <script src="/js/wanting.js"></script>
+  <script src="/js/expenses.js"></script>
+  <script src="/js/analytics.js"></script>
+  <script src="/js/service.js"></script>
+  <script src="/js/security.js"></script>
+
+  <!-- ========== PROFIT & CLEAN ANALYTICS LOGIC ========== -->
   <script>
+  (function () {
+    const COLLECT_KEY = "ks-collected";
+
+    function loadCollected() {
+      try {
+        const raw = localStorage.getItem(COLLECT_KEY);
+        const obj = raw ? JSON.parse(raw) : {};
+        window.collected = {
+          stockInv:   Number(obj.stockInv   || 0),
+          salesProfit:Number(obj.salesProfit|| 0),
+          svcInv:     Number(obj.svcInv     || 0),
+          svcProfit:  Number(obj.svcProfit  || 0),
+        };
+      } catch (e) {
+        window.collected = { stockInv:0, salesProfit:0, svcInv:0, svcProfit:0 };
+      }
+    }
+    function saveCollected() {
+      try {
+        localStorage.setItem(COLLECT_KEY, JSON.stringify(window.collected));
+      } catch (e) {}
+    }
+    const clamp = v => v < 0 ? 0 : v;
+
+    // Pending (not collected) helpers
+    window.getPendingStockInvestment = function () {
+      const total = window.getSalesInvestmentCollected?.() || 0;
+      return clamp(total - (window.collected.stockInv || 0));
+    };
+    window.getPendingSalesProfit = function () {
+      const total = window.getSalesProfitCollected?.() || 0;
+      return clamp(total - (window.collected.salesProfit || 0));
+    };
+    window.getPendingServiceInvestment = function () {
+      const total = window.getServiceInvestmentCollected?.() || 0;
+      return clamp(total - (window.collected.svcInv || 0));
+    };
+    window.getPendingServiceProfit = function () {
+      const total = window.getServiceProfitCollected?.() || 0;
+      return clamp(total - (window.collected.svcProfit || 0));
+    };
+
+    // Profit tab render
     window.renderProfitTab = function () {
-      qs("#pStockInv").textContent  = "₹" + (window.getStockInvestmentCollected() || 0);
-      qs("#pSalesProfit").textContent = "₹" + (window.getSalesProfitCollected() || 0);
-      qs("#pSvcInv").textContent   = "₹" + (window.getServiceInvestmentCollected() || 0);
-      qs("#pSvcProfit").textContent = "₹" + (window.getServiceProfitCollected() || 0);
+      qs("#pStockInv")   && (qs("#pStockInv").textContent   = "₹" + window.getPendingStockInvestment());
+      qs("#pSalesProfit")&& (qs("#pSalesProfit").textContent= "₹" + window.getPendingSalesProfit());
+      qs("#pSvcInv")     && (qs("#pSvcInv").textContent     = "₹" + window.getPendingServiceInvestment());
+      qs("#pSvcProfit")  && (qs("#pSvcProfit").textContent  = "₹" + window.getPendingServiceProfit());
     };
 
-    qs("#collectStockInvBtn")?.addEventListener("click", () => {
-      if (confirm("Collect Stock Investment?")) {
-        alert("Stock Investment Collected!");
-        renderProfitTab();
-      }
+    function collectAndRefresh(type) {
+      let add = 0, label = "";
+      if (type === "stockInv")   { add = window.getPendingStockInvestment();      label = "Stock Investment"; }
+      if (type === "salesProfit"){ add = window.getPendingSalesProfit();         label = "Sales Profit"; }
+      if (type === "svcInv")     { add = window.getPendingServiceInvestment();   label = "Service Investment"; }
+      if (type === "svcProfit")  { add = window.getPendingServiceProfit();       label = "Service Profit"; }
+
+      if (!add) { alert("Nothing pending to collect."); return; }
+      if (!confirm(`Collect ₹${add} from ${label}?`)) return;
+
+      if (type === "stockInv")        window.collected.stockInv   += add;
+      else if (type === "salesProfit")window.collected.salesProfit+= add;
+      else if (type === "svcInv")     window.collected.svcInv     += add;
+      else if (type === "svcProfit")  window.collected.svcProfit  += add;
+
+      saveCollected();
+      window.renderProfitTab?.();
+      window.renderAnalytics?.();
+    }
+
+    // Clean Smart Dashboard override (4 items)
+    let cleanPieChart = null;
+    window.renderAnalytics = function () {
+      const profit =
+        window.getPendingSalesProfit() +
+        window.getPendingServiceProfit();
+
+      const expenses = (window.expenses || [])
+        .reduce((a, b) => a + Number(b.amount || 0), 0);
+
+      const credit = (window.sales || [])
+        .filter(s => String(s.status || "").toLowerCase() === "credit")
+        .reduce((a, b) => a + Number(b.amount || 0), 0);
+
+      const investment =
+        window.getPendingStockInvestment() +
+        window.getPendingServiceInvestment();
+
+      qs("#dashProfit")   && (qs("#dashProfit").textContent   = "₹" + profit);
+      qs("#dashExpenses") && (qs("#dashExpenses").textContent = "₹" + expenses);
+      qs("#dashCredit")   && (qs("#dashCredit").textContent   = "₹" + credit);
+      qs("#dashInv")      && (qs("#dashInv").textContent      = "₹" + investment);
+
+      const canvas = document.getElementById("cleanPie");
+      if (!canvas) return;
+      const ctx = canvas.getContext("2d");
+      if (cleanPieChart) cleanPieChart.destroy();
+
+      cleanPieChart = new Chart(ctx, {
+        type: "pie",
+        data: {
+          labels: ["Profit", "Expenses", "Credit Sales", "Investment"],
+          datasets: [{
+            data: [profit, expenses, credit, investment],
+            backgroundColor: ["#2e7d32", "#c62828", "#1565c0", "#fbc02d"]
+          }]
+        },
+        options: {
+          responsive: true,
+          plugins: { legend: { position: "bottom" } }
+        }
+      });
+    };
+
+    // INIT
+    window.addEventListener("load", () => {
+      loadCollected();
+
+      // Profit tab buttons
+      qs("#collectStockInvBtn")?.addEventListener("click", () =>
+        collectAndRefresh("stockInv")
+      );
+      qs("#collectSalesProfitBtn2")?.addEventListener("click", () =>
+        collectAndRefresh("salesProfit")
+      );
+      qs("#collectSvcInvBtn2")?.addEventListener("click", () =>
+        collectAndRefresh("svcInv")
+      );
+      qs("#collectSvcProfitBtn2")?.addEventListener("click", () =>
+        collectAndRefresh("svcProfit")
+      );
+
+      // Analytics tab quick collect buttons (total only)
+      qs("#collectSalesInvBtn")?.addEventListener("click", () =>
+        collectAndRefresh("stockInv")
+      );
+      qs("#collectSalesProfitBtn")?.addEventListener("click", () =>
+        collectAndRefresh("salesProfit")
+      );
+      qs("#collectSvcInvBtn")?.addEventListener("click", () =>
+        collectAndRefresh("svcInv")
+      );
+      qs("#collectSvcProfitBtn")?.addEventListener("click", () =>
+        collectAndRefresh("svcProfit")
+      );
+
+      window.renderProfitTab?.();
+      window.renderAnalytics?.();
     });
 
-    qs("#collectSalesProfitBtn2")?.addEventListener("click", () => {
-      if (confirm("Collect Sales Profit?")) {
-        alert("Sales Profit Collected!");
-        renderProfitTab();
-      }
+    window.addEventListener("storage", () => {
+      window.renderProfitTab?.();
+      window.renderAnalytics?.();
     });
 
-    qs("#collectSvcInvBtn2")?.addEventListener("click", () => {
-      if (confirm("Collect Service Investment?")) {
-        alert("Service Investment Collected!");
-        renderProfitTab();
-      }
-    });
-
-    qs("#collectSvcProfitBtn2")?.addEventListener("click", () => {
-      if (confirm("Collect Service Profit?")) {
-        alert("Service Profit Collected!");
-        renderProfitTab();
-      }
-    });
+  })();
   </script>
-  <script>
-  // Shortcuts — REQUIRED
-  const qs  = (s) => document.querySelector(s);
-  const qsa = (s) => Array.from(document.querySelectorAll(s));
-</script>
 
 </body>
 </html>
-  
