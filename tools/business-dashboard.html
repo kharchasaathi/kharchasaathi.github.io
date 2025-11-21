@@ -757,6 +757,9 @@ if (name === 'analytics') {
 if (name === 'expenses') {
   if (typeof renderExpenses === "function") renderExpenses();
 }
+    if (name === 'profit') {
+  if (typeof renderProfitTab === "function") renderProfitTab();
+}    
       }
 
       tabs.forEach(t =>
@@ -913,6 +916,46 @@ window.addEventListener("load", () => {
     window.collected.svcProfit += window.getServiceProfit();
     alert("Service Profit Collected!");
   });
+</script>
+  <script>
+window.renderProfitTab = function() {
+  qs("#pStockInv").textContent = "₹" + (window.getStockInvestment?.() || 0);
+  qs("#pSalesProfit").textContent = "₹" + (window.getSalesProfit?.() || 0);
+  qs("#pSvcInv").textContent = "₹" + (window.getServiceInvestment?.() || 0);
+  qs("#pSvcProfit").textContent = "₹" + (window.getServiceProfit?.() || 0);
+};
+
+qs("#collectStockInvBtn")?.addEventListener("click", ()=>{
+  if(confirm("Collect Stock Investment?")){
+    window.collectStockInvestment?.();
+    renderProfitTab();
+    renderAnalytics?.();
+  }
+});
+
+qs("#collectSalesProfitBtn2")?.addEventListener("click", ()=>{
+  if(confirm("Collect Sales Profit?")){
+    window.collectSalesProfit?.();
+    renderProfitTab();
+    renderAnalytics?.();
+  }
+});
+
+qs("#collectSvcInvBtn2")?.addEventListener("click", ()=>{
+  if(confirm("Collect Service Investment?")){
+    window.collectServiceInvestment?.();
+    renderProfitTab();
+    renderAnalytics?.();
+  }
+});
+
+qs("#collectSvcProfitBtn2")?.addEventListener("click", ()=>{
+  if(confirm("Collect Service Profit?")){
+    window.collectServiceProfit?.();
+    renderProfitTab();
+    renderAnalytics?.();
+  }
+});
 </script>
 </body>
 </html>
