@@ -62,7 +62,7 @@ function getAnalyticsData() {
   /* ---------- SALES ---------- */
   sales.forEach(s => {
     const d = s.date;
-    const amt = Number(s.amount || 0);
+    const amt = Number(s.total || 0);
     const prof = Number(s.profit || 0);
     const dNum = toNum(d);
 
@@ -93,7 +93,7 @@ function getAnalyticsData() {
   /* ---------- NEW: TOTAL INVESTMENT (Stock + Service) ---------- */
   const totalInvestment =
       (window.getStockInvestmentCollected?.() || 0) +
-      (window.getServiceInvestment?.() || 0);
+      (window.getServiceInvestmentCollected?.() || 0)
 
   /* ---------- GROSS & NET ---------- */
   const grossProfit = paidSalesProfit + serviceProfit;
