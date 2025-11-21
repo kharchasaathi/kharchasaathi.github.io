@@ -506,3 +506,86 @@ window.addEventListener("load", () => {
     cloudPullAllIfAvailable();
   }, 200);
 });
+/* ===========================================================
+   🔵 NEW: UNIVERSAL INVESTMENT + PROFIT COLLECTORS
+=========================================================== */
+
+/* ----------------------------------------
+   1) STOCK INVESTMENT (total purchase cost)
+----------------------------------------- */
+window.getStockInvestmentCollected = function () {
+  let total = 0;
+
+  (window.stock || []).forEach(p => {
+    if (p.history && p.history.length) {
+      p.history.forEach(h => {
+        total += Number(h.cost || 0) * Number(h.qty || 0);
+      });
+    } else {
+      total += Number(p.cost || 0) * Number(p.qty || 0);
+    }
+  });
+
+  return total;
+};
+
+/* ----------------------------------------
+   2) SALES INVESTMENT (sold qty × cost)
+   (this excludes unsold stock)
+----------------------------------------- */
+window.getSalesInvestmentCollected = function () {
+  let total = 0;
+
+  (window.sales || []).forEach(s => {
+    const costPerItem = Number(s.cost || 0);   // from stock.js
+    const qty = Number(s.qty || 0);
+    total += qty * costPerItem;
+  });
+
+  return total;
+};
+
+/* ----------------------------------------
+   3) SALES PROFIT COLLECTED
+----------------------------------------- */
+window.getSalesProfitCollected = function () {
+  let total = 0;
+
+  (window.sales || []).forEach(s => {
+    if (String(s.status || "").toLowerCase() !== "credit") {
+      total += Number(s.profit || 0);
+    }
+  });
+
+  return total;
+};
+
+/* ----------------------------------------
+   4) SERVICE INVESTMENT (completed only)
+----------------------------------------- */
+window.getServiceInvestmentCollected = function () {
+  let total = 0;
+
+  (window.services || []).forEach(s => {
+    if (s.status === "Completed") {
+      total += Number(s.invest || 0);
+    }
+  });
+
+  return total;
+};
+
+/* ----------------------------------------
+   5) SERVICE PROFIT (completed only)
+----------------------------------------- */
+window.getServiceProfitCollected = function () {
+  let total = 0;
+
+  (window.services || []).forEach(s => {
+    if (s.status === "Completed") {
+      total += Number(s.profit || 0);
+    }
+  });
+
+  return total;
+};
