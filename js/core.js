@@ -589,3 +589,139 @@ window.getServiceProfitCollected = function () {
 
   return total;
 };
+/* ===========================================================
+   🔥 core.js — Central Data Controller (Profit + Investment)
+   Version: v2.0
+   Handles:
+   • Stock Investment (after sale)
+   • Sales Profit
+   • Service Investment
+   • Service Profit
+   • Collect functions
+   • Auto save + Firebase sync if available
+=========================================================== */
+
+(function () {
+
+  /* ---------------------------------------------------------
+     STORAGE KEYS
+  --------------------------------------------------------- */
+  const KEY = "ks-profit-box";
+
+  /* ---------------------------------------------------------
+     LOAD FROM LOCAL STORAGE
+  --------------------------------------------------------- */
+  let BOX = JSON.parse(localStorage.getItem(KEY) || "{}");
+
+  // Default values
+  BOX.stockInvestment   = BOX.stockInvestment   || 0;
+  BOX.salesProfit       = BOX.salesProfit       || 0;
+  BOX.serviceInvestment = BOX.serviceInvestment || 0;
+  BOX.serviceProfit     = BOX.serviceProfit     || 0;
+
+  /* ---------------------------------------------------------
+     SAVE FUNCTION (local + cloud)
+  --------------------------------------------------------- */
+  function saveBox() {
+    // 1. Save local
+    try {
+      localStorage.setItem(KEY, JSON.stringify(BOX));
+    } catch(e) {}
+
+    // 2. Firebase cloud sync (only if enabled)
+    try {
+      if (window.saveProfitCloud) {
+        window.saveProfitCloud(BOX);
+      }
+    } catch(e) {}
+  }
+
+  /* ---------------------------------------------------------
+     PUBLIC GETTERS (for displaying in HTML)
+  --------------------------------------------------------- */
+  window.getStockInvestment  = () => BOX.stockInvestment   || 0;
+  window.getSalesProfit      = () => BOX.salesProfit       || 0;
+  window.getServiceInvestment = () => BOX.serviceInvestment || 0;
+  window.getServiceProfit    = () => BOX.serviceProfit     || 0;
+
+  /* ---------------------------------------------------------
+     AUTO-ADD VALUES (from sales.js + service.js)
+     These functions are called by sales/service modules.
+  --------------------------------------------------------- */
+
+  // Add stock investment after sale
+  window.addStockInvestment = function (amt) {
+    BOX.stockInvestment += Number(amt || 0);
+    saveBox();
+  };
+
+  // Add sales profit
+  window.addSalesProfit = function (amt) {
+    BOX.salesProfit += Number(amt || 0);
+    saveBox();
+  };
+
+  // Add service investment
+  window.addServiceInvestment = function (amt) {
+    BOX.serviceInvestment += Number(amt || 0);
+    saveBox();
+  };
+
+  // Add service profit
+  window.addServiceProfit = function (amt) {
+    BOX.serviceProfit += Number(amt || 0);
+    saveBox();
+  };
+
+  /* ---------------------------------------------------------
+     COLLECT FUNCTIONS (reset values to 0)
+  --------------------------------------------------------- */
+
+  window.collectStockInvestment = function () {
+    const amt = BOX.stockInvestment;
+    BOX.stockInvestment = 0;
+    saveBox();
+    return amt;
+  };
+
+  window.collectSalesProfit = function () {
+    const amt = BOX.salesProfit;
+    BOX.salesProfit = 0;
+    saveBox();
+    return amt;
+  };
+
+  window.collectServiceInvestment = function () {
+    const amt = BOX.serviceInvestment;
+    BOX.serviceInvestment = 0;
+    saveBox();
+    return amt;
+  };
+
+  window.collectServiceProfit = function () {
+    const amt = BOX.serviceProfit;
+    BOX.serviceProfit = 0;
+    saveBox();
+    return amt;
+  };
+
+  /* ---------------------------------------------------------
+     DEBUG BUTTON (optional)
+  --------------------------------------------------------- */
+  window._resetProfitBox = function () {
+    BOX = {
+      stockInvestment: 0,
+      salesProfit: 0,
+      serviceInvestment: 0,
+      serviceProfit: 0
+    };
+    saveBox();
+    alert("Profit box reset!");
+  };
+
+  /* ---------------------------------------------------------
+     EXPOSE BOX FOR DEBUG (optional)
+  --------------------------------------------------------- */
+  window._profitBOX = BOX;
+
+})();
