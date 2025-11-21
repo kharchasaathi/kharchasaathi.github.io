@@ -200,6 +200,7 @@
     <div class="tab" data-tab="analytics">📈 Smart Dashboard</div>
     <div class="tab" data-tab="expenses">💸 Expenses</div>
   </div>
+  <div class="tab" data-tab="profit">💰 Profit</div>
   <div id="tabSummaryBar" 
      style="background:#1b1b1b;color:#fff;padding:10px;
             font-size:18px;font-weight:bold;border-radius:6px;
@@ -550,6 +551,46 @@
       </tfoot>
     </table>
   </section>
+  <!-- ===== PROFIT (NEW TAB) ===== -->
+<section id="profit" class="section">
+  <h3>💰 Profit Manager</h3>
+
+  <div class="flex-row" style="margin-top:12px">
+
+    <div class="card" style="flex:1;min-width:180px">
+      <h4>📦 Stock Investment</h4>
+      <b id="pStockInv" style="font-size:22px;color:#ff9800">₹0</b><br>
+      <button id="collectStockInvBtn" class="small-btn" style="margin-top:6px;background:#ff9800">
+        Collect
+      </button>
+    </div>
+
+    <div class="card" style="flex:1;min-width:180px">
+      <h4>💰 Sales Profit</h4>
+      <b id="pSalesProfit" style="font-size:22px;color:#4caf50">₹0</b><br>
+      <button id="collectSalesProfitBtn2" class="small-btn" style="margin-top:6px;background:#4caf50">
+        Collect
+      </button>
+    </div>
+
+    <div class="card" style="flex:1;min-width:180px">
+      <h4>🛠 Service Investment</h4>
+      <b id="pSvcInv" style="font-size:22px;color:#03a9f4">₹0</b><br>
+      <button id="collectSvcInvBtn2" class="small-btn" style="margin-top:6px;background:#03a9f4">
+        Collect
+      </button>
+    </div>
+
+    <div class="card" style="flex:1;min-width:180px">
+      <h4>⚙️ Service Profit</h4>
+      <b id="pSvcProfit" style="font-size:22px;color:#01579b">₹0</b><br>
+      <button id="collectSvcProfitBtn2" class="small-btn" style="margin-top:6px;background:#01579b">
+        Collect
+      </button>
+    </div>
+
+  </div>
+</section>
 
   <!-- HELP -->
   <div class="footer-btns" style="margin-top:18px; text-align:center;">
