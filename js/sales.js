@@ -1,180 +1,130 @@
-/* ==========================================================
-   💰 sales.js — Sales Viewer + Profit Manager (FINAL v9.0)
-   • Added: Stock Investment Collector
-   • Added: Profit Collector
-   • 100% Safe with your existing core.js/cloud sync
-========================================================== */
+/* ===========================================================
+   sales.js — Sales Manager (Final v7.0)
+   ✔ Correct stock deduction
+   ✔ Credit/Paid handling
+   ✔ Correct cost per item from stock
+   ✔ Auto profit calc
+   ✔ Collect system compatible
+=========================================================== */
 
-/* ----- helpers / compatibility ----- */
-const _SALES_KEY = "sales-data";
-
-/* Persist sales */
-function persistSales() {
-  try {
-    if (typeof window.saveSales === "function" && window.saveSales !== persistSales) {
-      return window.saveSales();
-    }
-  } catch (e) {}
-
-  try {
-    localStorage.setItem(_SALES_KEY, JSON.stringify(window.sales || []));
-    window.dispatchEvent(new Event("storage"));
-  } catch (e) {
-    console.error("Fallback saveSales failed:", e);
-  }
-}
-
-/* ----- TYPE FILTER ----- */
 function refreshSaleTypeSelector() {
-  const tdd = qs("#saleType");
-  if (!tdd) return;
+  const sel = document.getElementById("saleType");
+  if (!sel) return;
 
-  tdd.innerHTML =
-    `<option value="all">All Types</option>` +
-    (window.types || [])
-      .map(t => `<option value="${esc(t.name || t)}">${esc(t.name || t)}</option>`)
-      .join("");
+  const types = window.types || [];
+  sel.innerHTML = `<option value="all">All Types</option>`;
+
+  types.forEach(t => {
+    sel.innerHTML += `<option value="${t.name}">${t.name}</option>`;
+  });
 }
 
-/* ----- LIVE FILTER ----- */
-function attachImmediateSalesFilters() {
-  qs("#saleType")?.addEventListener("change", renderSales);
-  qs("#saleDate")?.addEventListener("change", renderSales);
-}
+/* ===========================================================
+   ADD SALE ENTRY
+=========================================================== */
+function addSaleEntry({ date, type, name, qty, price, status }) {
+  date = toInternalIfNeeded(date);
+  qty = Number(qty);
+  price = Number(price);
 
-/* ----------------------------------------------------------
-   CREDIT → PAID
----------------------------------------------------------- */
-function markSalePaid(id) {
-  const s = (window.sales || []).find(x => x.id === id);
-  if (!s) return;
+  if (!type || !name || qty <= 0 || price <= 0) return;
 
-  if (String(s.status || "").toLowerCase() === "paid") {
-    alert("Already Paid");
+  let p = findProduct(type, name);
+  if (!p) {
+    alert("Product not found in stock");
     return;
   }
 
-  if (!confirm("Mark this CREDIT sale as PAID?")) return;
+  if (p.qty < qty) {
+    alert("Not enough stock!");
+    return;
+  }
 
-  s.status = "Paid";
+  const cost = Number(p.cost || 0);
+  const total = qty * price;
+  const profit = total - (qty * cost);
 
-  persistSales();
-  renderSales();
-  updateSummaryCards?.();
-  renderAnalytics?.();
+  // Deduct stock
+  p.qty -= qty;
+  p.sold += qty;
+
+  // Save stock
+  saveStock();
+
+  // Add sale record
+  window.sales = window.sales || [];
+  window.sales.push({
+    id: uid("sale"),
+    date,
+    type,
+    name,
+    qty,
+    price,
+    total,
+    cost,
+    profit,
+    status: status || "Paid"
+  });
+
+  saveSales();
 }
 
-/* ----------------------------------------------------------
-   CLEAR ALL SALES
----------------------------------------------------------- */
-qs("#clearSalesBtn")?.addEventListener("click", () => {
-  if (!confirm("Delete ALL sales permanently?")) return;
-
-  window.sales = [];
-  persistSales();
-  renderSales();
-  updateSummaryCards?.();
-  renderAnalytics?.();
-});
-
-/* ----------------------------------------------------------
-   🟢 NEW — STOCK INVESTMENT COLLECTOR (Sale-based)
-   (Only sold qty × cost — NOT stock addition cost)
----------------------------------------------------------- */
-window.getCollectedStockInvestment = function () {
-  let inv = 0;
-  (window.sales || []).forEach(s => {
-    if (String(s.status).toLowerCase() !== "credit") {
-      inv += Number(s.cost || 0) * Number(s.qty || 0);
-    }
-  });
-  return inv;
-};
-
-/* ----------------------------------------------------------
-   🟢 NEW — SALES PROFIT COLLECTOR (Paid only)
----------------------------------------------------------- */
-window.getCollectedSalesProfit = function () {
-  let p = 0;
-  (window.sales || []).forEach(s => {
-    if (String(s.status).toLowerCase() !== "credit") {
-      p += Number(s.profit || 0);
-    }
-  });
-  return p;
-};
-
-/* ----------------------------------------------------------
+/* ===========================================================
    RENDER SALES TABLE
----------------------------------------------------------- */
+=========================================================== */
 function renderSales() {
-  const tbody = qs("#salesTable tbody");
-  const totalEl = qs("#salesTotal");
-  const profitEl = qs("#profitTotal");
-
+  const tbody = document.querySelector("#salesTable tbody");
   if (!tbody) return;
 
-  const typeFilter = qs("#saleType")?.value || "all";
-  const dateFilter = qs("#saleDate")?.value || "";
+  const filterType = document.getElementById("saleType")?.value || "all";
+  const filterDate = document.getElementById("saleDate")?.value || "";
 
-  let total = 0;
-  let profit = 0;
-  let rows = "";
+  let list = window.sales || [];
 
-  (window.sales || [])
-    .filter(s => typeFilter === "all" || s.type === typeFilter)
-    .filter(s => !dateFilter || s.date === dateFilter)
-    .forEach(s => {
+  if (filterType !== "all") {
+    list = list.filter(s => s.type === filterType);
+  }
+  if (filterDate) {
+    list = list.filter(s => s.date === filterDate);
+  }
 
-      const dispDate = toDisplay(s.date);
+  let total = 0, profit = 0;
 
-      total += Number(s.amount || 0);
-
-      // Credit does NOT count for profit
-      if (String(s.status || "").toLowerCase() !== "credit") {
+  tbody.innerHTML = list
+    .map(s => {
+      total += Number(s.total || 0);
+      if (String(s.status).toLowerCase() !== "credit")
         profit += Number(s.profit || 0);
-      }
 
-      const statusBtn =
-        String(s.status || "").toLowerCase() === "credit"
-          ? `<button class="small-btn"
-               style="background:#ff9800;color:#fff"
-               onclick="markSalePaid('${s.id}')">CREDIT</button>`
-          : `💰 Paid`;
-
-      rows += `
+      return `
         <tr>
-          <td>${dispDate}</td>
-          <td>${esc(s.type)}</td>
-          <td>${esc(s.product)}</td>
-          <td>${esc(s.qty)}</td>
-          <td>${esc(s.price)}</td>
-          <td>${esc(s.amount)}</td>
-          <td>${esc(s.profit)}</td>
-          <td>${statusBtn}</td>
+          <td>${toDisplay(s.date)}</td>
+          <td>${s.type}</td>
+          <td>${s.name}</td>
+          <td>${s.qty}</td>
+          <td>₹${s.price}</td>
+          <td>₹${s.total}</td>
+          <td>₹${s.profit}</td>
+          <td>${s.status}</td>
         </tr>
       `;
-    });
+    })
+    .join("");
 
-  if (!rows)
-    rows = `<tr><td colspan="8">No sales found</td></tr>`;
-
-  tbody.innerHTML = rows;
-  totalEl.textContent = total;
-  profitEl.textContent = profit;
+  document.getElementById("salesTotal").textContent = total;
+  document.getElementById("profitTotal").textContent = profit;
 }
 
-/* ----------------------------------------------------------
-   INITIAL LOAD
----------------------------------------------------------- */
-window.addEventListener("load", () => {
-  refreshSaleTypeSelector();
-  attachImmediateSalesFilters();
+/* ===========================================================
+   CLEAR SALES
+=========================================================== */
+document.getElementById("clearSalesBtn")?.addEventListener("click", () => {
+  if (!confirm("Clear all sales?")) return;
+  window.sales = [];
+  saveSales();
   renderSales();
 });
 
-/* expose */
-window.refreshSaleTypeSelector = refreshSaleTypeSelector;
+/* Auto-render */
 window.renderSales = renderSales;
-window.markSalePaid = markSalePaid;
-window.persistSales = persistSales;
+window.refreshSaleTypeSelector = refreshSaleTypeSelector;
