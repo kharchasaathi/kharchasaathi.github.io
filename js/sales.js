@@ -1,20 +1,19 @@
 /* ===========================================================
-   sales.js — Sales Manager (Final v7.0)
-   ✔ Correct stock deduction
-   ✔ Credit/Paid handling
-   ✔ Correct cost per item from stock
-   ✔ Auto profit calc
-   ✔ Collect system compatible
+   sales.js — Sales Manager (Final v8.0)
+   ✔ product key fixed
+   ✔ total value correct
+   ✔ Stock deduction correct
+   ✔ Profit calculation correct
+   ✔ No undefined values
+   ✔ Works with Profit tab + Analytics
 =========================================================== */
 
 function refreshSaleTypeSelector() {
   const sel = document.getElementById("saleType");
   if (!sel) return;
 
-  const types = window.types || [];
   sel.innerHTML = `<option value="all">All Types</option>`;
-
-  types.forEach(t => {
+  (window.types || []).forEach(t => {
     sel.innerHTML += `<option value="${t.name}">${t.name}</option>`;
   });
 }
@@ -31,7 +30,7 @@ function addSaleEntry({ date, type, name, qty, price, status }) {
 
   let p = findProduct(type, name);
   if (!p) {
-    alert("Product not found in stock");
+    alert("Product not found in stock!");
     return;
   }
 
@@ -47,19 +46,18 @@ function addSaleEntry({ date, type, name, qty, price, status }) {
   // Deduct stock
   p.qty -= qty;
   p.sold += qty;
-
-  // Save stock
   saveStock();
 
-  // Add sale record
+  // Save sale record
   window.sales = window.sales || [];
   window.sales.push({
     id: uid("sale"),
     date,
     type,
-    name,
+    product: name,   // ← FIXED KEY
     qty,
     price,
+    amount: total,   // ← FIXED KEY
     total,
     cost,
     profit,
@@ -67,6 +65,11 @@ function addSaleEntry({ date, type, name, qty, price, status }) {
   });
 
   saveSales();
+
+  // Auto UI update
+  renderSales?.();
+  renderAnalytics?.();
+  updateTabSummaryBar?.();
 }
 
 /* ===========================================================
@@ -81,18 +84,16 @@ function renderSales() {
 
   let list = window.sales || [];
 
-  if (filterType !== "all") {
-    list = list.filter(s => s.type === filterType);
-  }
-  if (filterDate) {
-    list = list.filter(s => s.date === filterDate);
-  }
+  if (filterType !== "all") list = list.filter(s => s.type === filterType);
+  if (filterDate) list = list.filter(s => s.date === filterDate);
 
   let total = 0, profit = 0;
 
   tbody.innerHTML = list
     .map(s => {
-      total += Number(s.total || 0);
+      const t = Number(s.total || s.amount || 0);
+
+      total += t;
       if (String(s.status).toLowerCase() !== "credit")
         profit += Number(s.profit || 0);
 
@@ -100,10 +101,10 @@ function renderSales() {
         <tr>
           <td>${toDisplay(s.date)}</td>
           <td>${s.type}</td>
-          <td>${s.name}</td>
+          <td>${s.product}</td>
           <td>${s.qty}</td>
           <td>₹${s.price}</td>
-          <td>₹${s.total}</td>
+          <td>₹${t}</td>
           <td>₹${s.profit}</td>
           <td>${s.status}</td>
         </tr>
@@ -123,8 +124,10 @@ document.getElementById("clearSalesBtn")?.addEventListener("click", () => {
   window.sales = [];
   saveSales();
   renderSales();
+  renderAnalytics?.();
+  updateTabSummaryBar?.();
 });
 
-/* Auto-render */
+/* Auto-register */
 window.renderSales = renderSales;
 window.refreshSaleTypeSelector = refreshSaleTypeSelector;
