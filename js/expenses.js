@@ -1,154 +1,108 @@
 /* ===========================================================
-   🧾 expenses.js — Expense Manager (FINAL v6.2 FIXED)
-   ✔ Auto-fill missing date with today()
-   ✔ dd-mm-yyyy display
-   ✔ yyyy-mm-dd internal storage
-   ✔ Smart Dashboard & Overview now show correct totals
-   ✔ No duplicate helpers
+   expenses.js — (FINAL v5.0)
+   ✔ dd-mm-yyyy → yyyy-mm-dd auto convert
+   ✔ Auto UI Refresh: Overview + Profit Bar + Smart Dashboard
+   ✔ No reload required
 =========================================================== */
 
-const exToDisp = window.toDisplay;
-const exToInt  = window.toInternal;
+/* -------------------------
+   ADD EXPENSE ENTRY
+-------------------------- */
+function addExpenseEntry() {
+  let date = qs("#expDate")?.value || todayDate();
+  const category = qs("#expCat")?.value;
+  const amount = Number(qs("#expAmount")?.value || 0);
+  const note = qs("#expNote")?.value || "";
 
-/* ----------------------------------------------------------
-   SAFE PARSE
----------------------------------------------------------- */
-function safeParse(j) {
-  try { return JSON.parse(j); } catch { return []; }
-}
+  if (!category || amount <= 0)
+    return alert("Enter category and amount!");
 
-/* ----------------------------------------------------------
-   SAVE WRAPPER
----------------------------------------------------------- */
-function _saveExpensesLocal() {
-  if (typeof saveExpenses === "function") {
-    saveExpenses();
-  } else {
-    localStorage.setItem("expenses-data", JSON.stringify(window.expenses || []));
-    window.dispatchEvent(new Event("storage"));
-  }
-}
-
-/* ----------------------------------------------------------
-   ADD NEW EXPENSE (AUTO DATE FIX)
----------------------------------------------------------- */
-function addNewExpense() {
-  const dateEl = qs("#expDate");
-  const categoryEl = qs("#expCategory");
-  const amountEl = qs("#expAmount");
-  const noteEl = qs("#expNote");
-
-  // ⭐ AUTO-FILL DATE IF EMPTY
-  let date = dateEl?.value || todayDate();
-
-  // convert dd-mm-yyyy → yyyy-mm-dd
-  if (date.includes("-") && date.split("-")[0].length === 2) {
-    date = exToInt(date);
-  }
-
-  const category = (categoryEl?.value || "").trim();
-  const amount = parseFloat((amountEl?.value || "0").replace(",", ""));
-  const note = (noteEl?.value || "").trim();
-
-  if (!category) return alert("Please enter a category.");
-  if (!amount || isNaN(amount) || amount <= 0) return alert("Please enter a valid amount.");
+  // Convert dd-mm-yyyy → yyyy-mm-dd
+  if (date.includes("-") && date.split("-")[0].length === 2)
+    date = toInternal(date);
 
   window.expenses = window.expenses || [];
-
   window.expenses.push({
     id: uid("exp"),
-    date,            // internal yyyy-mm-dd
+    date,
     category,
     amount,
     note
   });
 
-  _saveExpensesLocal();
-  renderExpenses();
+  saveExpenses();
 
-  categoryEl.value = "";
-  amountEl.value = "";
-  noteEl.value = "";
+  // UI Refresh
+  renderExpenses();
+  renderAnalytics?.();
+  updateSummaryCards?.();
+  updateTabSummaryBar?.();
+
+  qs("#expAmount").value = "";
+  qs("#expNote").value = "";
 }
 
-/* ----------------------------------------------------------
-   DELETE EXPENSE
----------------------------------------------------------- */
-function deleteExpense(id) {
-  if (!confirm("Delete this expense?")) return;
-
-  window.expenses = (window.expenses || []).filter(e => e.id !== id);
-  _saveExpensesLocal();
-  renderExpenses();
-}
-
-/* ----------------------------------------------------------
-   RENDER TABLE (DISPLAY dd-mm-yyyy)
----------------------------------------------------------- */
+/* -------------------------
+   RENDER EXPENSE TABLE
+-------------------------- */
 function renderExpenses() {
   const tbody = qs("#expensesTable tbody");
-  const totalEl = qs("#expensesTotal");
+  if (!tbody) return;
 
-  if (!tbody || !totalEl) return;
+  const fdate = qs("#expFilterDate")?.value || "";
+  const fcat  = qs("#expFilterCat")?.value || "all";
 
-  const list = window.expenses || [];
+  let list = window.expenses || [];
 
-  if (!list.length) {
-    tbody.innerHTML = `<tr><td colspan="5">No expenses found</td></tr>`;
-    totalEl.textContent = "₹0";
-    updateSummaryCards?.();
-    renderAnalytics?.();
-    return;
-  }
+  if (fdate) list = list.filter(e => e.date === fdate);
+  if (fcat !== "all") list = list.filter(e => e.category === fcat);
 
   let total = 0;
 
-  tbody.innerHTML = list.map(e => {
-    total += Number(e.amount || 0);
+  tbody.innerHTML = list
+    .map(e => {
+      total += Number(e.amount || 0);
+      return `
+        <tr>
+          <td>${toDisplay(e.date)}</td>
+          <td>${e.category}</td>
+          <td>₹${e.amount}</td>
+          <td>${e.note || "-"}</td>
+        </tr>
+      `;
+    })
+    .join("");
 
-    return `
-      <tr>
-        <td>${exToDisp(e.date)}</td>
-        <td>${esc(e.category)}</td>
-        <td>₹${Number(e.amount || 0)}</td>
-        <td>${esc(e.note || "")}</td>
-        <td>
-          <button onclick="deleteExpense('${e.id}')"
-                  class="small-btn"
-                  style="background:#d32f2f;color:#fff">
-            ❌ Delete
-          </button>
-        </td>
-      </tr>
-    `;
-  }).join("");
-
-  totalEl.textContent = "₹" + total;
-
-  // 🔄 Refresh all dashboards
-  updateSummaryCards?.();
-  renderAnalytics?.();
+  qs("#expTotal").textContent = total;
 }
 
-/* ----------------------------------------------------------
-   EVENTS
----------------------------------------------------------- */
-document.addEventListener("click", (e) => {
-  if (e.target?.id === "addExpBtn") addNewExpense();
+/* -------------------------
+   CLEAR EXPENSES
+-------------------------- */
+qs("#clearExpensesBtn")?.addEventListener("click", () => {
+  if (!confirm("Clear ALL expenses?")) return;
+
+  window.expenses = [];
+  saveExpenses();
+
+  renderExpenses();
+  renderAnalytics?.();
+  updateSummaryCards?.();
+  updateTabSummaryBar?.();
 });
 
-/* ----------------------------------------------------------
-   INITIAL LOAD
----------------------------------------------------------- */
-window.addEventListener("load", () => {
-  window.expenses = Array.isArray(window.expenses)
-    ? window.expenses
-    : safeParse(localStorage.getItem("expenses-data"));
+/* -------------------------
+   BUTTON HANDLERS
+-------------------------- */
+qs("#addExpenseBtn")?.addEventListener("click", addExpenseEntry);
+qs("#expFilterDate")?.addEventListener("change", renderExpenses);
+qs("#expFilterCat")?.addEventListener("change", renderExpenses);
 
+/* -------------------------
+   INITIAL LOAD
+-------------------------- */
+window.addEventListener("load", () => {
   renderExpenses();
 });
 
-/* PUBLIC API */
-window.addNewExpense = addNewExpense;
 window.renderExpenses = renderExpenses;
-window.deleteExpense = deleteExpense;
