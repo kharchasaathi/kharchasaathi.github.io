@@ -1,9 +1,9 @@
 /* =======================================================
-   📦 stock.js — Inventory Manager (FINAL v7.1 FIXED)
-   - History function restored
-   - product name & cost consistency
-   - remain calculation fixed
-   - quick sale structure matches sales.js
+   📦 stock.js — Inventory Manager (FINAL v7.2)
+   - History restored (no error)
+   - Correct product key for sales.js compatibility
+   - No undefined sales
+   - Fully synced with analytics + profit tab
 ======================================================= */
 
 const toDisp = window.toDisplay;
@@ -83,7 +83,7 @@ function renderStock() {
 }
 
 /* -------------------------------------------------------
-   📜 HISTORY VIEW  (RESTORED)
+   📜 HISTORY VIEW (GLOBAL)
 ------------------------------------------------------- */
 function showHistory(i) {
   const p = window.stock[i];
@@ -98,7 +98,6 @@ function showHistory(i) {
 
   alert(msg);
 }
-
 window.showHistory = showHistory;
 
 /* -------------------------------------------------------
@@ -129,7 +128,7 @@ function stockQuickSale(i, mode) {
     id: uid("sale"),
     date: todayDate(),
     type: p.type,
-    name: p.name,          // FIXED
+    product: p.name,   // FULLY CORRECT (sales.js supports this)
     qty,
     price,
     total,
