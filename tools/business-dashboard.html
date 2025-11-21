@@ -1026,20 +1026,6 @@
         collectAndRefresh("svcProfit")
       );
 
-      // Analytics tab quick collect buttons (total only)
-      qs("#collectSalesInvBtn")?.addEventListener("click", () =>
-        collectAndRefresh("stockInv")
-      );
-      qs("#collectSalesProfitBtn")?.addEventListener("click", () =>
-        collectAndRefresh("salesProfit")
-      );
-      qs("#collectSvcInvBtn")?.addEventListener("click", () =>
-        collectAndRefresh("svcInv")
-      );
-      qs("#collectSvcProfitBtn")?.addEventListener("click", () =>
-        collectAndRefresh("svcProfit")
-      );
-
       window.renderProfitTab?.();
       window.renderAnalytics?.();
     });
