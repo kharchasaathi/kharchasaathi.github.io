@@ -823,6 +823,37 @@ window.addEventListener("load", () => {
 <script src="/js/analytics.js"></script>
 <script src="/js/service.js"></script>
 <script src="/js/security.js"></script>
+  
+<!-- 🚀 Collect Buttons Logic -->
+<script>
+  // Create global storage for collected amounts
+  window.collected = {
+    stockInv: 0,
+    salesProfit: 0,
+    svcInv: 0,
+    svcProfit: 0
+  };
+
+  qs("#collectSalesInvBtn")?.addEventListener("click", () => {
+    window.collected.stockInv += window.getCollectedStockInvestment();
+    alert("Stock Investment Collected!");
+  });
+
+  qs("#collectSalesProfitBtn")?.addEventListener("click", () => {
+    window.collected.salesProfit += window.getCollectedSalesProfit();
+    alert("Sales Profit Collected!");
+  });
+
+  qs("#collectSvcInvBtn")?.addEventListener("click", () => {
+    window.collected.svcInv += window.getServiceInvestment();
+    alert("Service Investment Collected!");
+  });
+
+  qs("#collectSvcProfitBtn")?.addEventListener("click", () => {
+    window.collected.svcProfit += window.getServiceProfit();
+    alert("Service Profit Collected!");
+  });
+</script>
 
 </body>
 </html>
