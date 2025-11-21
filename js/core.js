@@ -598,3 +598,32 @@ window.getServiceProfitCollected = function () {
 
   return total;
 };
+/* ===========================================================
+   🔵 AUTO-ADD FUNCTIONS (REQUIRED)
+   (Sales.js + Service.js use these to update profit instantly)
+=========================================================== */
+
+window.addSalesProfit = function (amt) {
+  const box = JSON.parse(localStorage.getItem("ks-profit-box") || "{}");
+  box.salesProfit = (box.salesProfit || 0) + Number(amt || 0);
+  localStorage.setItem("ks-profit-box", JSON.stringify(box));
+};
+
+window.addStockInvestment = function (amt) {
+  const box = JSON.parse(localStorage.getItem("ks-profit-box") || "{}");
+  box.stockInvestment = (box.stockInvestment || 0) + Number(amt || 0);
+  localStorage.setItem("ks-profit-box", JSON.stringify(box));
+};
+
+window.addServiceInvestment = function (amt) {
+  const box = JSON.parse(localStorage.getItem("ks-profit-box") || "{}");
+  box.serviceInvestment = (box.serviceInvestment || 0) + Number(amt || 0);
+  localStorage.setItem("ks-profit-box", JSON.stringify(box));
+};
+
+window.addServiceProfit = function (amt) {
+  const box = JSON.parse(localStorage.getItem("ks-profit-box") || "{}");
+  box.serviceProfit = (box.serviceProfit || 0) + Number(amt || 0);
+  localStorage.setItem("ks-profit-box", JSON.stringify(box));
+};
+
