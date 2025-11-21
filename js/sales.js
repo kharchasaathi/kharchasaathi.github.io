@@ -1,11 +1,12 @@
 /* ===========================================================
-   sales.js — Sales Manager (Final v8.0)
+   sales.js — Sales Manager (Final v9.0)
    ✔ product key fixed
    ✔ total value correct
    ✔ Stock deduction correct
    ✔ Profit calculation correct
    ✔ No undefined values
    ✔ Works with Profit tab + Analytics
+   ✔ Credit → Paid toggle button restored
 =========================================================== */
 
 function refreshSaleTypeSelector() {
@@ -54,10 +55,10 @@ function addSaleEntry({ date, type, name, qty, price, status }) {
     id: uid("sale"),
     date,
     type,
-    product: name,   // ← FIXED KEY
+    product: name,
     qty,
     price,
-    amount: total,   // ← FIXED KEY
+    amount: total,
     total,
     cost,
     profit,
@@ -66,11 +67,32 @@ function addSaleEntry({ date, type, name, qty, price, status }) {
 
   saveSales();
 
-  // Auto UI update
   renderSales?.();
   renderAnalytics?.();
   updateTabSummaryBar?.();
 }
+
+/* ===========================================================
+   TOGGLE CREDIT → PAID
+=========================================================== */
+function toggleSaleStatus(id) {
+  const s = (window.sales || []).find(x => x.id === id);
+  if (!s) return;
+
+  if (s.status === "Credit") {
+    if (!confirm("Mark this Credit sale as PAID?")) return;
+    s.status = "Paid";
+  } else {
+    alert("Already Paid.");
+    return;
+  }
+
+  saveSales();
+  renderSales();
+  renderAnalytics?.();
+  updateTabSummaryBar?.();
+}
+window.toggleSaleStatus = toggleSaleStatus;
 
 /* ===========================================================
    RENDER SALES TABLE
@@ -97,6 +119,23 @@ function renderSales() {
       if (String(s.status).toLowerCase() !== "credit")
         profit += Number(s.profit || 0);
 
+      /* ---- STATUS BUTTON ---- */
+      let statusHTML = "";
+      if (s.status === "Credit") {
+        statusHTML = `
+          <button onclick="toggleSaleStatus('${s.id}')"
+            style="background:#2196f3;color:white;border:none;
+                   padding:4px 10px;border-radius:5px;cursor:pointer;">
+            💳 Credit
+          </button>`;
+      } else {
+        statusHTML = `
+          <span style="background:#4caf50;color:white;
+                       padding:4px 10px;border-radius:5px;">
+            💰 Paid
+          </span>`;
+      }
+
       return `
         <tr>
           <td>${toDisplay(s.date)}</td>
@@ -106,7 +145,7 @@ function renderSales() {
           <td>₹${s.price}</td>
           <td>₹${t}</td>
           <td>₹${s.profit}</td>
-          <td>${s.status}</td>
+          <td>${statusHTML}</td>
         </tr>
       `;
     })
@@ -128,6 +167,5 @@ document.getElementById("clearSalesBtn")?.addEventListener("click", () => {
   updateTabSummaryBar?.();
 });
 
-/* Auto-register */
 window.renderSales = renderSales;
 window.refreshSaleTypeSelector = refreshSaleTypeSelector;
