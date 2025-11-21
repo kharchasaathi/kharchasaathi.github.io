@@ -1,12 +1,8 @@
 /* ===========================================================
-   sales.js — Sales Manager (Final v9.0)
-   ✔ product key fixed
-   ✔ total value correct
-   ✔ Stock deduction correct
-   ✔ Profit calculation correct
-   ✔ No undefined values
-   ✔ Works with Profit tab + Analytics
-   ✔ Credit → Paid toggle button restored
+   sales.js — Sales Manager (Final v10.0 with Profit Sync)
+   ✔ Profit added to Profit Tab
+   ✔ Investment added to Profit Tab
+   ✔ Fully synced with Smart Dashboard
 =========================================================== */
 
 function refreshSaleTypeSelector() {
@@ -42,12 +38,17 @@ function addSaleEntry({ date, type, name, qty, price, status }) {
 
   const cost = Number(p.cost || 0);
   const total = qty * price;
-  const profit = total - (qty * cost);
+  const invest = qty * cost;
+  const profit = total - invest;
 
   // Deduct stock
   p.qty -= qty;
   p.sold += qty;
   saveStock();
+
+  // Add to Profit Box
+  addSalesProfit(profit);
+  addStockInvestment(invest);
 
   // Save sale record
   window.sales = window.sales || [];
@@ -81,6 +82,10 @@ function toggleSaleStatus(id) {
 
   if (s.status === "Credit") {
     if (!confirm("Mark this Credit sale as PAID?")) return;
+
+    // When credit sale becomes Paid → profit should be added now
+    addSalesProfit(Number(s.profit || 0));
+
     s.status = "Paid";
   } else {
     alert("Already Paid.");
@@ -114,12 +119,11 @@ function renderSales() {
   tbody.innerHTML = list
     .map(s => {
       const t = Number(s.total || s.amount || 0);
-
       total += t;
+
       if (String(s.status).toLowerCase() !== "credit")
         profit += Number(s.profit || 0);
 
-      /* ---- STATUS BUTTON ---- */
       let statusHTML = "";
       if (s.status === "Credit") {
         statusHTML = `
