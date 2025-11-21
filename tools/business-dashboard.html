@@ -895,6 +895,9 @@
   <!-- ========== PROFIT & CLEAN ANALYTICS LOGIC ========== -->
   <script>
   (function () {
+    if (!window.collected) {
+  window.collected = { stockInv:0, salesProfit:0, svcInv:0, svcProfit:0 };
+}
     const COLLECT_KEY = "ks-collected";
 
     function loadCollected() {
