@@ -1,26 +1,26 @@
 /* ===========================================================
-   📊 analytics.js — Smart Dashboard (FINAL v9.0)
-   ✔ Today/Week/Month sales
-   ✔ Paid Sales Profit + Service Profit (credit excluded)
-   ✔ Today expenses fixed
-   ✔ Pie: Total Profit | Expenses | Credit Sales
-   ✔ Compatible with core.js universal date system
+   📊 analytics.js — Smart Dashboard (FINAL v10.0)
+   ✔ Today / Week / Month Sales
+   ✔ Expenses
+   ✔ Sales Profit + Service Profit
+   ✔ NEW: Total Investment (Stock + Service)
+   ✔ 4-Color Pie: Profit | Expenses | Credit | Investment
+   ✔ Fully linked with Profit Tab
 =========================================================== */
 
 let salesBarChart = null;
 let salesPieChart = null;
 
-/* -------------------- HELPERS -------------------- */
+/* ----------------- HELPERS ----------------- */
 
 function toNum(d) {
-  return d ? Number(String(d).replace(/-/g, "")) : 0;
+  return Number(d.replace(/-/g, "")) || 0;
 }
 
 function getStartOfWeek() {
-  const t = new Date();
-  const day = t.getDay();
-  t.setDate(t.getDate() - day);
-  return t.toISOString().split("T")[0];
+  const d = new Date();
+  d.setDate(d.getDate() - d.getDay());
+  return d.toISOString().split("T")[0];
 }
 
 function getStartOfMonth() {
@@ -33,103 +33,104 @@ function getStartOfMonth() {
 function getExpensesByDate(date) {
   return (window.expenses || [])
     .filter(e => e.date === date)
-    .reduce((sum, e) => sum + Number(e.amount || 0), 0);
+    .reduce((s, e) => s + Number(e.amount || 0), 0);
 }
 
-/* ----------------------------------------------------------
+/* ===========================================================
    MAIN ANALYTICS DATA
----------------------------------------------------------- */
+=========================================================== */
 function getAnalyticsData() {
-  const sales = window.sales || [];
-  const services = window.services || [];
-  const expenses = window.expenses || [];
+  const sales     = window.sales || [];
+  const services  = window.services || [];
+  const expenses  = window.expenses || [];
 
-  const today = todayDate();
+  const today     = todayDate();
   const weekStart = getStartOfWeek();
-  const monthStart = getStartOfMonth();
+  const monthStart= getStartOfMonth();
 
-  const weekN = toNum(weekStart);
-  const monthN = toNum(monthStart);
+  const weekNum   = toNum(weekStart);
+  const monthNum  = toNum(monthStart);
 
   let todaySales = 0,
-    weekSales = 0,
-    monthSales = 0;
+      weekSales  = 0,
+      monthSales = 0;
 
-  let totalProfitSales = 0;     // PAID SALES ONLY
-  let totalProfitService = 0;   // REPAIR PROFIT
-  let totalExpenses = 0;
-  let creditSales = 0;
+  let paidSalesProfit = 0;
   let paidSalesAmount = 0;
+  let creditSales = 0;
 
-  /* ----- SALES ----- */
+  /* ---------- SALES ---------- */
   sales.forEach(s => {
-    if (!s || !s.date) return;
-
     const d = s.date;
     const amt = Number(s.amount || 0);
     const prof = Number(s.profit || 0);
     const dNum = toNum(d);
 
-    // Sales amounts for chart
     if (d === today) todaySales += amt;
-    if (dNum >= weekN) weekSales += amt;
-    if (dNum >= monthN) monthSales += amt;
+    if (dNum >= weekNum) weekSales += amt;
+    if (dNum >= monthNum) monthSales += amt;
 
-    // Credit sales → separate
-    if (String(s.status || "").toLowerCase() === "credit") {
+    if ((s.status || "").toLowerCase() === "credit") {
       creditSales += amt;
-      return; // do NOT add to profit
+      return;
     }
 
-    // Paid sales → add profit
-    totalProfitSales += prof;
+    paidSalesProfit += prof;
     paidSalesAmount += amt;
   });
 
-  /* ----- SERVICE PROFITS ----- */
-  services.forEach(j => {
-    totalProfitService += Number(j.profit || 0);
+  /* ---------- SERVICE PROFITS ---------- */
+  let serviceProfit = 0;
+  (services || []).forEach(s => {
+    if (s.status === "Completed") {
+      serviceProfit += Number(s.profit || 0);
+    }
   });
 
-  /* ----- TOTAL EXPENSES ----- */
-  totalExpenses = expenses.reduce((t, e) => t + Number(e.amount || 0), 0);
+  /* ---------- EXPENSES ---------- */
+  const totalExpenses = expenses.reduce((s, e) => s + Number(e.amount || 0), 0);
 
-  const grossProfit = totalProfitSales + totalProfitService; // exclude credit
+  /* ---------- NEW: TOTAL INVESTMENT (Stock + Service) ---------- */
+  const totalInvestment =
+      (window.getStockInvestmentCollected?.() || 0) +
+      (window.getServiceInvestment?.() || 0);
+
+  /* ---------- GROSS & NET ---------- */
+  const grossProfit = paidSalesProfit + serviceProfit;
   const netProfit = grossProfit - totalExpenses;
-
-  const todayExpenses = getExpensesByDate(today);
 
   return {
     todaySales,
     weekSales,
     monthSales,
 
-    totalProfitSales,
-    totalProfitService,
+    paidSalesProfit,
+    serviceProfit,
     grossProfit,
-    totalExpenses,
-    todayExpenses,
     netProfit,
 
+    totalExpenses,
     creditSales,
-    paidSalesAmount
+    totalInvestment,
+
+    todayExpenses: getExpensesByDate(today)
   };
 }
 
-/* ----------------------------------------------------------
+/* ===========================================================
    RENDER SMART DASHBOARD
----------------------------------------------------------- */
+=========================================================== */
 function renderAnalytics() {
   const barCanvas = qs("#salesBar");
   const pieCanvas = qs("#salesPie");
-  const data = getAnalyticsData();
+  const d = getAnalyticsData();
 
-  /* ----- UPDATE TOP SUMMARY CARDS (Smart Dashboard) ----- */
-  qs("#sumToday")  && (qs("#sumToday").textContent  = "₹" + data.todaySales);
-  qs("#sumWeek")   && (qs("#sumWeek").textContent   = "₹" + data.weekSales);
-  qs("#sumMonth")  && (qs("#sumMonth").textContent  = "₹" + data.monthSales);
-  qs("#sumGross")  && (qs("#sumGross").textContent  = "₹" + data.grossProfit);
-  qs("#sumNet")    && (qs("#sumNet").textContent    = "₹" + data.netProfit);
+  /* ---------- Update Summary Cards ---------- */
+  qs("#sumToday").textContent = "₹" + d.todaySales;
+  qs("#sumWeek").textContent  = "₹" + d.weekSales;
+  qs("#sumMonth").textContent = "₹" + d.monthSales;
+  qs("#sumGross").textContent = "₹" + d.grossProfit;
+  qs("#sumNet").textContent   = "₹" + d.netProfit;
 
   updateSummaryCards?.();
   updateTabSummaryBar?.();
@@ -139,40 +140,53 @@ function renderAnalytics() {
   if (salesBarChart) salesBarChart.destroy();
   if (salesPieChart) salesPieChart.destroy();
 
-  /* ---------- BAR CHART (SALES) ---------- */
+  /* ===========================================================
+     BAR CHART — Today / Week / Month Sales
+  ============================================================ */
   salesBarChart = new Chart(barCanvas, {
     type: "bar",
     data: {
-      labels: ["Today", "This Week", "This Month"],
+      labels: ["Today", "Week", "Month"],
       datasets: [{
         label: "Sales ₹",
-        data: [data.todaySales, data.weekSales, data.monthSales],
+        data: [d.todaySales, d.weekSales, d.monthSales],
         backgroundColor: ["#ff9800", "#fb8c00", "#f57c00"],
-        borderRadius: 8
+        borderRadius: 10
       }]
     },
     options: {
       responsive: true,
-      scales: { y: { beginAtZero: true }},
-      plugins: {
-        title: { display: true, text: "Sales Overview" },
-        legend: { display: false }
+      scales: {
+        y: { beginAtZero: true }
       }
     }
   });
 
-  /* ---------- PIE CHART (Profit | Expenses | Credit) ---------- */
+  /* ===========================================================
+     PIE CHART — Profit | Expenses | Credit | Investment
+  ============================================================ */
   salesPieChart = new Chart(pieCanvas, {
     type: "pie",
     data: {
-      labels: ["Total Profit", "Expenses", "Credit Sales"],
+      labels: [
+        "Profit",
+        "Expenses",
+        "Credit Sales",
+        "Investment"
+      ],
       datasets: [{
         data: [
-          data.grossProfit,
-          data.totalExpenses,
-          data.creditSales
+          d.grossProfit,
+          d.totalExpenses,
+          d.creditSales,
+          d.totalInvestment
         ],
-        backgroundColor: ["#4caf50", "#e53935", "#2196f3"]
+        backgroundColor: [
+          "#4caf50", // green  = profit
+          "#e53935", // red    = expenses
+          "#2196f3", // blue   = credit
+          "#ffeb3b"  // yellow = investment
+        ]
       }]
     },
     options: {
@@ -181,19 +195,19 @@ function renderAnalytics() {
         legend: { position: "bottom" },
         title: {
           display: true,
-          text: `Net Profit: ₹${data.netProfit}  (Credit excluded until paid)`
+          text: `Net Profit: ₹${d.netProfit}`
         }
       }
     }
   });
 }
 
-/* ----------------------------------------------------------
-   AUTO REFRESH & SYNC
----------------------------------------------------------- */
+/* ===========================================================
+   AUTO REFRESH
+=========================================================== */
 setInterval(() => {
   try { renderAnalytics(); } catch {}
-}, 45000);
+}, 40000);
 
 window.addEventListener("storage", () => {
   try { renderAnalytics(); } catch {}
