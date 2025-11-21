@@ -1,9 +1,10 @@
 /* =======================================================
    📦 stock.js — Inventory Manager (FINAL v7.2)
-   - History restored (no error)
-   - Correct product key for sales.js compatibility
-   - No undefined sales
-   - Fully synced with analytics + profit tab
+   - History working
+   - product name & cost consistency (uses `product`)
+   - remain calculation fixed
+   - Quick Sale structure matches sales.js
+   - Triggers Overview + Smart Dashboard + Profit Bar updates
 ======================================================= */
 
 const toDisp = window.toDisplay;
@@ -22,6 +23,7 @@ function addStock() {
   if (!type || !name || qty <= 0 || cost <= 0)
     return alert("Please fill all fields.");
 
+  // dd-mm-yyyy -> yyyy-mm-dd
   if (date.includes("-") && date.split("-")[0].length === 2)
     date = toInt(date);
 
@@ -31,7 +33,7 @@ function addStock() {
   updateTypeDropdowns?.();
 
   qs("#pname").value = "";
-  qs("#pqty").value = "";
+  qs("#pqty").value  = "";
   qs("#pcost").value = "";
 }
 
@@ -40,7 +42,7 @@ function addStock() {
 ------------------------------------------------------- */
 function renderStock() {
   const filter = qs("#filterType")?.value || "all";
-  const tbody = qs("#stockTable tbody");
+  const tbody  = qs("#stockTable tbody");
   if (!tbody) return;
 
   let html = "";
@@ -83,7 +85,7 @@ function renderStock() {
 }
 
 /* -------------------------------------------------------
-   📜 HISTORY VIEW (GLOBAL)
+   📜 HISTORY VIEW
 ------------------------------------------------------- */
 function showHistory(i) {
   const p = window.stock[i];
@@ -102,6 +104,8 @@ window.showHistory = showHistory;
 
 /* -------------------------------------------------------
    QUICK SALE / CREDIT
+   - pushes sale with `product` key
+   - keeps `total` & `amount` same
 ------------------------------------------------------- */
 function stockQuickSale(i, mode) {
   const p = window.stock[i];
@@ -118,24 +122,26 @@ function stockQuickSale(i, mode) {
   const price = Number(prompt("Enter Selling Price ₹:"));
   if (!price || price <= 0) return;
 
-  const cost = Number(p.cost || 0);
+  const cost  = Number(p.cost || 0);
   const total = qty * price;
   const profit = total - (qty * cost);
 
+  // update stock
   p.sold = sold + qty;
 
+  window.sales = window.sales || [];
   window.sales.push({
     id: uid("sale"),
-    date: todayDate(),
+    date: todayDate(),   // yyyy-mm-dd
     type: p.type,
-    product: p.name,   // FULLY CORRECT (sales.js supports this)
+    product: p.name,     // ✅ IMPORTANT: use `product`
     qty,
     price,
     total,
-    amount: total,
+    amount: total,       // keep both for backward-compat
     cost,
     profit,
-    status: mode
+    status: mode         // "Paid" / "Credit"
   });
 
   saveStock();
@@ -144,10 +150,12 @@ function stockQuickSale(i, mode) {
   if (p.sold >= p.qty)
     autoAddWanting(p.type, p.name, "Finished");
 
+  // UI refresh (all linked parts)
   renderStock();
   renderSales?.();
-  updateSummaryCards?.();
-  renderAnalytics?.();
+  updateSummaryCards?.();    // Overview cards
+  renderAnalytics?.();       // Smart dashboard
+  updateTabSummaryBar?.();   // Dark profit bar on top
 }
 
 /* -------------------------------------------------------
@@ -172,6 +180,9 @@ document.addEventListener("click", e => {
       window.stock = [];
       saveStock();
       renderStock();
+      renderAnalytics?.();
+      updateSummaryCards?.();
+      updateTabSummaryBar?.();
     }
     return;
   }
