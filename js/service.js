@@ -1,8 +1,8 @@
 /* ===========================================================
-   🛠 service.js — Service / Repair Manager (v8.3)
-   • Cloud-compatible saving via core.saveServices when available
-   • Pie chart colors: Completed=green, Failed/Returned=red, Pending=yellow
-   • No UI structure change — only save/sync logic improved
+   🛠 service.js — Service / Repair Manager (v8.4)
+   • Added: getServiceInvestmentCollected()
+   • Added: getServiceProfitCollected()
+   • No UI structure changed
 =========================================================== */
 
 (function () {
@@ -22,15 +22,11 @@
 
   function persistServices() {
     try {
-      // Prefer core's saveServices if present (handles cloud)
       if (typeof window.saveServices === "function" && window.saveServices !== persistServices) {
         return window.saveServices();
       }
-    } catch (e) {
-      // continue to fallback
-    }
+    } catch (e) {}
 
-    // fallback: localStorage
     try {
       localStorage.setItem(KEY, JSON.stringify(window.services || []));
       window.dispatchEvent(new Event("storage"));
@@ -43,21 +39,47 @@
     persistServices();
   }
 
-  /* -------- JOB ID -------- */
+  /* ======================================================
+     🔵 NEW — SERVICE INVESTMENT COLLECTOR
+     (Completed jobs only, invest = money spent)
+  ====================================================== */
+  window.getServiceInvestmentCollected = function () {
+    let total = 0;
+    (window.services || []).forEach(s => {
+      if (s.status === "Completed") {
+        total += Number(s.invest || 0);
+      }
+    });
+    return total;
+  };
+
+  /* ======================================================
+     🔵 NEW — SERVICE PROFIT COLLECTOR
+     (Completed jobs only, profit = paid - invest)
+  ====================================================== */
+  window.getServiceProfitCollected = function () {
+    let total = 0;
+    (window.services || []).forEach(s => {
+      if (s.status === "Completed") {
+        total += Number(s.profit || 0);
+      }
+    });
+    return total;
+  };
+
+  /* ======================================================
+         ADD JOB
+  ====================================================== */
   function nextJobId() {
     if (!window.services || !window.services.length) return "01";
     const max = Math.max(...window.services.map(s => Number(s.jobNum || 0)));
     return String(max + 1).padStart(2, "0");
   }
 
-  /* =====================================================
-       ADD JOB (DATE FIXED)
-     ===================================================== */
   function addJob() {
 
     let receivedRaw = qs("#svcReceivedDate")?.value || today();
 
-    // Convert dd-mm-yyyy → yyyy-mm-dd only if user manually entered dd-mm-yyyy
     let received =
       receivedRaw.split("-")[0].length === 2
         ? toInternal(receivedRaw)
@@ -112,9 +134,9 @@
       .forEach(id => qs("#" + id) && (qs("#" + id).value = ""));
   }
 
-  /* =====================================================
+  /* ======================================================
        RENDER TABLES
-     ===================================================== */
+  ====================================================== */
   function renderTables() {
     const tb = qs("#svcTable tbody");
     const hist = qs("#svcHistoryTable tbody");
@@ -125,7 +147,6 @@
     const completed = (window.services || []).filter(s => s.status === "Completed");
     const failed    = (window.services || []).filter(s => s.status === "Failed/Returned");
 
-    /* Pending Jobs */
     tb.innerHTML = pending.map(s => `
       <tr>
         <td>${esc(s.jobId)}</td>
@@ -143,7 +164,6 @@
       </tr>
     `).join("") || `<tr><td colspan="9">No pending jobs</td></tr>`;
 
-    /* Completed + Failed */
     hist.innerHTML = [...completed, ...failed].map(s => {
       if (s.status === "Failed/Returned") {
         return `
@@ -173,7 +193,6 @@
         </tr>`;
     }).join("") || `<tr><td colspan="9">No history</td></tr>`;
 
-    /* Summary */
     qs("#svcPendingCount").textContent = pending.length;
     qs("#svcCompletedCount").textContent = completed.length;
     qs("#svcTotalProfit").textContent =
@@ -182,10 +201,7 @@
     renderPie();
   }
 
-  /* =====================================================
-       PIE CHART
-       Colors: Pending (yellow), Completed (green), Failed (red)
-     ===================================================== */
+  /* PIE CHART */
   function renderPie() {
     const c = qs("#svcPie");
     if (!c) return;
@@ -202,16 +218,14 @@
         labels:["Pending","Completed","Failed/Returned"],
         datasets:[{
           data:[P,C,F],
-          backgroundColor: ["#FFEB3B", "#4CAF50", "#E53935"] // yellow, green, red
+          backgroundColor: ["#FFEB3B", "#4CAF50", "#E53935"]
         }]
       },
       options:{responsive:true,plugins:{legend:{position:"bottom"}}}
     });
   }
 
-  /* =====================================================
-       OPEN JOB
-     ===================================================== */
+  /* OPEN JOB */
   function openJob(id) {
     const s = (window.services || []).find(x=>x.id===id);
     if (!s) return;
@@ -231,9 +245,7 @@ Advance: ₹${s.advance}
     if (ch==="2") return markFailed(id);
   }
 
-  /* =====================================================
-       COMPLETED
-     ===================================================== */
+  /* COMPLETED */
   function markCompleted(id) {
     const s = (window.services || []).find(x=>x.id===id);
     if (!s) return;
@@ -266,9 +278,7 @@ Profit: ₹${profit}`
     renderAnalytics?.();
   }
 
-  /* =====================================================
-       FAILED / RETURNED
-     ===================================================== */
+  /* FAILED */
   function markFailed(id) {
     const s = (window.services || []).find(x=>x.id===id);
     if (!s) return;
@@ -289,9 +299,7 @@ Profit: ₹${profit}`
     renderAnalytics?.();
   }
 
-  /* =====================================================
-       DELETE / CLEAR
-     ===================================================== */
+  /* DELETE */
   function deleteJob(id) {
     if (!confirm("Delete this job?")) return;
     window.services = (window.services || []).filter(s=>s.id!==id);
@@ -306,9 +314,7 @@ Profit: ₹${profit}`
     renderTables();
   };
 
-  /* =====================================================
-       EVENTS
-     ===================================================== */
+  /* EVENTS */
   document.addEventListener("click", e => {
     if (e.target.id==="addServiceBtn") addJob();
     if (e.target.classList.contains("svc-view")) openJob(e.target.dataset.id);
