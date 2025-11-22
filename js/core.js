@@ -626,4 +626,34 @@ window.addServiceProfit = function (amt) {
   box.serviceProfit = (box.serviceProfit || 0) + Number(amt || 0);
   localStorage.setItem("ks-profit-box", JSON.stringify(box));
 };
+/* ===========================================================
+   PROFIT ENGINE — REQUIRED BY ALL DASHBOARDS
+   (FINAL FIX — Add to core.js)
+=========================================================== */
 
+// TOTAL SALES PROFIT collected from sales records
+window.getSalesProfitCollected = function () {
+  return (window.sales || [])
+    .filter(s => String(s.status || "").toLowerCase() !== "credit")
+    .reduce((t, s) => t + Number(s.profit || 0), 0);
+};
+
+// TOTAL SALES INVESTMENT = total cost of sold qty
+window.getSalesInvestmentCollected = function () {
+  return (window.sales || [])
+    .reduce((t, s) => t + (Number(s.qty || 0) * Number(s.cost || 0)), 0);
+};
+
+// TOTAL SERVICE PROFIT
+window.getServiceProfitCollected = function () {
+  return (window.services || [])
+    .filter(s => s.status === "Completed")
+    .reduce((t, s) => t + Number(s.profit || 0), 0);
+};
+
+// TOTAL SERVICE INVESTMENT (parts cost)
+window.getServiceInvestmentCollected = function () {
+  return (window.services || [])
+    .filter(s => s.status === "Completed")
+    .reduce((t, s) => t + Number(s.invest || 0), 0);
+};
