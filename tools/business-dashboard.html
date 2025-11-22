@@ -663,35 +663,50 @@
 
     <div class="flex-row" style="margin-top:12px">
 
+      <!-- 1) STOCK INVESTMENT — separate collect, net profit లో add అవదు -->
       <div class="card" style="flex:1;min-width:180px">
         <h4>📦 Stock Investment (After Sale)</h4>
         <b id="pStockInv" style="font-size:22px;color:#ff9800">₹0</b><br>
-        <button id="collectStockInvBtn" class="small-btn" style="margin-top:6px;background:#ff9800">
+        <button id="collectStockInvBtn"
+                class="small-btn"
+                style="margin-top:6px;background:#ff9800">
           Collect
         </button>
       </div>
 
+      <!-- 2) SALES PROFIT — JUST DISPLAY (collect button లేదు) -->
       <div class="card" style="flex:1;min-width:180px">
         <h4>💰 Sales Profit</h4>
         <b id="pSalesProfit" style="font-size:22px;color:#4caf50">₹0</b><br>
-        <button id="collectSalesProfitBtn2" class="small-btn" style="margin-top:6px;background:#4caf50">
-          Collect
-        </button>
+        <small>Total Sales Profit (Paid only)</small>
       </div>
 
+      <!-- 3) SERVICE INVESTMENT — separate collect, net profit లో add అవదు -->
       <div class="card" style="flex:1;min-width:180px">
         <h4>🛠 Service Investment</h4>
         <b id="pSvcInv" style="font-size:22px;color:#03a9f4">₹0</b><br>
-        <button id="collectSvcInvBtn2" class="small-btn" style="margin-top:6px;background:#03a9f4">
+        <button id="collectSvcInvBtn"
+                class="small-btn"
+                style="margin-top:6px;background:#03a9f4">
           Collect
         </button>
       </div>
 
+      <!-- 4) SERVICE PROFIT — JUST DISPLAY -->
       <div class="card" style="flex:1;min-width:180px">
         <h4>⚙️ Service Profit</h4>
         <b id="pSvcProfit" style="font-size:22px;color:#01579b">₹0</b><br>
-        <button id="collectSvcProfitBtn2" class="small-btn" style="margin-top:6px;background:#01579b">
-          Collect
+        <small>Total Service Profit (Completed jobs)</small>
+      </div>
+
+      <!-- 5) NET PROFIT — (SalesProfit + ServiceProfit - Expenses) -->
+      <div class="card" style="flex:1;min-width:180px">
+        <h4>🧮 Net Profit (Sales + Service - Expenses)</h4>
+        <b id="pNetProfit" style="font-size:22px;color:#2e7d32">₹0</b><br>
+        <button id="collectNetProfitBtn"
+                class="small-btn"
+                style="margin-top:6px;background:#2e7d32">
+          Collect Net Profit
         </button>
       </div>
 
