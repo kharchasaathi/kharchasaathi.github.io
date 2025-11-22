@@ -1,9 +1,9 @@
 /* ===========================================================
-   🛠 service.js — Service / Repair Manager (FINAL v9.0)
+   🛠 service.js — Service / Repair Manager (FINAL v9.1 FIXED)
    Fully compatible with your HTML structure
+   - NO duplicate qs()
+   - window.renderServiceTables is exported
 =========================================================== */
-
-const qs = s => document.querySelector(s);
 
 /* ---------------------------------------------
    ADD SERVICE JOB
@@ -55,7 +55,7 @@ function addServiceJob() {
 window.addServiceJob = addServiceJob;
 
 /* ---------------------------------------------
-   MARK AS COMPLETED
+   COMPLETE SERVICE JOB
 ---------------------------------------------- */
 function completeService(id) {
   const j = (window.services || []).find(s => s.id === id);
@@ -80,7 +80,7 @@ function completeService(id) {
 window.completeService = completeService;
 
 /* ---------------------------------------------
-   DELETE JOB
+   DELETE SERVICE JOB
 ---------------------------------------------- */
 function deleteService(id) {
   if (!confirm("Delete this service record?")) return;
@@ -101,10 +101,10 @@ window.deleteService = deleteService;
 function renderServiceTables() {
   const tbody = qs("#svcTable tbody");
   const hist  = qs("#svcHistoryTable tbody");
+
   if (!tbody || !hist) return;
 
   const list = window.services || [];
-
   let pending = "";
   let completed = "";
   let pendingCount = 0;
@@ -150,9 +150,9 @@ function renderServiceTables() {
   tbody.innerHTML = pending || `<tr><td colspan="9">No pending jobs</td></tr>`;
   hist.innerHTML  = completed || `<tr><td colspan="9">No completed jobs</td></tr>`;
 
-  qs("#svcPendingCount").textContent = pendingCount;
+  qs("#svcPendingCount").textContent   = pendingCount;
   qs("#svcCompletedCount").textContent = compCount;
-  qs("#svcTotalProfit").textContent = "₹" + totalProfit;
+  qs("#svcTotalProfit").textContent    = "₹" + totalProfit;
 }
 
 window.renderServiceTables = renderServiceTables;
