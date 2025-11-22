@@ -1,6 +1,19 @@
 /* ===========================================================
- 🛠 service.js — Repair Manager (v11.2 FINAL - NO QS HERE)
+ 🛠 service.js — Service / Repair Manager (v11.3 FIXED)
 =========================================================== */
+
+/* DATE FIX — RESTORED from old v10.1 */
+function toInternalIfNeeded(d) {
+  if (!d) return "";
+  if (d.includes("-")) {
+    const parts = d.split("-");
+    if (parts[0].length === 2) {
+      const [dd, m, y] = parts;
+      return `${y}-${m}-${dd}`;
+    }
+  }
+  return d;
+}
 
 /* ADD JOB */
 function addServiceJob() {
@@ -166,7 +179,5 @@ function renderServicePie(pending, completed) {
 /* REGISTER */
 qs("#addServiceBtn")?.addEventListener("click", addServiceJob);
 
-/* EXPORT */
 window.renderServiceTables = renderServiceTables;
-
 window.addEventListener("load", renderServiceTables);
