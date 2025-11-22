@@ -900,7 +900,7 @@
   <!-- AUTO VERSION LOADER — cache fix -->
 <script>
 (function(){
-  const v = Date.now(); // unique version every reload
+  const v = Date.now(); // force fresh JS every reload
 
   const js = [
     "/js/core.js",
@@ -913,7 +913,8 @@
     "/js/analytics.js",
     "/js/service.js",
     "/js/security.js",
-    "/js/profits.js"   // ✅ NEW — Profit Tab Engine
+
+    "/js/profits.js"  // 🔥 MUST BE LAST — FIXES SERVICE, ANALYTICS, PROFIT TABS
   ];
 
   js.forEach(f => {
