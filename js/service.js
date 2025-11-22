@@ -1,20 +1,13 @@
 /* ===========================================================
-   🛠 service.js — Service / Repair Manager (v10.0 FINAL)
-   ✔ Matches your business-dashboard(9).html
-   ✔ Pending + Completed tables fully working
-   ✔ Profit & Investment auto-sync to Profit tab
-   ✔ Smart Dashboard + Analytics auto update
-   ✔ No duplicate qs()
-   ✔ No silent failures
+   🛠 service.js — Service / Repair Manager (v10.1 FIXED)
+   (NO duplicate qs declaration)
 =========================================================== */
-
-// Shortcuts
-const qs = s => document.querySelector(s);
 
 /* ===========================================================
    ADD NEW JOB
 =========================================================== */
 function addServiceJob() {
+
   const date_in   = qs("#svcReceivedDate")?.value || todayDate();
   const customer  = qs("#svcCustomer")?.value.trim();
   const phone     = qs("#svcPhone")?.value.trim();
@@ -49,16 +42,10 @@ function addServiceJob() {
   renderAnalytics?.();
   updateSummaryCards?.();
   updateTabSummaryBar?.();
-
-  qs("#svcCustomer").value = "";
-  qs("#svcPhone").value = "";
-  qs("#svcModel").value = "";
-  qs("#svcProblem").value = "";
-  qs("#svcAdvance").value = "";
 }
 
 /* ===========================================================
-   COMPLETE JOB POPUP
+   COMPLETE JOB
 =========================================================== */
 function completeServiceJob(id) {
   const job = (window.services || []).find(j => j.id === id);
@@ -73,13 +60,11 @@ function completeServiceJob(id) {
   job.invest = invest;
   job.paid = paid;
 
-  const profit = paid - (invest + Number(job.advance || 0));
-  job.profit = profit;
+  job.profit = paid - (invest + Number(job.advance || 0));
   job.date_out = todayDate();
   job.status = "Completed";
 
   saveServices();
-
   renderServiceTables();
   renderAnalytics?.();
   updateSummaryCards?.();
@@ -87,12 +72,14 @@ function completeServiceJob(id) {
 }
 
 /* ===========================================================
-   DELETE A JOB
+   DELETE JOB
 =========================================================== */
 function deleteServiceJob(id) {
   if (!confirm("Delete this job?")) return;
+
   window.services = (window.services || []).filter(j => j.id !== id);
   saveServices();
+
   renderServiceTables();
   renderAnalytics?.();
   updateSummaryCards?.();
@@ -113,17 +100,16 @@ qs("#clearServiceBtn")?.addEventListener("click", () => {
 });
 
 /* ===========================================================
-   RENDER MAIN UI
+   RENDER UI
 =========================================================== */
 function renderServiceTables() {
   const pendBody = qs("#svcTable tbody");
   const histBody = qs("#svcHistoryTable tbody");
-
   if (!pendBody || !histBody) return;
 
   const list = window.services || [];
 
-  /* ---------- Pending ---------- */
+  /* Pending */
   const pending = list.filter(x => x.status !== "Completed");
   pendBody.innerHTML = pending.map(j => `
     <tr>
@@ -136,17 +122,17 @@ function renderServiceTables() {
       <td>${j.problem}</td>
       <td>${j.status}</td>
       <td>
-        <button class="small-btn" 
+        <button class="small-btn"
                 onclick="completeServiceJob('${j.id}')"
                 style="background:#2e7d32;color:#fff">✔ Complete</button>
-        <button class="small-btn" 
+        <button class="small-btn"
                 onclick="deleteServiceJob('${j.id}')"
                 style="background:#b71c1c;color:#fff">🗑</button>
       </td>
     </tr>
   `).join("");
 
-  /* ---------- Completed / History ---------- */
+  /* Completed */
   const completed = list.filter(x => x.status === "Completed");
   histBody.innerHTML = completed.map(j => `
     <tr>
@@ -162,14 +148,12 @@ function renderServiceTables() {
     </tr>
   `).join("");
 
-  /* ---------- Summary boxes ---------- */
-  qs("#svcPendingCount").textContent   = pending.length;
+  qs("#svcPendingCount").textContent = pending.length;
   qs("#svcCompletedCount").textContent = completed.length;
 
   const totalProfit = completed.reduce((s, j) => s + Number(j.profit || 0), 0);
   qs("#svcTotalProfit").textContent = "₹" + totalProfit;
 
-  /* ---------- PIE ---------- */
   renderServicePie(pending.length, completed.length);
 }
 
@@ -177,7 +161,6 @@ function renderServiceTables() {
    PIE CHART
 =========================================================== */
 let svcPie = null;
-
 function renderServicePie(pending, completed) {
   const ctx = qs("#svcPie");
   if (!ctx) return;
@@ -194,24 +177,17 @@ function renderServicePie(pending, completed) {
       }]
     },
     options: {
-      responsive: true,
-      plugins: {
-        legend: { position: "bottom" }
-      }
+      responsive: true
     }
   });
 }
 
 /* ===========================================================
-   BUTTON
+   REGISTER
 =========================================================== */
 qs("#addServiceBtn")?.addEventListener("click", addServiceJob);
 
-/* ===========================================================
-   INITIAL LOAD
-=========================================================== */
+/* expose globally */
 window.renderServiceTables = renderServiceTables;
 
-window.addEventListener("load", () => {
-  renderServiceTables();
-});
+window.addEventListener("load", renderServiceTables);
