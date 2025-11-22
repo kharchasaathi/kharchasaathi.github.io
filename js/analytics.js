@@ -126,11 +126,7 @@ function renderAnalytics() {
   const d = getAnalyticsData();
 
   /* ---------- Update Summary Cards ---------- */
-  qs("#sumToday").textContent = "₹" + d.todaySales;
-  qs("#sumWeek").textContent  = "₹" + d.weekSales;
-  qs("#sumMonth").textContent = "₹" + d.monthSales;
-  qs("#sumGross").textContent = "₹" + d.grossProfit;
-  qs("#sumNet").textContent   = "₹" + d.netProfit;
+  
 
   updateSummaryCards?.();
   updateTabSummaryBar?.();
