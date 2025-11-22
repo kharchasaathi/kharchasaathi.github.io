@@ -901,6 +901,7 @@
 <script>
 (function(){
   const v = Date.now(); // unique version every reload
+
   const js = [
     "/js/core.js",
     "/js/firebase.js",
@@ -911,7 +912,8 @@
     "/js/expenses.js",
     "/js/analytics.js",
     "/js/service.js",
-    "/js/security.js"
+    "/js/security.js",
+    "/js/profits.js"   // ✅ NEW — Profit Tab Engine
   ];
 
   js.forEach(f => {
@@ -919,156 +921,12 @@
   });
 })();
 </script>
+
   
-
-  <!-- ========== PROFIT & CLEAN ANALYTICS LOGIC ========== -->
-  <script>
-  (function () {
-    if (!window.collected) {
-  window.collected = { stockInv:0, salesProfit:0, svcInv:0, svcProfit:0 };
-}
-    const COLLECT_KEY = "ks-collected";
-
-    function loadCollected() {
-      try {
-        const raw = localStorage.getItem(COLLECT_KEY);
-        const obj = raw ? JSON.parse(raw) : {};
-        window.collected = {
-          stockInv:   Number(obj.stockInv   || 0),
-          salesProfit:Number(obj.salesProfit|| 0),
-          svcInv:     Number(obj.svcInv     || 0),
-          svcProfit:  Number(obj.svcProfit  || 0),
-        };
-      } catch (e) {
-        window.collected = { stockInv:0, salesProfit:0, svcInv:0, svcProfit:0 };
-      }
-    }
-    function saveCollected() {
-      try {
-        localStorage.setItem(COLLECT_KEY, JSON.stringify(window.collected));
-      } catch (e) {}
-    }
-    const clamp = v => v < 0 ? 0 : v;
-
-    // Pending (not collected) helpers
-    window.getPendingStockInvestment = function () {
-      const total = window.getSalesInvestmentCollected?.() || 0;
-      return clamp(total - (window.collected.stockInv || 0));
-    };
-    window.getPendingSalesProfit = function () {
-      const total = window.getSalesProfitCollected?.() || 0;
-      return clamp(total - (window.collected.salesProfit || 0));
-    };
-    window.getPendingServiceInvestment = function () {
-      const total = window.getServiceInvestmentCollected?.() || 0;
-      return clamp(total - (window.collected.svcInv || 0));
-    };
-    window.getPendingServiceProfit = function () {
-      const total = window.getServiceProfitCollected?.() || 0;
-      return clamp(total - (window.collected.svcProfit || 0));
-    };
-
-    // Profit tab render
-    window.renderProfitTab = function () {
-      qs("#pStockInv")   && (qs("#pStockInv").textContent   = "₹" + window.getPendingStockInvestment());
-      qs("#pSalesProfit")&& (qs("#pSalesProfit").textContent= "₹" + window.getPendingSalesProfit());
-      qs("#pSvcInv")     && (qs("#pSvcInv").textContent     = "₹" + window.getPendingServiceInvestment());
-      qs("#pSvcProfit")  && (qs("#pSvcProfit").textContent  = "₹" + window.getPendingServiceProfit());
-    };
-
-    function collectAndRefresh(type) {
-      let add = 0, label = "";
-      if (type === "stockInv")   { add = window.getPendingStockInvestment();      label = "Stock Investment"; }
-      if (type === "salesProfit"){ add = window.getPendingSalesProfit();         label = "Sales Profit"; }
-      if (type === "svcInv")     { add = window.getPendingServiceInvestment();   label = "Service Investment"; }
-      if (type === "svcProfit")  { add = window.getPendingServiceProfit();       label = "Service Profit"; }
-
-      if (!add) { alert("Nothing pending to collect."); return; }
-      if (!confirm(`Collect ₹${add} from ${label}?`)) return;
-
-      if (type === "stockInv")        window.collected.stockInv   += add;
-      else if (type === "salesProfit")window.collected.salesProfit+= add;
-      else if (type === "svcInv")     window.collected.svcInv     += add;
-      else if (type === "svcProfit")  window.collected.svcProfit  += add;
-
-      saveCollected();
-      window.renderProfitTab?.();
-      window.renderAnalytics?.();
-    }
-
-    // Clean Smart Dashboard override (4 items)
-    let cleanPieChart = null;
-    window.renderAnalytics = function () {
-      const profit =
-        window.getPendingSalesProfit() +
-        window.getPendingServiceProfit();
-
-      const expenses = (window.expenses || [])
-        .reduce((a, b) => a + Number(b.amount || 0), 0);
-
-      const credit = (window.sales || [])
-        .filter(s => String(s.status || "").toLowerCase() === "credit")
-        .reduce((a, b) => a + Number(b.amount || 0), 0);
-
-      const investment =
-        window.getPendingStockInvestment() +
-        window.getPendingServiceInvestment();
-
-      qs("#dashProfit")   && (qs("#dashProfit").textContent   = "₹" + profit);
-      qs("#dashExpenses") && (qs("#dashExpenses").textContent = "₹" + expenses);
-      qs("#dashCredit")   && (qs("#dashCredit").textContent   = "₹" + credit);
-      qs("#dashInv")      && (qs("#dashInv").textContent      = "₹" + investment);
-
-      const canvas = document.getElementById("cleanPie");
-      if (!canvas) return;
-      const ctx = canvas.getContext("2d");
-      if (cleanPieChart) cleanPieChart.destroy();
-
-      cleanPieChart = new Chart(ctx, {
-        type: "pie",
-        data: {
-          labels: ["Profit", "Expenses", "Credit Sales", "Investment"],
-          datasets: [{
-            data: [profit, expenses, credit, investment],
-            backgroundColor: ["#2e7d32", "#c62828", "#1565c0", "#fbc02d"]
-          }]
-        },
-        options: {
-          responsive: true,
-          plugins: { legend: { position: "bottom" } }
-        }
-      });
-    };
-
-    // INIT
-    window.addEventListener("load", () => {
-      loadCollected();
-
-      // Profit tab buttons
-      qs("#collectStockInvBtn")?.addEventListener("click", () =>
-        collectAndRefresh("stockInv")
-      );
-      qs("#collectSalesProfitBtn2")?.addEventListener("click", () =>
-        collectAndRefresh("salesProfit")
-      );
-      qs("#collectSvcInvBtn2")?.addEventListener("click", () =>
-        collectAndRefresh("svcInv")
-      );
-      qs("#collectSvcProfitBtn2")?.addEventListener("click", () =>
-        collectAndRefresh("svcProfit")
-      );
-
-      window.renderProfitTab?.();
-      window.renderAnalytics?.();
-    });
-
-    window.addEventListener("storage", () => {
-      window.renderProfitTab?.();
-      window.renderAnalytics?.();
-    });
-
-  })();
-  </script>
+  
+    
+      
+        
 
 </body>
 </html>
