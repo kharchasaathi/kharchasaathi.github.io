@@ -1,124 +1,65 @@
 /* ===========================================================
-   📦 profits.js — Profit Tab Logic (v2.0 Final)
-   Fully compatible with existing core.js Profit Module
-=========================================================== */
+   profits.js — NEW PROFIT TAB (Final v3.0)
+========================================================== */
 
 console.log("profits.js loaded");
 
-// Shortcuts
 const qs = s => document.querySelector(s);
 
-/* ----------------------------------------------------------
-   SAFE RENDER (Fixes Chrome cache not refreshing)
----------------------------------------------------------- */
-function safeNumber(v){ return Number(v || 0); }
+window.renderProfitTab = function () {
 
-/* ----------------------------------------------------------
-   MAIN RENDER — PROFIT BOX UI
----------------------------------------------------------- */
-window.renderProfitBox = function () {
-  if (!window.getProfitBox) return;
+  window.loadCollected?.();
 
-  const box = window.getProfitBox();   // from core.js
-  const data = window.getAnalyticsData?.() || {};
+  // Investment
+  qs("#pStockInv").textContent  = "₹" + window.getPendingStockInvestment();
+  qs("#pSvcInv").textContent    = "₹" + window.getPendingServiceInvestment();
 
-  // Ensure valid numbers
-  const stockInv  = safeNumber(box.stockInv);
-  const salesProf = safeNumber(box.salesProf);
-  const svcInv    = safeNumber(box.svcInv);
-  const svcProf   = safeNumber(box.svcProf);
+  // Profits
+  qs("#pSalesProfit").textContent = "₹" + window.getTotalSalesProfit();
+  qs("#pSvcProfit").textContent   = "₹" + window.getTotalServiceProfit();
 
-  // Update UI
-  qs("#pb_stockInv")  && (qs("#pb_stockInv").textContent  = "₹" + stockInv);
-  qs("#pb_salesProf") && (qs("#pb_salesProf").textContent = "₹" + salesProf);
-  qs("#pb_svcInv")    && (qs("#pb_svcInv").textContent    = "₹" + svcInv);
-  qs("#pb_svcProf")   && (qs("#pb_svcProf").textContent   = "₹" + svcProf);
+  // Net Profit
+  const net = window.getNetProfit();
+  const pendingNet = window.getPendingNetProfit();
 
-  renderProfitPie();
+  const box = qs("#pNetProfit");
+  box.textContent = "₹" + net;
+
+  const btn = qs("#collectNetProfitBtn");
+
+  if (pendingNet > 0) {
+    btn.style.background = "#2e7d32";
+    btn.disabled = false;
+  } else {
+    btn.style.background = "#b71c1c";
+    btn.disabled = true;
+  }
 };
 
-/* ----------------------------------------------------------
-   PROFIT PIE CHART
----------------------------------------------------------- */
-let profitPie = null;
-
-function renderProfitPie() {
-  const ctx = qs("#profitPie");
-  if (!ctx) return;
-
-  const box = window.getProfitBox?.() || {};
-  const data = window.getAnalyticsData?.() || {};
-
-  const stockInv  = safeNumber(box.stockInv);
-  const svcInv    = safeNumber(box.svcInv);
-  const salesProf = safeNumber(box.salesProf);
-  const svcProf   = safeNumber(box.svcProf);
-
-  const expenses  = safeNumber(data.totalExpenses);
-  const credit    = safeNumber(data.creditSales);
-
-  const totalInvestment = stockInv + svcInv;
-  const totalProfit     = salesProf + svcProf;
-
-  if (profitPie) profitPie.destroy();
-
-  profitPie = new Chart(ctx, {
-    type: "pie",
-    data: {
-      labels: ["Investment", "Profit", "Expenses", "Credit Sales"],
-      datasets: [{
-        data: [totalInvestment, totalProfit, expenses, credit],
-        backgroundColor: ["#ffeb3b", "#4caf50", "#e53935", "#2196f3"]
-      }]
-    },
-    options: {
-      responsive: true,
-      plugins: {
-        legend: { position: "bottom" },
-        title: { display: true, text: "Business Financial Status" }
-      }
-    }
-  });
-}
-
-/* ----------------------------------------------------------
-   COLLECT BUTTON HANDLERS (NO CHANGE)
----------------------------------------------------------- */
-
-qs("#pb_collectStockInv")?.addEventListener("click", () => {
-  const amt = window.collectStockInv?.() || 0;
-  alert(`Stock Investment Collected: ₹${amt}`);
-  renderProfitBox();
+// BUTTON HANDLERS
+qs("#collectStockInvBtn")?.addEventListener("click", () => {
+  const amt = window.collectStockInv();
+  alert("Collected Stock Investment: ₹" + amt);
+  window.renderProfitTab();
+  renderAnalytics?.();
 });
 
-qs("#pb_collectSalesProf")?.addEventListener("click", () => {
-  const amt = window.collectSalesProfit?.() || 0;
-  alert(`Sales Profit Collected: ₹${amt}`);
-  renderProfitBox();
+qs("#collectSvcInvBtn")?.addEventListener("click", () => {
+  const amt = window.collectSvcInv();
+  alert("Collected Service Investment: ₹" + amt);
+  window.renderProfitTab();
+  renderAnalytics?.();
 });
 
-qs("#pb_collectSvcInv")?.addEventListener("click", () => {
-  const amt = window.collectServiceInv?.() || 0;
-  alert(`Service Investment Collected: ₹${amt}`);
-  renderProfitBox();
+qs("#collectNetProfitBtn")?.addEventListener("click", () => {
+  const amt = window.collectNetProfit();
+  if (amt <= 0) return;
+  alert("Collected Net Profit: ₹" + amt);
+  window.renderProfitTab();
+  renderAnalytics?.();
 });
 
-qs("#pb_collectSvcProf")?.addEventListener("click", () => {
-  const amt = window.collectServiceProfit?.() || 0;
-  alert(`Service Profit Collected: ₹${amt}`);
-  renderProfitBox();
-});
-
-/* ----------------------------------------------------------
-   AUTO RENDER ON LOAD (Fixes Chrome stale cache)
----------------------------------------------------------- */
+// Auto render
 window.addEventListener("load", () => {
-  setTimeout(() => {
-    renderProfitBox();
-  }, 150);
-});
-
-// Refresh also when any localStorage changes
-window.addEventListener("storage", () => {
-  renderProfitBox();
+  setTimeout(window.renderProfitTab, 150);
 });
