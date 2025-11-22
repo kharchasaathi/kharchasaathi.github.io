@@ -1,6 +1,6 @@
 /* ===========================================================
-   📦 profits.js — Profit Tab Logic (v1.0)
-   Works with core.js ProfitBox module
+   📦 profits.js — Profit Tab Logic (v2.0 Final)
+   Fully compatible with existing core.js Profit Module
 =========================================================== */
 
 console.log("profits.js loaded");
@@ -9,23 +9,36 @@ console.log("profits.js loaded");
 const qs = s => document.querySelector(s);
 
 /* ----------------------------------------------------------
-   RENDER PROFIT BOX UI
+   SAFE RENDER (Fixes Chrome cache not refreshing)
+---------------------------------------------------------- */
+function safeNumber(v){ return Number(v || 0); }
+
+/* ----------------------------------------------------------
+   MAIN RENDER — PROFIT BOX UI
 ---------------------------------------------------------- */
 window.renderProfitBox = function () {
   if (!window.getProfitBox) return;
 
-  const box = window.getProfitBox();
+  const box = window.getProfitBox();   // from core.js
+  const data = window.getAnalyticsData?.() || {};
 
-  qs("#pb_stockInv").textContent  = "₹" + box.stockInv;
-  qs("#pb_salesProf").textContent = "₹" + box.salesProf;
-  qs("#pb_svcInv").textContent    = "₹" + box.svcInv;
-  qs("#pb_svcProf").textContent   = "₹" + box.svcProf;
+  // Ensure valid numbers
+  const stockInv  = safeNumber(box.stockInv);
+  const salesProf = safeNumber(box.salesProf);
+  const svcInv    = safeNumber(box.svcInv);
+  const svcProf   = safeNumber(box.svcProf);
+
+  // Update UI
+  qs("#pb_stockInv")  && (qs("#pb_stockInv").textContent  = "₹" + stockInv);
+  qs("#pb_salesProf") && (qs("#pb_salesProf").textContent = "₹" + salesProf);
+  qs("#pb_svcInv")    && (qs("#pb_svcInv").textContent    = "₹" + svcInv);
+  qs("#pb_svcProf")   && (qs("#pb_svcProf").textContent   = "₹" + svcProf);
 
   renderProfitPie();
 };
 
 /* ----------------------------------------------------------
-   PIE CHART (Investment / Profit / Credit / Expenses)
+   PROFIT PIE CHART
 ---------------------------------------------------------- */
 let profitPie = null;
 
@@ -33,59 +46,43 @@ function renderProfitPie() {
   const ctx = qs("#profitPie");
   if (!ctx) return;
 
-  const box = window.getProfitBox();
+  const box = window.getProfitBox?.() || {};
   const data = window.getAnalyticsData?.() || {};
 
-  const totalInvestment =
-    Number(box.stockInv) + Number(box.svcInv);
+  const stockInv  = safeNumber(box.stockInv);
+  const svcInv    = safeNumber(box.svcInv);
+  const salesProf = safeNumber(box.salesProf);
+  const svcProf   = safeNumber(box.svcProf);
 
-  const totalProfit =
-    Number(box.salesProf) + Number(box.svcProf);
+  const expenses  = safeNumber(data.totalExpenses);
+  const credit    = safeNumber(data.creditSales);
 
-  const expenses = Number(data.totalExpenses || 0);
-  const credit   = Number(data.creditSales || 0);
+  const totalInvestment = stockInv + svcInv;
+  const totalProfit     = salesProf + svcProf;
 
   if (profitPie) profitPie.destroy();
 
   profitPie = new Chart(ctx, {
     type: "pie",
     data: {
-      labels: [
-        "Investment",
-        "Profit",
-        "Expenses",
-        "Credit Sales"
-      ],
+      labels: ["Investment", "Profit", "Expenses", "Credit Sales"],
       datasets: [{
-        data: [
-          totalInvestment,
-          totalProfit,
-          expenses,
-          credit
-        ],
-        backgroundColor: [
-          "#ffeb3b", // yellow
-          "#4caf50", // green
-          "#e53935", // red
-          "#2196f3"  // blue
-        ]
+        data: [totalInvestment, totalProfit, expenses, credit],
+        backgroundColor: ["#ffeb3b", "#4caf50", "#e53935", "#2196f3"]
       }]
     },
     options: {
       responsive: true,
       plugins: {
         legend: { position: "bottom" },
-        title: {
-          display: true,
-          text: "Business Financial Status"
-        }
+        title: { display: true, text: "Business Financial Status" }
       }
     }
   });
 }
 
 /* ----------------------------------------------------------
-   COLLECT BUTTON LOGIC
+   COLLECT BUTTON HANDLERS (NO CHANGE)
 ---------------------------------------------------------- */
 
 qs("#pb_collectStockInv")?.addEventListener("click", () => {
@@ -113,8 +110,15 @@ qs("#pb_collectSvcProf")?.addEventListener("click", () => {
 });
 
 /* ----------------------------------------------------------
-   AUTO RENDER
+   AUTO RENDER ON LOAD (Fixes Chrome stale cache)
 ---------------------------------------------------------- */
 window.addEventListener("load", () => {
-  setTimeout(renderProfitBox, 200);
+  setTimeout(() => {
+    renderProfitBox();
+  }, 150);
+});
+
+// Refresh also when any localStorage changes
+window.addEventListener("storage", () => {
+  renderProfitBox();
 });
