@@ -897,11 +897,10 @@
   <script src="https://www.gstatic.com/firebasejs/9.6.11/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.6.11/firebase-firestore-compat.js"></script>
 
-  <!-- AUTO VERSION LOADER — cache fix -->
+ <!-- AUTO VERSION LOADER — cache fix -->
 <script>
 (function(){
-  const v = Date.now(); // force fresh JS every reload
-
+  const v = Date.now(); // unique version every reload
   const js = [
     "/js/core.js",
     "/js/firebase.js",
@@ -912,9 +911,8 @@
     "/js/expenses.js",
     "/js/analytics.js",
     "/js/service.js",
-    "/js/security.js",
-
-    "/js/profits.js"  // 🔥 MUST BE LAST — FIXES SERVICE, ANALYTICS, PROFIT TABS
+    "/js/profits.js",   // <<< ADD THIS
+    "/js/security.js"
   ];
 
   js.forEach(f => {
