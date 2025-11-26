@@ -348,10 +348,15 @@
       <button id="addStockBtn" class="small-btn">Add</button>
     </div>
 
-    <div style="margin-top:12px">
-      <b>Filter Type:</b>
-      <select id="filterType"><option value="all">All</option></select>
-    </div>
+    <div style="margin-top:12px; display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
+  <b>Filter Type:</b>
+  <select id="filterType"><option value="all">All</option></select>
+
+  <!-- 🔍 Product Search Bar -->
+  <input id="productSearch"
+         placeholder="Search product..."
+         style="padding:6px; margin-left:10px;">
+</div>
 
     <table id="stockTable">
       <thead>
