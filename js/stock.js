@@ -1,14 +1,38 @@
 /* =======================================================
-   📦 stock.js — Inventory Manager (FINAL v8.0)
-   ✔ Global limit (shared for all products)
-   ✔ Search bar for product name
-   ✔ Low/Out status 100% accurate
-   ✔ UI is same as your v7.2
-   ✔ Analytics.js + Overview fully compatible
+   📦 stock.js — Inventory Manager (FINAL v9.0)
+   ✔ Global limit for all products
+   ✔ Product search bar support
+   ✔ Stock Investment (Before Sale) — NEW
+   ✔ Perfect compatibility with analytics + overview
+   ✔ UI same as v7.2 (no design change)
 ======================================================= */
 
 const toDisp = window.toDisplay;
 const toInt  = window.toInternal;
+
+/* -------------------------------------------------------
+   CALCULATE STOCK INVESTMENT (BEFORE SALE)
+   Sum of (qty * cost) for ALL stock items
+------------------------------------------------------- */
+function calcStockInvestmentBeforeSale() {
+  let total = 0;
+
+  (window.stock || []).forEach(p => {
+    const qty  = Number(p.qty || 0);
+    const cost = Number(p.cost || 0);
+    total += qty * cost;
+  });
+
+  return total;
+}
+
+/* -------------------------------------------------------
+   UPDATE UI BOX (right corner box)
+------------------------------------------------------- */
+function updateStockInvestmentBox() {
+  const box = qs("#stockInvValue");
+  if (box) box.textContent = "₹" + calcStockInvestmentBeforeSale();
+}
 
 /* -------------------------------------------------------
    ADD STOCK ENTRY
@@ -31,6 +55,7 @@ function addStock() {
 
   renderStock();
   updateTypeDropdowns?.();
+  updateStockInvestmentBox();
 
   qs("#pname").value = "";
   qs("#pqty").value  = "";
@@ -88,6 +113,8 @@ function renderStock() {
     });
 
   tbody.innerHTML = html || `<tr><td colspan="9">No Stock Found</td></tr>`;
+
+  updateStockInvestmentBox();
 }
 
 /* -------------------------------------------------------
@@ -184,6 +211,7 @@ document.addEventListener("click", e => {
       window.stock = [];
       saveStock();
       renderStock();
+      updateStockInvestmentBox();
     }
     return;
   }
@@ -210,4 +238,5 @@ qs("#productSearch")?.addEventListener("input", renderStock);
 window.addEventListener("load", () => {
   updateTypeDropdowns?.();
   renderStock();
+  updateStockInvestmentBox();
 });
