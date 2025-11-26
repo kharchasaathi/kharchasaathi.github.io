@@ -1,26 +1,32 @@
 /* =======================================================
-   📦 stock.js — Inventory Manager (FINAL v9.0)
+   📦 stock.js — Inventory Manager (FINAL v9.1)
    ✔ Global limit for all products
    ✔ Product search bar support
-   ✔ Stock Investment (Before Sale) — NEW
-   ✔ Perfect compatibility with analytics + overview
-   ✔ UI same as v7.2 (no design change)
+   ✔ Stock Investment (Before Sale) — Correct Logic
+   ✔ Investment decreases as sales happen
+   ✔ Fully compatible with analytics + overview + profit
 ======================================================= */
 
 const toDisp = window.toDisplay;
 const toInt  = window.toInternal;
 
 /* -------------------------------------------------------
-   CALCULATE STOCK INVESTMENT (BEFORE SALE)
-   Sum of (qty * cost) for ALL stock items
+   CALCULATE REMAINING STOCK INVESTMENT
+   Correct Formula:
+   Investment = (qty - sold) * cost
 ------------------------------------------------------- */
 function calcStockInvestmentBeforeSale() {
   let total = 0;
 
   (window.stock || []).forEach(p => {
-    const qty  = Number(p.qty || 0);
-    const cost = Number(p.cost || 0);
-    total += qty * cost;
+    const qty   = Number(p.qty || 0);
+    const sold  = Number(p.sold || 0);
+    const cost  = Number(p.cost || 0);
+
+    const remain = qty - sold;
+
+    if (remain > 0)
+      total += remain * cost;
   });
 
   return total;
@@ -47,7 +53,6 @@ function addStock() {
   if (!type || !name || qty <= 0 || cost <= 0)
     return alert("Please fill all fields.");
 
-  // Convert dd-mm-yyyy → yyyy-mm-dd
   if (date.includes("-") && date.split("-")[0].length === 2)
     date = toInt(date);
 
@@ -84,7 +89,7 @@ function renderStock() {
       const sold   = Number(p.sold || 0);
       const remain = Number(p.qty) - sold;
 
-      const limit  = Number(getGlobalLimit());  // ✔ ALWAYS GLOBAL LIMIT
+      const limit  = Number(getGlobalLimit());
 
       let cls = "ok";
       if (remain <= 0) cls = "out";
