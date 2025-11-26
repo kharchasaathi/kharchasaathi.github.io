@@ -1,5 +1,5 @@
 /* ===========================================================
-   📌 core.js — Master Engine (v7.2) Cloud-enabled (Option A)
+   📌 core.js — Master Engine (v7.3) Cloud-enabled (Option A)
    ✔ Per-module Firestore collections (types, stock, sales, wanting, expenses, services)
    ✔ Debounced cloud saves (uses window.cloudSaveDebounced)
    ✔ Initial cloud load on app start (if logged in)
@@ -74,6 +74,10 @@ function toInternalIfNeeded(d) {
   return d;
 }
 
+window.toDisplay = toDisplay;
+window.toInternal = toInternal;
+window.toInternalIfNeeded = toInternalIfNeeded;
+
 /* ===========================================================
    🔥 LOAD ARRAYS (from localStorage initially)
 =========================================================== */
@@ -117,7 +121,6 @@ try { normalizeAllDates(); } catch(e){ console.warn("normalizeAllDates failed", 
 function loginUser(email) {
   if (!email || !email.includes("@")) return false;
   localStorage.setItem(KEY_USER_EMAIL, email);
-  // after login, trigger cloud pull (if firebase available)
   cloudPullAllIfAvailable();
   return true;
 }
@@ -138,7 +141,6 @@ window.logoutUser = logoutUser;
 
 /* ===========================================================
    🔥 SAVE HELPERS (localStorage + debounced cloud save)
-   - Uses window.cloudSaveDebounced(collectionName, data) if available
 =========================================================== */
 function _localSave(key, data) {
   try {
@@ -155,11 +157,8 @@ function _cloudSaveIfPossible(key, data) {
     if (typeof window.cloudSaveDebounced === "function") {
       window.cloudSaveDebounced(col, data);
       console.log(`cloudSaveDebounced queued for ${col}`);
-    } else {
-      // fallback: attempt immediate cloudSave if available
-      if (typeof window.cloudSave === "function") {
-        window.cloudSave(col, data).catch(e => console.warn("cloudSave fallback failed", e));
-      }
+    } else if (typeof window.cloudSave === "function") {
+      window.cloudSave(col, data).catch(e => console.warn("cloudSave fallback failed", e));
     }
   } catch (e) {
     console.warn("cloud save skipped", e);
@@ -201,7 +200,6 @@ window.saveServices = saveServices;
 /* ===========================================================
    🔥 BASICS
 =========================================================== */
-/* IMPORTANT: use local date (respect timezone) — avoid UTC iso mismatch */
 function todayDate() {
   const d = new Date();
   d.setMinutes(d.getMinutes() - d.getTimezoneOffset());
@@ -267,7 +265,6 @@ window.addType = addType;
    🔥 ADD STOCK ENTRY
 =========================================================== */
 function addStockEntry({ date, type, name, qty, cost }) {
-
   date = toInternalIfNeeded(date);
   qty  = Number(qty);
   cost = Number(cost);
@@ -350,12 +347,9 @@ window.addExpense = addExpense;
 
 /* ===========================================================
    🔥 NET PROFIT CALCULATOR (EXCLUDES CREDIT SALES)
-   👉 ఇప్పుడు pending profit ఆధారంగా పని చేస్తుంది
-      (getPendingSalesProfit / getPendingServiceProfit ఉంటే)
 =========================================================== */
 window.getTotalNetProfit = function() {
 
-  // If Profit Tab helpers exist → use PENDING (uncollected) profit
   if (typeof window.getPendingSalesProfit === "function" &&
       typeof window.getPendingServiceProfit === "function") {
 
@@ -367,7 +361,6 @@ window.getTotalNetProfit = function() {
     return (pendingSales + pendingService) - expenses;
   }
 
-  // Fallback → old behaviour (TOTAL profit)
   let salesProfit = 0, serviceProfit = 0, expenses = 0;
 
   (window.sales || []).forEach(s => {
@@ -408,9 +401,7 @@ window.updateTabSummaryBar = function() {
 };
 
 /* ===========================================================
-   🔥 CLOUD PULL (initial load) - Option A
-   For each collection, if cloud data exists, replace localStorage and memory.
-   This runs automatically on app load if cloud functions are available.
+   🔥 CLOUD PULL (initial load)
 =========================================================== */
 async function cloudPullAllIfAvailable() {
   if (typeof window.cloudLoad !== "function") {
@@ -418,7 +409,6 @@ async function cloudPullAllIfAvailable() {
     return;
   }
 
-  // Require user email (avoid pulling for guest)
   const user = getUserEmail();
   if (!user) {
     console.log("No logged-in user — skipping cloud pull");
@@ -434,7 +424,6 @@ async function cloudPullAllIfAvailable() {
     try {
       const remote = await window.cloudLoad(col);
       if (remote && Array.isArray(remote)) {
-        // remote is an array — replace local
         window[keyToVarName(key)] = remote;
         localStorage.setItem(key, JSON.stringify(remote));
         console.log(`Cloud -> Local sync: ${col} (${remote.length} items)`);
@@ -445,7 +434,6 @@ async function cloudPullAllIfAvailable() {
           localStorage.setItem(key, JSON.stringify(remote.items));
           used = true;
         } else {
-          // fallback: look for any property that is array
           for (const k in remote) {
             if (Array.isArray(remote[k])) {
               window[keyToVarName(key)] = remote[k];
@@ -464,7 +452,6 @@ async function cloudPullAllIfAvailable() {
     }
   }
 
-  // Ensure normalized and render
   try { normalizeAllDates(); } catch {}
   try { renderTypes?.(); } catch {}
   try { renderStock?.(); } catch {}
@@ -516,21 +503,22 @@ window.addEventListener("storage", () => {
 });
 
 /* ===========================================================
-   🔥 AUTO CLOUD PULL ON LOAD (if logged-in)
+   🔥 AUTO CLOUD PULL ON LOAD
 =========================================================== */
 window.addEventListener("load", () => {
-  // Delay slightly to let firebase.js load (if present)
   setTimeout(() => {
     cloudPullAllIfAvailable();
   }, 200);
 });
 
 /* ===========================================================
-   🔵 UNIVERSAL INVESTMENT + PROFIT COLLECTORS (TOTALS)
-   (Used by Clean Profit Tab helpers in HTML)
+   🔵 UNIVERSAL INVESTMENT + PROFIT HELPERS
+   (Used by Profit Tab + Smart Dashboard)
 =========================================================== */
 
-/* 1) STOCK INVESTMENT (total purchase cost) */
+/* 1) STOCK INVESTMENT (TOTAL PURCHASE COST)
+      Used for Profit tab pending calculation
+*/
 window.getStockInvestmentCollected = function () {
   let total = 0;
 
@@ -547,60 +535,55 @@ window.getStockInvestmentCollected = function () {
   return total;
 };
 
-/* 2) SALES INVESTMENT (sold qty × cost) */
+/* 2) STOCK INVESTMENT (AFTER SALE / REMAINING)
+   👉 ఇదే నువ్వు చెప్పిన “stock tab లో ఉండే investment – sale అవుతున్న కొద్దీ తగ్గుతుంది”
+   = (qty - sold) * cost for each product
+*/
+window.getStockInvestmentAfterSale = function () {
+  let total = 0;
+
+  (window.stock || []).forEach(p => {
+    const qty   = Number(p.qty || 0);
+    const sold  = Number(p.sold || 0);
+    const cost  = Number(p.cost || 0);
+    const remain = qty - sold;
+    if (remain > 0) {
+      total += remain * cost;
+    }
+  });
+
+  return total;
+};
+
+/* 3) SALES INVESTMENT (sold qty × cost) */
 window.getSalesInvestmentCollected = function () {
-  let total = 0;
-
-  (window.sales || []).forEach(s => {
-    const costPerItem = Number(s.cost || 0);
-    const qty = Number(s.qty || 0);
-    total += qty * costPerItem;
-  });
-
-  return total;
+  return (window.sales || [])
+    .reduce((t, s) => t + (Number(s.qty || 0) * Number(s.cost || 0)), 0);
 };
 
-/* 3) SALES PROFIT (Paid only) */
+/* 4) SALES PROFIT (Paid only) */
 window.getSalesProfitCollected = function () {
-  let total = 0;
-
-  (window.sales || []).forEach(s => {
-    if (String(s.status || "").toLowerCase() !== "credit") {
-      total += Number(s.profit || 0);
-    }
-  });
-
-  return total;
+  return (window.sales || [])
+    .filter(s => String(s.status || "").toLowerCase() !== "credit")
+    .reduce((t, s) => t + Number(s.profit || 0), 0);
 };
 
-/* 4) SERVICE INVESTMENT (Completed only) */
+/* 5) SERVICE INVESTMENT (Completed only) */
 window.getServiceInvestmentCollected = function () {
-  let total = 0;
-
-  (window.services || []).forEach(s => {
-    if (s.status === "Completed") {
-      total += Number(s.invest || 0);
-    }
-  });
-
-  return total;
+  return (window.services || [])
+    .filter(s => s.status === "Completed")
+    .reduce((t, s) => t + Number(s.invest || 0), 0);
 };
 
-/* 5) SERVICE PROFIT (Completed only) */
+/* 6) SERVICE PROFIT (Completed only) */
 window.getServiceProfitCollected = function () {
-  let total = 0;
-
-  (window.services || []).forEach(s => {
-    if (s.status === "Completed") {
-      total += Number(s.profit || 0);
-    }
-  });
-
-  return total;
+  return (window.services || [])
+    .filter(s => s.status === "Completed")
+    .reduce((t, s) => t + Number(s.profit || 0), 0);
 };
+
 /* ===========================================================
-   🔵 AUTO-ADD FUNCTIONS (REQUIRED)
-   (Sales.js + Service.js use these to update profit instantly)
+   🔵 AUTO-ADD FUNCTIONS (BACKWARD COMPAT)
 =========================================================== */
 
 window.addSalesProfit = function (amt) {
@@ -625,35 +608,4 @@ window.addServiceProfit = function (amt) {
   const box = JSON.parse(localStorage.getItem("ks-profit-box") || "{}");
   box.serviceProfit = (box.serviceProfit || 0) + Number(amt || 0);
   localStorage.setItem("ks-profit-box", JSON.stringify(box));
-};
-/* ===========================================================
-   PROFIT ENGINE — REQUIRED BY ALL DASHBOARDS
-   (FINAL FIX — Add to core.js)
-=========================================================== */
-
-// TOTAL SALES PROFIT collected from sales records
-window.getSalesProfitCollected = function () {
-  return (window.sales || [])
-    .filter(s => String(s.status || "").toLowerCase() !== "credit")
-    .reduce((t, s) => t + Number(s.profit || 0), 0);
-};
-
-// TOTAL SALES INVESTMENT = total cost of sold qty
-window.getSalesInvestmentCollected = function () {
-  return (window.sales || [])
-    .reduce((t, s) => t + (Number(s.qty || 0) * Number(s.cost || 0)), 0);
-};
-
-// TOTAL SERVICE PROFIT
-window.getServiceProfitCollected = function () {
-  return (window.services || [])
-    .filter(s => s.status === "Completed")
-    .reduce((t, s) => t + Number(s.profit || 0), 0);
-};
-
-// TOTAL SERVICE INVESTMENT (parts cost)
-window.getServiceInvestmentCollected = function () {
-  return (window.services || [])
-    .filter(s => s.status === "Completed")
-    .reduce((t, s) => t + Number(s.invest || 0), 0);
 };
