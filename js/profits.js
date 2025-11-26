@@ -1,9 +1,10 @@
 /* ===========================================================
-   profits.js — Profit Tab (Final v3.1)
+   profits.js — Profit Tab (Final v3.2)
    ✔ Stock & Service Investment: separate collect
    ✔ Net Profit = (SalesProfit + ServiceProfit - Expenses)
    ✔ Net Profit collect -> వెంటనే తగ్గుతుంది (reload అవసరం లేదు)
    ✔ Loss (negative) ఉంటే బటన్ RED + disabled
+   ✔ Collect చేసిన వెంటనే Overview + Smart Dashboard + Profit bar refresh
 =========================================================== */
 
 console.log("profits.js loaded");
@@ -134,7 +135,7 @@ window.renderProfitTab = function () {
 
   if (!netBox || !btn) return;
 
-  // Display:  
+  // Display:
   //   - loss అయితే  -₹value
   //   - profit అయితే pending (collect చేయగలిగినది మాత్రమే)
   let showVal;
@@ -184,6 +185,7 @@ qs("#collectStockInvBtn")?.addEventListener("click", () => {
 
   window.renderProfitTab?.();
   window.renderAnalytics?.();
+  window.updateSummaryCards?.();     // ✅ Overview refresh
   window.updateTabSummaryBar?.();
 });
 
@@ -201,6 +203,7 @@ qs("#collectSvcInvBtn")?.addEventListener("click", () => {
 
   window.renderProfitTab?.();
   window.renderAnalytics?.();
+  window.updateSummaryCards?.();     // ✅ Overview refresh
   window.updateTabSummaryBar?.();
 });
 
@@ -225,6 +228,7 @@ qs("#collectNetProfitBtn")?.addEventListener("click", () => {
 
   window.renderProfitTab?.();
   window.renderAnalytics?.();
+  window.updateSummaryCards?.();     // ✅ Overview refresh
   window.updateTabSummaryBar?.();
 });
 
