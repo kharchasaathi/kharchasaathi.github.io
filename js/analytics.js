@@ -103,12 +103,17 @@ window.renderAnalytics = function () {
     }
   });
 
-  // ---- NEW INVESTMENT LOGIC ----
+  // -------------------------------------------
+  //     NEW INVESTMENT LOGIC (V3 LOGIC)
+  // -------------------------------------------
+
   let investment = 0;
 
+  // 🔸 STOCK INVESTMENT (AFTER SALE)
   if (typeof getStockInvestmentAfterSale === "function")
     investment += Number(getStockInvestmentAfterSale());
 
+  // 🔸 SERVICE INVESTMENT (Completed Jobs)
   if (typeof getServiceInvestmentCollected === "function")
     investment += Number(getServiceInvestmentCollected());
 
