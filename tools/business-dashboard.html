@@ -77,6 +77,50 @@
       color:#ddd;
     }
 
+    /* ✅ LIVE CLOCK (NEW) */
+    .top-right-group{
+      display:flex;
+      gap:10px;
+      align-items:center;
+      flex-wrap:wrap;
+    }
+    .live-clock{
+      display:flex;
+      align-items:center;
+      gap:6px;
+      margin-right:4px;
+    }
+    .clock-circle{
+      width:46px;
+      height:46px;
+      border-radius:50%;
+      border:2px solid var(--orange);
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      font-size:11px;
+      font-weight:600;
+      background:#ffffff;
+      box-shadow:0 0 4px rgba(0,0,0,0.18);
+      min-width:46px;
+    }
+    body.dark .clock-circle{
+      background:#111111;
+      border-color:#ffb74d;
+      box-shadow:0 0 6px rgba(255,183,77,0.4);
+    }
+    #clockTime{
+      font-family:monospace;
+    }
+    .clock-date{
+      font-size:11px;
+      opacity:.8;
+      white-space:nowrap;
+    }
+    body.dark .clock-date{
+      color:#ddd;
+    }
+
     /* ---------- TABS ---------- */
     .tabs{
       display:flex;
@@ -286,8 +330,17 @@
   <div class="topbar">
     <h1>📦 KharchaSaathi (Offline)</h1>
 
-    <div style="display:flex;gap:10px;align-items:center">
+    <div class="top-right-group">
       <span id="emailTag">Loading...</span>
+
+      <!-- 🕒 LIVE CLOCK (NEW) -->
+      <div class="live-clock">
+        <div class="clock-circle">
+          <span id="clockTime">--:--:--</span>
+        </div>
+        <span id="clockDate" class="clock-date">--</span>
+      </div>
+
       <button id="themeBtn" class="theme-btn">🌙</button>
       <a class="small-btn" href="/index.html">🏠 Back</a>
       <button id="logoutBtn" class="small-btn" style="background:#e53935">🔓 Logout</button>
@@ -349,21 +402,22 @@
     </div>
 
     <div style="margin-top:12px; display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
-  <b>Filter Type:</b>
-  <select id="filterType"><option value="all">All</option></select>
+      <b>Filter Type:</b>
+      <select id="filterType"><option value="all">All</option></select>
 
-  <!-- 🔍 Product Search Bar -->
-  <input id="productSearch"
-         placeholder="Search product..."
-         style="padding:6px; margin-left:10px;">
-</div>
+      <!-- 🔍 Product Search Bar -->
+      <input id="productSearch"
+             placeholder="Search product..."
+             style="padding:6px; margin-left:10px;">
+    </div>
+
     <div id="stockInvBox" 
-     style="margin-top:10px; padding:10px; background:#fff3e0; border-radius:8px;
-            border:1px solid #ffbb66; max-width:260px; margin-left:auto;
-            font-weight:600;">
-  📦 Stock Investment (Before Sale): 
-  <span id="stockInvValue" style="color:#ff6a00;">₹0</span>
-</div>
+         style="margin-top:10px; padding:10px; background:#fff3e0; border-radius:8px;
+                border:1px solid #ffbb66; max-width:260px; margin-left:auto;
+                font-weight:600;">
+      📦 Stock Investment (Before Sale): 
+      <span id="stockInvValue" style="color:#ff6a00;">₹0</span>
+    </div>
 
     <table id="stockTable">
       <thead>
@@ -667,9 +721,9 @@
         </tr>
       </tfoot>
     </table>
-</section>
+  </section>
 
-  <!-- ===== PROFIT TAB ===== -->
+  <!-- ===== PROFIT TAB (CURRENT VERSION — untouched for now) ===== -->
   <section id="profit" class="section">
     <h3>💰 Profit Manager</h3>
 
@@ -678,9 +732,9 @@
       <!-- 1) STOCK INVESTMENT — separate collect, net profit లో add అవదు -->
       <div class="card" style="flex:1;min-width:180px">
         <h4 style="line-height:1.2;">
-  Collect Investment<br>
-  <small>(Stock After Sale + Service Investment)</small>
-</h4>
+          Collect Investment<br>
+          <small>(Stock After Sale + Service Investment)</small>
+        </h4>
         <b id="pStockInv" style="font-size:22px;color:#ff9800">₹0</b><br>
         <button id="collectStockInvBtn"
                 class="small-btn"
@@ -799,6 +853,29 @@
       localStorage.setItem('ks-theme', d?'dark':'light');
     });
 
+    // 🕒 LIVE CLOCK SCRIPT (NEW)
+    function startLiveClock(){
+      const tEl = document.getElementById("clockTime");
+      const dEl = document.getElementById("clockDate");
+      if (!tEl || !dEl) return;
+
+      function tick(){
+        const now = new Date();
+        const hh = String(now.getHours()).padStart(2,"0");
+        const mm = String(now.getMinutes()).padStart(2,"0");
+        const ss = String(now.getSeconds()).padStart(2,"0");
+        tEl.textContent = `${hh}:${mm}:${ss}`;
+
+        const day   = String(now.getDate()).padStart(2,"0");
+        const month = String(now.getMonth()+1).toString().padStart(2,"0");
+        const year  = now.getFullYear();
+        dEl.textContent = `${day}-${month}-${year}`;
+      }
+
+      tick();
+      setInterval(tick, 1000);
+    }
+
     // Tabs switcher
     (function () {
       const tabs = qsa('.tab'),
@@ -898,6 +975,7 @@
       try { renderAnalytics?.(); } catch {}
       try { updateSummaryCards?.(); } catch {}
       try { updateTabSummaryBar?.(); } catch {}
+      try { startLiveClock(); } catch {}
     }
     window.addEventListener("load", () => {
       setTimeout(safeInitialRender, 80);
@@ -926,7 +1004,7 @@
     "/js/expenses.js",
     "/js/analytics.js",
     "/js/service.js",
-    "/js/profits.js",   // <<< ADD THIS
+    "/js/profits.js",
     "/js/security.js"
   ];
 
@@ -935,12 +1013,6 @@
   });
 })();
 </script>
-
-  
-  
-    
-      
-        
 
 </body>
 </html>
