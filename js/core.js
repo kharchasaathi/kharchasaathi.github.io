@@ -1,53 +1,48 @@
 /* ===========================================================
-   📌 core.js — Master Engine (v7.3) Cloud-enabled (Option A)
-   ✔ Stock After Sale Investment (NEW)
-   ✔ Service Investment (NEW)
-   ✔ Fully synced with Profit tab + Analytics V3
-   ✔ Per-module Firestore collections
-   ✔ Safe date parse, normalize, localStorage sync
-   ✔ GLOBAL qs/qsa FROM HTML (NO DUPLICATE HERE)
+   📌 core.js — Master Engine (FINAL V8.0)
+   ✔ FULL Collection Module Integrated
+   ✔ Cloud Sync for Collections
+   ✔ Stock/Service Investment Helpers
+   ✔ Safe Date Converter
+   ✔ Fully Synced With All JS Files
 =========================================================== */
 
-/* ===== GLOBAL QUERY HELPERS NOTE =====
-   👉 qs() / qsa() already defined in business-dashboard.html:
-      const qs  = s => document.querySelector(s);
-      const qsa = s => Array.from(document.querySelectorAll(s));
-   So we DON'T define them again here (otherwise "already declared" error).
-=========================================================== */
+/* ---------- STORAGE KEYS ---------- */
+const KEY_TYPES        = "item-types";
+const KEY_STOCK        = "stock-data";
+const KEY_SALES        = "sales-data";
+const KEY_WANTING      = "wanting-data";
+const KEY_EXPENSES     = "expenses-data";
+const KEY_SERVICES     = "service-data";
+const KEY_COLLECTIONS  = "ks-collections";   // ⭐ NEW
+const KEY_LIMIT        = "default-limit";
+const KEY_USER_EMAIL   = "ks-user-email";
 
-/* ---------- STORAGE KEYS & COLLECTION NAMES ---------- */
-const KEY_TYPES      = "item-types";
-const KEY_STOCK      = "stock-data";
-const KEY_SALES      = "sales-data";
-const KEY_WANTING    = "wanting-data";
-const KEY_EXPENSES   = "expenses-data";
-const KEY_SERVICES   = "service-data";
-const KEY_LIMIT      = "default-limit";
-const KEY_USER_EMAIL = "ks-user-email";
-
+/* ---------- CLOUD COLLECTION NAMES ---------- */
 const CLOUD_COLLECTIONS = {
-  [KEY_TYPES]:    "types",
-  [KEY_STOCK]:    "stock",
-  [KEY_SALES]:    "sales",
-  [KEY_WANTING]:  "wanting",
-  [KEY_EXPENSES]: "expenses",
-  [KEY_SERVICES]: "services"
+  [KEY_TYPES]:       "types",
+  [KEY_STOCK]:       "stock",
+  [KEY_SALES]:       "sales",
+  [KEY_WANTING]:     "wanting",
+  [KEY_EXPENSES]:    "expenses",
+  [KEY_SERVICES]:    "services",
+  [KEY_COLLECTIONS]: "collections"  // ⭐ NEW (Cloud sync enabled)
 };
 
-/* ---------- SAFE PARSE ---------- */
+/* ===========================================================
+   SAFE HELPERS
+=========================================================== */
 function safeParse(raw) { try { return JSON.parse(raw); } catch { return []; } }
 function toArray(v) { return Array.isArray(v) ? v : []; }
 
 /* ===========================================================
-   🔥 DATE CONVERTERS
+   DATE HELPERS
 =========================================================== */
 function toDisplay(d) {
   if (!d) return "";
-  if (!d.includes("-")) return d;
-  const parts = d.split("-");
-  if (parts[0].length === 4) {           // yyyy-mm-dd
-    const [y, m, dd] = parts;
-    return `${dd}-${m}-${y}`;
+  if (d.includes("-")) {
+    const [y,m,dd] = d.split("-");
+    if (y.length === 4) return `${dd}-${m}-${y}`;
   }
   return d;
 }
@@ -55,9 +50,9 @@ function toDisplay(d) {
 function toInternal(d) {
   if (!d) return "";
   if (!d.includes("-")) return d;
-  const parts = d.split("-");
-  if (parts[0].length === 2) {          // dd-mm-yyyy
-    const [dd, m, y] = parts;
+  const p = d.split("-");
+  if (p[0].length === 2) {
+    const [dd, m, y] = p;
     return `${y}-${m}-${dd}`;
   }
   return d;
@@ -66,7 +61,7 @@ function toInternal(d) {
 function toInternalIfNeeded(d) {
   if (!d) return "";
   const p = d.split("-");
-  if (p[0].length === 4) return d;      // already yyyy-mm-dd
+  if (p[0].length === 4) return d;
   if (p[0].length === 2) return toInternal(d);
   return d;
 }
@@ -76,27 +71,29 @@ window.toInternal = toInternal;
 window.toInternalIfNeeded = toInternalIfNeeded;
 
 /* ===========================================================
-   🔥 LOAD DATA (LOCALSTORAGE)
+   LOAD ALL MODULE DATA (LOCAL)
 =========================================================== */
-window.types     = toArray(safeParse(localStorage.getItem(KEY_TYPES)));
-window.stock     = toArray(safeParse(localStorage.getItem(KEY_STOCK)));
-window.sales     = toArray(safeParse(localStorage.getItem(KEY_SALES)));
-window.wanting   = toArray(safeParse(localStorage.getItem(KEY_WANTING)));
-window.expenses  = toArray(safeParse(localStorage.getItem(KEY_EXPENSES)));
-window.services  = toArray(safeParse(localStorage.getItem(KEY_SERVICES)));
+window.types        = toArray(safeParse(localStorage.getItem(KEY_TYPES)));
+window.stock        = toArray(safeParse(localStorage.getItem(KEY_STOCK)));
+window.sales        = toArray(safeParse(localStorage.getItem(KEY_SALES)));
+window.wanting      = toArray(safeParse(localStorage.getItem(KEY_WANTING)));
+window.expenses     = toArray(safeParse(localStorage.getItem(KEY_EXPENSES)));
+window.services     = toArray(safeParse(localStorage.getItem(KEY_SERVICES)));
+window.collections  = toArray(safeParse(localStorage.getItem(KEY_COLLECTIONS))); // ⭐ NEW
 
 function ensureArrays() {
-  if (!Array.isArray(window.types))    window.types    = [];
-  if (!Array.isArray(window.stock))    window.stock    = [];
-  if (!Array.isArray(window.sales))    window.sales    = [];
-  if (!Array.isArray(window.wanting))  window.wanting  = [];
-  if (!Array.isArray(window.expenses)) window.expenses = [];
-  if (!Array.isArray(window.services)) window.services = [];
+  if (!Array.isArray(window.types))       window.types = [];
+  if (!Array.isArray(window.stock))       window.stock = [];
+  if (!Array.isArray(window.sales))       window.sales = [];
+  if (!Array.isArray(window.wanting))     window.wanting = [];
+  if (!Array.isArray(window.expenses))    window.expenses = [];
+  if (!Array.isArray(window.services))    window.services = [];
+  if (!Array.isArray(window.collections)) window.collections = []; // ⭐ NEW
 }
 ensureArrays();
 
 /* ===========================================================
-   🔥 NORMALIZE DATES
+   NORMALIZE DATES
 =========================================================== */
 function normalizeAllDates() {
   if (window.stock)
@@ -117,11 +114,17 @@ function normalizeAllDates() {
       date_in:  toInternalIfNeeded(j.date_in),
       date_out: toInternalIfNeeded(j.date_out)
     }));
+
+  if (window.collections)
+    window.collections = window.collections.map(c => ({
+      ...c,
+      date: toInternalIfNeeded(c.date)
+    }));
 }
-try { normalizeAllDates(); } catch(e){}
+normalizeAllDates();
 
 /* ===========================================================
-   🔥 LOGIN
+   LOGIN
 =========================================================== */
 function loginUser(email) {
   if (!email || !email.includes("@")) return false;
@@ -139,29 +142,28 @@ window.getUserEmail = getUserEmail;
 window.logoutUser = logoutUser;
 
 /* ===========================================================
-   🔥 SAVE HELPERS (local + cloud)
+   SAVE HELPERS (LOCAL + CLOUD)
 =========================================================== */
-function _localSave(key, data) {
-  try { localStorage.setItem(key, JSON.stringify(data)); } catch{}
-}
-function _cloudSaveIfPossible(key, data) {
+function _localSave(k, v){ try{ localStorage.setItem(k, JSON.stringify(v)); }catch{} }
+function _cloudSaveIfPossible(key, data){
   const col = CLOUD_COLLECTIONS[key];
   if (!col) return;
   try {
-    if (typeof window.cloudSaveDebounced === "function") {
-      window.cloudSaveDebounced(col, data);
-    } else if (typeof window.cloudSave === "function") {
-      window.cloudSave(col, data).catch(()=>{});
+    if (typeof cloudSaveDebounced === "function") {
+      cloudSaveDebounced(col, data);
+    } else if (typeof cloudSave === "function") {
+      cloudSave(col, data).catch(()=>{});
     }
   } catch {}
 }
 
-function saveTypes()    { _localSave(KEY_TYPES, window.types);       _cloudSaveIfPossible(KEY_TYPES, window.types); }
-function saveStock()    { _localSave(KEY_STOCK, window.stock);       _cloudSaveIfPossible(KEY_STOCK, window.stock); }
-function saveSales()    { _localSave(KEY_SALES, window.sales);       _cloudSaveIfPossible(KEY_SALES, window.sales); }
-function saveWanting()  { _localSave(KEY_WANTING, window.wanting);   _cloudSaveIfPossible(KEY_WANTING, window.wanting); }
-function saveExpenses() { _localSave(KEY_EXPENSES, window.expenses); _cloudSaveIfPossible(KEY_EXPENSES, window.expenses); }
-function saveServices() { _localSave(KEY_SERVICES, window.services); _cloudSaveIfPossible(KEY_SERVICES, window.services); }
+function saveTypes()      { _localSave(KEY_TYPES, types);         _cloudSaveIfPossible(KEY_TYPES, types); }
+function saveStock()      { _localSave(KEY_STOCK, stock);         _cloudSaveIfPossible(KEY_STOCK, stock); }
+function saveSales()      { _localSave(KEY_SALES, sales);         _cloudSaveIfPossible(KEY_SALES, sales); }
+function saveWanting()    { _localSave(KEY_WANTING, wanting);     _cloudSaveIfPossible(KEY_WANTING, wanting); }
+function saveExpenses()   { _localSave(KEY_EXPENSES, expenses);   _cloudSaveIfPossible(KEY_EXPENSES, expenses); }
+function saveServices()   { _localSave(KEY_SERVICES, services);   _cloudSaveIfPossible(KEY_SERVICES, services); }
+function saveCollections(){ _localSave(KEY_COLLECTIONS, collections); _cloudSaveIfPossible(KEY_COLLECTIONS, collections); } // ⭐ NEW
 
 window.saveTypes = saveTypes;
 window.saveStock = saveStock;
@@ -169,18 +171,21 @@ window.saveSales = saveSales;
 window.saveWanting = saveWanting;
 window.saveExpenses = saveExpenses;
 window.saveServices = saveServices;
+window.saveCollections = saveCollections;  // ⭐ NEW
 
 /* ===========================================================
-   🔥 BASICS
+   BASICS
 =========================================================== */
-function todayDate() {
+function todayDate(){
   const d = new Date();
   d.setMinutes(d.getMinutes() - d.getTimezoneOffset());
   return d.toISOString().split("T")[0];
 }
 window.todayDate = todayDate;
 
-function uid(p="id") { return p + "_" + Math.random().toString(36).slice(2,10); }
+function uid(p="id"){
+  return p + "_" + Math.random().toString(36).slice(2,10);
+}
 window.uid = uid;
 
 function esc(t){
@@ -192,59 +197,57 @@ function esc(t){
 window.esc = esc;
 
 /* ===========================================================
-   🔥 STOCK HELPERS
+   STOCK HELPERS
 =========================================================== */
 function findProduct(type, name) {
   return (window.stock || []).find(
-    p => p.type === type && String(p.name || "").toLowerCase() === String(name || "").toLowerCase()
+    p => p.type === type &&
+    String(p.name || "").toLowerCase() === String(name || "").toLowerCase()
   );
 }
 window.findProduct = findProduct;
 
-function getProductCost(type, name) {
+function getProductCost(type, name){
   const p = findProduct(type, name);
   if (!p) return 0;
 
   if (p.cost) return Number(p.cost);
 
-  if (p.history?.length) {
-    let t = 0, q = 0;
-    p.history.forEach(h => {
-      t += Number(h.cost) * Number(h.qty);
+  if (p.history?.length){
+    let t=0, q=0;
+    p.history.forEach(h=>{
+      t += Number(h.cost)*Number(h.qty);
       q += Number(h.qty);
     });
-    return q ? (t / q) : 0;
+    return q ? (t/q) : 0;
   }
   return 0;
 }
 window.getProductCost = getProductCost;
 
 /* ===========================================================
-   🔥 ADD TYPE
+   ADD TYPE
 =========================================================== */
-function addType(name) {
-  name = (name || "").trim();
+function addType(name){
+  name = (name||"").trim();
   if (!name) return;
-  if ((window.types || []).find(t => t.name.toLowerCase() === name.toLowerCase())) return;
-  window.types.push({ id: uid("type"), name });
+  if (window.types.find(t => t.name.toLowerCase() === name.toLowerCase())) return;
+  types.push({ id: uid("type"), name });
   saveTypes();
 }
 window.addType = addType;
 
 /* ===========================================================
-   🔥 ADD STOCK ENTRY
+   ADD STOCK ENTRY
 =========================================================== */
 function addStockEntry({ date, type, name, qty, cost }) {
   date = toInternalIfNeeded(date);
   qty  = Number(qty);
   cost = Number(cost);
 
-  if (!type || !name || qty <= 0 || cost <= 0) return;
-
-  window.stock = window.stock || [];
+  if (!type || !name || qty<=0 || cost<=0) return;
 
   let p = findProduct(type, name);
-
   if (!p) {
     p = {
       id: uid("stk"),
@@ -257,7 +260,7 @@ function addStockEntry({ date, type, name, qty, cost }) {
       limit: getGlobalLimit(),
       history: [{ date, qty, cost }]
     };
-    window.stock.push(p);
+    stock.push(p);
   } else {
     p.qty += qty;
     p.cost = cost;
@@ -270,26 +273,22 @@ function addStockEntry({ date, type, name, qty, cost }) {
 window.addStockEntry = addStockEntry;
 
 /* ===========================================================
-   🔥 LIMIT
+   LIMIT
 =========================================================== */
-function setGlobalLimit(v) { localStorage.setItem(KEY_LIMIT, v); }
-function getGlobalLimit() { return Number(localStorage.getItem(KEY_LIMIT) || 0); }
-
+function setGlobalLimit(v){ localStorage.setItem(KEY_LIMIT,v); }
+function getGlobalLimit(){ return Number(localStorage.getItem(KEY_LIMIT)||0); }
 window.setGlobalLimit = setGlobalLimit;
 window.getGlobalLimit = getGlobalLimit;
 
 /* ===========================================================
-   🔥 WANTING
+   WANTING
 =========================================================== */
-function autoAddWanting(type, name, note="Low Stock") {
-  window.wanting = window.wanting || [];
-  if (!window.wanting.find(w => w.type === type && w.name === name)) {
-    window.wanting.push({
-      id: uid("want"),
-      date: todayDate(),
-      type,
-      name,
-      note
+function autoAddWanting(type,name,note="Low Stock"){
+  if (!window.wanting.find(w => w.type===type && w.name===name)){
+    wanting.push({
+      id:uid("want"),
+      date:todayDate(),
+      type,name,note
     });
     saveWanting();
   }
@@ -297,90 +296,83 @@ function autoAddWanting(type, name, note="Low Stock") {
 window.autoAddWanting = autoAddWanting;
 
 /* ===========================================================
-   🔥 EXPENSES
+   EXPENSE
 =========================================================== */
-function addExpense({ date, category, amount, note }) {
-  window.expenses = window.expenses || [];
-  window.expenses.push({
-    id: uid("exp"),
-    date: toInternalIfNeeded(date || todayDate()),
+function addExpense({date,category,amount,note}){
+  expenses.push({
+    id:uid("exp"),
+    date:toInternalIfNeeded(date||todayDate()),
     category,
-    amount: Number(amount || 0),
-    note: note || ""
+    amount:Number(amount||0),
+    note:note||""
   });
   saveExpenses();
 }
 window.addExpense = addExpense;
 
 /* ===========================================================
-   🔥 NET PROFIT CALCULATOR
+   NET PROFIT (Dynamic)
 =========================================================== */
-window.getTotalNetProfit = function() {
+window.getTotalNetProfit = function(){
+  let salesProfit = 0, serviceProfit = 0, exp = 0;
 
-  // If advanced pending helpers exist, use them
-  if (typeof window.getPendingSalesProfit === "function" &&
-      typeof window.getPendingServiceProfit === "function") {
-
-    const pendingSales   = Number(window.getPendingSalesProfit() || 0);
-    const pendingService = Number(window.getPendingServiceProfit() || 0);
-
-    const expenses = (window.expenses || [])
-      .reduce((s, e) => s + Number(e.amount || 0), 0);
-
-    return (pendingSales + pendingService) - expenses;
-  }
-
-  // Basic fallback
-  let salesProfit = 0, serviceProfit = 0, expenses = 0;
-
-  (window.sales || []).forEach(s => {
-    if (String(s.status || "").toLowerCase() !== "credit") {
-      salesProfit += Number(s.profit || 0);
+  sales.forEach(s=>{
+    if ((s.status||"").toLowerCase() !== "credit") {
+      salesProfit += Number(s.profit||0);
     }
   });
 
-  (window.services || []).forEach(s => serviceProfit += Number(s.profit || 0));
-  (window.expenses || []).forEach(e => expenses += Number(e.amount || 0));
+  services.forEach(j => serviceProfit += Number(j.profit||0));
 
-  return (salesProfit + serviceProfit) - expenses;
+  expenses.forEach(e => exp += Number(e.amount||0));
+
+  return (salesProfit + serviceProfit) - exp;
 };
 
 /* ===========================================================
-   🔥 SUMMARY BAR
+   TAB SUMMARY BAR
 =========================================================== */
-window.updateTabSummaryBar = function() {
-  const bar = document.getElementById("tabSummaryBar");
+window.updateTabSummaryBar = function(){
+  const bar = qs("#tabSummaryBar");
   if (!bar) return;
 
   const net = window.getTotalNetProfit();
 
-  if (net >= 0) {
-    bar.style.background = "#003300";
-    bar.style.color = "#fff";
+  if (net>=0){
+    bar.style.background="#003300";
+    bar.style.color="#fff";
     bar.textContent = `Profit: +₹${net}`;
   } else {
-    bar.style.background = "#330000";
-    bar.style.color = "#fff";
+    bar.style.background="#330000";
+    bar.style.color="#fff";
     bar.textContent = `Loss: -₹${Math.abs(net)}`;
   }
 };
 
 /* ===========================================================
-   🔥 CLOUD PULL (initial load)
+   CLOUD PULL
 =========================================================== */
-async function cloudPullAllIfAvailable() {
-  if (typeof window.cloudLoad !== "function") return;
+async function cloudPullAllIfAvailable(){
+  if (typeof cloudLoad !== "function") return;
 
   const user = getUserEmail();
   if (!user) return;
 
-  const keys = [KEY_TYPES, KEY_STOCK, KEY_SALES, KEY_WANTING, KEY_EXPENSES, KEY_SERVICES];
+  const keys = [
+    KEY_TYPES,
+    KEY_STOCK,
+    KEY_SALES,
+    KEY_WANTING,
+    KEY_EXPENSES,
+    KEY_SERVICES,
+    KEY_COLLECTIONS  // ⭐ NEW
+  ];
 
-  for (const key of keys) {
+  for (const key of keys){
     const col = CLOUD_COLLECTIONS[key];
-    try {
-      const remote = await window.cloudLoad(col);
-      if (remote) {
+    try{
+      const remote = await cloudLoad(col);
+      if (remote){
         const arr = toArray(remote);
         window[keyToVarName(key)] = arr;
         localStorage.setItem(key, JSON.stringify(arr));
@@ -389,151 +381,117 @@ async function cloudPullAllIfAvailable() {
   }
 
   ensureArrays();
-  try { normalizeAllDates(); } catch {}
+  normalizeAllDates();
 
-  try { renderTypes?.(); } catch {}
-  try { renderStock?.(); } catch {}
-  try { renderSales?.(); } catch {}
-  try { renderWanting?.(); } catch {}
-  try { renderExpenses?.(); } catch {}
-  try { renderServiceTables?.(); } catch {}
-  try { renderAnalytics?.(); } catch {}
-  try { updateSummaryCards?.(); } catch {}
-  try { updateTabSummaryBar?.(); } catch {}
+  try{ renderTypes?.(); }catch{}
+  try{ renderStock?.(); }catch{}
+  try{ renderSales?.(); }catch{}
+  try{ renderWanting?.(); }catch{}
+  try{ renderExpenses?.(); }catch{}
+  try{ renderServiceTables?.(); }catch{}
+  try{ renderAnalytics?.(); }catch{}
+  try{ updateSummaryCards?.(); }catch{}
+  try{ updateTabSummaryBar?.(); }catch{}
 }
 
 function keyToVarName(key){
   switch(key){
-    case KEY_TYPES:    return "types";
-    case KEY_STOCK:    return "stock";
-    case KEY_SALES:    return "sales";
-    case KEY_WANTING:  return "wanting";
+    case KEY_TYPES: return "types";
+    case KEY_STOCK: return "stock";
+    case KEY_SALES: return "sales";
+    case KEY_WANTING: return "wanting";
     case KEY_EXPENSES: return "expenses";
     case KEY_SERVICES: return "services";
+    case KEY_COLLECTIONS: return "collections";
   }
   return key;
 }
 
 /* ===========================================================
-   🔥 STORAGE SYNC
+   AUTO CLOUD LOAD
 =========================================================== */
-window.addEventListener("storage", () => {
-  window.types    = toArray(safeParse(localStorage.getItem(KEY_TYPES)));
-  window.stock    = toArray(safeParse(localStorage.getItem(KEY_STOCK)));
-  window.sales    = toArray(safeParse(localStorage.getItem(KEY_SALES)));
-  window.wanting  = toArray(safeParse(localStorage.getItem(KEY_WANTING)));
-  window.expenses = toArray(safeParse(localStorage.getItem(KEY_EXPENSES)));
-  window.services = toArray(safeParse(localStorage.getItem(KEY_SERVICES)));
+window.addEventListener("load",()=>{
+  setTimeout(cloudPullAllIfAvailable,200);
+});
+
+/* ===========================================================
+   STORAGE EVENTS (MULTI-TAB SYNC)
+=========================================================== */
+window.addEventListener("storage",()=>{
+  types       = toArray(safeParse(localStorage.getItem(KEY_TYPES)));
+  stock       = toArray(safeParse(localStorage.getItem(KEY_STOCK)));
+  sales       = toArray(safeParse(localStorage.getItem(KEY_SALES)));
+  wanting     = toArray(safeParse(localStorage.getItem(KEY_WANTING)));
+  expenses    = toArray(safeParse(localStorage.getItem(KEY_EXPENSES)));
+  services    = toArray(safeParse(localStorage.getItem(KEY_SERVICES)));
+  collections = toArray(safeParse(localStorage.getItem(KEY_COLLECTIONS))); // ⭐ NEW
 
   ensureArrays();
 
-  try { renderTypes?.(); } catch {}
-  try { renderStock?.(); } catch {}
-  try { renderSales?.(); } catch {}
-  try { renderWanting?.(); } catch {}
-  try { renderExpenses?.(); } catch {}
-  try { renderServiceTables?.(); } catch {}
-  try { renderAnalytics?.(); } catch {}
-  try { updateSummaryCards?.(); } catch {}
-  try { updateTabSummaryBar?.(); } catch {}
+  try{ renderTypes?.(); }catch{}
+  try{ renderStock?.(); }catch{}
+  try{ renderSales?.(); }catch{}
+  try{ renderWanting?.(); }catch{}
+  try{ renderExpenses?.(); }catch{}
+  try{ renderServiceTables?.(); }catch{}
+  try{ renderAnalytics?.(); }catch{}
+  try{ updateSummaryCards?.(); }catch{}
+  try{ updateTabSummaryBar?.(); }catch{}
 });
 
 /* ===========================================================
-   🔥 AUTO CLOUD LOAD
-=========================================================== */
-window.addEventListener("load", () => {
-  setTimeout(cloudPullAllIfAvailable, 200);
-});
-
-/* ===========================================================
-   🔵 UNIVERSAL INVESTMENT + PROFIT HELPERS
+   UNIVERSAL INVESTMENT HELPERS
 =========================================================== */
 
-/* 1) TOTAL STOCK INVESTMENT (BEFORE SALE) */
-window.getStockInvestmentCollected = function () {
-  let total = 0;
-
-  (window.stock || []).forEach(p => {
-    const cost = Number(p.cost || 0);
-    const qty  = Number(p.qty  || 0);
-
-    if (p.history?.length) {
+/* 1) TOTAL STOCK INVESTMENT (before sale) */
+window.getStockInvestmentCollected = function(){
+  let total=0;
+  stock.forEach(p=>{
+    if (p.history?.length){
       p.history.forEach(h => {
-        total += Number(h.cost || 0) * Number(h.qty || 0);
+        total += Number(h.cost)*Number(h.qty);
       });
     } else {
-      total += cost * qty;
+      total += Number(p.cost) * Number(p.qty);
     }
   });
-
   return total;
 };
 
-/* 2) STOCK INVESTMENT (AFTER SALE) - REMAIN ONLY */
-window.getStockInvestmentAfterSale = function () {
-  let total = 0;
-
-  (window.stock || []).forEach(p => {
-    const qty   = Number(p.qty  || 0);
-    const sold  = Number(p.sold || 0);
-    const cost  = Number(p.cost || 0);
-    const remain = qty - sold;
-    if (remain > 0) total += remain * cost;
+/* 2) AFTER SALE – remaining only */
+window.getStockInvestmentAfterSale = function(){
+  let total=0;
+  stock.forEach(p=>{
+    const remain = Number(p.qty) - Number(p.sold||0);
+    if (remain>0) total += remain * Number(p.cost);
   });
-
   return total;
 };
 
 /* 3) SALES INVESTMENT (sold qty × cost) */
-window.getSalesInvestmentCollected = function () {
-  return (window.sales || [])
-    .reduce((t, s) => t + (Number(s.qty || 0) * Number(s.cost || 0)), 0);
+window.getSalesInvestmentCollected = function(){
+  return sales.reduce((t,s) =>
+    t + (Number(s.qty||0) * Number(s.cost||0)), 0
+  );
 };
 
-/* 4) SALES PROFIT (PAID only) */
-window.getSalesProfitCollected = function () {
-  return (window.sales || [])
-    .filter(s => String(s.status || "").toLowerCase() !== "credit")
-    .reduce((t, s) => t + Number(s.profit || 0), 0);
+/* 4) SALES PROFIT (paid only) */
+window.getSalesProfitCollected = function(){
+  return sales
+    .filter(s => (s.status||"").toLowerCase()!=="credit")
+    .reduce((t,s)=>t+Number(s.profit||0),0);
 };
 
 /* 5) SERVICE INVESTMENT (Completed only) */
-window.getServiceInvestmentCollected = function () {
-  return (window.services || [])
-    .filter(s => s.status === "Completed")
-    .reduce((t, s) => t + Number(s.invest || 0), 0);
+window.getServiceInvestmentCollected = function(){
+  return services
+    .filter(s => s.status==="Completed")
+    .reduce((t,s)=>t+Number(s.invest||0),0);
 };
 
-/* 6) SERVICE PROFIT (Completed only) */
-window.getServiceProfitCollected = function () {
-  return (window.services || [])
-    .filter(s => s.status === "Completed")
-    .reduce((t, s) => t + Number(s.profit || 0), 0);
-};
-
-/* ===========================================================
-   🔵 BACKWARD COMPAT — AUTO ADD
-=========================================================== */
-window.addSalesProfit = function (amt) {
-  const b = JSON.parse(localStorage.getItem("ks-profit-box") || "{}");
-  b.salesProfit = (b.salesProfit || 0) + Number(amt || 0);
-  localStorage.setItem("ks-profit-box", JSON.stringify(b));
-};
-
-window.addStockInvestment = function (amt) {
-  const b = JSON.parse(localStorage.getItem("ks-profit-box") || "{}");
-  b.stockInvestment = (b.stockInvestment || 0) + Number(amt || 0);
-  localStorage.setItem("ks-profit-box", JSON.stringify(b));
-};
-
-window.addServiceInvestment = function (amt) {
-  const b = JSON.parse(localStorage.getItem("ks-profit-box") || "{}");
-  b.serviceInvestment = (b.serviceInvestment || 0) + Number(amt || 0);
-  localStorage.setItem("ks-profit-box", JSON.stringify(b));
-};
-
-window.addServiceProfit = function (amt) {
-  const b = JSON.parse(localStorage.getItem("ks-profit-box") || "{}");
-  b.serviceProfit = (b.serviceProfit || 0) + Number(amt || 0);
-  localStorage.setItem("ks-profit-box", JSON.stringify(b));
+/* 6) SERVICE PROFIT */
+window.getServiceProfitCollected = function(){
+  return services
+    .filter(s => s.status==="Completed")
+    .reduce((t,s)=>t+Number(s.profit||0),0);
 };
