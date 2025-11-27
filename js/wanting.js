@@ -1,8 +1,8 @@
 /* =======================================================
-   🛒 wanting.js — Wanting / Reorder Manager (FINAL V7.0 UI UPGRADED)
-   • Colorful table (matches global UI)
-   • Mobile-friendly (data-labels)
-   • Buttons updated
+   🛒 wanting.js — Wanting / Reorder Manager (FINAL V7.1)
+   • Colorful table compatible
+   • Mobile-friendly (data-labels added)
+   • Add / Delete / Add-to-stock stable
 ======================================================= */
 
 const wToDisp = window.toDisplay;
@@ -10,7 +10,7 @@ const wToInt  = window.toInternal;
 const esc = x => (x === undefined || x === null) ? "" : String(x);
 
 /* -------------------------------------------------------
-   🔁 RENDER WANTING TABLE  (UI UPGRADED)
+   🔁 RENDER WANTING TABLE  (UI UPGRADED + MOBILE FIX)
 ------------------------------------------------------- */
 function renderWanting() {
   const tbody = qs("#wantingTable tbody");
@@ -33,21 +33,28 @@ function renderWanting() {
   }
 
   /* ---- TABLE ROWS ---- */
-  tbody.innerHTML = list.map((w, i) => `
-    <tr>
-      <td data-label="Date">${wToDisp(w.date)}</td>
-      <td data-label="Type">${esc(w.type)}</td>
-      <td data-label="Product">${esc(w.name)}</td>
-      <td data-label="Note">${esc(w.note || "-")}</td>
+  tbody.innerHTML = list
+    .map((w, i) => `
+      <tr>
+        <td data-label="Date">${wToDisp(w.date)}</td>
+        <td data-label="Type">${esc(w.type)}</td>
+        <td data-label="Product">${esc(w.name)}</td>
+        <td data-label="Note">${esc(w.note || "-")}</td>
 
-      <td data-label="Action">
-        <button class="want-add-btn small-btn" data-i="${i}">Add to Stock</button>
-        <button class="want-del-btn small-btn" 
-                data-i="${i}" 
-                style="background:#d32f2f;color:#fff">Delete</button>
-      </td>
-    </tr>
-  `).join("");
+        <td data-label="Action">
+          <button class="want-add-btn small-btn" data-i="${i}">
+            Add to Stock
+          </button>
+
+          <button class="want-del-btn small-btn"
+            data-i="${i}"
+            style="background:#d32f2f;color:#fff">
+            Delete
+          </button>
+        </td>
+      </tr>
+    `)
+    .join("");
 }
 
 /* -------------------------------------------------------
@@ -141,7 +148,7 @@ document.addEventListener("click", e => {
 });
 
 /* -------------------------------------------------------
-   🚀 INIT ON PAGE LOAD
+   🚀 INIT
 ------------------------------------------------------- */
 window.addEventListener("load", () => {
   renderWanting();
