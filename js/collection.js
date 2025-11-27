@@ -143,3 +143,134 @@ window.addEventListener("load", () => {
   }
   renderCollection();
 });
+/* ===========================================================
+   🔄 BUILD PENDING COLLECTION LIST
+=========================================================== */
+function getPendingList() {
+  const list = [];
+
+  // ---- Sales Pending Credit ----
+  (window.sales || []).forEach(s => {
+    if (String(s.status).toLowerCase() === "credit") {
+      const total = Number(s.total || (s.qty * s.price));
+      const pending = total;
+
+      if (pending > 0) {
+        list.push({
+          id: s.id,
+          name: s.product || s.name || "Sale",
+          type: "Sale Credit",
+          date: s.date,
+          pending: pending,
+          source: "sales"
+        });
+      }
+    }
+  });
+
+  // ---- Service Pending ----
+  (window.services || []).forEach(job => {
+    if (String(job.status).toLowerCase() === "pending") {
+      const total = Number(job.total || 0);
+      const adv = Number(job.advance || 0);
+      const pending = total - adv;
+
+      if (pending > 0) {
+        list.push({
+          id: job.id,
+          name: job.customer,
+          type: "Service",
+          date: job.received,
+          pending: pending,
+          source: "service"
+        });
+      }
+    }
+  });
+
+  return list;
+}
+
+/* ===========================================================
+   📥 RENDER PENDING TABLE
+=========================================================== */
+function renderPendingCollections() {
+  const tbody = qs("#pendingCollectionTable tbody");
+  if (!tbody) return;
+
+  const list = getPendingList();
+
+  if (!list.length) {
+    tbody.innerHTML = `
+      <tr>
+        <td colspan="5" style="text-align:center;opacity:0.6;">
+          No pending collections
+        </td>
+      </tr>`;
+    return;
+  }
+
+  tbody.innerHTML = list.map((r, i) => `
+    <tr>
+      <td data-label="Date">${r.date}</td>
+      <td data-label="Name">${r.name}</td>
+      <td data-label="Type">${r.type}</td>
+      <td data-label="Pending">₹${r.pending}</td>
+      <td data-label="Action">
+        <button class="small-btn collectNowBtn" data-i="${i}">
+          Collect
+        </button>
+      </td>
+    </tr>
+  `).join("");
+}
+
+/* ===========================================================
+   💰 COLLECT BUTTON LOGIC
+=========================================================== */
+document.addEventListener("click", e => {
+  if (!e.target.classList.contains("collectNowBtn")) return;
+
+  const idx = Number(e.target.dataset.i);
+  const list = getPendingList();
+  const item = list[idx];
+  if (!item) return;
+
+  let amt = Number(prompt(`Collect amount (Pending ₹${item.pending}):`));
+  if (!amt || amt <= 0) return alert("Invalid amount!");
+  if (amt > item.pending) return alert("More than pending!");
+
+  // ---- Add to History ----
+  window.addCollectionEntry(item.type, item.name, amt);
+
+  // ---- Update main data ----
+  if (item.source === "sales") {
+    let row = (window.sales || []).find(x => x.id === item.id);
+    if (row) {
+      row.total = Number(row.total) - amt;
+      if (row.total <= 0) row.status = "paid";
+      saveSales();
+    }
+  }
+
+  if (item.source === "service") {
+    let job = (window.services || []).find(x => x.id === item.id);
+    if (job) {
+      job.advance = Number(job.advance || 0) + amt;
+      if (job.advance >= job.total) job.status = "completed";
+      saveService();
+    }
+  }
+
+  renderPendingCollections();
+  renderCollection();
+  alert("Amount collected!");
+});
+
+/* ===========================================================
+   ⏳ INIT
+=========================================================== */
+window.addEventListener("load", () => {
+  renderPendingCollections();
+  renderCollection();
+});
