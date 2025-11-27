@@ -1,7 +1,8 @@
 // ===============================
-//  analytics.js — FINAL CLEAN V4
-//  Safe Numbers + Investment Fix
-//  Fully matches business-dashboard.html
+//  analytics.js — FINAL CLEAN V5
+//  + Collection.js integration
+//  + Safe Numbers + Investment Fix
+//  + Fully matches business-dashboard.html
 // ===============================
 
 let cleanPieChart = null;
@@ -15,25 +16,24 @@ window.getAnalyticsData = function () {
     ? todayDate()
     : new Date().toISOString().slice(0, 10);
 
-  const sales    = window.sales    || [];
-  const expenses = window.expenses || [];
-  const services = window.services || [];
+  const sales       = window.sales       || [];
+  const expenses    = window.expenses    || [];
+  const services    = window.services    || [];
+  const collections = window.collections || [];
 
-  let todaySales    = 0;
-  let creditSales   = 0;
-  let todayExpenses = 0;
-  let grossProfit   = 0;
+  let todaySales      = 0;
+  let creditSales     = 0;
+  let todayExpenses   = 0;
+  let grossProfit     = 0;
+  let todayCollection = 0;
 
-  // ---- TODAY SALES ----
+  /* ---------- TODAY SALES ---------- */
   sales.forEach(s => {
-    if (!s.date || s.date !== today) return;
+    if (s.date !== today) return;
 
-    const total = Number(s.total || s.amount ||
-          (Number(s.qty || 0) * Number(s.price || 0)));
+    const total = Number(s.total || (s.qty * s.price));
 
-    const status = String(s.status || "").toLowerCase();
-
-    if (status === "credit") {
+    if (String(s.status).toLowerCase() === "credit") {
       creditSales += total;
     } else {
       todaySales += total;
@@ -41,17 +41,22 @@ window.getAnalyticsData = function () {
     }
   });
 
-  // ---- TODAY SERVICE PROFIT ----
+  /* ---------- TODAY SERVICE PROFIT ---------- */
   services.forEach(j => {
     if (j.date_out === today) {
       grossProfit += Number(j.profit || 0);
     }
   });
 
-  // ---- TODAY EXPENSES ----
+  /* ---------- TODAY EXPENSES ---------- */
   expenses.forEach(e => {
-    if (e.date === today) {
-      todayExpenses += Number(e.amount || 0);
+    if (e.date === today) todayExpenses += Number(e.amount || 0);
+  });
+
+  /* ---------- TODAY COLLECTION ---------- */
+  collections.forEach(c => {
+    if (c.date === today) {
+      todayCollection += Number(c.amount || 0);
     }
   });
 
@@ -61,6 +66,7 @@ window.getAnalyticsData = function () {
     todaySales,
     creditSales,
     todayExpenses,
+    todayCollection,
     grossProfit,
     netProfit
   };
@@ -72,18 +78,16 @@ window.getAnalyticsData = function () {
 ---------------------------------- */
 window.renderAnalytics = function () {
 
-  const sales    = window.sales    || [];
-  const expenses = window.expenses || [];
-  const services = window.services || [];
+  const sales       = window.sales       || [];
+  const expenses    = window.expenses    || [];
+  const services    = window.services    || [];
+  const collections = window.collections || [];
 
-  /* -------------------------------
-      TOTAL PROFIT
-  -------------------------------- */
   let salesProfit   = 0;
   let serviceProfit = 0;
 
   sales.forEach(s => {
-    if (String(s.status || "").toLowerCase() !== "credit") {
+    if (String(s.status).toLowerCase() !== "credit") {
       salesProfit += Number(s.profit || 0);
     }
   });
@@ -94,50 +98,39 @@ window.renderAnalytics = function () {
 
   const totalProfit = salesProfit + serviceProfit;
 
-  /* -------------------------------
-      TOTAL EXPENSES
-  -------------------------------- */
+  /* ---------- TOTAL EXPENSES ---------- */
   let totalExpenses = expenses.reduce(
     (sum, e) => sum + Number(e.amount || 0), 0
   );
 
-  /* -------------------------------
-      TOTAL CREDIT
-  -------------------------------- */
+  /* ---------- TOTAL CREDIT ---------- */
   let creditTotal = 0;
   sales.forEach(s => {
-    if (String(s.status || "").toLowerCase() === "credit") {
+    if (String(s.status).toLowerCase() === "credit") {
       creditTotal += Number(
-        s.total || s.amount ||
-        (Number(s.qty || 0) * Number(s.price || 0))
+        s.total || (s.qty * s.price)
       );
     }
   });
 
-  /* -------------------------------
-      TOTAL INVESTMENT (SAFE)
-  -------------------------------- */
+  /* ---------- TOTAL INVESTMENT ---------- */
   let investment = 0;
 
-  if (typeof getStockInvestmentAfterSale === "function") {
-    investment += Number(getStockInvestmentAfterSale() || 0);
-  }
+  investment += Number(getStockInvestmentAfterSale?.() || 0);
+  investment += Number(getServiceInvestmentCollected?.() || 0);
 
-  if (typeof getServiceInvestmentCollected === "function") {
-    investment += Number(getServiceInvestmentCollected() || 0);
-  }
+  /* ---------- TOTAL COLLECTION ---------- */
+  let totalCollection = collections.reduce(
+    (s, c) => s + Number(c.amount || 0), 0
+  );
 
-  /* -------------------------------
-      UPDATE CARDS
-  -------------------------------- */
+  /* ---------- UPDATE CARDS ---------- */
   qs("#dashProfit").textContent   = "₹" + Math.round(totalProfit);
   qs("#dashExpenses").textContent = "₹" + Math.round(totalExpenses);
   qs("#dashCredit").textContent   = "₹" + Math.round(creditTotal);
   qs("#dashInv").textContent      = "₹" + Math.round(investment);
 
-  /* -------------------------------
-      PIE CHART
-  -------------------------------- */
+  /* ---------- PIE CHART ---------- */
   const ctx = qs("#cleanPie");
   if (!ctx || typeof Chart === "undefined") return;
 
@@ -146,15 +139,22 @@ window.renderAnalytics = function () {
   cleanPieChart = new Chart(ctx, {
     type: "pie",
     data: {
-      labels: ["Profit", "Expenses", "Credit", "Investment"],
+      labels: ["Profit", "Expenses", "Credit", "Investment", "Collection"],
       datasets: [{
         data: [
           Number(totalProfit || 0),
           Number(totalExpenses || 0),
           Number(creditTotal || 0),
-          Number(investment || 0)
+          Number(investment || 0),
+          Number(totalCollection || 0)
         ],
-        backgroundColor: ["#2e7d32","#c62828","#1565c0","#fbc02d"]
+        backgroundColor: [
+          "#2e7d32",
+          "#c62828",
+          "#1565c0",
+          "#fbc02d",
+          "#6a1b9a"
+        ]
       }]
     },
     options: {
