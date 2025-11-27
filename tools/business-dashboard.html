@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>📦 KharchaSaathi — Business Dashboard (v3.0 Clean)</title>
+  <title>📦 KharchaSaathi — Business Dashboard (v3.1 Enhanced)</title>
   <meta name="theme-color" content="#ff7a00" />
   <link rel="icon" href="/favicon.png" />
   <link rel="apple-touch-icon" href="/favicon.png" />
@@ -60,7 +60,7 @@
       color:#ddd;
     }
 
-    /* ---------- CLOCK (12-hour clean) ---------- */
+    /* ---------- CLOCK ---------- */
     .simple-clock{
       display:flex;
       flex-direction:column;
@@ -140,10 +140,9 @@
       border:1px solid var(--dark-border);
     }
 
-
     /* ==========================================
        🌈 COLORFUL TABLE (V3)
-       Used for: Stock, Sales, Service, Wanting, Expenses
+       Used for: Stock, Sales, Service, Wanting, Expenses, Collection
     =========================================== */
     table {
       width: 100%;
@@ -204,7 +203,8 @@
     .sale-btn,
     .credit-btn,
     .want-add-btn,
-    .want-del-btn {
+    .want-del-btn,
+    .collect-btn {
       padding: 5px 8px;
       border-radius: 6px;
       background: #ff8800;
@@ -212,9 +212,11 @@
       border: none;
       cursor: pointer;
     }
+
     .btn-del:hover,
     .sale-btn:hover,
-    .credit-btn:hover {
+    .credit-btn:hover,
+    .collect-btn:hover {
       background: #d96a00;
     }
 
@@ -239,7 +241,7 @@
     }
   </style>
 </head>
-<body>
+  <body>
 
   <!-- 🔐 TOPBAR -->
   <div class="topbar">
@@ -314,7 +316,9 @@
       <b>Filter Type:</b>
       <select id="filterType"><option value="all">All</option></select>
 
-      <input id="productSearch" placeholder="Search product..." style="padding:6px; margin-left:10px;">
+      <input id="productSearch"
+             placeholder="Search product..."
+             style="padding:6px; margin-left:10px;">
     </div>
 
     <!-- BEFORE SALE INVESTMENT (NO COLLECT BUTTON) -->
@@ -343,6 +347,7 @@
       <tbody></tbody>
     </table>
   </section>
+
 
 
 
@@ -391,11 +396,11 @@
       </tfoot>
     </table>
   </section>
-  <!-- =============== WANTING =============== -->
+    <!-- =============== WANTING =============== -->
   <section id="wanting" class="section">
     <h3>🛒 Wanting List</h3>
 
-    <div class="want-form">
+    <div class="want-form" style="margin-bottom:10px;">
       <select id="wantType"></select>
       <input id="wantName" type="text" placeholder="Product">
       <input id="wantNote" type="text" placeholder="Note">
@@ -417,6 +422,7 @@
       <tbody></tbody>
     </table>
   </section>
+
 
 
 
@@ -527,7 +533,7 @@
       </tfoot>
     </table>
   </section>
-  <!-- =============== OVERVIEW =============== -->
+    <!-- =============== OVERVIEW =============== -->
   <section id="dashboard" class="section">
     <h3>📊 Business Overview</h3>
 
@@ -568,6 +574,7 @@
 
 
 
+
   <!-- =============== SMART DASHBOARD =============== -->
   <section id="analytics" class="section">
     <h3>📈 Smart Dashboard</h3>
@@ -602,158 +609,68 @@
 
 
 
-  <!-- =============== SCRIPTS =============== -->
-  <script>
-    const qs  = s => document.querySelector(s);
-    const qsa = s => Array.from(document.querySelectorAll(s));
+  <!-- =============== ⭐ NEW COLLECTION TAB =============== -->
+  <section id="collection" class="section">
+    <h3>🪙 Collection Center</h3>
 
-    /* DATE HELPERS */
-    window.toDisplay = function(d) {
-      if (!d) return "";
-      if (d.includes("-")) {
-        const [y,m,dd] = d.split("-");
-        if (y.length === 4) return `${dd}-${m}-${y}`;
-      }
-      return d;
-    };
-    window.toInternal = function(d) {
-      if (!d) return "";
-      if (d.includes("-")) {
-        const p = d.split("-");
-        if (p[0].length === 2) {
-          const [dd,m,y] = p;
-          return `${y}-${m}-${dd}`;
-        }
-      }
-      return d;
-    };
+    <!-- SUMMARY CARDS -->
+    <div class="flex-row" style="margin-bottom:14px">
 
-    /* THEME */
-    if (localStorage.getItem('ks-theme') === 'dark') {
-      document.body.classList.add('dark');
-    }
-    qs('#themeBtn')?.addEventListener('click', () => {
-      const d = document.body.classList.toggle('dark');
-      localStorage.setItem('ks-theme', d ? 'dark' : 'light');
-    });
+      <div class="card" style="flex:1;min-width:160px">
+        <h4>Sales Profit (Collected)</h4>
+        <b id="colSales" style="font-size:20px;color:#2e7d32">₹0</b>
+      </div>
 
-    /* LIVE CLOCK (12-HOUR) */
-    function startLiveClock(){
-      const tEl = qs("#clockTime");
-      const dEl = qs("#clockDate");
+      <div class="card" style="flex:1;min-width:160px">
+        <h4>Service Profit (Collected)</h4>
+        <b id="colService" style="font-size:20px;color:#1976d2">₹0</b>
+      </div>
 
-      function tick(){
-        const now = new Date();
-        let hh = now.getHours();
-        const mm = String(now.getMinutes()).padStart(2,"0");
-        const ss = String(now.getSeconds()).padStart(2,"0");
+      <div class="card" style="flex:1;min-width:160px">
+        <h4>Pending Credits</h4>
+        <b id="colCredit" style="font-size:20px;color:#d32f2f">₹0</b>
+      </div>
 
-        const ap = hh >= 12 ? "PM" : "AM";
-        hh = hh % 12;
-        if (hh === 0) hh = 12;
+      <div class="card" style="flex:1;min-width:160px">
+        <h4>Total Investment (After Sale)</h4>
+        <b id="colInvRemain" style="font-size:20px;color:#f57f17">₹0</b>
+      </div>
 
-        tEl.textContent = `${hh}:${mm}:${ss} ${ap}`;
-
-        const dd = String(now.getDate()).padStart(2,"0");
-        const mm2 = String(now.getMonth()+1).padStart(2,"0");
-        const yy = now.getFullYear();
-        dEl.textContent = `${dd}-${mm2}-${yy}`;
-      }
-
-      tick();
-      setInterval(tick, 1000);
-    }
+    </div>
 
 
+    <!-- COLLECTION HISTORY TABLE -->
+    <h4>Collection History</h4>
 
-    /* TABS */
-    (function () {
-      const tabs = qsa('.tab'),
-            sections = qsa('.section');
+    <table id="collectionTable">
+      <thead>
+        <tr>
+          <th>Date</th>
+          <th>Type</th>
+          <th>Details</th>
+          <th>Amount</th>
+        </tr>
+      </thead>
+      <tbody>
+        <!-- JS will fill -->
+      </tbody>
+    </table>
 
-      function activate(name) {
-        tabs.forEach(t => t.classList.toggle('active', t.dataset.tab === name));
-        sections.forEach(s => s.classList.toggle('active', s.id === name));
+    <!-- CLEAR BUTTON -->
+    <button id="clearCollectionBtn"
+            class="small-btn"
+            style="background:#b71c1c;color:#fff;margin-top:10px">
+      🗑 Clear Collection History
+    </button>
 
-        if (name === 'types')     renderTypes?.();
-        if (name === 'stock')     { updateTypeDropdowns?.(); renderStock?.(); }
-        if (name === 'sales')     { refreshSaleTypeSelector?.(); renderSales?.(); }
-        if (name === 'wanting')   renderWanting?.();
-        if (name === 'service')   renderServiceTables?.();
-        if (name === 'expenses')  renderExpenses?.();
-        if (name === 'dashboard') updateSummaryCards?.();
-        if (name === 'analytics') renderAnalytics?.();
-      }
-
-      tabs.forEach(t =>
-        t.addEventListener('click', () => activate(t.dataset.tab))
-      );
-
-      window.activateTab = activate;
-    })();
-
-
-
-    /* LOGIN */
-    window.addEventListener("load", () => {
-      if (typeof isLoggedIn === "function" && !isLoggedIn()) {
-        window.location.href = "/login.html";
-        return;
-      }
-      const tag = qs("#emailTag");
-      if (tag && typeof getUserEmail === "function") {
-        tag.textContent = "Logged in: " + (getUserEmail() || "Unknown User");
-      }
-      qs("#logoutBtn").addEventListener("click", () => {
-        logoutUser?.();
-        window.location.href = "/login.html";
-      });
-    });
-
-
-    /* OVERVIEW SUMMARY */
-    function updateSummaryCards() {
-      if (typeof getAnalyticsData !== "function") return;
-      const data = getAnalyticsData();
-
-      qs("#todaySales").textContent    = "₹" + data.todaySales;
-      qs("#todayCredit").textContent   = "₹" + data.creditSales;
-      qs("#todayExpenses").textContent = "₹" + data.todayExpenses;
-      qs("#todayGross").textContent    = "₹" + data.grossProfit;
-      qs("#todayNet").textContent      = "₹" + data.netProfit;
-    }
-    window.updateSummaryCards = updateSummaryCards;
-
-
-    /* SAFE INITIAL RENDER */
-    function safeInitialRender() {
-      try { renderTypes?.(); } catch {}
-      try { updateTypeDropdowns?.(); } catch {}
-      try { renderStock?.(); } catch {}
-      try { refreshSaleTypeSelector?.(); } catch {}
-      try { renderSales?.(); } catch {}
-      try { renderWanting?.(); } catch {}
-      try { renderExpenses?.(); } catch {}
-      try { renderServiceTables?.(); } catch {}
-      try { renderAnalytics?.(); } catch {}
-      try { updateSummaryCards?.(); } catch {}
-      try { startLiveClock(); } catch {}
-    }
-
-    window.addEventListener("load", () => {
-      setTimeout(safeInitialRender, 80);
-    });
-  </script>
-
-
-  <!-- LIBRARIES -->
+  </section>
+    <!-- LIBRARIES -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js/dist/chart.umd.min.js"></script>
 
   <!-- FIREBASE -->
   <script src="https://www.gstatic.com/firebasejs/9.6.11/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.6.11/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.6.11/firebase-firestore-compat.js"></script>
-
 
   <!-- AUTO VERSION LOADER -->
   <script>
@@ -769,6 +686,7 @@
         "/js/expenses.js",
         "/js/analytics.js",
         "/js/service.js",
+        "/js/collection.js",   /* ⭐ NEW FILE ADDED */
         "/js/security.js"
       ];
       js.forEach(f => {
