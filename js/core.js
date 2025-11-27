@@ -7,6 +7,12 @@
    ✔ Safe date parse, normalize, localStorage sync
 =========================================================== */
 
+/* GLOBAL QUERY HELPERS (required for ALL modules) */
+function qs(sel){ return document.querySelector(sel); }
+function qsa(sel){ return Array.from(document.querySelectorAll(sel)); }
+
+window.qs = qs;
+window.qsa = qsa;
 /* ---------- STORAGE KEYS & COLLECTION NAMES ---------- */
 const KEY_TYPES      = "item-types";
 const KEY_STOCK      = "stock-data";
