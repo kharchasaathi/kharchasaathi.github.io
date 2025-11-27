@@ -551,9 +551,7 @@
     </div>
   </section>
 
-
-
-  <!-- =============== SMART DASHBOARD =============== -->
+<!-- =============== SMART DASHBOARD =============== -->
   <section id="analytics" class="section">
     <h3>📈 Smart Dashboard</h3>
 
@@ -583,21 +581,86 @@
       <canvas id="cleanPie" height="150"></canvas>
     </div>
   </section>
-</section>
 
-<!-- =============== LIBRARIES =============== -->
-<script src="https://cdn.jsdelivr.net/npm/chart.js/dist/chart.umd.min.js"></script>
+  <!-- =============== COLLECTION TAB (FINAL FIXED VERSION) =============== -->
+  <section id="collection" class="section">
+    <h3>🪙 Collection Center</h3>
 
-<!-- FIREBASE -->
-<script src="https://www.gstatic.com/firebasejs/9.6.11/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.6.11/firebase-auth-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.6.11/firebase-firestore-compat.js"></script>
+    <!-- SUMMARY CARDS -->
+    <div class="flex-row" style="margin-bottom:14px">
 
-<!-- =============== AUTO SCRIPT LOADER =============== -->
-<script>
-(function () {
-    const v = Date.now();
-    const js = [
+      <div class="card" style="flex:1;min-width:160px">
+        <h4>Sales Profit (Collected)</h4>
+        <b id="colSales" style="font-size:20px;color:#2e7d32">₹0</b>
+      </div>
+
+      <div class="card" style="flex:1;min-width:160px">
+        <h4>Service Profit (Collected)</h4>
+        <b id="colService" style="font-size:20px;color:#1976d2">₹0</b>
+      </div>
+
+      <div class="card" style="flex:1;min-width:160px">
+        <h4>Pending Credits</h4>
+        <b id="colCredit" style="font-size:20px;color:#d32f2f">₹0</b>
+      </div>
+
+      <div class="card" style="flex:1;min-width:160px">
+        <h4>Total Investment (After Sale)</h4>
+        <b id="colInvRemain" style="font-size:20px;color:#f57f17">₹0</b>
+      </div>
+
+    </div>
+
+    <!-- PENDING COLLECTIONS -->
+    <h4>Pending Collections</h4>
+    <table id="collectionTable">
+      <thead>
+        <tr>
+          <th>Date</th>
+          <th>Name</th>
+          <th>Type</th>
+          <th>Pending</th>
+          <th>Action</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+
+    <!-- HISTORY -->
+    <h4 style="margin-top:25px">Collection History</h4>
+
+    <table id="collectionHistory">
+      <thead>
+        <tr>
+          <th>Date</th>
+          <th>Name</th>
+          <th>Type</th>
+          <th>Amount</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+
+    <button id="clearCollectionBtn"
+            class="small-btn"
+            style="background:#b71c1c;color:#fff;margin-top:10px">
+      🗑 Clear Collection History
+    </button>
+  </section>
+
+  <!-- =============== LIBRARIES =============== -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js/dist/chart.umd.min.js"></script>
+
+  <!-- FIREBASE -->
+  <script src="https://www.gstatic.com/firebasejs/9.6.11/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.6.11/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.6.11/firebase-firestore-compat.js"></script>
+
+  <!-- =============== AUTO SCRIPT LOADER =============== -->
+  <script>
+    (function(){
+      const v = Date.now();
+      const js = [
         "/js/core.js",
         "/js/firebase.js",
         "/js/types.js",
@@ -609,66 +672,61 @@
         "/js/service.js",
         "/js/collection.js",
         "/js/security.js"
-    ];
-    js.forEach(f => {
+      ];
+      js.forEach(f => {
         document.write(`<script src="${f}?v=${v}"><\/script>`);
-    });
-})();
-</script>
+      });
+    })();
+  </script>
 
-<!-- =============== TAB SWITCHER =============== -->
-<script>
-function switchTab(id) {
-    // Hide all sections
-    document.querySelectorAll(".section").forEach(sec => {
-        sec.classList.remove("active");
-    });
+  <!-- =============== TAB SWITCHER =============== -->
+  <script>
+    function switchTab(id) {
 
-    // Show selected section
-    document.querySelector(`#${id}`).classList.add("active");
+      document.querySelectorAll(".section").forEach(sec =>
+        sec.classList.remove("active")
+      );
 
-    // Update tab highlight
-    document.querySelectorAll(".tab").forEach(t => t.classList.remove("active"));
-    document.querySelector(`.tab[data-tab="${id}"]`).classList.add("active");
+      document.querySelector(`#${id}`).classList.add("active");
 
-    // Refresh UI screens
-    try { renderStock?.(); } catch {}
-    try { renderSales?.(); } catch {}
-    try { renderWanting?.(); } catch {}
-    try { renderExpenses?.(); } catch {}
-    try { renderServiceTables?.(); } catch {}
-    try { renderCollection?.(); } catch {}
-    try { renderAnalytics?.(); } catch {}
-    try { updateSummaryCards?.(); } catch {}
-}
+      document.querySelectorAll(".tab").forEach(t =>
+        t.classList.remove("active")
+      );
 
-// Tab click listener
-document.addEventListener("click", e => {
-    if (e.target.classList.contains("tab")) {
-        switchTab(e.target.dataset.tab);
+      document.querySelector(`.tab[data-tab="${id}"]`).classList.add("active");
+
+      try { renderStock?.(); } catch {}
+      try { renderSales?.(); } catch {}
+      try { renderWanting?.(); } catch {}
+      try { renderExpenses?.(); } catch {}
+      try { renderServiceTables?.(); } catch {}
+      try { renderCollection?.(); } catch {}
+      try { renderAnalytics?.(); } catch {}
+      try { updateSummaryCards?.(); } catch {}
     }
-});
-</script>
 
-<!-- =============== CLOCK =============== -->
-<script>
-function updateClock() {
-    const d = new Date();
+    document.addEventListener("click", e => {
+      if (e.target.classList.contains("tab")) {
+        switchTab(e.target.dataset.tab);
+      }
+    });
+  </script>
 
-    const timeEl = document.querySelector("#clockTime");
-    const dateEl = document.querySelector("#clockDate");
-
-    if (timeEl) timeEl.textContent = d.toLocaleTimeString();
-    if (dateEl) dateEl.textContent = d.toLocaleDateString();
-}
-
-setInterval(updateClock, 1000);
-updateClock();
-</script>
+  <!-- =============== CLOCK =============== -->
+  <script>
+    function updateClock() {
+      const d = new Date();
+      qs("#clockTime").textContent = d.toLocaleTimeString();
+      qs("#clockDate").textContent = d.toLocaleDateString();
+    }
+    setInterval(updateClock, 1000);
+    updateClock();
+  </script>
 
 </body>
 </html>
 
+  
 
 
           
