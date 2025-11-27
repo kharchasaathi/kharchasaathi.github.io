@@ -1,20 +1,18 @@
 /* ===========================================================
-   collection.js — FINAL V2.0 (Clean + Fixed)
-   ✔ Uses window.sales & window.services (NO serviceJobs)
-   ✔ Credit Sales Collection
-   ✔ Service Pending Collection
+   collection.js — FINAL V2.1 (No duplicate esc)
+   ✔ Uses window.sales & window.services
+   ✔ Credit Sales + Service Collections
    ✔ Collection History
    ✔ Pie Chart
 =========================================================== */
 
-const esc = x => (x === undefined || x === null) ? "" : String(x);
 
 /* -------------------------------------------------------
    🔄 GET ALL PENDING COLLECTIONS
 ------------------------------------------------------- */
 function getAllCollections() {
   const sales = window.sales || [];
-  const services = window.services || [];   // ✅ FIXED
+  const services = window.services || [];
 
   let list = [];
 
