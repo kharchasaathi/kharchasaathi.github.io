@@ -1,9 +1,9 @@
 /* ===========================================================
-   sales.js — Sales Manager (Final v11.0 with Time + AM/PM)
-   ✔ Profit auto-added
-   ✔ Investment auto-added
-   ✔ Smart Dashboard sync
-   ✔ NOW INCLUDES SALE TIME (12-hour format)
+   sales.js — Sales Manager (Final v11.1 Stable)
+   ✔ Profit auto-calculated
+   ✔ Time included (12-hour format)
+   ✔ Analytics + Overview sync
+   ✔ No double-profit / double-invest errors
 =========================================================== */
 
 function refreshSaleTypeSelector() {
@@ -16,15 +16,15 @@ function refreshSaleTypeSelector() {
   });
 }
 
-/* ===========================================================
+/* -----------------------------------------------------------
    🔵 12-HOUR TIME GENERATOR
-=========================================================== */
+----------------------------------------------------------- */
 function getCurrentTime12hr() {
   const now = new Date();
 
-  let hh = now.getHours();         // 0–23
-  const mm = String(now.getMinutes()).padStart(2, "0");
-  const ss = String(now.getSeconds()).padStart(2, "0");
+  let hh = now.getHours();
+  const mm = String(now.getMinutes()).padStart(2,"0");
+  const ss = String(now.getSeconds()).padStart(2,"0");
 
   const ampm = hh >= 12 ? "PM" : "AM";
   hh = hh % 12;
@@ -33,10 +33,11 @@ function getCurrentTime12hr() {
   return `${hh}:${mm}:${ss} ${ampm}`;
 }
 
-/* ===========================================================
-   ADD SALE ENTRY
-=========================================================== */
+/* -----------------------------------------------------------
+   ADD SALE ENTRY (Clean — No double profit/invest)
+----------------------------------------------------------- */
 function addSaleEntry({ date, type, name, qty, price, status }) {
+
   date = toInternalIfNeeded(date);
   qty = Number(qty);
   price = Number(price);
@@ -54,32 +55,27 @@ function addSaleEntry({ date, type, name, qty, price, status }) {
     return;
   }
 
-  const cost = Number(p.cost || 0);
+  const cost  = Number(p.cost || 0);
   const total = qty * price;
   const invest = qty * cost;
   const profit = total - invest;
 
-  // Deduct stock
+  // Update stock
   p.qty -= qty;
-  p.sold += qty;
+  p.sold = (p.sold || 0) + qty;
   saveStock();
 
-  // Add Profit / Investment buckets
-  addSalesProfit(profit);
-  addStockInvestment(invest);
-
-  // 🔵 Add sale record with TIME
-  window.sales = window.sales || [];
+  // 🔵 Add sale record
   window.sales.push({
     id: uid("sale"),
     date,
-    time: getCurrentTime12hr(),  // ← NEW
+    time: getCurrentTime12hr(),
     type,
     product: name,
     qty,
     price,
-    amount: total,
     total,
+    amount: total,
     cost,
     profit,
     status: status || "Paid"
@@ -89,21 +85,19 @@ function addSaleEntry({ date, type, name, qty, price, status }) {
 
   renderSales?.();
   renderAnalytics?.();
+  updateSummaryCards?.();
   updateTabSummaryBar?.();
 }
 
-/* ===========================================================
-   TOGGLE CREDIT → PAID
-=========================================================== */
+/* -----------------------------------------------------------
+   TOGGLE CREDIT → PAID (Corrected)
+----------------------------------------------------------- */
 function toggleSaleStatus(id) {
-  const s = (window.sales || []).find(x => x.id === id);
+  const s = window.sales.find(x => x.id === id);
   if (!s) return;
 
   if (s.status === "Credit") {
     if (!confirm("Mark this Credit sale as PAID?")) return;
-
-    // Add profit now
-    addSalesProfit(Number(s.profit || 0));
     s.status = "Paid";
   } else {
     alert("Already Paid.");
@@ -113,13 +107,15 @@ function toggleSaleStatus(id) {
   saveSales();
   renderSales();
   renderAnalytics?.();
+  updateSummaryCards?.();
   updateTabSummaryBar?.();
 }
+
 window.toggleSaleStatus = toggleSaleStatus;
 
-/* ===========================================================
+/* -----------------------------------------------------------
    RENDER SALES TABLE
-=========================================================== */
+----------------------------------------------------------- */
 function renderSales() {
   const tbody = document.querySelector("#salesTable tbody");
   if (!tbody) return;
@@ -127,40 +123,36 @@ function renderSales() {
   const filterType = document.getElementById("saleType")?.value || "all";
   const filterDate = document.getElementById("saleDate")?.value || "";
 
-  let list = window.sales || [];
+  let list = [...(window.sales || [])];
 
   if (filterType !== "all") list = list.filter(s => s.type === filterType);
-  if (filterDate) list = list.filter(s => s.date === filterDate);
+  if (filterDate)          list = list.filter(s => s.date === filterDate);
 
   let total = 0, profit = 0;
 
-  tbody.innerHTML = list
-    .map(s => {
+  tbody.innerHTML = list.map(s => {
       const t = Number(s.total || s.amount || 0);
       total += t;
 
       if (String(s.status).toLowerCase() !== "credit")
         profit += Number(s.profit || 0);
 
-      let statusHTML = "";
-      if (s.status === "Credit") {
-        statusHTML = `
-          <button onclick="toggleSaleStatus('${s.id}')"
-            style="background:#2196f3;color:white;border:none;
-                   padding:4px 10px;border-radius:5px;cursor:pointer;">
-            💳 Credit
-          </button>`;
-      } else {
-        statusHTML = `
-          <span style="background:#4caf50;color:white;
-                       padding:4px 10px;border-radius:5px;">
-            💰 Paid
-          </span>`;
-      }
+      const statusHTML = 
+        s.status === "Credit"
+          ? `<button onclick="toggleSaleStatus('${s.id}')" 
+               style="background:#2196f3;color:white;border:none;
+               padding:4px 10px;border-radius:5px;cursor:pointer;">
+               💳 Credit
+             </button>`
+          : `<span style="background:#4caf50;color:white;
+                  padding:4px 10px;border-radius:5px;">
+                💰 Paid
+             </span>`;
 
       return `
         <tr>
-          <td>${toDisplay(s.date)}<br><small>${s.time || "--"}</small></td>
+          <td>${toDisplay(s.date)}<br>
+              <small>${s.time || "--"}</small></td>
           <td>${s.type}</td>
           <td>${s.product}</td>
           <td>${s.qty}</td>
@@ -168,8 +160,7 @@ function renderSales() {
           <td>₹${t}</td>
           <td>₹${s.profit}</td>
           <td>${statusHTML}</td>
-        </tr>
-      `;
+        </tr>`;
     })
     .join("");
 
@@ -177,15 +168,16 @@ function renderSales() {
   document.getElementById("profitTotal").textContent = profit;
 }
 
-/* ===========================================================
+/* -----------------------------------------------------------
    CLEAR SALES
-=========================================================== */
+----------------------------------------------------------- */
 document.getElementById("clearSalesBtn")?.addEventListener("click", () => {
   if (!confirm("Clear all sales?")) return;
   window.sales = [];
   saveSales();
   renderSales();
   renderAnalytics?.();
+  updateSummaryCards?.();
   updateTabSummaryBar?.();
 });
 
