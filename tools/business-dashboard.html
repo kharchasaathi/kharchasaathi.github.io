@@ -142,7 +142,6 @@
 
     /* ==========================================
        🌈 COLORFUL TABLE (V3)
-       Used for: Stock, Sales, Service, Wanting, Expenses, Collection
     =========================================== */
     table {
       width: 100%;
@@ -197,53 +196,17 @@
       border-radius: 6px;
       font-size: 12px;
     }
-
-    .btn-del,
-    .history-btn,
-    .sale-btn,
-    .credit-btn,
-    .want-add-btn,
-    .want-del-btn,
-    .collect-btn {
-      padding: 5px 8px;
-      border-radius: 6px;
-      background: #ff8800;
-      color: white;
-      border: none;
-      cursor: pointer;
-    }
-
-    .btn-del:hover,
-    .sale-btn:hover,
-    .credit-btn:hover,
-    .collect-btn:hover {
-      background: #d96a00;
-    }
-
-    /* MOBILE */
-    @media (max-width: 600px) {
-      table thead {
-        display: none;
-      }
-      table tbody tr {
-        display:block;
-        margin-bottom:12px;
-      }
-      table tbody td {
-        display:flex;
-        justify-content:space-between;
-      }
-      table tbody td:before {
-        content: attr(data-label);
-        font-weight:600;
-        opacity:.7;
-      }
-    }
   </style>
 </head>
-  <body>
 
-  <!-- 🔐 TOPBAR -->
+<body>
+
+<!-- ⭐ GLOBAL HELPERS (REQUIRED) -->
+<script>
+  const qs  = s => document.querySelector(s);
+  const qsa = s => Array.from(document.querySelectorAll(s));
+</script>
+<!-- 🔐 TOPBAR -->
   <div class="topbar">
     <h1>📦 KharchaSaathi (Offline)</h1>
 
@@ -273,7 +236,7 @@
     <div class="tab" data-tab="expenses">💸 Expenses</div>
     <div class="tab" data-tab="dashboard">📊 Overview</div>
     <div class="tab" data-tab="analytics">📈 Smart Dashboard</div>
-    <div class="tab" data-tab="collection">🪙 Collection</div> <!-- ⭐ NEW TAB -->
+    <div class="tab" data-tab="collection">🪙 Collection</div>
   </div>
 
 
@@ -314,14 +277,16 @@
 
     <div style="margin-top:12px; display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
       <b>Filter Type:</b>
-      <select id="filterType"><option value="all">All</option></select>
+      <select id="filterType">
+        <option value="all">All</option>
+      </select>
 
       <input id="productSearch"
              placeholder="Search product..."
              style="padding:6px; margin-left:10px;">
     </div>
 
-    <!-- BEFORE SALE INVESTMENT (NO COLLECT BUTTON) -->
+    <!-- BEFORE SALE INVESTMENT -->
     <div id="stockInvBox" 
          style="margin-top:10px; padding:10px; background:#fff3e0; border-radius:8px;
                 border:1px solid #ffbb66; max-width:260px; margin-left:auto;
@@ -347,11 +312,6 @@
       <tbody></tbody>
     </table>
   </section>
-
-
-
-
-
   <!-- =============== SALES =============== -->
   <section id="sales" class="section">
     <h3>💰 Sales & Profit</h3>
@@ -396,7 +356,10 @@
       </tfoot>
     </table>
   </section>
-    <!-- =============== WANTING =============== -->
+
+
+
+  <!-- =============== WANTING =============== -->
   <section id="wanting" class="section">
     <h3>🛒 Wanting List</h3>
 
@@ -422,7 +385,6 @@
       <tbody></tbody>
     </table>
   </section>
-
 
 
 
@@ -495,10 +457,6 @@
       <canvas id="svcPie" height="150"></canvas>
     </div>
   </section>
-
-
-
-
   <!-- =============== EXPENSES =============== -->
   <section id="expenses" class="section">
     <h3>🧾 Expenses</h3>
@@ -533,7 +491,10 @@
       </tfoot>
     </table>
   </section>
-    <!-- =============== OVERVIEW =============== -->
+
+
+
+  <!-- =============== OVERVIEW =============== -->
   <section id="dashboard" class="section">
     <h3>📊 Business Overview</h3>
 
@@ -609,7 +570,7 @@
 
 
 
-  <!-- =============== ⭐ NEW COLLECTION TAB =============== -->
+  <!-- =============== COLLECTION =============== -->
   <section id="collection" class="section">
     <h3>🪙 Collection Center</h3>
 
@@ -639,7 +600,6 @@
     </div>
 
 
-    <!-- COLLECTION HISTORY TABLE -->
     <h4>Collection History</h4>
 
     <table id="collectionTable">
@@ -651,12 +611,9 @@
           <th>Amount</th>
         </tr>
       </thead>
-      <tbody>
-        <!-- JS will fill -->
-      </tbody>
+      <tbody></tbody>
     </table>
 
-    <!-- CLEAR BUTTON -->
     <button id="clearCollectionBtn"
             class="small-btn"
             style="background:#b71c1c;color:#fff;margin-top:10px">
@@ -664,10 +621,16 @@
     </button>
 
   </section>
-    <!-- LIBRARIES -->
+
+
+
+
+  <!-- =============== SCRIPTS =============== -->
+
+  <!-- Charts -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js/dist/chart.umd.min.js"></script>
 
-  <!-- FIREBASE -->
+  <!-- Firebase -->
   <script src="https://www.gstatic.com/firebasejs/9.6.11/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.6.11/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.6.11/firebase-firestore-compat.js"></script>
@@ -686,7 +649,7 @@
         "/js/expenses.js",
         "/js/analytics.js",
         "/js/service.js",
-        "/js/collection.js",   /* ⭐ NEW FILE ADDED */
+        "/js/collection.js",
         "/js/security.js"
       ];
       js.forEach(f => {
