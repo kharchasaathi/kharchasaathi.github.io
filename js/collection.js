@@ -1,29 +1,35 @@
 /* ===========================================================
-   collection.js — Collection Center (SAFE FINAL V3.0)
-   • Matches business-dashboard v3.1 HTML
-   • No errors even if tables are empty
-   • Works with only History table (no pending feature)
+   collection.js — Collection Center (SAFE FINAL V4.0)
+   • Pending Sales (Credit)
+   • Pending Services (Advance < Total)
+   • Collection History
+   • Universal Summary (Sales + Service + Pending + Investment)
 =========================================================== */
 
-/* ------------ LOCAL HISTORY STORE ------------ */
+const esc = x => (x === undefined || x === null) ? "" : String(x);
+
+/* -----------------------------------------------------------
+   HISTORY STORAGE
+----------------------------------------------------------- */
 window.collections = JSON.parse(localStorage.getItem("ks-collections") || "[]");
 
 function saveCollections() {
   try {
-    localStorage.setItem("ks-collections", JSON.stringify(window.collections || []));
+    localStorage.setItem("ks-collections", JSON.stringify(window.collections));
   } catch (e) {
-    console.warn("Unable to save collections", e);
+    console.warn("Collection save error:", e);
   }
 }
 
-/* ------------ PUBLIC ADD ENTRY ------------ */
+/* -----------------------------------------------------------
+   PUBLIC ADD ENTRY
+----------------------------------------------------------- */
 window.addCollectionEntry = function (source, details, amount) {
-  const escFn = window.esc || (x => String(x ?? ""));
   const entry = {
-    id: Date.now().toString(),
-    date: window.todayDate ? todayDate() : new Date().toISOString().slice(0, 10),
-    source: escFn(source || ""),
-    details: escFn(details || ""),
+    id: "coll_" + Date.now(),
+    date: todayDate(),
+    source: esc(source),
+    details: esc(details),
     amount: Number(amount || 0)
   };
 
@@ -32,9 +38,9 @@ window.addCollectionEntry = function (source, details, amount) {
   renderCollection();
 };
 
-/* ===========================================================
+/* -----------------------------------------------------------
    SUMMARY NUMBERS
-=========================================================== */
+----------------------------------------------------------- */
 function getNum(v) {
   const n = Number(v || 0);
   return isNaN(n) ? 0 : n;
@@ -46,28 +52,30 @@ function computeCollectionSummary() {
   let pendingCredit = 0;
   let investmentRemain = 0;
 
-  // 1) Sales Profit Collected
+  // ✔ Sales Collected (profit only of PAID)
   (window.sales || []).forEach(s => {
-    const status = String(s.status || "").toLowerCase();
-    if (status !== "credit") salesCollected += getNum(s.profit);
+    const st = String(s.status || "").toLowerCase();
+    if (st !== "credit") {
+      salesCollected += getNum(s.profit);
+    }
   });
 
-  // 2) Service Profit Collected
+  // ✔ Service Collected (completed only)
   (window.services || []).forEach(s => {
     if (String(s.status || "").toLowerCase() === "completed") {
       serviceCollected += getNum(s.profit);
     }
   });
 
-  // 3) Pending Credits
+  // ✔ Pending Credits (sales)
   (window.sales || []).forEach(s => {
-    if (String(s.status || "").toLowerCase() === "credit") {
-      const total = getNum(s.total || (getNum(s.qty) * getNum(s.price)));
+    if (String(s.status).toLowerCase() === "credit") {
+      const total = getNum(s.total || s.qty * s.price);
       pendingCredit += total;
     }
   });
 
-  // 4) Investment After Sale
+  // ✔ Investment After Sale (stock remain + service investment)
   if (typeof window.getStockInvestmentAfterSale === "function") {
     investmentRemain += getNum(window.getStockInvestmentAfterSale());
   }
@@ -78,26 +86,25 @@ function computeCollectionSummary() {
   return { salesCollected, serviceCollected, pendingCredit, investmentRemain };
 }
 
-/* ===========================================================
-   RENDER COLLECTION TAB
-=========================================================== */
+/* -----------------------------------------------------------
+   RENDER SUMMARY + HISTORY
+----------------------------------------------------------- */
 function renderCollection() {
 
-  // ---- SUMMARY CARDS UPDATE ----
+  // ---- SUMMARY UPDATE ----
   const sum = computeCollectionSummary();
-
-  qs("#colSales").textContent      = "₹" + Math.round(sum.salesCollected);
-  qs("#colService").textContent    = "₹" + Math.round(sum.serviceCollected);
-  qs("#colCredit").textContent     = "₹" + Math.round(sum.pendingCredit);
-  qs("#colInvRemain").textContent  = "₹" + Math.round(sum.investmentRemain);
+  qs("#colSales").textContent     = "₹" + Math.round(sum.salesCollected);
+  qs("#colService").textContent   = "₹" + Math.round(sum.serviceCollected);
+  qs("#colCredit").textContent    = "₹" + Math.round(sum.pendingCredit);
+  qs("#colInvRemain").textContent = "₹" + Math.round(sum.investmentRemain);
 
   // ---- HISTORY TABLE ----
-  const tbody = document.querySelector("#collectionHistory tbody");
+  const tbody = qs("#collectionHistory tbody");
   if (!tbody) return;
 
   const list = window.collections || [];
 
-  if (list.length === 0) {
+  if (!list.length) {
     tbody.innerHTML = `
       <tr>
         <td colspan="4" style="text-align:center;opacity:0.6">
@@ -121,67 +128,43 @@ function renderCollection() {
 
 window.renderCollection = renderCollection;
 
-/* ===========================================================
-   CLEAR BUTTON
-=========================================================== */
-document.addEventListener("click", e => {
-  if (e.target && e.target.id === "clearCollectionBtn") {
-    if (!confirm("Clear entire collection history?")) return;
-    window.collections = [];
-    saveCollections();
-    renderCollection();
-  }
-});
-
-/* ===========================================================
-   INIT ON LOAD
-=========================================================== */
-window.addEventListener("load", () => {
-  if (!Array.isArray(window.collections)) {
-    window.collections = [];
-    saveCollections();
-  }
-  renderCollection();
-});
-/* ===========================================================
-   🔄 BUILD PENDING COLLECTION LIST
-=========================================================== */
+/* -----------------------------------------------------------
+   GET PENDING LIST (Credit Sales + Service Pending)
+----------------------------------------------------------- */
 function getPendingList() {
   const list = [];
 
-  // ---- Sales Pending Credit ----
+  // ---- Sales pending credit ----
   (window.sales || []).forEach(s => {
     if (String(s.status).toLowerCase() === "credit") {
-      const total = Number(s.total || (s.qty * s.price));
-      const pending = total;
-
+      const pending = Number(s.total || (s.qty * s.price));
       if (pending > 0) {
         list.push({
           id: s.id,
-          name: s.product || s.name || "Sale",
+          name: s.product,
           type: "Sale Credit",
           date: s.date,
-          pending: pending,
+          pending,
           source: "sales"
         });
       }
     }
   });
 
-  // ---- Service Pending ----
-  (window.services || []).forEach(job => {
-    if (String(job.status).toLowerCase() === "pending") {
-      const total = Number(job.total || 0);
-      const adv = Number(job.advance || 0);
+  // ---- Service pending ----
+  (window.services || []).forEach(j => {
+    if (String(j.status).toLowerCase() === "pending") {
+      const total = Number(j.invest || 0) + Number(j.paid || 0) + Number(j.remaining || 0);
+      const adv = Number(j.advance || 0);
       const pending = total - adv;
 
       if (pending > 0) {
         list.push({
-          id: job.id,
-          name: job.customer,
+          id: j.id,
+          name: j.customer,
           type: "Service",
-          date: job.received,
-          pending: pending,
+          date: j.date_in,
+          pending,
           source: "service"
         });
       }
@@ -191,9 +174,9 @@ function getPendingList() {
   return list;
 }
 
-/* ===========================================================
-   📥 RENDER PENDING TABLE
-=========================================================== */
+/* -----------------------------------------------------------
+   RENDER PENDING COLLECTION TABLE
+----------------------------------------------------------- */
 function renderPendingCollections() {
   const tbody = qs("#pendingCollectionTable tbody");
   if (!tbody) return;
@@ -203,31 +186,33 @@ function renderPendingCollections() {
   if (!list.length) {
     tbody.innerHTML = `
       <tr>
-        <td colspan="5" style="text-align:center;opacity:0.6;">
+        <td colspan="5" style="text-align:center;opacity:0.6">
           No pending collections
         </td>
       </tr>`;
     return;
   }
 
-  tbody.innerHTML = list.map((r, i) => `
-    <tr>
-      <td data-label="Date">${r.date}</td>
-      <td data-label="Name">${r.name}</td>
-      <td data-label="Type">${r.type}</td>
-      <td data-label="Pending">₹${r.pending}</td>
-      <td data-label="Action">
-        <button class="small-btn collectNowBtn" data-i="${i}">
-          Collect
-        </button>
-      </td>
-    </tr>
-  `).join("");
+  tbody.innerHTML = list
+    .map((r, i) => `
+      <tr>
+        <td data-label="Date">${r.date}</td>
+        <td data-label="Name">${r.name}</td>
+        <td data-label="Type">${r.type}</td>
+        <td data-label="Pending">₹${r.pending}</td>
+        <td data-label="Action">
+          <button class="small-btn collectNowBtn" data-i="${i}">
+            Collect
+          </button>
+        </td>
+      </tr>
+    `)
+    .join("");
 }
 
-/* ===========================================================
-   💰 COLLECT BUTTON LOGIC
-=========================================================== */
+/* -----------------------------------------------------------
+   COLLECT BUTTON LOGIC
+----------------------------------------------------------- */
 document.addEventListener("click", e => {
   if (!e.target.classList.contains("collectNowBtn")) return;
 
@@ -243,33 +228,47 @@ document.addEventListener("click", e => {
   // ---- Add to History ----
   window.addCollectionEntry(item.type, item.name, amt);
 
-  // ---- Update main data ----
+  // ---- Update Sales ----
   if (item.source === "sales") {
     let row = (window.sales || []).find(x => x.id === item.id);
     if (row) {
-      row.total = Number(row.total) - amt;
-      if (row.total <= 0) row.status = "paid";
+      row.total -= amt;
+      if (row.total <= 0) row.status = "Paid";
       saveSales();
     }
   }
 
+  // ---- Update Service ----
   if (item.source === "service") {
     let job = (window.services || []).find(x => x.id === item.id);
     if (job) {
-      job.advance = Number(job.advance || 0) + amt;
-      if (job.advance >= job.total) job.status = "completed";
-      saveService();
+      job.advance += amt;
+      const total = Number(job.invest || 0) + Number(job.paid || 0) + Number(job.remaining || 0);
+
+      if (job.advance >= total) job.status = "Completed";
+      saveServices?.();
     }
   }
 
   renderPendingCollections();
   renderCollection();
-  alert("Amount collected!");
 });
 
-/* ===========================================================
-   ⏳ INIT
-=========================================================== */
+/* -----------------------------------------------------------
+   CLEAR HISTORY
+----------------------------------------------------------- */
+document.addEventListener("click", e => {
+  if (e.target.id === "clearCollectionBtn") {
+    if (!confirm("Clear entire collection history?")) return;
+    window.collections = [];
+    saveCollections();
+    renderCollection();
+  }
+});
+
+/* -----------------------------------------------------------
+   INIT
+----------------------------------------------------------- */
 window.addEventListener("load", () => {
   renderPendingCollections();
   renderCollection();
