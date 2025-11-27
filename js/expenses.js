@@ -1,23 +1,26 @@
 /* ===========================================================
-   expenses.js — FINAL v7.0 (Perfect Sync With Your HTML)
-   ✔ Fully matches your HTML IDs
-   ✔ Add/Delete working 100%
-   ✔ Auto updates: Overview + Smart Dashboard + Profit Bar
+   expenses.js — FINAL V8.0 (Colorful UI + Mobile Labels + Perfect Sync)
+   • Matches new global colourful table UI
+   • Mobile-friendly: data-label support
+   • Add/Delete smooth
+   • Auto updates: Overview, Dashboard, Summary, TabBar
 =========================================================== */
 
-/* -------------------------
-   ADD EXPENSE ENTRY
--------------------------- */
+const esc = x => (x === undefined || x === null) ? "" : String(x);
+
+/* -------------------------------------------------------
+   ➕ ADD EXPENSE ENTRY
+------------------------------------------------------- */
 function addExpenseEntry() {
   let date = qs("#expDate")?.value || todayDate();
-  const category = qs("#expCat")?.value;
+  const category = qs("#expCat")?.value.trim();
   const amount = Number(qs("#expAmount")?.value || 0);
-  const note = qs("#expNote")?.value || "";
+  const note = qs("#expNote")?.value.trim();
 
   if (!category || amount <= 0)
     return alert("Enter category and amount!");
 
-  // Convert dd-mm-yyyy → yyyy-mm-dd (if needed)
+  // Convert dd-mm-yyyy → yyyy-mm-dd
   if (date.includes("-") && date.split("-")[0].length === 2)
     date = toInternal(date);
 
@@ -33,37 +36,32 @@ function addExpenseEntry() {
 
   saveExpenses();
 
-  // Refresh UI everywhere
   renderExpenses();
   renderAnalytics?.();
   updateSummaryCards?.();
   updateTabSummaryBar?.();
 
-  // Clear inputs
   qs("#expAmount").value = "";
   qs("#expNote").value = "";
 }
 
-/* -------------------------
-   DELETE EXPENSE ENTRY
--------------------------- */
+/* -------------------------------------------------------
+   ❌ DELETE EXPENSE ENTRY
+------------------------------------------------------- */
 function deleteExpense(id) {
   window.expenses = (window.expenses || []).filter(e => e.id !== id);
-
   saveExpenses();
 
-  // Refresh UI everywhere
   renderExpenses();
   renderAnalytics?.();
   updateSummaryCards?.();
   updateTabSummaryBar?.();
 }
-
 window.deleteExpense = deleteExpense;
 
-/* -------------------------
-   RENDER EXPENSE TABLE
--------------------------- */
+/* -------------------------------------------------------
+   📊 RENDER EXPENSE TABLE (UI UPGRADED)
+------------------------------------------------------- */
 function renderExpenses() {
   const tbody = qs("#expensesTable tbody");
   if (!tbody) return;
@@ -71,31 +69,33 @@ function renderExpenses() {
   let list = window.expenses || [];
   let total = 0;
 
-  tbody.innerHTML = list
-    .map(e => {
-      total += Number(e.amount || 0);
-      return `
-        <tr>
-          <td>${toDisplay(e.date)}</td>
-          <td>${e.category}</td>
-          <td>₹${e.amount}</td>
-          <td>${e.note || "-"}</td>
-          <td>
-            <button class="btn-del" onclick="deleteExpense('${e.id}')">🗑 Delete</button>
-          </td>
-        </tr>
-      `;
-    })
-    .join("");
+  tbody.innerHTML = list.map(e => {
+    total += Number(e.amount || 0);
+    return `
+      <tr>
+        <td data-label="Date">${toDisplay(e.date)}</td>
+        <td data-label="Category">${esc(e.category)}</td>
+        <td data-label="Amount">₹${esc(e.amount)}</td>
+        <td data-label="Note">${esc(e.note || "-")}</td>
 
-  // Update Total box (HTML: id="expTotal")
+        <td data-label="Action">
+          <button class="btn-del small-btn" 
+                  onclick="deleteExpense('${e.id}')"
+                  style="background:#d32f2f;color:#fff;">
+            🗑 Delete
+          </button>
+        </td>
+      </tr>
+    `;
+  }).join("");
+
   const totalBox = qs("#expTotal");
   if (totalBox) totalBox.textContent = total;
 }
 
-/* -------------------------
-   CLEAR ALL EXPENSES
--------------------------- */
+/* -------------------------------------------------------
+   🗑 CLEAR ALL EXPENSES
+------------------------------------------------------- */
 qs("#clearExpensesBtn")?.addEventListener("click", () => {
   if (!confirm("Clear ALL expenses?")) return;
 
@@ -108,14 +108,14 @@ qs("#clearExpensesBtn")?.addEventListener("click", () => {
   updateTabSummaryBar?.();
 });
 
-/* -------------------------
-   ADD BUTTON
--------------------------- */
+/* -------------------------------------------------------
+   ➕ ADD BUTTON
+------------------------------------------------------- */
 qs("#addExpenseBtn")?.addEventListener("click", addExpenseEntry);
 
-/* -------------------------
-   INITIAL PAGE LOAD
--------------------------- */
+/* -------------------------------------------------------
+   🚀 INITIAL PAGE LOAD
+------------------------------------------------------- */
 window.addEventListener("load", () => {
   renderExpenses();
 });
