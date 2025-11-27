@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>📦 KharchaSaathi — Business Dashboard (v2.2 Clean)</title>
+  <title>📦 KharchaSaathi — Business Dashboard (v3.0 Clean)</title>
   <meta name="theme-color" content="#ff7a00" />
   <link rel="icon" href="/favicon.png" />
   <link rel="apple-touch-icon" href="/favicon.png" />
@@ -139,130 +139,106 @@
       background:var(--dark-card);
       border:1px solid var(--dark-border);
     }
+
+
     /* ==========================================
-   🌈 BEAUTIFUL COLORFUL TABLE DESIGN (V3)
-   Works on: Stock, Sales, Service, Wanting, Expenses
-   Mobile-friendly + Desktop clean look
-=========================================== */
+       🌈 COLORFUL TABLE (V3)
+       Used for: Stock, Sales, Service, Wanting, Expenses
+    =========================================== */
+    table {
+      width: 100%;
+      border-collapse: separate;
+      border-spacing: 0 8px;
+      font-size: 14px;
+    }
 
-table {
-  width: 100%;
-  border-collapse: separate;
-  border-spacing: 0 8px;
-  font-size: 14px;
-}
+    table thead tr {
+      background: linear-gradient(90deg, #ff8a3d, #ff6a00);
+      color: #fff;
+    }
 
-table thead tr {
-  background: linear-gradient(90deg, #ff8a3d, #ff6a00);
-  color: #fff;
-}
+    table thead th {
+      padding: 10px 8px;
+      text-align: left;
+      font-weight: 600;
+    }
 
-table thead th {
-  padding: 10px 8px;
-  text-align: left;
-  font-weight: 600;
-}
+    table tbody tr {
+      background: #ffffff;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+      border-radius: 10px;
+    }
 
-table tbody tr {
-  background: #ffffff;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.08);
-  border-radius: 10px;
-}
+    body.dark table tbody tr {
+      background: #1f1f1f;
+      box-shadow: 0 2px 6px rgba(255,255,255,0.05);
+    }
 
-body.dark table tbody tr {
-  background: #1f1f1f;
-  box-shadow: 0 2px 6px rgba(255,255,255,0.05);
-}
+    table tbody td {
+      padding: 10px 8px;
+      vertical-align: middle;
+    }
 
-table tbody td {
-  padding: 10px 8px;
-  vertical-align: middle;
-}
+    table tbody tr:hover {
+      background: #fff4e6;
+    }
+    body.dark table tbody tr:hover {
+      background: #292929;
+    }
 
-table tbody tr:hover {
-  background: #fff4e6;
-}
+    table tbody tr td:first-child {
+      border-radius: 10px 0 0 10px;
+    }
+    table tbody tr td:last-child {
+      border-radius: 0 10px 10px 0;
+    }
 
-body.dark table tbody tr:hover {
-  background: #292929;
-}
+    .small-btn {
+      padding: 6px 10px !important;
+      border-radius: 6px;
+      font-size: 12px;
+    }
 
-/* Rounded first & last cells */
-table tbody tr td:first-child {
-  border-radius: 10px 0 0 10px;
-}
-table tbody tr td:last-child {
-  border-radius: 0 10px 10px 0;
-}
+    .btn-del,
+    .history-btn,
+    .sale-btn,
+    .credit-btn,
+    .want-add-btn,
+    .want-del-btn {
+      padding: 5px 8px;
+      border-radius: 6px;
+      background: #ff8800;
+      color: white;
+      border: none;
+      cursor: pointer;
+    }
+    .btn-del:hover,
+    .sale-btn:hover,
+    .credit-btn:hover {
+      background: #d96a00;
+    }
 
-/* Status & Action Buttons */
-.status-paid {
-  background: #4caf50;
-  color: white;
-  padding: 4px 10px;
-  border-radius: 6px;
-  font-weight: 600;
-}
-.status-credit {
-  background: #ff3b30;
-  color: white;
-  padding: 4px 10px;
-  border-radius: 6px;
-  font-weight: 600;
-}
-
-.small-btn {
-  padding: 6px 10px !important;
-  border-radius: 6px;
-  font-size: 12px;
-}
-
-.history-btn,
-.sale-btn,
-.credit-btn,
-.want-add-btn,
-.want-del-btn,
-.btn-del {
-  padding: 5px 8px;
-  border-radius: 6px;
-  background: #ff8800;
-  color: white;
-  border: none;
-  cursor: pointer;
-}
-.history-btn:hover,
-.sale-btn:hover,
-.credit-btn:hover,
-.btn-del:hover {
-  background: #d96a00;
-}
-
-/* 🎯 MOBILE OPTIMIZATION */
-@media (max-width: 600px) {
-  table thead {
-    display: none;
-  }
-
-  table tbody tr {
-    display: block;
-    margin-bottom: 12px;
-  }
-
-  table tbody td {
-    display: flex;
-    justify-content: space-between;
-    padding: 8px 12px;
-  }
-
-  table tbody td:before {
-    content: attr(data-label);
-    font-weight: 600;
-    opacity: .7;
-  }
-}
+    /* MOBILE */
+    @media (max-width: 600px) {
+      table thead {
+        display: none;
+      }
+      table tbody tr {
+        display:block;
+        margin-bottom:12px;
+      }
+      table tbody td {
+        display:flex;
+        justify-content:space-between;
+      }
+      table tbody td:before {
+        content: attr(data-label);
+        font-weight:600;
+        opacity:.7;
+      }
+    }
   </style>
 </head>
-
 <body>
 
   <!-- 🔐 TOPBAR -->
@@ -284,21 +260,22 @@ table tbody tr td:last-child {
     </div>
   </div>
 
-  <!-- ===== FIXED TAB ORDER (EXPENSES MOVED AFTER SERVICE) ===== -->
+
+  <!-- =============== FIXED TAB ORDER =============== -->
   <div class="tabs" role="tablist">
     <div class="tab active" data-tab="types">🗂 Types</div>
     <div class="tab" data-tab="stock">📦 Stock</div>
     <div class="tab" data-tab="sales">📈 Sales</div>
     <div class="tab" data-tab="wanting">🛒 Wanting</div>
     <div class="tab" data-tab="service">🛠 Service</div>
-
-    <!-- ⭐ MOVED EXPENSES HERE -->
     <div class="tab" data-tab="expenses">💸 Expenses</div>
-
     <div class="tab" data-tab="dashboard">📊 Overview</div>
     <div class="tab" data-tab="analytics">📈 Smart Dashboard</div>
+    <div class="tab" data-tab="collection">🪙 Collection</div> <!-- ⭐ NEW TAB -->
   </div>
-  <!-- ===== TYPES ===== -->
+
+
+  <!-- =============== TYPES =============== -->
   <section id="types" class="section active">
     <h3>🗂 Manage Item Types</h3>
 
@@ -311,7 +288,9 @@ table tbody tr td:last-child {
     <ul id="typeList" style="margin-top:10px;padding-left:18px"></ul>
   </section>
 
-  <!-- ===== STOCK ===== -->
+
+
+  <!-- =============== STOCK =============== -->
   <section id="stock" class="section">
     <h3>📦 Current Stock</h3>
 
@@ -335,12 +314,10 @@ table tbody tr td:last-child {
       <b>Filter Type:</b>
       <select id="filterType"><option value="all">All</option></select>
 
-      <input id="productSearch"
-             placeholder="Search product..."
-             style="padding:6px; margin-left:10px;">
+      <input id="productSearch" placeholder="Search product..." style="padding:6px; margin-left:10px;">
     </div>
 
-    <!-- BEFORE SALE INVESTMENT -->
+    <!-- BEFORE SALE INVESTMENT (NO COLLECT BUTTON) -->
     <div id="stockInvBox" 
          style="margin-top:10px; padding:10px; background:#fff3e0; border-radius:8px;
                 border:1px solid #ffbb66; max-width:260px; margin-left:auto;
@@ -367,7 +344,10 @@ table tbody tr td:last-child {
     </table>
   </section>
 
-  <!-- ===== SALES ===== -->
+
+
+
+  <!-- =============== SALES =============== -->
   <section id="sales" class="section">
     <h3>💰 Sales & Profit</h3>
 
@@ -411,8 +391,7 @@ table tbody tr td:last-child {
       </tfoot>
     </table>
   </section>
-
-  <!-- ===== WANTING ===== -->
+  <!-- =============== WANTING =============== -->
   <section id="wanting" class="section">
     <h3>🛒 Wanting List</h3>
 
@@ -439,7 +418,9 @@ table tbody tr td:last-child {
     </table>
   </section>
 
-  <!-- ===== SERVICE ===== -->
+
+
+  <!-- =============== SERVICE =============== -->
   <section id="service" class="section">
     <h3>🛠 Service / Repair Manager</h3>
 
@@ -509,7 +490,10 @@ table tbody tr td:last-child {
     </div>
   </section>
 
-  <!-- ===== EXPENSES (NOW AFTER SERVICE) ===== -->
+
+
+
+  <!-- =============== EXPENSES =============== -->
   <section id="expenses" class="section">
     <h3>🧾 Expenses</h3>
 
@@ -543,7 +527,7 @@ table tbody tr td:last-child {
       </tfoot>
     </table>
   </section>
-  <!-- ===== OVERVIEW ===== -->
+  <!-- =============== OVERVIEW =============== -->
   <section id="dashboard" class="section">
     <h3>📊 Business Overview</h3>
 
@@ -582,7 +566,9 @@ table tbody tr td:last-child {
     </div>
   </section>
 
-  <!-- ===== SMART DASHBOARD ===== -->
+
+
+  <!-- =============== SMART DASHBOARD =============== -->
   <section id="analytics" class="section">
     <h3>📈 Smart Dashboard</h3>
 
@@ -613,23 +599,15 @@ table tbody tr td:last-child {
     </div>
   </section>
 
-  <!-- ========== JS LOGIC (BASE) ========== -->
+
+
+
+  <!-- =============== SCRIPTS =============== -->
   <script>
     const qs  = s => document.querySelector(s);
     const qsa = s => Array.from(document.querySelectorAll(s));
 
-    /* ---------- HELP MODAL (optional, safe even if not present) ---------- */
-    function toggleHelp(){
-      const m = qs('#helpModal');
-      if (!m) return;
-      m.style.display = (m.style.display==='flex' ? 'none' : 'flex');
-    }
-    qs('#helpLink')?.addEventListener('click', e=>{
-      e.preventDefault();
-      toggleHelp();
-    });
-
-    /* ---------- DATE HELPERS ---------- */
+    /* DATE HELPERS */
     window.toDisplay = function(d) {
       if (!d) return "";
       if (d.includes("-")) {
@@ -650,7 +628,7 @@ table tbody tr td:last-child {
       return d;
     };
 
-    /* ---------- THEME SWITCHER ---------- */
+    /* THEME */
     if (localStorage.getItem('ks-theme') === 'dark') {
       document.body.classList.add('dark');
     }
@@ -659,11 +637,10 @@ table tbody tr td:last-child {
       localStorage.setItem('ks-theme', d ? 'dark' : 'light');
     });
 
-    /* ---------- LIVE CLOCK (12-HOUR FORMAT) ---------- */
+    /* LIVE CLOCK (12-HOUR) */
     function startLiveClock(){
       const tEl = qs("#clockTime");
       const dEl = qs("#clockDate");
-      if (!tEl || !dEl) return;
 
       function tick(){
         const now = new Date();
@@ -671,23 +648,25 @@ table tbody tr td:last-child {
         const mm = String(now.getMinutes()).padStart(2,"0");
         const ss = String(now.getSeconds()).padStart(2,"0");
 
-        const ampm = hh >= 12 ? "PM" : "AM";
+        const ap = hh >= 12 ? "PM" : "AM";
         hh = hh % 12;
         if (hh === 0) hh = 12;
 
-        tEl.textContent = `${hh}:${mm}:${ss} ${ampm}`;
+        tEl.textContent = `${hh}:${mm}:${ss} ${ap}`;
 
-        const day = String(now.getDate()).padStart(2,"0");
-        const month = String(now.getMonth()+1).toString().padStart(2,"0");
-        const year = now.getFullYear();
-        dEl.textContent = `${day}-${month}-${year}`;
+        const dd = String(now.getDate()).padStart(2,"0");
+        const mm2 = String(now.getMonth()+1).padStart(2,"0");
+        const yy = now.getFullYear();
+        dEl.textContent = `${dd}-${mm2}-${yy}`;
       }
 
       tick();
       setInterval(tick, 1000);
     }
 
-    /* ---------- TABS ---------- */
+
+
+    /* TABS */
     (function () {
       const tabs = qsa('.tab'),
             sections = qsa('.section');
@@ -713,44 +692,26 @@ table tbody tr td:last-child {
       window.activateTab = activate;
     })();
 
-    /* ---------- LOGIN / EMAIL ---------- */
-    window.addEventListener("load", () => {
 
+
+    /* LOGIN */
+    window.addEventListener("load", () => {
       if (typeof isLoggedIn === "function" && !isLoggedIn()) {
         window.location.href = "/login.html";
         return;
       }
-
       const tag = qs("#emailTag");
       if (tag && typeof getUserEmail === "function") {
-        const mail = getUserEmail();
-        tag.textContent = "Logged in: " + (mail || "Unknown User");
+        tag.textContent = "Logged in: " + (getUserEmail() || "Unknown User");
       }
-
-      qs("#logoutBtn")?.addEventListener("click", () => {
-        if (typeof logoutUser === "function") logoutUser();
+      qs("#logoutBtn").addEventListener("click", () => {
+        logoutUser?.();
         window.location.href = "/login.html";
       });
     });
 
-    /* ---------- STOCK FILTER ---------- */
-    qs("#filterType")?.addEventListener("change", () => {
-      refreshSaleTypeSelector?.();
-      renderStock?.();
-    });
 
-    /* ---------- SALES LIVE FILTERS ---------- */
-    (function attachSalesInputs() {
-      if (typeof attachImmediateSalesFilters === "function") {
-        try { attachImmediateSalesFilters(); } catch (e) {}
-      } else {
-        qs("#saleType")?.addEventListener("change", () => renderSales?.());
-        qs("#saleDate")?.addEventListener("change", () => renderSales?.());
-        qs("#filterSalesBtn")?.addEventListener("click", () => renderSales?.());
-      }
-    })();
-
-    /* ---------- OVERVIEW SUMMARY ---------- */
+    /* OVERVIEW SUMMARY */
     function updateSummaryCards() {
       if (typeof getAnalyticsData !== "function") return;
       const data = getAnalyticsData();
@@ -763,7 +724,8 @@ table tbody tr td:last-child {
     }
     window.updateSummaryCards = updateSummaryCards;
 
-    /* ---------- SAFE INITIAL RENDER ---------- */
+
+    /* SAFE INITIAL RENDER */
     function safeInitialRender() {
       try { renderTypes?.(); } catch {}
       try { updateTypeDropdowns?.(); } catch {}
@@ -783,6 +745,7 @@ table tbody tr td:last-child {
     });
   </script>
 
+
   <!-- LIBRARIES -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js/dist/chart.umd.min.js"></script>
 
@@ -791,26 +754,28 @@ table tbody tr td:last-child {
   <script src="https://www.gstatic.com/firebasejs/9.6.11/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.6.11/firebase-firestore-compat.js"></script>
 
-  <!-- AUTO VERSION LOADER (DO NOT TOUCH) -->
+
+  <!-- AUTO VERSION LOADER -->
   <script>
-  (function(){
-    const v = Date.now();
-    const js = [
-      "/js/core.js",
-      "/js/firebase.js",
-      "/js/types.js",
-      "/js/stock.js",
-      "/js/sales.js",
-      "/js/wanting.js",
-      "/js/expenses.js",
-      "/js/analytics.js",
-      "/js/service.js",
-      "/js/security.js"
-    ];
-    js.forEach(f => {
-      document.write(`<script src="${f}?v=${v}"><\/script>`);
-    });
-  })();
+    (function(){
+      const v = Date.now();
+      const js = [
+        "/js/core.js",
+        "/js/firebase.js",
+        "/js/types.js",
+        "/js/stock.js",
+        "/js/sales.js",
+        "/js/wanting.js",
+        "/js/expenses.js",
+        "/js/analytics.js",
+        "/js/service.js",
+        "/js/security.js"
+      ];
+      js.forEach(f => {
+        document.write(`<script src="${f}?v=${v}"><\/script>`);
+      });
+    })();
   </script>
-  </body>
+
+</body>
 </html>
