@@ -1,18 +1,35 @@
 /* =======================================================
-   📦 stock.js — Inventory Manager (FINAL CLEAN v10.0)
-   ✔ Correct BEFORE-SALE investment (total purchase cost)
-   ✔ Correct AFTER-SALE investment (remain × cost)
+   📦 stock.js — Inventory Manager (FINAL CLEAN v11.1)
+   ✔ BEFORE-SALE investment (total purchase cost)
+   ✔ AFTER-SALE investment (remain × cost)
    ✔ Shows BEFORE-sale investment in stock tab
    ✔ Auto-updates analytics, overview, dashboard
    ✔ Fully compatible with core.js (V7.3)
+   ✔ NOW quick-sale also stores TIME (12-HOUR AM/PM)
 ======================================================= */
 
 const toDisp = window.toDisplay;
 const toInt  = window.toInternal;
 
 /* -------------------------------------------------------
-   1️⃣ BEFORE SALE INVESTMENT  (Correct Formula)
-      Total purchase cost = Σ (qty × cost of ALL purchases)
+   TIME (12 hr format)
+------------------------------------------------------- */
+function getCurrentTime12hr() {
+  const now = new Date();
+
+  let hh = now.getHours();
+  const mm = String(now.getMinutes()).padStart(2, "0");
+  const ss = String(now.getSeconds()).padStart(2, "0");
+
+  const ampm = hh >= 12 ? "PM" : "AM";
+  hh = hh % 12;
+  hh = hh === 0 ? 12 : hh;
+
+  return `${hh}:${mm}:${ss} ${ampm}`;
+}
+
+/* -------------------------------------------------------
+   BEFORE SALE INVESTMENT
 ------------------------------------------------------- */
 function calcStockInvestmentBeforeSale() {
   let total = 0;
@@ -31,7 +48,7 @@ function calcStockInvestmentBeforeSale() {
 }
 
 /* -------------------------------------------------------
-   2️⃣ AFTER SALE INVESTMENT (Remain × Cost)
+   AFTER SALE INVESTMENT
 ------------------------------------------------------- */
 function calcStockInvestmentAfterSale() {
   let total = 0;
@@ -50,7 +67,7 @@ function calcStockInvestmentAfterSale() {
 }
 
 /* -------------------------------------------------------
-   🔸 UPDATE UI BOX (Shows BEFORE SALE investment)
+   UPDATE UI BOX
 ------------------------------------------------------- */
 function updateStockInvestmentBox() {
   const box = qs("#stockInvValue");
@@ -58,7 +75,7 @@ function updateStockInvestmentBox() {
 }
 
 /* -------------------------------------------------------
-   ➕ ADD STOCK ENTRY
+   ADD STOCK ENTRY
 ------------------------------------------------------- */
 function addStock() {
   let date = qs("#pdate")?.value || todayDate();
@@ -85,7 +102,7 @@ function addStock() {
 }
 
 /* -------------------------------------------------------
-   📋 RENDER STOCK TABLE
+   RENDER STOCK TABLE
 ------------------------------------------------------- */
 function renderStock() {
   const filterType = qs("#filterType")?.value || "all";
@@ -139,7 +156,7 @@ function renderStock() {
 }
 
 /* -------------------------------------------------------
-   📜 HISTORY POPUP
+   HISTORY POPUP
 ------------------------------------------------------- */
 function showHistory(i) {
   const p = window.stock[i];
@@ -157,7 +174,8 @@ function showHistory(i) {
 window.showHistory = showHistory;
 
 /* -------------------------------------------------------
-   ⚡ QUICK SALE / CREDIT
+   QUICK SALE / CREDIT
+   (NOW ADDS TIME)
 ------------------------------------------------------- */
 function stockQuickSale(i, mode) {
   const p = window.stock[i];
@@ -178,10 +196,14 @@ function stockQuickSale(i, mode) {
 
   p.sold = (p.sold || 0) + qty;
 
+  // ADD TIME HERE
+  const timeNow = getCurrentTime12hr();
+
   window.sales = window.sales || [];
   window.sales.push({
     id: uid("sale"),
     date: todayDate(),
+    time: timeNow,     // ★ NEW
     type: p.type,
     product: p.name,
     qty,
