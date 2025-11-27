@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>📦 KharchaSaathi — Business Dashboard (v2.1 — No Profit)</title>
+  <title>📦 KharchaSaathi — Business Dashboard (v2.2 Clean)</title>
   <meta name="theme-color" content="#ff7a00" />
   <link rel="icon" href="/favicon.png" />
   <link rel="apple-touch-icon" href="/favicon.png" />
@@ -22,8 +22,6 @@
     }
 
     *{box-sizing:border-box;transition:background .18s,color .18s}
-    html,body{height:100%}
-
     body{
       margin:0;
       padding:18px;
@@ -45,13 +43,47 @@
       flex-wrap:wrap;
       margin-bottom:12px
     }
-
     h1{
       margin:0;
       font-size:20px;
       color:var(--orange)
     }
+    #emailTag{
+      font-size:13px;
+      opacity:.75;
+      background:#eee;
+      padding:4px 8px;
+      border-radius:6px;
+    }
+    body.dark #emailTag{
+      background:#222;
+      color:#ddd;
+    }
 
+    /* ---------- CLOCK (12-hour clean) ---------- */
+    .simple-clock{
+      display:flex;
+      flex-direction:column;
+      line-height:1.1;
+      padding:4px 0;
+      min-width:95px;
+    }
+    .clock-line{
+      font-family:monospace;
+      font-size:14px;
+      font-weight:700;
+      color:var(--orange);
+    }
+    .clock-line.small{
+      font-size:11px;
+      opacity:0.75;
+      color:var(--text);
+    }
+    body.dark .clock-line.small{
+      color:#ddd;
+    }
+
+    /* ---------- BUTTONS ---------- */
     .theme-btn,.small-btn{
       background:var(--orange);
       color:#fff;
@@ -62,42 +94,6 @@
     }
     .theme-btn:hover,.small-btn:hover{
       background:var(--orange-dark)
-    }
-
-    #emailTag{
-      font-size:13px;
-      opacity:.75;
-      margin-right:8px;
-      background:#eee;
-      padding:4px 8px;
-      border-radius:6px;
-    }
-    body.dark #emailTag{
-      background:#222;
-      color:#ddd;
-    }
-
-    /* ---------- SIMPLE CLOCK ---------- */
-    .simple-clock{
-      display:flex;
-      flex-direction:column;
-      line-height:1.1;
-      padding:4px 0;
-      min-width:85px;
-    }
-    .clock-line{
-      font-family:monospace;
-      font-size:13px;
-      font-weight:600;
-      color:var(--orange);
-    }
-    .clock-line.small{
-      font-size:11px;
-      opacity:0.8;
-      color:var(--text);
-    }
-    body.dark .clock-line.small{
-      color:#ddd;
     }
 
     /* ---------- TABS ---------- */
@@ -139,7 +135,10 @@
       margin-bottom:18px
     }
     .section.active{display:block}
-
+    body.dark .section{
+      background:var(--dark-card);
+      border:1px solid var(--dark-border);
+    }
   </style>
 </head>
 
@@ -164,7 +163,7 @@
     </div>
   </div>
 
-  <!-- ===== TABS (NO PROFIT TAB NOW) ===== -->
+  <!-- ===== TABS (NO PROFIT TAB) ===== -->
   <div class="tabs" role="tablist">
     <div class="tab active" data-tab="types">🗂 Types</div>
     <div class="tab" data-tab="stock">📦 Stock</div>
@@ -187,7 +186,6 @@
 
     <ul id="typeList" style="margin-top:10px;padding-left:18px"></ul>
   </section>
-
 
   <!-- ===== STOCK ===== -->
   <section id="stock" class="section">
@@ -218,7 +216,7 @@
              style="padding:6px; margin-left:10px;">
     </div>
 
-    <!-- BEFORE SALE INVESTMENT (unchanged) -->
+    <!-- BEFORE SALE INVESTMENT -->
     <div id="stockInvBox" 
          style="margin-top:10px; padding:10px; background:#fff3e0; border-radius:8px;
                 border:1px solid #ffbb66; max-width:260px; margin-left:auto;
@@ -245,7 +243,6 @@
     </table>
   </section>
 
-
   <!-- ===== SALES ===== -->
   <section id="sales" class="section">
     <h3>💰 Sales & Profit</h3>
@@ -259,14 +256,10 @@
         <option value="all">All Types</option>
       </select>
 
-      <button id="filterSalesBtn" class="small-btn" style="margin-left:8px">
-        Filter
-      </button>
+      <button id="filterSalesBtn" class="small-btn" style="margin-left:8px">Filter</button>
 
       <button id="clearSalesBtn" class="small-btn" 
-        style="background:#c62828;color:#fff;margin-left:10px">
-        🗑️ Clear All
-      </button>
+        style="background:#c62828;color:#fff;margin-left:10px">🗑️ Clear All</button>
     </div>
 
     <table id="salesTable">
@@ -282,7 +275,6 @@
           <th>Status</th>
         </tr>
       </thead>
-
       <tbody></tbody>
 
       <tfoot>
@@ -295,7 +287,6 @@
       </tfoot>
     </table>
   </section>
-
 
   <!-- ===== WANTING ===== -->
   <section id="wanting" class="section">
@@ -324,13 +315,12 @@
     </table>
   </section>
 
-
   <!-- ===== SERVICE ===== -->
   <section id="service" class="section">
     <h3>🛠 Service / Repair Manager</h3>
 
     <div class="row-inline" style="margin:10px 0;align-items:center;gap:10px">
-      <input id="svcReceivedDate" type="date" placeholder="Received date" style="width:160px">
+      <input id="svcReceivedDate" type="date" style="width:160px">
       <input id="svcCustomer" type="text" placeholder="Customer name" style="min-width:160px">
       <input id="svcPhone" type="text" placeholder="Phone Number" style="width:140px">
       <select id="svcItemType" style="width:120px">
@@ -370,9 +360,7 @@
 
     <button id="clearServiceBtn"
       class="small-btn"
-      style="background:#b71c1c;color:white;margin:10px 0;">
-      🗑️ Clear All Jobs
-    </button>
+      style="background:#b71c1c;color:white;margin:10px 0;">🗑️ Clear All Jobs</button>
 
     <h4 style="margin-top:14px">Completed / History</h4>
     <table id="svcHistoryTable">
@@ -396,7 +384,6 @@
       <canvas id="svcPie" height="150"></canvas>
     </div>
   </section>
-
 
   <!-- ===== OVERVIEW ===== -->
   <section id="dashboard" class="section">
@@ -437,13 +424,11 @@
     </div>
   </section>
 
-
   <!-- ===== SMART DASHBOARD ===== -->
   <section id="analytics" class="section">
     <h3>📈 Smart Dashboard</h3>
 
     <div class="flex-row" style="margin-bottom:18px">
-
       <div class="card" style="flex:1;min-width:160px">
         <h4>Total Profit</h4>
         <b id="dashProfit" style="font-size:22px;color:#2e7d32">₹0</b>
@@ -463,13 +448,13 @@
         <h4>Total Investment</h4>
         <b id="dashInv" style="font-size:22px;color:#fbc02d">₹0</b>
       </div>
-
     </div>
 
     <div style="max-width:600px;margin:auto;">
       <canvas id="cleanPie" height="150"></canvas>
     </div>
   </section>
+
   <!-- ===== EXPENSES ===== -->
   <section id="expenses" class="section">
     <h3>🧾 Expenses</h3>
@@ -492,7 +477,6 @@
           <th>Action</th>
         </tr>
       </thead>
-
       <tbody></tbody>
 
       <tfoot>
@@ -505,48 +489,23 @@
       </tfoot>
     </table>
   </section>
-
-  <!-- HELP + VERSION -->
-  <div class="footer-btns" style="margin-top:18px; text-align:center;">
-    <a href="#" id="helpLink" class="small-btn">📘 Help & Guide</a>
-    <div class="version-info">v2.0 — Filters + Dates + Clean UI</div>
-  </div>
-
-  <div id="helpModal" class="help-modal">
-    <div class="help-content">
-      <h2>📘 Quick Help & User Guide</h2>
-      <ul style="line-height:1.6;font-size:15px">
-        <li><b>Types</b> — Create and manage product categories.</li>
-        <li><b>Stock</b> — Add items to inventory & track qty/cost.</li>
-        <li><b>Sales</b> — Paid & Credit sales with auto profit.</li>
-        <li><b>Wanting</b> — Items to purchase / restock.</li>
-        <li><b>Service</b> — Repair jobs, investment, payment, profit.</li>
-        <li><b>Expenses</b> — Daily expenses.</li>
-        <li><b>Overview</b> — Today’s full stats.</li>
-        <li><b>Smart Dashboard</b> — Profit/Expenses/Credit/Invest Pie.</li>
-      </ul>
-      <button class="small-btn" onclick="toggleHelp()">Close</button>
-    </div>
-  </div>
-
-
   <!-- ========== JS LOGIC (BASE) ========== -->
   <script>
     const qs  = s => document.querySelector(s);
     const qsa = s => Array.from(document.querySelectorAll(s));
 
+    /* ---------- HELP MODAL ---------- */
     function toggleHelp(){
       const m = qs('#helpModal');
       if (!m) return;
       m.style.display = (m.style.display==='flex' ? 'none' : 'flex');
     }
-
     qs('#helpLink')?.addEventListener('click', e=>{
       e.preventDefault();
       toggleHelp();
     });
 
-    // date helpers
+    /* ---------- DATE HELPERS ---------- */
     window.toDisplay = function(d) {
       if (!d) return "";
       if (d.includes("-")) {
@@ -567,16 +526,16 @@
       return d;
     };
 
-    // Theme switcher
-    if(localStorage.getItem('ks-theme')==='dark'){
+    /* ---------- THEME SWITCHER ---------- */
+    if (localStorage.getItem('ks-theme') === 'dark') {
       document.body.classList.add('dark');
     }
-    qs('#themeBtn')?.addEventListener('click', ()=>{
+    qs('#themeBtn')?.addEventListener('click', () => {
       const d = document.body.classList.toggle('dark');
-      localStorage.setItem('ks-theme', d?'dark':'light');
+      localStorage.setItem('ks-theme', d ? 'dark' : 'light');
     });
 
-    // CLOCK
+    /* ---------- LIVE CLOCK (12-HOUR FORMAT) ---------- */
     function startLiveClock(){
       const tEl = qs("#clockTime");
       const dEl = qs("#clockDate");
@@ -584,14 +543,19 @@
 
       function tick(){
         const now = new Date();
-        const hh = String(now.getHours()).padStart(2,"0");
+        let hh = now.getHours();
         const mm = String(now.getMinutes()).padStart(2,"0");
         const ss = String(now.getSeconds()).padStart(2,"0");
-        tEl.textContent = `${hh}:${mm}:${ss}`;
 
-        const day   = String(now.getDate()).padStart(2,"0");
+        const ampm = hh >= 12 ? "PM" : "AM";
+        hh = hh % 12;
+        if (hh === 0) hh = 12;
+
+        tEl.textContent = `${hh}:${mm}:${ss} ${ampm}`;
+
+        const day = String(now.getDate()).padStart(2,"0");
         const month = String(now.getMonth()+1).toString().padStart(2,"0");
-        const year  = now.getFullYear();
+        const year = now.getFullYear();
         dEl.textContent = `${day}-${month}-${year}`;
       }
 
@@ -599,7 +563,7 @@
       setInterval(tick, 1000);
     }
 
-    // Tabs
+    /* ---------- TABS ---------- */
     (function () {
       const tabs = qsa('.tab'),
             sections = qsa('.section');
@@ -625,7 +589,7 @@
       window.activateTab = activate;
     })();
 
-    // Login load
+    /* ---------- LOGIN / EMAIL ---------- */
     window.addEventListener("load", () => {
 
       if (typeof isLoggedIn === "function" && !isLoggedIn()) {
@@ -645,12 +609,13 @@
       });
     });
 
+    /* ---------- STOCK FILTER ---------- */
     qs("#filterType")?.addEventListener("change", () => {
-      if (typeof refreshSaleTypeSelector === "function") refreshSaleTypeSelector();
+      refreshSaleTypeSelector?.();
       renderStock?.();
     });
 
-    // attach Sales live filters
+    /* ---------- SALES LIVE FILTERS ---------- */
     (function attachSalesInputs() {
       if (typeof attachImmediateSalesFilters === "function") {
         try { attachImmediateSalesFilters(); } catch (e) {}
@@ -661,7 +626,7 @@
       }
     })();
 
-    // Overview Summary
+    /* ---------- OVERVIEW SUMMARY ---------- */
     function updateSummaryCards() {
       if (typeof getAnalyticsData !== "function") return;
       const data = getAnalyticsData();
@@ -674,7 +639,7 @@
     }
     window.updateSummaryCards = updateSummaryCards;
 
-    // initial render
+    /* ---------- SAFE INITIAL RENDER ---------- */
     function safeInitialRender() {
       try { renderTypes?.(); } catch {}
       try { updateTypeDropdowns?.(); } catch {}
@@ -694,16 +659,15 @@
     });
   </script>
 
-
-  <!-- LIBS -->
+  <!-- LIBRARIES -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js/dist/chart.umd.min.js"></script>
 
-  <!-- Firebase -->
+  <!-- FIREBASE -->
   <script src="https://www.gstatic.com/firebasejs/9.6.11/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.6.11/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.6.11/firebase-firestore-compat.js"></script>
 
-  <!-- AUTO VERSION LOADER -->
+  <!-- AUTO VERSION LOADER (DO NOT TOUCH) -->
   <script>
   (function(){
     const v = Date.now();
@@ -724,6 +688,5 @@
     });
   })();
   </script>
-
-</body>
+  </body>
 </html>
