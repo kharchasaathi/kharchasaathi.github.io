@@ -1,9 +1,8 @@
 /* ===========================================================
-   sales.js — Sales Manager (Final v11.2 Stable)
+   sales.js — Sales Manager (Final v11.2 with Universal Bar)
    ✔ Profit auto-calculated
    ✔ Time included (12-hour format)
-   ✔ Analytics + Overview sync
-   ✔ Universal Profit System Ready
+   ✔ Analytics + Overview + Universal bar sync
    ✔ No double-profit / double-invest errors
 =========================================================== */
 
@@ -39,13 +38,13 @@ function getCurrentTime12hr() {
 ----------------------------------------------------------- */
 function addSaleEntry({ date, type, name, qty, price, status }) {
 
-  date = toInternalIfNeeded(date);
+  date = window.toInternalIfNeeded ? toInternalIfNeeded(date) : date;
   qty = Number(qty);
   price = Number(price);
 
   if (!type || !name || qty <= 0 || price <= 0) return;
 
-  let p = findProduct(type, name);
+  let p = window.findProduct ? findProduct(type, name) : null;
   if (!p) {
     alert("Product not found in stock!");
     return;
@@ -64,11 +63,12 @@ function addSaleEntry({ date, type, name, qty, price, status }) {
   // Update stock
   p.qty -= qty;
   p.sold = (p.sold || 0) + qty;
-  saveStock();
+  window.saveStock && window.saveStock();
 
   // 🔵 Add sale record
+  window.sales = window.sales || [];
   window.sales.push({
-    id: uid("sale"),
+    id: window.uid ? uid("sale") : Date.now().toString(),
     date,
     time: getCurrentTime12hr(),
     type,
@@ -82,19 +82,20 @@ function addSaleEntry({ date, type, name, qty, price, status }) {
     status: status || "Paid"
   });
 
-  saveSales();
+  window.saveSales && window.saveSales();
 
   renderSales?.();
-  renderAnalytics?.();
-  updateSummaryCards?.();
-  updateTabSummaryBar?.();
+  window.renderAnalytics?.();
+  window.updateSummaryCards?.();
+  window.updateTabSummaryBar?.();
+  window.updateUniversalBar?.();
 }
 
 /* -----------------------------------------------------------
-   TOGGLE CREDIT → PAID (Corrected)
+   TOGGLE CREDIT → PAID
 ----------------------------------------------------------- */
 function toggleSaleStatus(id) {
-  const s = window.sales.find(x => x.id === id);
+  const s = (window.sales || []).find(x => x.id === id);
   if (!s) return;
 
   if (s.status === "Credit") {
@@ -105,13 +106,13 @@ function toggleSaleStatus(id) {
     return;
   }
 
-  saveSales();
+  window.saveSales && window.saveSales();
   renderSales();
-  renderAnalytics?.();
-  updateSummaryCards?.();
-  updateTabSummaryBar?.();
+  window.renderAnalytics?.();
+  window.updateSummaryCards?.();
+  window.updateTabSummaryBar?.();
+  window.updateUniversalBar?.();
 }
-
 window.toggleSaleStatus = toggleSaleStatus;
 
 /* -----------------------------------------------------------
@@ -152,7 +153,7 @@ function renderSales() {
 
       return `
         <tr>
-          <td>${toDisplay(s.date)}<br>
+          <td>${window.toDisplay ? toDisplay(s.date) : s.date}<br>
               <small>${s.time || "--"}</small></td>
           <td>${s.type}</td>
           <td>${s.product}</td>
@@ -165,8 +166,10 @@ function renderSales() {
     })
     .join("");
 
-  document.getElementById("salesTotal").textContent = total;
+  document.getElementById("salesTotal").textContent  = total;
   document.getElementById("profitTotal").textContent = profit;
+
+  window.updateUniversalBar?.();
 }
 
 /* -----------------------------------------------------------
@@ -175,25 +178,13 @@ function renderSales() {
 document.getElementById("clearSalesBtn")?.addEventListener("click", () => {
   if (!confirm("Clear all sales?")) return;
   window.sales = [];
-  saveSales();
+  window.saveSales && window.saveSales();
   renderSales();
-  renderAnalytics?.();
-  updateSummaryCards?.();
-  updateTabSummaryBar?.();
+  window.renderAnalytics?.();
+  window.updateSummaryCards?.();
+  window.updateTabSummaryBar?.();
+  window.updateUniversalBar?.();
 });
 
 window.renderSales = renderSales;
 window.refreshSaleTypeSelector = refreshSaleTypeSelector;
-
-/* -----------------------------------------------------------
-   UNIVERSAL PROFIT HELPER (Required for Summary Bars)
------------------------------------------------------------ */
-window.getSalesProfitCollected = function () {
-  let total = 0;
-  (window.sales || []).forEach(s => {
-    if (String(s.status).toLowerCase() !== "credit") {
-      total += Number(s.profit || 0);
-    }
-  });
-  return total;
-};
