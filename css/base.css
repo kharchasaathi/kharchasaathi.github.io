@@ -1,39 +1,43 @@
-/* ============================
-   base.css  (Corporate Blue)
-   Global reset + colors + cards
-=============================== */
+/* =========================================================
+   base.css  —  Global reset + theme + page basics
+   Brand: Blue Premium
+========================================================= */
 
+/* ------------------------------
+   Root Theme Variables
+------------------------------ */
 :root {
-  --primary: #1e88e5;
-  --primary-dark: #1565c0;
-  --primary-soft: #e3f2fd;
+  --primary: #1e4bb8;
+  --primary-soft: #e3ecff;
+  --primary-soft-2: #eef3ff;
+  --bg: #f4f6fb;
+  --card: #ffffff;
+  --text: #111827;
+  --muted: #6b7280;
 
-  --accent-green: #2e7d32;
-  --accent-green-soft: #e8f5e9;
+  --accent-green: #16a34a;
+  --accent-red: #e11d48;
+  --accent-orange: #ea580c;
+  --accent-yellow: #eab308;
 
-  --danger: #e53935;
-  --danger-soft: #ffebee;
+  --dark-bg: #020617;
+  --dark-card: #020617;
+  --dark-text: #e5e7eb;
+  --dark-border: #1f2937;
 
-  --text-main: #0f172a;
-  --text-soft: #64748b;
+  --radius-lg: 18px;
+  --radius-md: 12px;
+  --radius-full: 999px;
 
-  --bg-main: #edf3ff;
-  --bg-gradient-top: #eef3ff;
-  --bg-gradient-bottom: #f8fbff;
+  --shadow-soft: 0 10px 26px rgba(15, 23, 42, 0.12);
+  --shadow-strong: 0 18px 40px rgba(15, 23, 42, 0.18);
 
-  --card-bg: #ffffff;
-  --card-radius: 18px;
-  --card-shadow: 0 10px 30px rgba(15, 23, 42, 0.08);
-
-  --border-soft: #d0d7e5;
-  --tab-pill-radius: 999px;
-
-  --font-main: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
-               Roboto, "Helvetica Neue", Arial, sans-serif;
+  --transition-fast: 0.18s ease-out;
 }
 
-/* ---------- RESET ---------- */
-
+/* ------------------------------
+   Reset
+------------------------------ */
 *,
 *::before,
 *::after {
@@ -43,226 +47,102 @@
 html, body {
   margin: 0;
   padding: 0;
+  height: 100%;
 }
 
+/* ------------------------------
+   Base Body / Typography
+------------------------------ */
 body {
-  font-family: var(--font-main);
-  background: radial-gradient(circle at 0% 0%, #e6f0ff 0, transparent 55%),
-              radial-gradient(circle at 100% 0%, #e3f2fd 0, transparent 55%),
-              linear-gradient(to bottom, var(--bg-gradient-top), var(--bg-gradient-bottom));
-  color: var(--text-main);
-  min-height: 100vh;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  background: radial-gradient(circle at top, #eef4ff 0, #f4f6fb 40%, #eef5ff 100%);
+  color: var(--text);
+  padding: 18px;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
 }
 
-/* Small scrollbars (desktop) */
-body::-webkit-scrollbar {
-  width: 8px;
-}
-body::-webkit-scrollbar-thumb {
-  background: #c5d0e5;
-  border-radius: 999px;
+body.dark {
+  background: radial-gradient(circle at top, #020617 0, #020617 35%, #030712 100%);
+  color: var(--dark-text);
 }
 
-/* ---------- TEXT ---------- */
+/* Links */
+a {
+  color: var(--primary);
+  text-decoration: none;
+}
+a:hover {
+  text-decoration: underline;
+}
 
-h1, h2, h3, h4 {
+/* Headings */
+h1, h2, h3, h4, h5 {
   margin: 0;
   font-weight: 600;
-  color: var(--text-main);
+  letter-spacing: .02em;
 }
 
+/* Paragraphs & lists */
 p {
-  margin: 0 0 6px;
-  color: var(--text-soft);
+  margin: 0 0 0.5rem;
+}
+ul {
+  margin: 0.4rem 0 0;
 }
 
-/* ---------- CARDS ---------- */
-
-.section,
-.card,
-.uni-card {
-  background: var(--card-bg);
-  border-radius: var(--card-radius);
-  box-shadow: var(--card-shadow);
-}
-
-/* slightly tighter radius for metrics cards */
-.uni-card {
-  border-radius: 24px;
-}
-
-/* ---------- BUTTONS ---------- */
-/* corporate: slightly rounded for normal buttons,
-   pill for tabs & special buttons */
-
-button,
-input,
-select {
-  font-family: inherit;
-}
-
-.btn,
-.theme-btn,
-.small-btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 14px;          /* slightly rounded */
-  border: none;
-  padding: 8px 14px;
-  font-size: 13px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.18s ease;
-}
-
-/* primary */
-.theme-btn,
-.btn-primary {
-  background: var(--primary);
-  color: #fff;
-}
-.theme-btn:hover,
-.btn-primary:hover {
-  background: var(--primary-dark);
-  transform: translateY(-1px);
-  box-shadow: 0 6px 16px rgba(21, 101, 192, 0.3);
-}
-
-/* small buttons */
-.small-btn {
-  background: var(--primary-soft);
-  color: var(--primary-dark);
-  font-size: 12px;
-  padding: 6px 12px;
-}
-.small-btn:hover {
-  background: #d2e6ff;
-}
-
-/* danger */
-.btn-danger,
-#logoutBtn {
-  background: var(--danger);
-  color: #fff;
-}
-#logoutBtn:hover,
-.btn-danger:hover {
-  background: #c62828;
-}
-
-/* collect / success buttons */
-.btn-collect {
-  background: var(--accent-green);
-  color: #fff;
-}
-.btn-collect:hover {
-  background: #1b5e20;
-}
-
-/* ghost badge buttons inside cards */
-.badge-pill {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  padding: 4px 10px;
-  border-radius: 999px;
-  font-size: 11px;
-  font-weight: 500;
-  background: #edf2ff;
-  color: var(--text-soft);
-}
-
-/* ---------- STATUS TAGS (Sales/Service) ---------- */
-
-.status-paid {
-  display: inline-flex;
-  padding: 4px 10px;
-  border-radius: 999px;
-  background: var(--accent-green-soft);
-  color: var(--accent-green);
-  font-size: 11px;
-  font-weight: 600;
-}
-
-.status-credit {
-  display: inline-flex;
-  padding: 4px 10px;
-  border-radius: 999px;
-  background: #e3f2fd;
-  color: var(--primary-dark);
-  font-size: 11px;
-  font-weight: 600;
-}
-
-/* ---------- INPUTS ---------- */
-
-input[type="text"],
-input[type="number"],
-input[type="date"],
-select {
-  padding: 7px 10px;
-  border-radius: 10px;
-  border: 1px solid var(--border-soft);
-  font-size: 13px;
-  outline: none;
-  min-height: 34px;
-  background: #f9fbff;
-}
-
-input:focus,
-select:focus {
-  border-color: var(--primary);
-  box-shadow: 0 0 0 2px rgba(30, 136, 229, 0.15);
-  background: #ffffff;
-}
-
-/* ---------- TOP BACKGROUND CARD INSIDE SECTIONS ---------- */
-
+/* ------------------------------
+   Sections (IMPORTANT for tabs)
+------------------------------ */
 .section {
-  padding: 14px;
-  margin-bottom: 18px;
+  display: none;          /* 🔴 default: hidden */
 }
 
-/* generic row-inline helper (if not defined) */
+.section.active {
+  display: block;         /* 🟢 only active tab content visible */
+}
+
+/* ------------------------------
+   Simple utility layout helpers
+------------------------------ */
 .row-inline {
   display: flex;
-  flex-wrap: wrap;
   gap: 8px;
   align-items: center;
+  flex-wrap: wrap;
 }
 
-/* generic flex row for cards */
 .flex-row {
   display: flex;
+  gap: 10px;
   flex-wrap: wrap;
-  gap: 12px;
 }
 
-/* ---------- MOBILE ---------- */
+.text-right { text-align: right; }
+.text-center { text-align: center; }
+.text-muted { color: var(--muted); }
 
-@media (max-width: 768px) {
-  .section {
-    padding: 12px;
-    border-radius: 18px;
-  }
-
-  .row-inline {
-    flex-direction: column;
-    align-items: stretch;
-  }
-
-  input[type="text"],
-  input[type="number"],
-  input[type="date"],
-  select {
-    width: 100%;
-  }
-   /* TAB SECTIONS: show only active */
-.section {
-  display: none;
+/* ------------------------------
+   Cards – generic base
+------------------------------ */
+.card {
+  background: var(--card);
+  border-radius: var(--radius-md);
+  padding: 10px 12px;
+  box-shadow: 0 6px 18px rgba(15, 23, 42, 0.06);
 }
-.section.active {
-  display: block;
+
+body.dark .card {
+  background: var(--dark-card);
+  border: 1px solid var(--dark-border);
+  box-shadow: 0 14px 30px rgba(0, 0, 0, 0.75);
 }
+
+/* ------------------------------
+   Responsive
+------------------------------ */
+@media (max-width: 720px) {
+  body {
+    padding: 10px;
+  }
 }
