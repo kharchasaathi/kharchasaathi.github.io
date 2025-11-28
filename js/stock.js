@@ -2,15 +2,26 @@
    📦 stock.js — Inventory Manager (FINAL CLEAN v12)
    ✔ BEFORE-SALE investment (purchase cost)
    ✔ AFTER-SALE investment (remain × cost)
-   ✔ Universal Investment Functions (global exported)
-   ✔ Auto-updates analytics + overview + universal summary
-   ✔ Compatible with collection.js, profit.js, analytics.js
-   ✔ Safe esc(), safe globalLimit, safe null checks
+   ✔ Shows BEFORE-sale investment in stock tab
+   ✔ Exports stock investment functions for universal bar
+   ✔ Quick Sale / Credit includes TIME (12-hr AM/PM)
 ======================================================= */
 
-const esc   = x => (x === undefined || x === null) ? "" : String(x);
-const toDisp = window.toDisplay;
-const toInt  = window.toInternal;
+const toDisp = window.toDisplay || (x => x);
+const toInt  = window.toInternal || (x => x);
+const todayDate = window.todayDate || (function () {
+  const d = new Date();
+  return [
+    d.getFullYear(),
+    String(d.getMonth() + 1).padStart(2, "0"),
+    String(d.getDate()).padStart(2, "0")
+  ].join("-");
+});
+
+// local escape – DOES NOT clash with global esc
+function escLocal(x) {
+  return (x === undefined || x === null) ? "" : String(x);
+}
 
 /* -------------------------------------------------------
    TIME (12 hr format)
@@ -30,13 +41,13 @@ function getCurrentTime12hr() {
 }
 
 /* -------------------------------------------------------
-   BEFORE SALE INVESTMENT  — (PURCHASE COST)
+   BEFORE SALE INVESTMENT
 ------------------------------------------------------- */
 function calcStockInvestmentBeforeSale() {
   let total = 0;
 
   (window.stock || []).forEach(p => {
-    if (p.history?.length) {
+    if (p.history && p.history.length) {
       p.history.forEach(h => {
         total += Number(h.cost || 0) * Number(h.qty || 0);
       });
@@ -49,8 +60,7 @@ function calcStockInvestmentBeforeSale() {
 }
 
 /* -------------------------------------------------------
-   AFTER SALE INVESTMENT — REMAIN × COST
-   (needed for Universal Investment summary)
+   AFTER SALE INVESTMENT
 ------------------------------------------------------- */
 function calcStockInvestmentAfterSale() {
   let total = 0;
@@ -61,26 +71,18 @@ function calcStockInvestmentAfterSale() {
     const cost   = Number(p.cost || 0);
     const remain = qty - sold;
 
-    if (remain > 0)
-      total += remain * cost;
+    if (remain > 0) total += remain * cost;
   });
 
   return total;
 }
 
-/* -------------------------------------------------------
-   EXPORT GLOBAL HELPERS
-------------------------------------------------------- */
-window.getStockInvestmentBeforeSale = function () {
-  return calcStockInvestmentBeforeSale();
-};
-
-window.getStockInvestmentAfterSale = function () {
-  return calcStockInvestmentAfterSale();
-};
+// Export for other modules (analytics, universal bar, collection)
+window.getStockInvestmentBeforeSale = calcStockInvestmentBeforeSale;
+window.getStockInvestmentAfterSale  = calcStockInvestmentAfterSale;
 
 /* -------------------------------------------------------
-   UPDATE UI BOX (Stock tab)
+   UPDATE UI BOX (Before-sale investment)
 ------------------------------------------------------- */
 function updateStockInvestmentBox() {
   const box = qs("#stockInvValue");
@@ -93,25 +95,47 @@ function updateStockInvestmentBox() {
 function addStock() {
   let date = qs("#pdate")?.value || todayDate();
   const type = qs("#ptype")?.value;
-  const name = esc(qs("#pname")?.value.trim());
+  const name = (qs("#pname")?.value || "").trim();
   const qty  = Number(qs("#pqty")?.value || 0);
   const cost = Number(qs("#pcost")?.value || 0);
 
-  if (!type || !name || qty <= 0 || cost <= 0)
-    return alert("Please fill all fields.");
+  if (!type || !name || qty <= 0 || cost <= 0) {
+    alert("Please fill Date, Type, Product, Qty, Cost.");
+    return;
+  }
 
-  if (date.includes("-") && date.split("-")[0].length === 2)
+  if (date.includes("-") && date.split("-")[0].length === 2) {
     date = toInt(date);
+  }
 
-  addStockEntry({ date, type, name, qty, cost });
+  // Assume addStockEntry is defined in core.js
+  if (typeof window.addStockEntry === "function") {
+    window.addStockEntry({ date, type, name, qty, cost });
+  } else {
+    // Fallback simple push
+    window.stock = window.stock || [];
+    window.stock.push({
+      id: window.uid ? uid("stk") : Date.now().toString(),
+      date,
+      type,
+      name,
+      qty,
+      sold: 0,
+      cost
+    });
+    window.saveStock && window.saveStock();
+  }
 
   renderStock();
-  updateTypeDropdowns?.();
+  window.updateTypeDropdowns?.();
   updateStockInvestmentBox();
+  window.updateUniversalBar?.();
 
-  qs("#pname").value = "";
-  qs("#pqty").value  = "";
-  qs("#pcost").value = "";
+  // clear inputs
+  const pn = qs("#pname"), pq = qs("#pqty"), pc = qs("#pcost");
+  if (pn) pn.value = "";
+  if (pq) pq.value = "";
+  if (pc) pc.value = "";
 }
 
 /* -------------------------------------------------------
@@ -132,25 +156,26 @@ function renderStock() {
       return true;
     })
     .forEach((p, i) => {
-
       const sold   = Number(p.sold || 0);
-      const remain = Number(p.qty) - sold;
-
-      const limit  = Number(getGlobalLimit() || 0);
+      const remain = Number(p.qty || 0) - sold;
+      const limit  = Number(window.getGlobalLimit ? getGlobalLimit() : 0);
 
       let cls = "ok";
       if (remain <= 0) cls = "out";
       else if (remain <= limit) cls = "low";
 
       let style = "";
-      if (cls === "low") style = 'style="background:#fff8ec"';
-      if (cls === "out") style = 'style="background:#ffecec;color:#a00;font-weight:600"';
+      if (cls === "low") {
+        style = 'style="background:#fff8ec"';
+      } else if (cls === "out") {
+        style = 'style="background:#ffecec;color:#a00;font-weight:600"';
+      }
 
       html += `
         <tr class="${cls}" ${style}>
           <td>${toDisp(p.date)}</td>
-          <td>${esc(p.type)}</td>
-          <td>${esc(p.name)}</td>
+          <td>${escLocal(p.type)}</td>
+          <td>${escLocal(p.name)}</td>
           <td>${p.qty}</td>
           <td>${sold}</td>
           <td>${remain}</td>
@@ -173,12 +198,13 @@ function renderStock() {
    HISTORY POPUP
 ------------------------------------------------------- */
 function showHistory(i) {
-  const p = window.stock[i];
-  if (!p?.history?.length)
-    return alert("No history found.");
+  const p = (window.stock || [])[i];
+  if (!p || !p.history || !p.history.length) {
+    alert("No history found.");
+    return;
+  }
 
   let msg = `Purchase History of ${p.name}:\n\n`;
-
   p.history.forEach(h => {
     msg += `${toDisp(h.date)} — Qty ${h.qty} @ ₹${h.cost}\n`;
   });
@@ -188,14 +214,17 @@ function showHistory(i) {
 window.showHistory = showHistory;
 
 /* -------------------------------------------------------
-   QUICK SALE / CREDIT  (Adds TIME also)
+   QUICK SALE / CREDIT  (adds time)
 ------------------------------------------------------- */
 function stockQuickSale(i, mode) {
-  const p = window.stock[i];
+  const p = (window.stock || [])[i];
   if (!p) return;
 
-  const remain = Number(p.qty) - Number(p.sold || 0);
-  if (remain <= 0) return alert("No stock left!");
+  const remain = Number(p.qty || 0) - Number(p.sold || 0);
+  if (remain <= 0) {
+    alert("No stock left!");
+    return;
+  }
 
   const qty = Number(prompt(`Enter Qty (Available: ${remain})`));
   if (!qty || qty <= 0 || qty > remain) return;
@@ -213,7 +242,7 @@ function stockQuickSale(i, mode) {
 
   window.sales = window.sales || [];
   window.sales.push({
-    id: uid("sale"),
+    id: window.uid ? uid("sale") : Date.now().toString(),
     date: todayDate(),
     time: timeNow,
     type: p.type,
@@ -227,55 +256,71 @@ function stockQuickSale(i, mode) {
     status: mode
   });
 
-  saveStock();
-  saveSales();
+  window.saveStock  && window.saveStock();
+  window.saveSales  && window.saveSales();
 
-  if (p.sold >= p.qty)
-    autoAddWanting(p.type, p.name, "Finished");
+  if (p.sold >= p.qty && typeof window.autoAddWanting === "function") {
+    window.autoAddWanting(p.type, p.name, "Finished");
+  }
 
   renderStock();
-  renderSales?.();
-  updateSummaryCards?.();
-  renderAnalytics?.();
-  updateTabSummaryBar?.();
+  window.renderSales?.();
+  window.updateSummaryCards?.();
+  window.renderAnalytics?.();
+  window.updateTabSummaryBar?.();
+  window.updateUniversalBar?.();
 }
 
 /* -------------------------------------------------------
    BUTTON EVENTS
 ------------------------------------------------------- */
 document.addEventListener("click", e => {
+  const t = e.target;
 
-  if (e.target.id === "addStockBtn")
-    return addStock();
-
-  if (e.target.id === "setLimitBtn") {
-    const v = Number(qs("#globalLimit")?.value);
-    if (v < 0 || isNaN(v)) return alert("Invalid Limit!");
-    if (!confirm(`Set global limit = ${v} for ALL products?`)) return;
-    setGlobalLimit(v);
-    alert("Global limit updated.");
-    renderStock();
+  if (t.id === "addStockBtn") {
+    addStock();
     return;
   }
 
-  if (e.target.id === "clearStockBtn") {
-    if (confirm("Clear ALL stock?")) {
-      window.stock = [];
-      saveStock();
+  if (t.id === "setLimitBtn") {
+    const v = Number(qs("#globalLimit")?.value);
+    if (v < 0 || isNaN(v)) {
+      alert("Invalid Limit!");
+      return;
+    }
+    if (confirm(`Set global limit = ${v} for ALL products?`)) {
+      window.setGlobalLimit && setGlobalLimit(v);
+      alert("Global limit updated.");
       renderStock();
-      updateStockInvestmentBox();
     }
     return;
   }
 
-  if (e.target.classList.contains("history-btn"))
-    return showHistory(Number(e.target.dataset.i));
+  if (t.id === "clearStockBtn") {
+    if (confirm("Clear ALL stock?")) {
+      window.stock = [];
+      window.saveStock && window.saveStock();
+      renderStock();
+      updateStockInvestmentBox();
+      window.updateUniversalBar?.();
+    }
+    return;
+  }
 
-  if (e.target.classList.contains("sale-btn"))
-    return stockQuickSale(Number(e.target.dataset.i), "Paid");
+  if (t.classList.contains("history-btn")) {
+    showHistory(Number(t.dataset.i));
+    return;
+  }
 
-  if (e.target.classList.contains("credit-btn"))
-    return stockQuickSale(Number(e.target.dataset.i), "Credit");
+  if (t.classList.contains("sale-btn")) {
+    stockQuickSale(Number(t.dataset.i), "Paid");
+    return;
+  }
+
+  if (t.classList.contains("credit-btn")) {
+    stockQuickSale(Number(t.dataset.i), "Credit");
+    return;
+  }
 });
 
 /* -------------------------------------------------------
@@ -288,7 +333,8 @@ qs("#productSearch")?.addEventListener("input", renderStock);
    INITIAL LOAD
 ------------------------------------------------------- */
 window.addEventListener("load", () => {
-  updateTypeDropdowns?.();
+  window.updateTypeDropdowns?.();
   renderStock();
   updateStockInvestmentBox();
+  window.updateUniversalBar?.();
 });
