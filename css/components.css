@@ -229,3 +229,8 @@ table tfoot td {
 .collect-btn:active {
   transform: scale(0.96);
 }
+.collect-btn {
+  background: #2563eb !important;
+  color: white !important;
+  border: none !important;
+}
