@@ -1,20 +1,26 @@
 /* ===========================================================
-   collection.js — FINAL STABLE V5
-   • Adds working Collect button
-   • Proper history entry
-   • Updates sale status (credit → paid)
-   • Updates universal bar & dashboard
-   • No double calculation
+   collection.js — FINAL CLEAN v6.0
+   ✔ Works with new sales.js v12.0 & stock.js v3.0
+   ✔ Uses universalBar metrics (no double calc)
+   ✔ Separate button class (no clash with top collect-btn)
+   ✔ Credit → Paid update + history entry
 =========================================================== */
 
-// Safe text escape
+/* -----------------------------
+   Small helpers
+----------------------------- */
 function escLocal(x) {
   return (x === undefined || x === null) ? "" : String(x);
 }
 
-/* -----------------------------------------------------------
-   HISTORY STORAGE
------------------------------------------------------------ */
+function cNum(v) {
+  const n = Number(v || 0);
+  return isNaN(n) ? 0 : n;
+}
+
+/* -----------------------------
+   Local storage for history
+----------------------------- */
 window.collections = JSON.parse(localStorage.getItem("ks-collections") || "[]");
 
 function saveCollections() {
@@ -25,16 +31,16 @@ function saveCollections() {
   }
 }
 
-/* -----------------------------------------------------------
-   PUBLIC: Add collection entry (used globally)
------------------------------------------------------------ */
+/* ===========================================================
+   PUBLIC: addCollectionEntry (used by universalBar + others)
+=========================================================== */
 window.addCollectionEntry = function (source, details, amount) {
   const entry = {
     id: Date.now().toString(),
-    date: window.todayDate ? todayDate() : new Date().toISOString().slice(0,10),
+    date: window.todayDate ? todayDate() : new Date().toISOString().slice(0, 10),
     source: escLocal(source || ""),
     details: escLocal(details || ""),
-    amount: Number(amount || 0)
+    amount: cNum(amount)
   };
 
   window.collections = window.collections || [];
@@ -45,58 +51,32 @@ window.addCollectionEntry = function (source, details, amount) {
   window.updateUniversalBar?.();
 };
 
-/* -----------------------------------------------------------
-   SUMMARY CALCULATION
------------------------------------------------------------ */
-function cNum(v) {
-  const n = Number(v || 0);
-  return isNaN(n) ? 0 : n;
-}
-
+/* ===========================================================
+   SUMMARY using universalBar metrics
+=========================================================== */
 function computeCollectionSummary() {
-  let salesCollected   = 0;
-  let serviceCollected = 0;
-  let pendingCredit    = 0;
-  let investmentRemain = 0;
+  // Ensure universalBar metrics are up to date
+  window.updateUniversalBar?.();
+  const m = window.__unMetrics || {};
 
-  // Sales section
-  (window.sales || []).forEach(s => {
-    const status = String(s.status || "").toLowerCase();
-
-    const total = cNum(s.total || (cNum(s.qty) * cNum(s.price)));
-
-    if (status === "credit") {
-      pendingCredit += total;
-    } else {
-      // collected or paid
-      salesCollected += cNum(s.profit);
-    }
-  });
-
-  // Service section
-  (window.services || []).forEach(job => {
-    if (String(job.status || "").toLowerCase() === "completed") {
-      serviceCollected += cNum(job.profit);
-      investmentRemain += cNum(job.invest);
-    }
-  });
-
-  // After-sale stock investment
-  if (typeof window.getStockInvestmentAfterSale === "function") {
-    investmentRemain += cNum(window.getStockInvestmentAfterSale());
-  }
+  // We reuse same definitions to avoid mismatches
+  const salesCollected   = cNum(m.saleProfitCollected);
+  const serviceCollected = cNum(m.serviceProfitCollected);
+  const pendingCredit    = cNum(m.pendingCreditTotal);
+  const investmentRemain = cNum(m.stockInvestSold) + cNum(m.serviceInvestCompleted);
 
   return { salesCollected, serviceCollected, pendingCredit, investmentRemain };
 }
 
-/* -----------------------------------------------------------
-   GET PENDING LIST
------------------------------------------------------------ */
+/* ===========================================================
+   PENDING CREDIT LIST
+=========================================================== */
 function getPendingList() {
   const list = [];
 
   (window.sales || []).forEach(s => {
-    if (String(s.status || "").toLowerCase() === "credit") {
+    const st = String(s.status || "").toLowerCase();
+    if (st === "credit") {
       const total = cNum(s.total || (cNum(s.qty) * cNum(s.price)));
       if (total > 0) {
         list.push({
@@ -104,7 +84,9 @@ function getPendingList() {
           name: s.product || "Sale",
           type: s.type || "Sale",
           date: s.date,
-          pending: total
+          pending: total,
+          customer: s.customer || "",
+          phone: s.phone || ""
         });
       }
     }
@@ -113,9 +95,10 @@ function getPendingList() {
   return list;
 }
 
-/* -----------------------------------------------------------
-   RENDER PENDING TABLE  (WITH COLLECT BUTTON)
------------------------------------------------------------ */
+/* ===========================================================
+   RENDER PENDING COLLECTION TABLE
+   (USES .pending-collect-btn → no clash with top .collect-btn)
+=========================================================== */
 function renderPendingCollections() {
   const tbody = qs("#pendingCollectionTable tbody");
   if (!tbody) return;
@@ -125,7 +108,9 @@ function renderPendingCollections() {
   if (!list.length) {
     tbody.innerHTML = `
       <tr>
-        <td colspan="5" style="text-align:center;opacity:0.6;">No pending collections</td>
+        <td colspan="5" style="text-align:center;opacity:0.6;">
+          No pending collections
+        </td>
       </tr>`;
     return;
   }
@@ -133,11 +118,14 @@ function renderPendingCollections() {
   tbody.innerHTML = list.map(r => `
     <tr>
       <td data-label="Date">${window.toDisplay ? toDisplay(r.date) : r.date}</td>
-      <td data-label="Name">${escLocal(r.name)}</td>
+      <td data-label="Name">
+        ${escLocal(r.name)}
+        ${r.customer ? `<br><small>${escLocal(r.customer)}</small>` : ""}
+      </td>
       <td data-label="Type">${escLocal(r.type)}</td>
       <td data-label="Pending">₹${r.pending}</td>
       <td data-label="Action">
-        <button class="small-btn collect-btn"
+        <button class="small-btn pending-collect-btn"
                 data-id="${r.id}"
                 data-amount="${r.pending}">
           Collect
@@ -147,21 +135,19 @@ function renderPendingCollections() {
   `).join("");
 }
 
-/* -----------------------------------------------------------
-   RENDER COLLECTION HISTORY + SUMMARY
------------------------------------------------------------ */
+/* ===========================================================
+   RENDER COLLECTION SUMMARY + HISTORY TABLE
+=========================================================== */
 function renderCollection() {
   const sum = computeCollectionSummary();
-
   const fmt = v => "₹" + Math.round(cNum(v));
 
-  // Summary card elements
-  if (qs("#colSales"))   qs("#colSales").textContent   = fmt(sum.salesCollected);
-  if (qs("#colService")) qs("#colService").textContent = fmt(sum.serviceCollected);
-  if (qs("#colCredit"))  qs("#colCredit").textContent  = fmt(sum.pendingCredit);
-  if (qs("#colInvRemain")) qs("#colInvRemain").textContent = fmt(sum.investmentRemain);
+  // Summary cards
+  if (qs("#colSales"))      qs("#colSales").textContent      = fmt(sum.salesCollected);
+  if (qs("#colService"))    qs("#colService").textContent    = fmt(sum.serviceCollected);
+  if (qs("#colCredit"))     qs("#colCredit").textContent     = fmt(sum.pendingCredit);
+  if (qs("#colInvRemain"))  qs("#colInvRemain").textContent  = fmt(sum.investmentRemain);
 
-  // History table
   const tbody = qs("#collectionHistory tbody");
   if (!tbody) return;
 
@@ -189,51 +175,72 @@ function renderCollection() {
 
 window.renderCollection = renderCollection;
 
-/* -----------------------------------------------------------
-   DELETE HISTORY BUTTON
------------------------------------------------------------ */
+/* ===========================================================
+   GLOBAL CLICK HANDLER
+   - Clear history
+   - Pending credit collect button
+=========================================================== */
 document.addEventListener("click", e => {
-  // Clear all collection history
-  if (e.target.id === "clearCollectionBtn") {
+  const target = e.target;
+
+  /* --- CLEAR HISTORY BUTTON --- */
+  if (target.id === "clearCollectionBtn") {
     if (!confirm("Clear entire collection history?")) return;
     window.collections = [];
     saveCollections();
     renderCollection();
     window.updateUniversalBar?.();
+    return;
   }
 
-  /* -----------------------------------------------
-     COLLECT BUTTON HANDLER (Credit → Paid)
-  ----------------------------------------------- */
-  if (e.target.classList.contains("collect-btn")) {
-    const id = e.target.getAttribute("data-id");
-    const amt = Number(e.target.getAttribute("data-amount") || 0);
+  /* --- PENDING CREDIT COLLECT BUTTON --- */
+  const btn = target.closest(".pending-collect-btn");
+  if (!btn) return;
 
-    const sale = (window.sales || []).find(s => s.id == id);
-    if (!sale) {
-      alert("Error: Sale not found!");
-      return;
-    }
+  const id  = btn.getAttribute("data-id");
+  const amt = cNum(btn.getAttribute("data-amount") || 0);
 
-    // Convert credit → paid
-    sale.status = "paid";
-    saveSales?.();
+  const sale = (window.sales || []).find(s => s.id == id);
+  if (!sale) {
+    alert("Sale not found.");
+    return;
+  }
 
-    // Add collection history entry
-    window.addCollectionEntry("Sale", sale.product, amt);
-
-    // Refresh UI
+  if (String(sale.status || "").toLowerCase() !== "credit") {
+    alert("This sale is not marked as CREDIT anymore.");
     renderPendingCollections();
     renderCollection();
-    window.updateUniversalBar?.();
-
-    alert("Amount collected successfully!");
+    return;
   }
+
+  const lines = [
+    `Product: ${sale.product} (${sale.type})`,
+    `Qty: ${sale.qty}, Total: ₹${sale.total}`
+  ];
+  if (sale.customer) lines.push(`Customer: ${sale.customer}`);
+  if (sale.phone)    lines.push(`Phone: ${sale.phone}`);
+
+  if (!confirm(lines.join("\n") + "\n\nMark this as COLLECTED (Paid)?")) return;
+
+  // 1) Mark sale as Paid (proper case!)
+  sale.status = "Paid";
+  window.saveSales && window.saveSales();
+
+  // 2) Add collection history entry
+  window.addCollectionEntry("Sale (Credit cleared)", sale.product, amt);
+
+  // 3) Refresh UI
+  renderPendingCollections();
+  renderCollection();
+  window.renderSales?.();
+  window.updateUniversalBar?.();
+
+  alert("Collection recorded and sale marked as Paid.");
 });
 
-/* -----------------------------------------------------------
+/* ===========================================================
    INIT
------------------------------------------------------------ */
+=========================================================== */
 window.addEventListener("load", () => {
   if (!Array.isArray(window.collections)) {
     window.collections = [];
