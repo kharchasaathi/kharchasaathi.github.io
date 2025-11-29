@@ -1,18 +1,21 @@
 /* ===========================================================
-   🛠 service.js — Service / Repair Manager (v14 FINAL)
-   • Fully compatible with Universal Profit & Investment System
-   • Clean UI, colorful tables, mobile responsive
-   • Safe storage + no double profit/invest counting
+   🛠 service.js — Service / Repair Manager (v15 FINAL)
+   • Fully compatible with:
+       - universalBar.js v2
+       - collection.js v6
+       - analytics & dashboard
+   • Safe date handling (toDisplay optional)
+   • Updates universal bar on every change
 =========================================================== */
 
 (function () {
 
-  const qs = s => document.querySelector(s);
+  const qs  = s => document.querySelector(s);
   const esc = x => (x === undefined || x === null) ? "" : String(x);
 
-  const toDisplay  = window.toDisplay;
+  const toDisplay  = window.toDisplay || (d => d);
   const toInternal = window.toInternal;
-  const todayDate  = window.todayDate;
+  const todayDateFn = window.todayDate || (() => new Date().toISOString().slice(0, 10));
 
   let svcPie = null;
 
@@ -28,7 +31,11 @@
     if (typeof window.saveServices === "function") {
       try { window.saveServices(); return; } catch (e) {}
     }
-    try { localStorage.setItem("services", JSON.stringify(window.services)); } catch {}
+    try {
+      localStorage.setItem("services", JSON.stringify(window.services));
+    } catch (e) {
+      console.warn("Service save error:", e);
+    }
   }
 
   /* -----------------------------
@@ -50,9 +57,12 @@
   ------------------------------ */
   function addServiceJob() {
 
-    let received = qs("#svcReceivedDate")?.value || todayDate();
-    if (received.split("-")[0].length === 2)
+    let received = qs("#svcReceivedDate")?.value || todayDateFn();
+
+    // If user typed dd-mm-yy & toInternal exists → convert
+    if (received && received.split("-")[0].length === 2 && typeof toInternal === "function") {
       received = toInternal(received);
+    }
 
     const customer = esc(qs("#svcCustomer")?.value.trim());
     const phone    = esc(qs("#svcPhone")?.value.trim());
@@ -61,8 +71,10 @@
     const problem  = esc(qs("#svcProblem")?.value.trim());
     const advance  = Number(qs("#svcAdvance")?.value || 0);
 
-    if (!customer || !phone || !problem)
-      return alert("Please fill Customer, Phone, Problem.");
+    if (!customer || !phone || !problem) {
+      alert("Please fill Customer, Phone, and Problem.");
+      return;
+    }
 
     const ids = nextJobId();
 
@@ -89,8 +101,10 @@
     ensureServices().push(job);
     persistServices();
     renderServiceTables();
-    renderAnalytics?.();
-    updateSummaryCards?.();
+    window.renderAnalytics?.();
+    window.updateSummaryCards?.();
+    window.updateUniversalBar?.();
+    window.renderCollection?.();
   }
 
   /* -----------------------------
@@ -108,24 +122,31 @@
     const profit    = full - invest;
 
     if (!confirm(
-      `Save this job?\n\nInvest: ₹${invest}\nAdvance: ₹${job.advance}\nFull: ₹${full}\nRemaining: ₹${remaining}\nProfit: ₹${profit}`
+      `Save this job?\n\n` +
+      `Invest: ₹${invest}\n` +
+      `Advance: ₹${job.advance}\n` +
+      `Full: ₹${full}\n` +
+      `Remaining (Customer pays): ₹${remaining}\n` +
+      `Profit: ₹${profit}`
     )) return;
 
-    job.invest = invest;
-    job.paid = full;
+    job.invest    = invest;
+    job.paid      = full;
     job.remaining = remaining;
-    job.profit = profit;
-    job.status = "Completed";
-    job.date_out = todayDate();
+    job.profit    = profit;
+    job.status    = "Completed";
+    job.date_out  = todayDateFn();
 
     persistServices();
     renderServiceTables();
-    renderAnalytics?.();
-    updateSummaryCards?.();
+    window.renderAnalytics?.();
+    window.updateSummaryCards?.();
+    window.updateUniversalBar?.();
+    window.renderCollection?.();
   }
 
   /* -----------------------------
-      FAIL RETURNED
+      FAIL / RETURNED JOB
   ------------------------------ */
   function markFailed(id) {
     const list = ensureServices();
@@ -135,17 +156,19 @@
     const returned = Number(prompt("Advance returned ₹:", job.advance || 0) || 0);
 
     job.returnedAdvance = returned;
-    job.invest = 0;
-    job.paid = 0;
+    job.invest    = 0;
+    job.paid      = 0;
     job.remaining = 0;
-    job.profit = 0;
-    job.status = "Failed/Returned";
-    job.date_out = todayDate();
+    job.profit    = 0;
+    job.status    = "Failed/Returned";
+    job.date_out  = todayDateFn();
 
     persistServices();
     renderServiceTables();
-    renderAnalytics?.();
-    updateSummaryCards?.();
+    window.renderAnalytics?.();
+    window.updateSummaryCards?.();
+    window.updateUniversalBar?.();
+    window.renderCollection?.();
   }
 
   /* -----------------------------
@@ -156,10 +179,14 @@
     window.services = ensureServices().filter(j => j.id !== id);
     persistServices();
     renderServiceTables();
+    window.renderAnalytics?.();
+    window.updateSummaryCards?.();
+    window.updateUniversalBar?.();
+    window.renderCollection?.();
   }
 
   /* -----------------------------
-      QUICK MENU POPUP
+      QUICK POPUP MENU FOR JOB
   ------------------------------ */
   function openJob(id) {
     const j = ensureServices().find(x => x.id === id);
@@ -177,10 +204,9 @@
   }
 
   /* ==========================================================
-       🚀 RENDER PENDING + HISTORY TABLES
+       RENDER TABLES (Pending + History)
   ========================================================== */
   function renderServiceTables() {
-
     const pendBody = qs("#svcTable tbody");
     const histBody = qs("#svcHistoryTable tbody");
     if (!pendBody || !histBody) return;
@@ -193,10 +219,10 @@
 
     const badge = s => {
       if (s === "Pending")
-        return `<span class='status-credit'>Pending</span>`;
+        return `<span class="status-credit">Pending</span>`;
       if (s === "Completed")
-        return `<span class='status-paid'>Completed</span>`;
-      return `<span class='status-credit' style='background:#e53935'>Failed</span>`;
+        return `<span class="status-paid">Completed</span>`;
+      return `<span class="status-credit" style="background:#e53935;color:#fff;">Failed</span>`;
     };
 
     pendBody.innerHTML =
@@ -216,14 +242,14 @@
           </td>
         </tr>
       `).join("") ||
-      `<tr><td colspan="9">No pending jobs</td></tr>`;
+      `<tr><td colspan="9" style="text-align:center;opacity:0.6;">No pending jobs</td></tr>`;
 
     histBody.innerHTML =
       [...completed, ...failed].map(j => `
         <tr>
           <td data-label="Job ID">${j.jobId}</td>
           <td data-label="Received">${toDisplay(j.date_in)}</td>
-          <td data-label="Completed">${toDisplay(j.date_out)}</td>
+          <td data-label="Completed">${j.date_out ? toDisplay(j.date_out) : "-"}</td>
           <td data-label="Customer">${esc(j.customer)}</td>
           <td data-label="Item">${esc(j.item)}</td>
           <td data-label="Invest">₹${j.invest}</td>
@@ -232,7 +258,7 @@
           <td data-label="Status">${badge(j.status)}</td>
         </tr>
       `).join("") ||
-      `<tr><td colspan="9">No history</td></tr>`;
+      `<tr><td colspan="9" style="text-align:center;opacity:0.6;">No history</td></tr>`;
 
     qs("#svcPendingCount").textContent   = pending.length;
     qs("#svcCompletedCount").textContent = completed.length;
@@ -248,7 +274,7 @@
   ========================================================== */
   function renderServicePie() {
     const ctx = qs("#svcPie");
-    if (!ctx) return;
+    if (!ctx || typeof Chart === "undefined") return;
 
     const list = ensureServices();
     const P = list.filter(j => j.status === "Pending").length;
@@ -273,31 +299,45 @@
     });
   }
 
-  /* ----------------------------- */
+  /* ==========================================================
+      EVENT BINDINGS
+  ========================================================== */
   qs("#addServiceBtn")?.addEventListener("click", addServiceJob);
+
   qs("#clearServiceBtn")?.addEventListener("click", () => {
     if (!confirm("Delete ALL service jobs?")) return;
     window.services = [];
     persistServices();
     renderServiceTables();
+    window.renderAnalytics?.();
+    window.updateSummaryCards?.();
+    window.updateUniversalBar?.();
+    window.renderCollection?.();
   });
 
   document.addEventListener("click", e => {
-    if (e.target.classList.contains("svc-view")) openJob(e.target.dataset.id);
-    if (e.target.classList.contains("svc-del"))  deleteServiceJob(e.target.dataset.id);
+    if (e.target.classList.contains("svc-view")) {
+      openJob(e.target.dataset.id);
+    }
+    if (e.target.classList.contains("svc-del")) {
+      deleteServiceJob(e.target.dataset.id);
+    }
   });
 
-  window.addEventListener("load", renderServiceTables);
+  window.addEventListener("load", () => {
+    renderServiceTables();
+    window.updateUniversalBar?.();
+  });
 
   window.renderServiceTables = renderServiceTables;
 
   /* ==========================================================
-      UNIVERSAL PROFIT & INVESTMENT HELPERS
+      UNIVERSAL HELPERS (for other modules if needed)
   ========================================================== */
   window.getServiceProfitCollected = function () {
     let total = 0;
     (window.services || []).forEach(j => {
-      if (String(j.status).toLowerCase() === "completed") {
+      if (String(j.status || "").toLowerCase() === "completed") {
         total += Number(j.profit || 0);
       }
     });
@@ -307,7 +347,7 @@
   window.getServiceInvestmentCollected = function () {
     let total = 0;
     (window.services || []).forEach(j => {
-      if (String(j.status).toLowerCase() === "completed") {
+      if (String(j.status || "").toLowerCase() === "completed") {
         total += Number(j.invest || 0);
       }
     });
