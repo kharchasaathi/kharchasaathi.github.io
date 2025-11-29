@@ -37,7 +37,7 @@
   box-shadow: none;
 }
 
-/* Special danger buttons override */
+/* Danger button override */
 .small-btn[style*="ef4444"],
 .small-btn[style*="c62828"],
 .small-btn[style*="b71c1c"] {
@@ -45,7 +45,7 @@
 }
 
 /* ------------------------------
-   Inputs & selects (generic)
+   Inputs & selects
 ------------------------------ */
 input[type="text"],
 input[type="number"],
@@ -67,7 +67,7 @@ select:focus {
 }
 
 /* ------------------------------
-   Tables (corporate style)
+   Tables
 ------------------------------ */
 table {
   width: 100%;
@@ -87,7 +87,6 @@ table thead th {
   padding: 8px 10px;
   text-align: left;
   font-weight: 600;
-  border-bottom: 1px solid rgba(15, 23, 42, 0.2);
 }
 
 table tbody tr {
@@ -95,21 +94,12 @@ table tbody tr {
   border-bottom: 1px solid #e5e7eb;
 }
 
-body.dark table tbody tr {
-  background: #020617;
-  border-bottom: 1px solid #111827;
-}
-
 table tbody td {
   padding: 8px 10px;
-  vertical-align: middle;
 }
 
 table tbody tr:hover {
   background: #eff3ff;
-}
-body.dark table tbody tr:hover {
-  background: #020617;
 }
 
 table tfoot td {
@@ -118,13 +108,12 @@ table tfoot td {
 }
 
 /* ------------------------------
-   Mobile responsive table
+   Mobile responsive tables
 ------------------------------ */
 @media (max-width: 720px) {
   table thead {
     display: none;
   }
-
   table,
   table tbody,
   table tr,
@@ -132,18 +121,14 @@ table tfoot td {
     display: block;
     width: 100%;
   }
-
   table tbody tr {
     margin-bottom: 10px;
     border-radius: 14px;
-    overflow: hidden;
   }
-
   table tbody td {
     display: flex;
     justify-content: space-between;
   }
-
   table tbody td::before {
     content: attr(data-label);
     font-weight: 600;
@@ -176,9 +161,8 @@ table tfoot td {
 }
 
 /* ------------------------------
-   Misc
+   Misc small components
 ------------------------------ */
-
 #stockInvBox {
   background: #fffbeb;
 }
@@ -189,57 +173,42 @@ table tfoot td {
 }
 
 /* =========================================================
-   Collect Button — Final Clean Blue Version
+   FINAL COLLECT BUTTON — Clean Blue Version
 ========================================================= */
 
 .uni-card {
   position: relative;
-  padding-bottom: 35px !important;
+  padding-bottom: 30px;
 }
 
 .collect-btn {
   position: absolute;
-  right: 12px;
-  bottom: 10px;
+  right: 10px;
+  top: 10px;
 
-  background: #2563eb;     /* Strong blue */
-  color: #ffffff;
+  background: #2563eb;
+  color: white;
   border: none;
 
-  padding: 4px 12px;       /* small clean */
-  font-size: 11px;
+  padding: 3px 10px;
+  font-size: 10px;
   font-weight: 600;
 
-  border-radius: 14px;     /* small rounded pill */
+  border-radius: 12px;
   display: inline-flex;
   align-items: center;
   gap: 4px;
-
   cursor: pointer;
 
-  box-shadow: 0 4px 10px rgba(37, 99, 235, 0.3);
-  transition: 0.2s ease-in-out;
+  box-shadow: 0 3px 8px rgba(37, 99, 235, 0.25);
+  transition: 0.2s ease;
 }
 
 .collect-btn:hover {
-  background: #1e4bb8;     /* darker blue */
-  box-shadow: 0 5px 12px rgba(30, 75, 184, 0.35);
+  background: #1e4bb8;
+  box-shadow: 0 4px 10px rgba(30, 75, 184, 0.3);
 }
 
 .collect-btn:active {
-  transform: scale(0.96);
-}
-.collect-btn {
-  background: #2563eb !important;
-  color: white !important;
-  border: none !important;
-}
-.collect-btn {
-  padding: 3px 10px !important;   /* smaller size */
-  font-size: 10px !important;     /* smaller text */
-  border-radius: 12px !important; /* smaller pill */
-  right: 10px !important;
-  bottom: 8px !important;
-  height: auto !important;
-  line-height: 1 !important;
+  transform: scale(0.94);
 }
