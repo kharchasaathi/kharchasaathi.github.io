@@ -1,241 +1,454 @@
 <!doctype html>
-<html lang="en">
-<head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>📦 KharchaSaathi — Business Dashboard (v3.3)</title>
-  <meta name="theme-color" content="#1e4bb8" />
-  <link rel="icon" href="/favicon.png" />
-  <link rel="apple-touch-icon" href="/favicon.png" />
 
-  <!-- CSS Files -->
-  <link rel="stylesheet" href="/css/base.css" />
-  <link rel="stylesheet" href="/css/layout.css" />
-  <link rel="stylesheet" href="/css/components.css" />
-</head>
+<html lang="en">  
+<head>  
+  <meta charset="utf-8" />  
+  <meta name="viewport" content="width=device-width,initial-scale=1" />  
+  <title>📦 KharchaSaathi — Business Dashboard (v3.3)</title>  
+  <meta name="theme-color" content="#1e4bb8" />  
+  <link rel="icon" href="/favicon.png" />  
+  <link rel="apple-touch-icon" href="/favicon.png" />    <!-- ✅ NEW: external CSS files -->    <link rel="stylesheet" href="/css/base.css" />  
+  <link rel="stylesheet" href="/css/layout.css" />  
+  <link rel="stylesheet" href="/css/components.css" />  
+</head>  <body>  <!-- ⭐ GLOBAL HELPERS (qs / qsa) -->  <script>  
+  const qs  = s => document.querySelector(s);  
+  const qsa = s => Array.from(document.querySelectorAll(s));  
+</script>  <!-- 🔐 TOPBAR -->  <div class="topbar">  
+  <h1>📦 KharchaSaathi (Offline)</h1>    <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">  
+    <span id="emailTag">Loading...</span>  <!-- SIMPLE CLOCK -->  
+<div class="simple-clock">  
+  <span id="clockTime" class="clock-line">--:--:--</span>  
+  <span id="clockDate" class="clock-line small">--</span>  
+</div>  
 
-<body>
+<button id="themeBtn" class="theme-btn">🌙</button>  
+<a class="small-btn" href="/index.html">🏠 Back</a>  
+<button id="logoutBtn" class="small-btn" style="background:#e53935;box-shadow:0 8px 18px rgba(239,68,68,0.5);">  
+  🔓 Logout  
+</button>
 
-<script>
-  const qs  = s => document.querySelector(s);
-  const qsa = s => Array.from(document.querySelectorAll(s));
-</script>
+  </div>  
+</div>  <!-- 🔶 UNIVERSAL TOP METRICS BAR -->  <div id="universalBar">  
+  <div class="uni-row">  <!-- NET PROFIT MAIN CARD -->  
+<div class="uni-card main">  
+  <div class="uni-title">Net Profit (Sale + Service − Expenses)</div>  
+  <div class="uni-value" id="unNetProfit">₹0</div>  
+  <div class="uni-sub">  
+    <span>Sale:</span><span id="unSaleProfit" style="font-weight:600;">₹0</span>  
+    <span>Service:</span><span id="unServiceProfit" style="font-weight:600;">₹0</span>  
+    <span class="uni-exp-label">Exp:</span>  
+    <span id="unExpenses" class="uni-exp-value">₹0</span>  
+  </div>  
+</div>  
 
-<!-- 🔐 TOPBAR -->
-<div class="topbar">
-  <h1>📦 KharchaSaathi (Offline)</h1>
+<!-- STOCK INVEST (SOLD ITEMS) -->  
+<div class="uni-card">  
+  <div class="uni-title">Stock Investment (Sold Items)</div>  
+  <div class="uni-value small" id="unStockInv">₹0</div>  
+  <div class="uni-sub">  
+    <span class="uni-chip">Sold stock</span>  
+  </div>  
+</div>  
 
-  <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
-    <span id="emailTag">Loading...</span>
+<!-- SERVICE INVESTMENT -->  
+<div class="uni-card">  
+  <div class="uni-title">Service Investment (Completed)</div>  
+  <div class="uni-value small" id="unServiceInv">₹0</div>  
+  <div class="uni-sub">  
+    <span class="uni-chip">Closed jobs</span>  
+  </div>  
+</div>  
 
-    <div class="simple-clock">
-      <span id="clockTime" class="clock-line">--:--:--</span>
-      <span id="clockDate" class="clock-line small">--</span>
-    </div>
-
-    <button id="themeBtn" class="theme-btn">🌙</button>
-    <a class="small-btn" href="/index.html">🏠 Back</a>
-    <button id="logoutBtn" class="small-btn" style="background:#e53935;">
-      🔓 Logout
-    </button>
-  </div>
+<!-- CREDIT SALES -->  
+<div class="uni-card">  
+  <div class="uni-title">Pending Credit Sales</div>  
+  <div class="uni-value small" id="unCreditSales">₹0</div>  
+  <div class="uni-sub">  
+    <span class="uni-chip">To be collected</span>  
+  </div>  
 </div>
 
-<!-- 🔶 UNIVERSAL TOP METRICS BAR -->
-<div id="universalBar">
-  <div class="uni-row">
+  </div>  
+</div>  <!-- =============== FIXED TAB ORDER =============== -->  <div class="tabs" role="tablist">  
+  <div class="tab active" data-tab="types">📁 Types</div>  
+  <div class="tab" data-tab="stock">📦 Stock</div>  
+  <div class="tab" data-tab="sales">📈 Sales</div>  
+  <div class="tab" data-tab="wanting">🛒 Wanting</div>  
+  <div class="tab" data-tab="service">🛠 Service</div>  
+  <div class="tab" data-tab="expenses">💸 Expenses</div>  
+  <div class="tab" data-tab="dashboard">📊 Dashboard</div>  
+  <div class="tab" data-tab="collection">🪙 Collection</div>  
+</div>  <!-- =============== TYPES =============== -->  <section id="types" class="section active">  
+  <h3>🗂 Manage Item Types</h3>    <div class="row-inline" style="margin-top:8px;display:flex;gap:8px;flex-wrap:wrap;">  
+    <input id="typeName" type="text" placeholder="Add new type"  
+           style="flex:1;min-width:160px;padding:8px 10px;border-radius:12px;border:1px solid #d1d5db;">  
+    <button id="addTypeBtn" class="small-btn">Add</button>  
+    <button id="clearTypesBtn" class="small-btn">Clear All</button>  
+  </div>    <ul id="typeList" style="margin-top:10px;padding-left:18px;font-size:13px;"></ul>  
+</section>  <!-- =============== STOCK =============== -->  <section id="stock" class="section">  
+  <h3>📦 Current Stock</h3>    <div class="row-inline" style="margin-top:6px;display:flex;gap:8px;flex-wrap:wrap;align-items:center;">  
+    <label>Low Stock:</label>  
+    <input id="globalLimit" type="number" placeholder="2" style="width:90px;padding:6px 8px;border-radius:10px;border:1px solid #d1d5db;">  
+    <button id="setLimitBtn" class="small-btn">Set</button>  
+    <button id="clearStockBtn" class="small-btn" style="background:#ef4444;">Clear All</button>  
+  </div>    <div class="row-inline" style="margin-top:12px;display:flex;flex-wrap:wrap;gap:8px;">  
+    <input id="pdate" type="date" style="padding:6px 8px;border-radius:10px;border:1px solid #d1d5db;">  
+    <select id="ptype" style="padding:6px 8px;border-radius:10px;border:1px solid #d1d5db;"></select>  
+    <input id="pname" type="text" placeholder="Product" style="padding:6px 8px;border-radius:10px;border:1px solid #d1d5db;min-width:140px;">  
+    <input id="pqty" type="number" placeholder="Qty" style="width:80px;padding:6px 8px;border-radius:10px;border:1px solid #d1d5db;">  
+    <input id="pcost" type="number" placeholder="Cost ₹" style="width:100px;padding:6px 8px;border-radius:10px;border:1px solid #d1d5db;">  
+    <button id="addStockBtn" class="small-btn">Add</button>  
+  </div>    <div style="margin-top:12px; display:flex; align-items:center; gap:10px; flex-wrap:wrap;">  
+    <b>Filter Type:</b>  
+    <select id="filterType" style="padding:6px 8px;border-radius:10px;border:1px solid #d1d5db;">  
+      <option value="all">All</option>  
+    </select>  <input id="productSearch"  
+       placeholder="Search product..."  
+       style="padding:6px 10px; border-radius:12px; border:1px solid #d1d5db; min-width:160px;">
 
-    <!-- NET PROFIT CARD -->
-    <div class="uni-card main">
-      <div class="uni-title">Net Profit (Sale + Service − Expenses)</div>
-      <div class="uni-value" id="unNetProfit">₹0</div>
-      <div class="uni-sub">
-        <span>Sale:</span><span id="unSaleProfit" style="font-weight:600;">₹0</span>
-        <span>Service:</span><span id="unServiceProfit" style="font-weight:600;">₹0</span>
-        <span class="uni-exp-label">Exp:</span>
-        <span id="unExpenses" class="uni-exp-value">₹0</span>
+  </div>    <!-- BEFORE SALE INVESTMENT -->    <div id="stockInvBox"   
+       style="margin-top:10px; padding:10px; background:#fffbeb; border-radius:12px;  
+              border:1px solid #facc15; max-width:280px; margin-left:auto;  
+              font-weight:600; font-size:13px;">  
+    📦 Stock Investment (Before Sale):   
+    <span id="stockInvValue" style="color:#d97706;">₹0</span>  
+  </div>    <table id="stockTable" style="margin-top:10px;">  
+    <thead>  
+      <tr>  
+        <th>Date</th>  
+        <th>Type</th>  
+        <th>Product</th>  
+        <th>Qty</th>  
+        <th>Sold</th>  
+        <th>Remain</th>  
+        <th>Alert</th>  
+        <th>Limit</th>  
+        <th>Action</th>  
+      </tr>  
+    </thead>  
+    <tbody></tbody>  
+  </table>  
+</section>  
+<!-- =============== SALES =============== -->  
+<section id="sales" class="section">  
+  <h3>💰 Sales & Profit</h3>    <div class="row-inline" style="margin:10px 0;display:flex;gap:8px;flex-wrap:wrap;align-items:center;">  
+    <label>Date:</label>  
+    <input id="saleDate" type="date" style="padding:6px 8px;border-radius:10px;border:1px solid #d1d5db;">  <label style="margin-left:4px">Filter Type:</label>  
+<select id="saleType" style="padding:6px 8px;border-radius:10px;border:1px solid #d1d5db;">  
+  <option value="all">All Types</option>  
+</select>  
 
-        <!-- ⭐ Collect Button -->
-        <button class="small-btn uni-collect-btn"
-                data-collect="net"
-                style="margin-left:auto;padding:4px 10px;font-size:11px;">
-          Collect
-        </button>
-      </div>
-    </div>
+<button id="filterSalesBtn" class="small-btn" style="margin-left:4px">Filter</button>  
 
-    <!-- STOCK INVESTMENT -->
-    <div class="uni-card">
-      <div class="uni-title">Stock Investment (Sold Items)</div>
-      <div class="uni-value small" id="unStockInv">₹0</div>
-      <div class="uni-sub">
-        <span class="uni-chip">Sold stock</span>
+<button id="clearSalesBtn" class="small-btn"   
+  style="background:#c62828;color:#fff;margin-left:8px">🗑️ Clear All</button>
 
-        <!-- ⭐ Collect Button -->
-        <button class="small-btn uni-collect-btn"
-                data-collect="stock"
-                style="margin-left:auto;padding:4px 10px;font-size:11px;">
-          Collect
-        </button>
-      </div>
-    </div>
+  </div>    <table id="salesTable">  
+    <thead>  
+      <tr>  
+        <th>Date</th>  
+        <th>Type</th>  
+        <th>Product</th>  
+        <th>Qty</th>  
+        <th>Price</th>  
+        <th>Total</th>  
+        <th>Profit</th>  
+        <th>Status</th>  
+      </tr>  
+    </thead>  
+    <tbody></tbody>  <tfoot>  
+  <tr>  
+    <td colspan="5" style="text-align:right">Total:</td>  
+    <td id="salesTotal">0</td>  
+    <td id="profitTotal">0</td>  
+    <td></td>  
+  </tr>  
+</tfoot>
 
-    <!-- SERVICE INVESTMENT -->
-    <div class="uni-card">
-      <div class="uni-title">Service Investment (Completed)</div>
-      <div class="uni-value small" id="unServiceInv">₹0</div>
-      <div class="uni-sub">
-        <span class="uni-chip">Closed jobs</span>
+  </table>  
+</section>  <!-- =============== WANTING =============== -->  <section id="wanting" class="section">  
+  <h3>🛒 Wanting List</h3>    <div class="want-form" style="margin-bottom:10px;display:flex;gap:8px;flex-wrap:wrap;">  
+    <select id="wantType" style="padding:6px 8px;border-radius:10px;border:1px solid #d1d5db;"></select>  
+    <input id="wantName" type="text" placeholder="Product"  
+           style="padding:6px 8px;border-radius:10px;border:1px solid #d1d5db;min-width:140px;">  
+    <input id="wantNote" type="text" placeholder="Note"  
+           style="padding:6px 8px;border-radius:10px;border:1px solid #d1d5db;min-width:160px;">  
+    <button id="addWantBtn" class="small-btn">Add</button>  
+    <button id="clearWantBtn" class="small-btn">Clear</button>  
+    <button id="printWantBtn" class="small-btn">Print</button>  
+  </div>    <table id="wantingTable">  
+    <thead>  
+      <tr>  
+        <th>Date</th>  
+        <th>Type</th>  
+        <th>Product</th>  
+        <th>Note</th>  
+        <th>Action</th>  
+      </tr>  
+    </thead>  
+    <tbody></tbody>  
+  </table>  
+</section>  <!-- =============== SERVICE =============== -->  <section id="service" class="section">  
+  <h3>🛠 Service / Repair Manager</h3>    <div class="row-inline" style="margin:10px 0;align-items:center;gap:8px;display:flex;flex-wrap:wrap;">  
+    <input id="svcReceivedDate" type="date" style="width:160px;padding:6px 8px;border-radius:10px;border:1px solid #d1d5db;">  
+    <input id="svcCustomer" type="text" placeholder="Customer name" style="min-width:160px;padding:6px 8px;border-radius:10px;border:1px solid #d1d5db;">  
+    <input id="svcPhone" type="text" placeholder="Phone Number" style="width:140px;padding:6px 8px;border-radius:10px;border:1px solid #d1d5db;">  
+    <select id="svcItemType" style="width:120px;padding:6px 8px;border-radius:10px;border:1px solid #d1d5db;">  
+      <option value="Mobile">Mobile</option>  
+      <option value="Laptop">Laptop</option>  
+      <option value="Other">Other</option>  
+    </select>  
+    <input id="svcModel" type="text" placeholder="Model" style="min-width:130px;padding:6px 8px;border-radius:10px;border:1px solid #d1d5db;">  
+    <input id="svcProblem" type="text" placeholder="Problem / Complaint" style="min-width:220px;padding:6px 8px;border-radius:10px;border:1px solid #d1d5db;">  
+    <input id="svcAdvance" type="number" placeholder="Advance ₹ (0)" style="width:120px;padding:6px 8px;border-radius:10px;border:1px solid #d1d5db;">  
+    <button id="addServiceBtn" class="small-btn">Add Job</button>  
+  </div>    <div class="flex-row" style="margin:8px 0;display:flex;gap:10px;flex-wrap:wrap;">  
+    <div class="card" style="flex:1;min-width:120px;padding:8px 10px;border-radius:14px;background:#eff6ff;">  
+      <small>Pending</small><div id="svcPendingCount" style="font-size:18px;font-weight:700;">0</div>  
+    </div>  
+    <div class="card" style="flex:1;min-width:120px;padding:8px 10px;border-radius:14px;background:#ecfdf3;">  
+      <small>Completed</small><div id="svcCompletedCount" style="font-size:18px;font-weight:700;">0</div>  
+    </div>  
+    <div class="card" style="flex:1;min-width:160px;padding:8px 10px;border-radius:14px;background:#fefce8;">  
+      <small>Total Repair Profit</small><div id="svcTotalProfit" style="font-size:18px;font-weight:700;">₹0</div>  
+    </div>  
+  </div>    <h4>Pending / Active Jobs</h4>  
+  <table id="svcTable">  
+    <thead>  
+      <tr>  
+        <th>Job ID</th>  
+        <th>Received</th>  
+        <th>Customer</th>  
+        <th>Phone</th>  
+        <th>Item</th>  
+        <th>Model</th>  
+        <th>Problem</th>  
+        <th>Status</th>  
+        <th>Action</th>  
+      </tr>  
+    </thead>  
+    <tbody></tbody>  
+  </table>  <button id="clearServiceBtn"  
+class="small-btn"  
+style="background:#b71c1c;color:white;margin:10px 0;">🗑️ Clear All Jobs</button>
 
-        <!-- ⭐ Collect Button -->
-        <button class="small-btn uni-collect-btn"
-                data-collect="service"
-                style="margin-left:auto;padding:4px 10px;font-size:11px;">
-          Collect
-        </button>
-      </div>
-    </div>
+  <h4 style="margin-top:14px">Completed / History</h4>  
+  <table id="svcHistoryTable">  
+    <thead>  
+      <tr>  
+        <th>Job ID</th>  
+        <th>Received</th>  
+        <th>Completed</th>  
+        <th>Customer</th>  
+        <th>Item</th>  
+        <th>Invest</th>  
+        <th>Paid</th>  
+        <th>Profit</th>  
+        <th>Status</th>  
+      </tr>  
+    </thead>  
+    <tbody></tbody>  
+  </table>    <div style="max-width:520px;margin:14px auto;">  
+    <canvas id="svcPie" height="150"></canvas>  
+  </div>  
+</section>  
+<!-- =============== EXPENSES =============== -->  
+<section id="expenses" class="section">  
+  <h3>🧾 Expenses</h3>    <div class="row-inline" style="margin-bottom:8px;display:flex;gap:8px;flex-wrap:wrap;">  
+    <input id="expDate" type="date" onfocus="if(!this.value)this.value=todayDate()"  
+           style="padding:6px 8px;border-radius:10px;border:1px solid #d1d5db;">  
+    <input id="expCat" type="text" placeholder="Category"  
+           style="min-width:140px;padding:6px 8px;border-radius:10px;border:1px solid #d1d5db;">  
+    <input id="expAmount" type="number" placeholder="Amount"  
+           style="width:120px;padding:6px 8px;border-radius:10px;border:1px solid #d1d5db;">  
+    <input id="expNote" type="text" placeholder="Note"  
+           style="min-width:200px;padding:6px 8px;border-radius:10px;border:1px solid #d1d5db;">  
+    <button id="addExpenseBtn" class="small-btn">Add Expense</button>  
+  </div>    <table id="expensesTable">  
+    <thead>  
+      <tr>  
+        <th>Date</th>  
+        <th>Category</th>  
+        <th>Amount</th>  
+        <th>Note</th>  
+        <th>Action</th>  
+      </tr>  
+    </thead>  
+    <tbody></tbody>  <tfoot>  
+  <tr>  
+    <td colspan="2" style="text-align:right">Total:</td>  
+    <td id="expTotal">0</td>  
+    <td></td>  
+    <td></td>  
+  </tr>  
+</tfoot>
 
-    <!-- CREDIT (No collect button here) -->
-    <div class="uni-card">
-      <div class="uni-title">Pending Credit Sales</div>
-      <div class="uni-value small" id="unCreditSales">₹0</div>
-      <div class="uni-sub">
-        <span class="uni-chip">To be collected</span>
-      </div>
-    </div>
+  </table>  
+</section>  <!-- =============== MERGED DASHBOARD (Overview + Smart) =============== -->  <section id="dashboard" class="section">  
+  <h3>📊 Dashboard (Today + Total)</h3>    <!-- TODAY OVERVIEW -->    <div id="summaryCards" class="flex-row" style="margin-top:10px;display:flex;gap:10px;flex-wrap:wrap;">  
+    <div class="card" style="flex:1;min-width:140px;padding:10px;border-radius:14px;background:#eff6ff;">  
+      <div style="font-size:24px">💰</div>  
+      <b id="todaySales" style="font-size:18px;color:#1e4bb8">₹0</b><br>  
+      <small>Today's Sales</small>  
+    </div>  <div class="card" style="flex:1;min-width:140px;padding:10px;border-radius:14px;background:#eff6ff;">  
+  <div style="font-size:24px">💳</div>  
+  <b id="todayCredit" style="font-size:18px;color:#1e4bb8">₹0</b><br>  
+  <small>Today's Credit</small>  
+</div>  
 
-  </div>
+<div class="card" style="flex:1;min-width:140px;padding:10px;border-radius:14px;background:#fef2f2;">  
+  <div style="font-size:24px">🧾</div>  
+  <b id="todayExpenses" style="font-size:18px;color:#b91c1c">₹0</b><br>  
+  <small>Today's Expenses</small>  
+</div>  
+
+<div class="card" style="flex:1;min-width:140px;padding:10px;border-radius:14px;background:#ecfdf3;">  
+  <div style="font-size:24px">📈</div>  
+  <b id="todayGross" style="font-size:18px;color:#15803d">₹0</b><br>  
+  <small>Today's Gross Profit</small>  
+</div>  
+
+<div class="card" style="flex:1;min-width:140px;padding:10px;border-radius:14px;background:#ecfdf3;">  
+  <div style="font-size:24px">💹</div>  
+  <b id="todayNet" style="font-size:18px;color:#15803d">₹0</b><br>  
+  <small>Today's NET Profit</small>  
 </div>
-<!-- =============== FIXED TAB ORDER =============== -->
-<div class="tabs" role="tablist">
-  <div class="tab active" data-tab="types">📁 Types</div>
-  <div class="tab" data-tab="stock">📦 Stock</div>
-  <div class="tab" data-tab="sales">📈 Sales</div>
-  <div class="tab" data-tab="wanting">🛒 Wanting</div>
-  <div class="tab" data-tab="service">🛠 Service</div>
-  <div class="tab" data-tab="expenses">💸 Expenses</div>
-  <div class="tab" data-tab="dashboard">📊 Dashboard</div>
-  <div class="tab" data-tab="collection">🪙 Collection</div>
+
+  </div>    <hr style="margin:18px 0;border:none;border-top:1px dashed #cbd5e1;">    <!-- SMART DASHBOARD TOTAL -->    <h4>Smart Dashboard (Total)</h4>  
+  <div class="flex-row" style="margin-bottom:18px;display:flex;gap:10px;flex-wrap:wrap;">  
+    <div class="card" style="flex:1;min-width:160px;padding:10px;border-radius:14px;background:#ecfdf3;">  
+      <h4 style="margin:0 0 4px 0;font-size:13px;">Total Profit</h4>  
+      <b id="dashProfit" style="font-size:22px;color:#15803d">₹0</b>  
+      <small>Sale + Service (collected only)</small>  
+    </div>  <div class="card" style="flex:1;min-width:160px;padding:10px;border-radius:14px;background:#fef2f2;">  
+  <h4 style="margin:0 0 4px 0;font-size:13px;">Total Expenses</h4>  
+  <b id="dashExpenses" style="font-size:22px;color:#b91c1c">₹0</b>  
+</div>  
+
+<div class="card" style="flex:1;min-width:160px;padding:10px;border-radius:14px;background:#eff6ff;">  
+  <h4 style="margin:0 0 4px 0;font-size:13px;">Credit Sales (Pending)</h4>  
+  <b id="dashCredit" style="font-size:22px;color:#2563eb">₹0</b>  
+</div>  
+
+<div class="card" style="flex:1;min-width:160px;padding:10px;border-radius:14px;background:#fefce8;">  
+  <h4 style="margin:0 0 4px 0;font-size:13px;">Total Investment (Sold Items)</h4>  
+  <b id="dashInv" style="font-size:22px;color:#d97706">₹0</b>  
+  <small>Sold stock + Service invest</small>  
 </div>
 
-<!-- TYPES -->
-<section id="types" class="section active">
-  <h3>🗂 Manage Item Types</h3>
-  ...
-</section>
+  </div>    <div style="max-width:600px;margin:auto;">  
+    <canvas id="cleanPie" height="150"></canvas>  
+  </div>  
+</section>  <!-- =============== COLLECTION TAB =============== -->  <section id="collection" class="section">  
+  <h3>🪙 Collection Center</h3>    <!-- SUMMARY CARDS (same numbers used universally) -->    <div class="flex-row" style="margin-bottom:14px;display:flex;gap:10px;flex-wrap:wrap;">  <div class="card" style="flex:1;min-width:160px;padding:10px;border-radius:14px;background:#ecfdf3;">  
+  <h4 style="margin:0 0 4px 0;font-size:13px;">Sales Profit (Collected)</h4>  
+  <b id="colSales" style="font-size:20px;color:#15803d">₹0</b>  
+</div>  
 
-<!-- STOCK -->
-<section id="stock" class="section">
-  <h3>📦 Current Stock</h3>
-  ...
-</section>
+<div class="card" style="flex:1;min-width:160px;padding:10px;border-radius:14px;background:#eff6ff;">  
+  <h4 style="margin:0 0 4px 0;font-size:13px;">Service Profit (Collected)</h4>  
+  <b id="colService" style="font-size:20px;color:#2563eb">₹0</b>  
+</div>  
 
-<!-- SALES -->
-<section id="sales" class="section">
-  <h3>💰 Sales & Profit</h3>
-  ...
-</section>
+<div class="card" style="flex:1;min-width:160px;padding:10px;border-radius:14px;background:#fef2f2;">  
+  <h4 style="margin:0 0 4px 0;font-size:13px;">Pending Credits</h4>  
+  <b id="colCredit" style="font-size:20px;color:#b91c1c">₹0</b>  
+</div>  
 
-<!-- WANTING -->
-<section id="wanting" class="section">
-  <h3>🛒 Wanting List</h3>
-  ...
-</section>
+<div class="card" style="flex:1;min-width:160px;padding:10px;border-radius:14px;background:#fefce8;">  
+  <h4 style="margin:0 0 4px 0;font-size:13px;">Total Investment (Sold Items)</h4>  
+  <b id="colInvRemain" style="font-size:20px;color:#d97706">₹0</b>  
+</div>
 
-<!-- SERVICE -->
-<section id="service" class="section">
-  <h3>🛠 Service / Repair Manager</h3>
-  ...
-</section>
+  </div>    <!-- PENDING COLLECTIONS -->    <h4>Pending Collections</h4>  
+  <table id="pendingCollectionTable">  
+    <thead>  
+      <tr>  
+        <th>Date</th>  
+        <th>Name</th>  
+        <th>Type</th>  
+        <th>Pending</th>  
+        <th>Action</th>  
+      </tr>  
+    </thead>  
+    <tbody></tbody>  
+  </table>    <!-- HISTORY -->    <h4 style="margin-top:25px">Collection History</h4>  
+  <table id="collectionHistory">  
+    <thead>  
+      <tr>  
+        <th>Date</th>  
+        <th>Source</th>  
+        <th>Details</th>  
+        <th>Amount</th>  
+      </tr>  
+    </thead>  
+    <tbody></tbody>  
+  </table>  <button id="clearCollectionBtn"  
+class="small-btn"  
+style="background:#b71c1c;color:#fff;margin-top:10px">
+🗑 Clear Collection History
+</button>
 
-<!-- EXPENSES -->
-<section id="expenses" class="section">
-  <h3>🧾 Expenses</h3>
-  ...
-</section>
-<!-- DASHBOARD -->
-<section id="dashboard" class="section">
-  <h3>📊 Dashboard (Today + Total)</h3>
-  ...
-</section>
-
-<!-- COLLECTION -->
-<section id="collection" class="section">
-  <h3>🪙 Collection Center</h3>
-  ...
-</section>
-<!-- LIBRARIES -->
-<script src="https://cdn.jsdelivr.net/npm/chart.js/dist/chart.umd.min.js"></script>
-
-<!-- FIREBASE -->
-<script src="https://www.gstatic.com/firebasejs/9.6.11/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.6.11/firebase-auth-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.6.11/firebase-firestore-compat.js"></script>
-
-<!-- AUTO SCRIPT LOADER -->
-<script>
-  (function(){
-    const v = Date.now();
-    const js = [
-      "/js/core.js",
-      "/js/firebase.js",
-      "/js/types.js",
-      "/js/stock.js",
-      "/js/sales.js",
-      "/js/wanting.js",
-      "/js/expenses.js",
-      "/js/analytics.js",
-      "/js/service.js",
-      "/js/collection.js",
-      "/js/security.js",
-
-      /* ⭐ NEW FILE */
-      "/js/universal-bar.js"
-    ];
-    js.forEach(f => {
-      document.write(`<script src="${f}?v=${v}"><\/script>`);
-    });
-  })();
-</script>
-
-<!-- TAB SWITCHER -->
-<script>
-  function switchTab(id) {
-    qsa(".section").forEach(sec => sec.classList.remove("active"));
-    qs("#" + id)?.classList.add("active");
-
-    qsa(".tab").forEach(t => t.classList.remove("active"));
-    qs(`.tab[data-tab="${id}"]`)?.classList.add("active");
-
-    try { renderStock?.(); } catch {}
-    try { renderSales?.(); } catch {}
-    try { renderWanting?.(); } catch {}
-    try { renderExpenses?.(); } catch {}
-    try { renderServiceTables?.(); } catch {}
-    try { renderCollection?.(); } catch {}
-    try { renderAnalytics?.(); } catch {}
-    try { updateSummaryCards?.(); } catch {}
-    try { updateUniversalBar?.(); } catch {}
-  }
-
-  document.addEventListener("click", e => {
-    if (e.target.classList.contains("tab")) {
-      switchTab(e.target.dataset.tab);
-    }
-  });
-</script>
-
-<!-- CLOCK -->
-<script>
-  function updateClock() {
-    const d = new Date();
-    qs("#clockTime").textContent = d.toLocaleTimeString();
-    qs("#clockDate").textContent = d.toLocaleDateString();
-  }
-  setInterval(updateClock, 1000);
-  updateClock();
-</script>
-
-</body>
+</section>  
+<!-- =============== LIBRARIES =============== -->  
+<script src="https://cdn.jsdelivr.net/npm/chart.js/dist/chart.umd.min.js"></script>  <!-- FIREBASE -->  <script src="https://www.gstatic.com/firebasejs/9.6.11/firebase-app-compat.js"></script>  <script src="https://www.gstatic.com/firebasejs/9.6.11/firebase-auth-compat.js"></script>  <script src="https://www.gstatic.com/firebasejs/9.6.11/firebase-firestore-compat.js"></script>  <!-- =============== AUTO SCRIPT LOADER =============== -->  <script>  
+  (function(){  
+    const v = Date.now();  
+    const js = [  
+      "/js/core.js",  
+      "/js/firebase.js",  
+      "/js/types.js",  
+      "/js/stock.js",  
+      "/js/sales.js",  
+      "/js/wanting.js",  
+      "/js/expenses.js",  
+      "/js/analytics.js",  
+      "/js/service.js",  
+      "/js/collection.js",  
+      "/js/security.js"  
+    ];  
+    js.forEach(f => {  
+      document.write(`<script src="${f}?v=${v}"><\/script>`);  
+    });  
+  })();  
+</script>  <!-- =============== TAB SWITCHER =============== -->  <script>  
+  function switchTab(id) {  
+    // Hide all sections  
+    qsa(".section").forEach(sec => sec.classList.remove("active"));  
+    // Show selected  
+    const target = qs("#" + id);  
+    if (target) target.classList.add("active");  
+  
+    // Highlight tab  
+    qsa(".tab").forEach(t => t.classList.remove("active"));  
+    const tab = qs(`.tab[data-tab="${id}"]`);  
+    if (tab) tab.classList.add("active");  
+  
+    // Refresh screens  
+    try { renderStock?.(); } catch {}  
+    try { renderSales?.(); } catch {}  
+    try { renderWanting?.(); } catch {}  
+    try { renderExpenses?.(); } catch {}  
+    try { renderServiceTables?.(); } catch {}  
+    try { renderCollection?.(); } catch {}  
+    try { renderAnalytics?.(); } catch {}  
+    try { updateSummaryCards?.(); } catch {}  
+  }  
+  
+  document.addEventListener("click", e => {  
+    if (e.target.classList.contains("tab")) {  
+      switchTab(e.target.dataset.tab);  
+    }  
+  });  
+</script>  <!-- =============== CLOCK =============== -->  <script>  
+  function updateClock() {  
+    const d = new Date();  
+    const t = qs("#clockTime");  
+    const dt = qs("#clockDate");  
+    if (t) t.textContent = d.toLocaleTimeString();  
+    if (dt) dt.textContent = d.toLocaleDateString();  
+  }  
+  setInterval(updateClock, 1000);  
+  updateClock();  
+</script>  </body>  
 </html>
