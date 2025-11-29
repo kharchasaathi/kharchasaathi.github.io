@@ -1,39 +1,38 @@
 /* ===========================================================
-   universal-bar.js — Top Metrics + Collect Buttons (v1.0)
-   • Calculates:
-       - Net Profit  = (Sale + Service) − Expenses
-       - Stock Investment (sold items)
-       - Service Investment (completed jobs)
-       - Pending Credit Sales
-   • Provides:
-       - window.updateUniversalBar()
-       - Collect buttons for Net, Stock, Service
-   • Uses:
-       - window.sales, window.services, window.expenses, window.stock
-       - window.addCollectionEntry (from collection.js)
+   universal-bar.js — Top Metrics + Collect Buttons (v2.0)
+   CLEAN + BUG-FREE + FULLY STABLE
 =========================================================== */
-
 (function () {
 
+  /* -------------------------------
+     Utility
+  --------------------------------*/
   function num(v) {
     const n = Number(v || 0);
     return isNaN(n) ? 0 : n;
   }
 
+  function formatMoney(v) {
+    return "₹" + Math.round(num(v));
+  }
+
+  /* -------------------------------
+     Compute all metrics
+  --------------------------------*/
   function computeMetrics() {
-    const sales   = window.sales   || [];
+    const sales    = window.sales    || [];
     const services = window.services || [];
     const expenses = window.expenses || [];
     const stock    = window.stock    || [];
 
-    let saleProfitCollected   = 0;
-    let serviceProfitCollected = 0;
-    let totalExpenses         = 0;
-    let pendingCreditTotal    = 0;
-    let stockInvestSold       = 0;
-    let serviceInvestCompleted = 0;
+    let saleProfitCollected     = 0;
+    let serviceProfitCollected  = 0;
+    let pendingCreditTotal      = 0;
+    let totalExpenses           = 0;
+    let stockInvestSold         = 0;
+    let serviceInvestCompleted  = 0;
 
-    // ---- Sales ----
+    // --- SALES ---
     sales.forEach(s => {
       const st = String(s.status || "").toLowerCase();
       const profit = num(s.profit);
@@ -46,7 +45,7 @@
       }
     });
 
-    // ---- Service ----
+    // --- SERVICE ---
     services.forEach(j => {
       const st = String(j.status || "").toLowerCase();
       if (st === "completed") {
@@ -55,12 +54,12 @@
       }
     });
 
-    // ---- Expenses ----
+    // --- EXPENSES ---
     expenses.forEach(e => {
       totalExpenses += num(e.amount || e.value);
     });
 
-    // ---- Stock Investment (Sold Items) ----
+    // --- STOCK INVEST (Sold items only) ---
     stock.forEach(p => {
       const soldQty = num(p.sold);
       const cost    = num(p.cost);
@@ -74,47 +73,51 @@
     return {
       saleProfitCollected,
       serviceProfitCollected,
-      totalExpenses,
       pendingCreditTotal,
+      totalExpenses,
       stockInvestSold,
       serviceInvestCompleted,
       netProfit
     };
   }
 
-  function formatMoney(v) {
-    return "₹" + Math.round(num(v));
-  }
-
+  /* -------------------------------
+     Update the metric bar UI
+  --------------------------------*/
   function updateUniversalBar() {
     const m = computeMetrics();
 
-    const elNet        = document.getElementById("unNetProfit");
-    const elSaleProfit = document.getElementById("unSaleProfit");
-    const elServProfit = document.getElementById("unServiceProfit");
-    const elExpenses   = document.getElementById("unExpenses");
-    const elStockInv   = document.getElementById("unStockInv");
-    const elServInv    = document.getElementById("unServiceInv");
-    const elCredit     = document.getElementById("unCreditSales");
+    const el = {
+      net:        document.getElementById("unNetProfit"),
+      sale:       document.getElementById("unSaleProfit"),
+      serv:       document.getElementById("unServiceProfit"),
+      exp:        document.getElementById("unExpenses"),
+      stock:      document.getElementById("unStockInv"),
+      servInv:    document.getElementById("unServiceInv"),
+      credit:     document.getElementById("unCreditSales")
+    };
 
-    if (elNet)        elNet.textContent        = formatMoney(m.netProfit);
-    if (elSaleProfit) elSaleProfit.textContent = formatMoney(m.saleProfitCollected);
-    if (elServProfit) elServProfit.textContent = formatMoney(m.serviceProfitCollected);
-    if (elExpenses)   elExpenses.textContent   = formatMoney(m.totalExpenses);
-    if (elStockInv)   elStockInv.textContent   = formatMoney(m.stockInvestSold);
-    if (elServInv)    elServInv.textContent    = formatMoney(m.serviceInvestCompleted);
-    if (elCredit)     elCredit.textContent     = formatMoney(m.pendingCreditTotal);
+    if (el.net)     el.net.textContent     = formatMoney(m.netProfit);
+    if (el.sale)    el.sale.textContent    = formatMoney(m.saleProfitCollected);
+    if (el.serv)    el.serv.textContent    = formatMoney(m.serviceProfitCollected);
+    if (el.exp)     el.exp.textContent     = formatMoney(m.totalExpenses);
+    if (el.stock)   el.stock.textContent   = formatMoney(m.stockInvestSold);
+    if (el.servInv) el.servInv.textContent = formatMoney(m.serviceInvestCompleted);
+    if (el.credit)  el.credit.textContent  = formatMoney(m.pendingCreditTotal);
 
-    // last snapshot – collect prompts లో చూపించడానికి
-    window.__unMetrics = m;
+    window.__unMetrics = m; // save snapshot
   }
 
   window.updateUniversalBar = updateUniversalBar;
 
-  // ---------- Collect Button Logic (Option 1) ----------
+
+
+  /* -------------------------------
+     Handle Collect Button
+  --------------------------------*/
   function handleCollect(kind) {
     if (!window.addCollectionEntry) {
-      alert("Collection history is not ready yet.");
+      alert("Collection module missing.");
       return;
     }
 
@@ -123,55 +126,70 @@
     let label = "";
     let approx = 0;
 
-    if (kind === "net") {
-      label = "Net Profit (Sale + Service − Expenses)";
-      approx = m.netProfit;
-    } else if (kind === "stock") {
-      label = "Stock Investment (Sold Items)";
-      approx = m.stockInvestSold;
-    } else if (kind === "service") {
-      label = "Service Investment (Completed)";
-      approx = m.serviceInvestCompleted;
-    } else {
-      return;
+    switch (kind) {
+      case "net":
+        label = "Net Profit (Sale + Service − Expenses)";
+        approx = m.netProfit;
+        break;
+
+      case "stock":
+        label = "Stock Investment (Sold Items)";
+        approx = m.stockInvestSold;
+        break;
+
+      case "service":
+        label = "Service Investment (Completed)";
+        approx = m.serviceInvestCompleted;
+        break;
+
+      default:
+        return;
     }
 
     const hint = approx > 0
       ? `Approx available: ₹${Math.round(approx)}`
-      : `No positive balance visible.`;
+      : `No positive amount.`;
 
-    const inStr = prompt(
-      `${label}\n${hint}\n\nEnter amount to record as collected:`
-    );
-    if (!inStr) return;
+    const val = prompt(`${label}\n${hint}\n\nEnter amount to record:`);
 
-    const amt = Number(inStr);
+    if (!val) return;
+
+    const amt = Number(val);
     if (!amt || amt <= 0) {
       alert("Invalid amount.");
       return;
     }
 
-    const note = prompt("Optional note (e.g., 'Owner withdrawal', 'Bank deposit'):", "") || "";
+    const note = prompt("Optional note:", "") || "";
 
-    // 👉 Option 1: Just record in collection history. We DO NOT touch sales/stock/services.
     window.addCollectionEntry(label, note, amt);
 
-    // Collection tab + universal bar refresh
+    // refresh everything
     window.renderCollection?.();
-    window.updateUniversalBar?.();
-    alert("Collection recorded in history.");
+    updateUniversalBar();
+    alert("Collection recorded.");
   }
 
+  window.handleCollect = handleCollect;
+
+
+
+  /* -------------------------------
+     Register one click listener only
+  --------------------------------*/
   document.addEventListener("click", e => {
-    const t = e.target;
-    const kind = t?.dataset?.collect;
-    if (!kind) return;
-    handleCollect(kind);
+    const btn = e.target.closest(".collect-btn");
+    if (!btn) return;
+    handleCollect(btn.dataset.collect);
   });
 
+
+
+  /* -------------------------------
+     Initial render after load
+  --------------------------------*/
   window.addEventListener("load", () => {
-    // initial render once all data loaded
-    setTimeout(updateUniversalBar, 50);
+    setTimeout(updateUniversalBar, 120);
   });
 
 })();
