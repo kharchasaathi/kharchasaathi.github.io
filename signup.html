@@ -102,57 +102,60 @@
   </div>
 </div>
 
+<!-- Firebase Core -->
+<script src="https://www.gstatic.com/firebasejs/9.6.11/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.6.11/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.6.11/firebase-firestore-compat.js"></script>
+
+<!-- Firebase init -->
+<script src="/js/firebase.js"></script>
+
+<!-- login-utils.js (MANDATORY) -->
+<script src="/js/login-utils.js"></script>
+
 <script>
+  const qs = s => document.querySelector(s);
+
   // Password show/hide
-  document.getElementById("pwEye").addEventListener("click", () => {
-    const pw = document.getElementById("password");
+  qs("#pwEye").addEventListener("click", () => {
+    const pw = qs("#password");
     pw.type = pw.type === "password" ? "text" : "password";
   });
 
-  // Sign Up using fsSignUp()
-  document.getElementById("signupBtn").addEventListener("click", async ()=>{
+  // SIGNUP CLICK
+  qs("#signupBtn").addEventListener("click", async () => {
 
-    const email = document.getElementById("email").value.trim();
-    const pass  = document.getElementById("password").value.trim();
+    const email = qs("#email").value.trim();
+    const pass  = qs("#password").value.trim();
 
-    if(!email || !pass){
+    if (!email || !pass) {
       alert("Enter email & password");
       return;
     }
 
-    if(pass.length < 6){
+    if (pass.length < 6) {
       alert("Password must be at least 6 characters");
       return;
     }
 
-    try{
-      const userCred = await window.fsSignUp(email, pass);
+    // 🔥 FINAL: Use signupUser() from login-utils.js
+    const res = await signupUser(email, pass);
 
+    if (res.success) {
       alert("Account created successfully!");
 
-      // Save user email
+      // store email locally (for core.js)
       localStorage.setItem("ks-user-email", email);
 
-      // Redirect to dashboard
+      // redirect to dashboard
       window.location.href = "/tools/business-dashboard.html";
 
-    }catch(err){
-      alert("Signup failed: " + err.message);
+    } else {
+      alert("Signup failed: " + res.error);
     }
+
   });
 </script>
-
-<!-- Firebase Core -->
-<script src="https://www.gstatic.com/firebasejs/9.6.11/firebase-app-compat.js"></script>
-
-<!-- Firebase Auth -->
-<script src="https://www.gstatic.com/firebasejs/9.6.11/firebase-auth-compat.js"></script>
-
-<!-- Firestore (IMPORTANT!!) -->
-<script src="https://www.gstatic.com/firebasejs/9.6.11/firebase-firestore-compat.js"></script>
-
-<!-- Your firebase.js -->
-<script src="/js/firebase.js"></script>
 
 </body>
 </html>
