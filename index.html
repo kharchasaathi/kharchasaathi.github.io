@@ -1,148 +1,383 @@
 <!doctype html>
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>💰 KharchaSaathi — Smart Tools Hub</title>
-  <meta name="theme-color" content="#ff7a00" />
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>KharchaSaathi</title>
 
-  <!-- Favicon -->
-  <link rel="icon" href="icons/icon-192.png" type="image/png">
-
-  <!-- Fonts -->
-  <link rel="preload" href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;800&display=swap" as="style" onload="this.rel='stylesheet'">
+<!-- Main Font -->
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;800&display=swap">
-  <style>
+
+<style>
     :root{
       --orange:#ff7a00;
-      --orange-dark:#cc6300;
-      --bg-light:#fafafa;
-      --bg-dark:#121212;
-      --text-light:#e8e8e8;
-      --text-dark:#222;
-      --card-light:#ffffff;
-      --card-dark:#1e1e1e;
+      --dark:#111;
+      --light:#f5f5f5;
+      --blur-bg:url('/img/ks-bg-blur.png'); /* YOU WILL PLACE THE BLURRED BG HERE */
     }
 
     body{
-      margin:0;padding:0;
-      font-family:Poppins,Arial,sans-serif;
-      background:var(--bg-light);color:var(--text-dark);
+      margin:0;
+      padding:0;
+      font-family:'Poppins',sans-serif;
+      background:#000;
+      overflow-x:hidden;
+    }
+
+    /* ================================
+        FULLSCREEN BACKGROUND BLUR
+    ================================= */
+    .bg-blur{
+      position:fixed;
+      top:0; left:0;
+      width:100%; height:100%;
+      background-image:var(--blur-bg);
+      background-size:cover;
+      background-position:center;
+      filter:blur(18px) brightness(0.65);
+      z-index:-1;
+      transform:scale(1.15);
+    }
+
+    /* ================================
+         HEADER BRAND
+    ================================= */
+    .header{
+      padding:28px 20px;
       text-align:center;
-      transition:background .3s,color .3s;
+      color:white;
+      margin-top:10px;
+      animation:fadeIn 1s ease-out;
     }
-    body.dark{background:var(--bg-dark);color:var(--text-light)}
 
-    h1{margin-top:28px;font-size:34px;color:var(--orange)}
-    p.subtitle{color:#666;font-size:15px}
-    body.dark p.subtitle{color:#bbb}
-
-    /* Theme toggle */
-    #themeBtn{
-      position:fixed;top:14px;right:14px;
-      background:var(--orange);color:#fff;
-      border:none;padding:8px 14px;
-      border-radius:8px;cursor:pointer;
-      font-size:15px;
+    .brand-box{
+      display:flex;
+      justify-content:center;
+      align-items:center;
+      gap:14px;
     }
-    #themeBtn:hover{background:var(--orange-dark)}
 
-    /* Tools Grid */
-    .section-title{font-size:20px;font-weight:700;margin:35px 0 14px;color:var(--orange)}
-    .tools-grid{
-      display:grid;
-      grid-template-columns:repeat(auto-fit,minmax(200px,1fr));
-      gap:18px;
-      max-width:920px;margin:auto;padding:0 20px;
+    .brand-icon img{
+      width:70px;
+      height:70px;
+      object-fit:contain;
     }
-    .tool-card{
-      background:var(--card-light);
-      padding:22px;border-radius:14px;
-      text-decoration:none;color:var(--text-dark);
-      box-shadow:0 4px 12px rgba(0,0,0,.07);
-      transition:.25s;
-      display:flex;flex-direction:column;align-items:center;
+
+    .brand-title{
+      font-size:32px;
+      font-weight:800;
+      letter-spacing:1px;
     }
-    .tool-card:hover{transform:translateY(-6px);background:#fff3e5}
-    .tool-card span{font-size:32px;margin-bottom:8px}
-    small.desc{font-size:13px;color:#777;text-align:center;display:block;margin-top:6px}
 
-    body.dark .tool-card{background:var(--card-dark);color:var(--text-light)}
-    body.dark .tool-card:hover{background:#2a2a2a}
-
-    footer{margin-top:45px;padding:28px 0;font-size:12px;color:#888}
-    body.dark footer{color:#bbb}
-  </style>
+    @keyframes fadeIn{
+      from{opacity:0; transform:translateY(-10px);}
+      to{opacity:1; transform:translateY(0);}
+    }
+</style>
 
 </head>
 
 <body>
 
-  <button id="themeBtn">🌙</button>
+<div class="bg-blur"></div>
 
-  <h1>💰 KharchaSaathi</h1>
-  <p class="subtitle">Your Smart Companion for Daily & Business Tools</p>
+<!-- =============================
+        HEADER
+============================== -->
+<div class="header">
+  <div class="brand-box">
+      <!-- GOLD BAG ICON (transparent img) -->
+      <div class="brand-icon">
+          <img src="/img/goldbag.png" alt="bag">
+      </div>
 
-  <!-- PERSONAL TOOLS -->
-  <div class="section-title">Personal Tools</div>
-  <div class="tools-grid">
-    <a class="tool-card" href="tools/rent-split.html">
-      <span>🏠</span>Rent Split<small class="desc">Split rent easily.</small>
-    </a>
-    <a class="tool-card" href="tools/trip-expense-splitter.html">
-      <span>🚗</span>Trip Split<small class="desc">Group trip expenses.</small>
-    </a>
-    <a class="tool-card" href="tools/water-bill-split.html">
-      <span>💧</span>Water Bill<small class="desc">Shared bills.</small>
-    </a>
-    <a class="tool-card" href="tools/grocery-split-pro.html">
-      <span>🛒</span>Grocery Split<small class="desc">Advanced grocery sharing.</small>
-    </a>
-    <a class="tool-card" href="tools/roomshare-ledger.html">
-      <span>📒</span>RoomShare Ledger<small class="desc">Shared expenses tracker.</small>
-    </a>
+      <!-- Title -->
+      <div class="brand-title">KHARCHASAATHI</div>
   </div>
+</div>
+  <!-- =============================
+       MAIN WRAPPER
+============================== -->
+<div class="main-container">
 
-  <!-- BUSINESS TOOLS -->
-  <div class="section-title">Business Tools</div>
+  <!-- =============================
+        SECTION: BUSINESS MANAGER
+  ============================== -->
+  <h2 class="section-title">📦 Business Manager</h2>
+
   <div class="tools-grid">
+
+    <!-- Business Dashboard (New Name) -->
     <a class="tool-card" href="tools/business-dashboard.html">
-      <span>📦</span>Business Dashboard
-      <small class="desc">Stock, Sales, Wanting, Analytics.</small>
+      <span class="emoji">📊</span>
+      <div class="title">Business Manager</div>
+      <small class="desc">Stock • Sales • Service • Credit • Analytics</small>
     </a>
+
+    <!-- Invoice Pro -->
     <a class="tool-card" href="tools/invoice-pro.html">
-      <span>🧾</span>Invoice Pro<small class="desc">Create & print invoices.</small>
+      <span class="emoji">🧾</span>
+      <div class="title">Invoice Pro</div>
+      <small class="desc">Print professional bills</small>
     </a>
+
+    <!-- GST Tool -->
     <a class="tool-card" href="tools/gst-bill.html">
-      <span>📄</span>GST Calculator<small class="desc">Reverse GST tool.</small>
+      <span class="emoji">📄</span>
+      <div class="title">GST Calculator</div>
+      <small class="desc">18% + Reverse GST Tool</small>
     </a>
+
   </div>
 
-  <!-- HELP -->
-  <div class="section-title">Help & Docs</div>
-  <div class="tools-grid">
-    <a class="tool-card" href="help.html">
-      <span>📘</span>Help Center<small class="desc">Guides & tutorials.</small>
-    </a>
+  <!-- FUTURE TOOLS -->
+  <div class="coming-box">
+    🚀 <b>More Business Tools Coming Soon!</b><br>
+    Auto Backup • Sync • PDF Reports • Bulk Upload • WhatsApp Invoice…
   </div>
+</div>
 
-  <footer>© 2025 KharchaSaathi • Built by Abid Ali</footer>
+<!-- =====================================
+      PART 2 CSS
+====================================== -->
+<style>
+.main-container{
+  padding:20px;
+  max-width:900px;
+  margin:auto;
+  color:#fff;
+  animation:fadeIn 1.2s ease-out;
+}
 
-  <script>
-    // Dark Mode
-    (function(){
-      if(localStorage.getItem('ks-theme') === 'dark'){
-        document.body.classList.add('dark');
-        document.getElementById("themeBtn").textContent = "☀️";
-      }
-    })();
+/* Section Title */
+.section-title{
+  text-align:center;
+  color:#ffb84d;
+  font-size:22px;
+  font-weight:700;
+  margin-top:10px;
+  margin-bottom:18px;
+  letter-spacing:0.5px;
+}
 
-    document.getElementById("themeBtn").addEventListener("click",()=>{
-      const d = document.body.classList.toggle("dark");
-      localStorage.setItem("ks-theme", d ? "dark" : "light");
-      document.getElementById("themeBtn").textContent = d ? "☀️" : "🌙";
-    });
-  </script>
+/* Tools Grid */
+.tools-grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(230px,1fr));
+  gap:18px;
+  margin-bottom:32px;
+}
+
+/* Cards */
+.tool-card{
+  display:flex;
+  flex-direction:column;
+  background:rgba(255,255,255,0.08);
+  padding:22px 18px;
+  text-decoration:none;
+  border-radius:16px;
+  backdrop-filter:blur(8px);
+  border:1px solid rgba(255,255,255,0.13);
+  transition:.25s;
+  color:#fff;
+  text-align:center;
+}
+
+.tool-card:hover{
+  transform:translateY(-6px);
+  background:rgba(255,255,255,0.14);
+}
+
+.tool-card .emoji{
+  font-size:36px;
+  margin-bottom:8px;
+}
+
+.tool-card .title{
+  font-size:18px;
+  font-weight:600;
+}
+
+.desc{
+  font-size:13px;
+  opacity:0.8;
+  margin-top:6px;
+}
+
+/* Coming soon banner */
+.coming-box{
+  margin-top:16px;
+  text-align:center;
+  padding:16px;
+  background:rgba(0,0,0,0.35);
+  border-radius:14px;
+  border:1px solid rgba(255,255,255,0.1);
+  backdrop-filter:blur(6px);
+  font-size:14px;
+  color:#f7f7f7;
+}
+</style>
+
+<!-- ==========================================================
+     PART 3 — THEME SWITCH + FOOTER + GLOBAL UI EFFECTS
+============================================================== -->
+
+<!-- Theme Toggle Button -->
+<button id="themeBtn" class="theme-btn">🌙</button>
+
+<!-- Footer -->
+<footer class="footer">
+  © 2025 KharchaSaathi • All Rights Reserved  
+</footer>
+
+<!-- ================================
+     GLOBAL CSS
+================================ -->
+<style>
+
+/* Theme toggle button */
+.theme-btn{
+  position:fixed;
+  top:16px;
+  right:18px;
+  z-index:1000;
+  padding:10px 14px;
+  background:#ffb84d;
+  color:#000;
+  border:none;
+  font-size:16px;
+  font-weight:600;
+  border-radius:10px;
+  cursor:pointer;
+  box-shadow:0 4px 12px rgba(0,0,0,0.25);
+  transition:0.25s;
+}
+.theme-btn:hover{
+  transform:scale(1.08);
+}
+
+/* Footer */
+.footer{
+  margin-top:50px;
+  padding:25px 0;
+  text-align:center;
+  font-size:13px;
+  opacity:0.8;
+  color:#fff;
+  animation:fadeIn 1.6s ease-out;
+}
+
+
+/* Fade Animation */
+@keyframes fadeIn{
+  from{opacity:0;transform:translateY(10px);}
+  to{opacity:1;transform:translateY(0);}
+}
+
+/* Dark mode tweaks */
+body.dark .tool-card{
+  border:1px solid rgba(255,255,255,0.2);
+}
+
+body.dark .footer{
+  color:#ddd;
+}
+
+</style>
+
+
+<!-- =====================================
+     THEME SWITCH SCRIPT
+====================================== -->
+<script>
+(function(){
+
+  const btn = document.getElementById("themeBtn");
+
+  // Load saved theme
+  const saved = localStorage.getItem("ks-theme");
+  if(saved === "dark"){
+    document.body.classList.add("dark");
+    btn.textContent = "☀️";
+  }
+
+  // Toggle theme
+  btn.addEventListener("click", () => {
+    const dark = document.body.classList.toggle("dark");
+    localStorage.setItem("ks-theme", dark ? "dark" : "light");
+    btn.textContent = dark ? "☀️" : "🌙";
+  });
+
+})();
+</script>
+  <!-- ==========================================================
+     PART 4 — BACKGROUND BLUR IMAGE + PAGE INITIALIZER
+============================================================== -->
+
+<!-- Blurred Background Layer -->
+<div class="bg-blur"></div>
+
+<style>
+/* ===============================
+   BACKGROUND BLUR IMAGE
+=============================== */
+.bg-blur{
+  position: fixed;
+  top:0; left:0;
+  width:100%; height:100%;
+  background:url('assets/bg-main-shop.jpg') center/cover no-repeat;
+  filter: blur(18px) brightness(0.5);
+  z-index:-1;
+  transform:scale(1.1);
+}
+
+/* If dark mode → reduce blur brightness */
+body.dark .bg-blur{
+  filter: blur(18px) brightness(0.35);
+}
+
+/* Smooth load fade animation */
+body{
+  opacity:0;
+  animation:pageFade 0.6s ease-out forwards;
+}
+@keyframes pageFade{
+  from{opacity:0;}
+  to{opacity:1;}
+}
+</style>
+
+
+<!-- ==========================================================
+     PAGE INIT: Smooth animations + Mobile scroll handler
+============================================================== -->
+
+<script>
+document.addEventListener("DOMContentLoaded", ()=>{
+
+  // Animate Sections
+  const secs = document.querySelectorAll(".section-title, .tools-grid");
+  secs.forEach((el,i)=>{
+    el.style.opacity = "0";
+    el.style.transform = "translateY(18px)";
+    setTimeout(()=>{
+      el.style.transition = "0.6s";
+      el.style.opacity = "1";
+      el.style.transform = "translateY(0)";
+    }, 200 + i*120);
+  });
+
+  // Prevent accidental scroll overshoot
+  let lastY = 0;
+  window.addEventListener("scroll", ()=>{
+    const y = window.scrollY;
+    if(Math.abs(y - lastY) > 100){
+      lastY = y;
+    }
+  });
+
+});
+</script>
 
 </body>
 </html>
