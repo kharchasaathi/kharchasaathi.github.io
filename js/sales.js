@@ -1,9 +1,8 @@
 /* ===========================================================
-   sales.js — FULL FIXED CLEAN VERSION (v12.0)
-   ✔ Works with new stock.js v3.0
-   ✔ Works with universalBar.js v2.0
-   ✔ Credit → Paid collection stable
-   ✔ Zero console errors
+   sales.js — REALTIME ONLINE VERSION (v13.0)
+   ✔ Instant Cloud Sync
+   ✔ Pending Credit → Collection Auto Refresh
+   ✔ UniversalBar, Dashboard live update
 =========================================================== */
 
 /* ------------------------------
@@ -30,7 +29,7 @@ function refreshSaleTypeSelector() {
 }
 
 /* ===========================================================
-   ADD SALE ENTRY (Used by stock.js also)
+   ADD SALE ENTRY (Real-time Cloud + UI Update)
 =========================================================== */
 function addSaleEntry({ date, type, product, qty, price, status, customer, phone }) {
 
@@ -53,12 +52,11 @@ function addSaleEntry({ date, type, product, qty, price, status, customer, phone
   const total = qty * price;
   const profit = total - qty * cost;
 
-  // Update sold qty (DO NOT TOUCH p.qty)
+  // Update sold qty
   p.sold = Number(p.sold) + qty;
-  window.saveStock && window.saveStock();
+  window.saveStock?.();
 
   // Add sale
-  window.sales = window.sales || [];
   window.sales.push({
     id: uid("sale"),
     date: date || todayDate(),
@@ -75,23 +73,28 @@ function addSaleEntry({ date, type, product, qty, price, status, customer, phone
     phone: phone || ""
   });
 
-  window.saveSales && window.saveSales();
+  /* 🔥 CLOUD + LOCAL SAVE */
+  window.saveSales?.();
 
+  /* 🔥 INSTANT UI REFRESH */
   renderSales?.();
+  renderPendingCollections?.();
+  renderCollection?.();
   window.renderAnalytics?.();
   window.updateSummaryCards?.();
   window.updateUniversalBar?.();
 }
 
 /* ===========================================================
-   CREDIT → PAID
+   CREDIT → PAID (Instant Update Everywhere)
 =========================================================== */
 function collectCreditSale(id) {
-  const s = (window.sales || []).find(x => x.id === id);
+  const s = window.sales.find(x => x.id === id);
   if (!s) return;
 
   if ((s.status || "").toLowerCase() !== "credit") {
-    alert("Already Paid."); return;
+    alert("Already Paid.");
+    return;
   }
 
   const msg = [
@@ -106,13 +109,21 @@ function collectCreditSale(id) {
   if (!confirm(msg.join("\n") + "\n\nMark as PAID?")) return;
 
   s.status = "Paid";
-  window.saveSales && window.saveSales();
 
-  renderSales();
+  /* 🔥 CLOUD SAVE FIRST */
+  window.saveSales?.();
+
+  /* 🔥 UI updates (NO REFRESH NEEDED) */
+  renderSales?.();
+  renderPendingCollections?.();
+  renderCollection?.();
   window.renderAnalytics?.();
   window.updateSummaryCards?.();
   window.updateUniversalBar?.();
+
+  alert("Marked as PAID.");
 }
+
 window.collectCreditSale = collectCreditSale;
 
 /* ===========================================================
@@ -139,7 +150,7 @@ function renderSales() {
       totalSum += t;
 
       if ((s.status || "").toLowerCase() !== "credit")
-        profitSum += Number(s.profit);
+        profitSum += Number(s.profit || 0);
 
       const isCredit = (s.status || "").toLowerCase() === "credit";
 
@@ -183,9 +194,11 @@ document.getElementById("clearSalesBtn")?.addEventListener("click", () => {
   if (!confirm("Clear ALL sales?")) return;
 
   window.sales = [];
-  window.saveSales && window.saveSales();
+  window.saveSales?.();
 
   renderSales();
+  renderPendingCollections?.();
+  renderCollection?.();
   window.renderAnalytics?.();
   window.updateSummaryCards?.();
   window.updateUniversalBar?.();
