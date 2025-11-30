@@ -1,10 +1,9 @@
 /* ===========================================================
-   📌 core.js — Master Engine (FINAL V9.0)
-   ✔ Collection module compatible
-   ✔ Cloud sync hooks
+   📌 core.js — Master Engine (ONLINE ONLY — FINAL V12, Part A)
+   ✔ Online-only (Firebase Auth + Firestore)
    ✔ Safe date helpers
-   ✔ NO duplicate login functions (uses security.js + firebase.js)
-   ✔ Topbar email text: email / Offline (Local mode)
+   ✔ Clean helpers (no login here)
+   ✔ Cloud keys (used later in Part B/C/D)
 =========================================================== */
 
 /* ---------- STORAGE KEYS ---------- */
@@ -18,7 +17,7 @@ const KEY_COLLECTIONS  = "ks-collections";
 const KEY_LIMIT        = "default-limit";
 const KEY_USER_EMAIL   = "ks-user-email";
 
-/* ---------- CLOUD COLLECTION NAMES ---------- */
+/* ---------- CLOUD COLLECTION NAMES (Firestore Collections) ---------- */
 const CLOUD_COLLECTIONS = {
   [KEY_TYPES]:       "types",
   [KEY_STOCK]:       "stock",
@@ -33,38 +32,66 @@ const CLOUD_COLLECTIONS = {
    SAFE HELPERS
 =========================================================== */
 function safeParse(raw) {
-  try { return JSON.parse(raw); } catch { return []; }
+  try {
+    return JSON.parse(raw);
+  } catch {
+    return [];
+  }
 }
-function toArray(v) { return Array.isArray(v) ? v : []; }
+
+function toArray(v) {
+  return Array.isArray(v) ? v : [];
+}
 
 /* ===========================================================
    DATE HELPERS
+   Internal format: YYYY-MM-DD
+   Display format: DD-MM-YYYY
 =========================================================== */
 function toDisplay(d) {
   if (!d) return "";
+  if (typeof d !== "string") return d;
+
   if (d.includes("-")) {
-    const [y, m, dd] = d.split("-");
-    if (y.length === 4) return `${dd}-${m}-${y}`;
+    const p = d.split("-");
+    if (p.length === 3) {
+      const [a, b, c] = p;
+      if (a.length === 4) {
+        // YYYY-MM-DD → DD-MM-YYYY
+        return `${c}-${b}-${a}`;
+      }
+    }
   }
   return d;
 }
 
 function toInternal(d) {
   if (!d) return "";
+  if (typeof d !== "string") return d;
   if (!d.includes("-")) return d;
+
   const p = d.split("-");
-  if (p[0].length === 2) {
+  if (p.length !== 3) return d;
+
+  // DD-MM-YYYY → YYYY-MM-DD
+  if (p[0].length === 2 && p[2].length === 4) {
     const [dd, m, y] = p;
     return `${y}-${m}-${dd}`;
   }
+
   return d;
 }
 
 function toInternalIfNeeded(d) {
   if (!d) return "";
+  if (typeof d !== "string") return d;
+
   const p = d.split("-");
-  if (p[0].length === 4) return d;          // already YYYY-MM-DD
-  if (p[0].length === 2) return toInternal(d);
+  if (p.length !== 3) return d;
+
+  if (p[0].length === 4) return d;        // already YYYY-MM-DD
+  if (p[0].length === 2 && p[2].length === 4) return toInternal(d);
+
   return d;
 }
 
@@ -73,7 +100,39 @@ window.toInternal = toInternal;
 window.toInternalIfNeeded = toInternalIfNeeded;
 
 /* ===========================================================
-   LOAD ALL MODULE DATA (LOCAL)
+   BASIC HELPERS
+=========================================================== */
+function todayDate() {
+  const d = new Date();
+  d.setMinutes(d.getMinutes() - d.getTimezoneOffset());
+  return d.toISOString().split("T")[0]; // YYYY-MM-DD
+}
+window.todayDate = todayDate;
+
+function uid(p = "id") {
+  return p + "_" + Math.random().toString(36).slice(2, 10);
+}
+window.uid = uid;
+
+function esc(t) {
+  return String(t || "").replace(/[&<>"']/g, m => ({
+    "&": "&amp;",
+    "<": "&lt;",
+    ">": "&gt;",
+    '"': "&quot;",
+    "'": "&#39;"
+  }[m]));
+}
+window.esc = esc;
+
+/* ===== Part A ends here. Next line in Part B: LOAD ALL MODULE DATA ===== */
+/* ===========================================================
+   PART B — LOAD LOCAL DATA + NORMALIZE + SAVE HELPERS
+=========================================================== */
+
+/* ===========================================================
+   LOAD ALL MODULE DATA (LOCAL CACHE)
+   (Firestore నుంచి కూడా later sync అవుతుంది)
 =========================================================== */
 window.types       = toArray(safeParse(localStorage.getItem(KEY_TYPES)));
 window.stock       = toArray(safeParse(localStorage.getItem(KEY_STOCK)));
@@ -83,6 +142,7 @@ window.expenses    = toArray(safeParse(localStorage.getItem(KEY_EXPENSES)));
 window.services    = toArray(safeParse(localStorage.getItem(KEY_SERVICES)));
 window.collections = toArray(safeParse(localStorage.getItem(KEY_COLLECTIONS)));
 
+/* Ensure always arrays */
 function ensureArrays() {
   if (!Array.isArray(window.types))       window.types = [];
   if (!Array.isArray(window.stock))       window.stock = [];
@@ -95,20 +155,33 @@ function ensureArrays() {
 ensureArrays();
 
 /* ===========================================================
-   NORMALIZE DATES
+   NORMALIZE DATES (convert everything to YYYY-MM-DD)
 =========================================================== */
 function normalizeAllDates() {
+
   if (window.stock)
-    window.stock = window.stock.map(s => ({ ...s, date: toInternalIfNeeded(s.date) }));
+    window.stock = window.stock.map(s => ({
+      ...s,
+      date: toInternalIfNeeded(s.date)
+    }));
 
   if (window.sales)
-    window.sales = window.sales.map(s => ({ ...s, date: toInternalIfNeeded(s.date) }));
+    window.sales = window.sales.map(s => ({
+      ...s,
+      date: toInternalIfNeeded(s.date)
+    }));
 
   if (window.expenses)
-    window.expenses = window.expenses.map(e => ({ ...e, date: toInternalIfNeeded(e.date) }));
+    window.expenses = window.expenses.map(e => ({
+      ...e,
+      date: toInternalIfNeeded(e.date)
+    }));
 
   if (window.wanting)
-    window.wanting = window.wanting.map(w => ({ ...w, date: toInternalIfNeeded(w.date) }));
+    window.wanting = window.wanting.map(w => ({
+      ...w,
+      date: toInternalIfNeeded(w.date)
+    }));
 
   if (window.services)
     window.services = window.services.map(j => ({
@@ -123,78 +196,78 @@ function normalizeAllDates() {
       date: toInternalIfNeeded(c.date)
     }));
 }
+
 normalizeAllDates();
 
 /* ===========================================================
-   BASIC HELPERS
-=========================================================== */
-function todayDate() {
-  const d = new Date();
-  d.setMinutes(d.getMinutes() - d.getTimezoneOffset());
-  return d.toISOString().split("T")[0];
-}
-window.todayDate = todayDate;
-
-function uid(p = "id") {
-  return p + "_" + Math.random().toString(36).slice(2, 10);
-}
-window.uid = uid;
-
-function esc(t) {
-  return String(t || "").replace(/[&<>"']/g, m => ({
-    "&": "&amp;", "<": "&lt;", ">": "&gt;",
-    '"': "&quot;", "'": "&#39;"
-  }[m]));
-}
-window.esc = esc;
-
-/* ===========================================================
    SAVE HELPERS (LOCAL + CLOUD)
+   — Firestore sync actual code is in Part D
 =========================================================== */
+
 function _localSave(k, v) {
-  try { localStorage.setItem(k, JSON.stringify(v)); } catch {}
-}
-
-function _cloudSaveIfPossible(key, data) {
-  const col = CLOUD_COLLECTIONS[key];
-  if (!col) return;
-
   try {
-    if (typeof cloudSaveDebounced === "function") {
-      cloudSaveDebounced(col, data);
-    } else if (typeof cloudSave === "function") {
-      cloudSave(col, data);
-    }
+    localStorage.setItem(k, JSON.stringify(v));
   } catch {}
 }
 
-function saveTypes()       { _localSave(KEY_TYPES, types);         _cloudSaveIfPossible(KEY_TYPES, types); }
-function saveStock()       { _localSave(KEY_STOCK, stock);         _cloudSaveIfPossible(KEY_STOCK, stock); }
-function saveSales()       { _localSave(KEY_SALES, sales);         _cloudSaveIfPossible(KEY_SALES, sales); }
-function saveWanting()     { _localSave(KEY_WANTING, wanting);     _cloudSaveIfPossible(KEY_WANTING, wanting); }
-function saveExpenses()    { _localSave(KEY_EXPENSES, expenses);   _cloudSaveIfPossible(KEY_EXPENSES, expenses); }
-function saveServices()    { _localSave(KEY_SERVICES, services);   _cloudSaveIfPossible(KEY_SERVICES, services); }
-function saveCollections() { _localSave(KEY_COLLECTIONS, collections); _cloudSaveIfPossible(KEY_COLLECTIONS, collections); }
+function saveTypes()       { _localSave(KEY_TYPES, types); }
+function saveStock()       { _localSave(KEY_STOCK, stock); }
+function saveSales()       { _localSave(KEY_SALES, sales); }
+function saveWanting()     { _localSave(KEY_WANTING, wanting); }
+function saveExpenses()    { _localSave(KEY_EXPENSES, expenses); }
+function saveServices()    { _localSave(KEY_SERVICES, services); }
+function saveCollections() { _localSave(KEY_COLLECTIONS, collections); }
 
-window.saveTypes = saveTypes;
-window.saveStock = saveStock;
-window.saveSales = saveSales;
-window.saveWanting = saveWanting;
-window.saveExpenses = saveExpenses;
-window.saveServices = saveServices;
+window.saveTypes       = saveTypes;
+window.saveStock       = saveStock;
+window.saveSales       = saveSales;
+window.saveWanting     = saveWanting;
+window.saveExpenses    = saveExpenses;
+window.saveServices    = saveServices;
 window.saveCollections = saveCollections;
 
+/* ===== Part B ends here. Next part: Part C (Business Logic: Types, Stock, Sales, Expenses, Wanting) ===== */
 /* ===========================================================
-   STOCK HELPERS
+   PART C — BUSINESS LOGIC (Types / Stock / Wanting / Expenses)
 =========================================================== */
+
+/* ===========================================================
+   TYPE MANAGEMENT
+=========================================================== */
+
+function addType(name) {
+  name = (name || "").trim();
+  if (!name) return;
+
+  if (types.find(t => t.name.toLowerCase() === name.toLowerCase())) return;
+
+  types.push({
+    id: uid("type"),
+    name
+  });
+
+  saveTypes();
+  cloudSync(KEY_TYPES, types);
+}
+
+window.addType = addType;
+
+
+/* ===========================================================
+   STOCK MANAGEMENT
+=========================================================== */
+
+/* Find a product in stock */
 function findProduct(type, name) {
-  return (window.stock || []).find(
-    p => p.type === type &&
+  return (stock || []).find(
+    p =>
+      p.type === type &&
       String(p.name || "").toLowerCase() === String(name || "").toLowerCase()
   );
 }
 window.findProduct = findProduct;
 
+/* Calculate cost */
 function getProductCost(type, name) {
   const p = findProduct(type, name);
   if (!p) return 0;
@@ -202,36 +275,22 @@ function getProductCost(type, name) {
   if (p.cost) return Number(p.cost);
 
   if (p.history && p.history.length) {
-    let t = 0, q = 0;
+    let t = 0,
+      q = 0;
     p.history.forEach(h => {
       t += Number(h.cost) * Number(h.qty);
       q += Number(h.qty);
     });
-    return q ? (t / q) : 0;
+    return q ? t / q : 0;
   }
   return 0;
 }
 window.getProductCost = getProductCost;
 
-/* ===========================================================
-   TYPES
-=========================================================== */
-function addType(name) {
-  name = (name || "").trim();
-  if (!name) return;
-  if (window.types.find(t => t.name.toLowerCase() === name.toLowerCase())) return;
-
-  types.push({ id: uid("type"), name });
-  saveTypes();
-}
-window.addType = addType;
-
-/* ===========================================================
-   ADD STOCK ENTRY
-=========================================================== */
+/* Add stock entry */
 function addStockEntry({ date, type, name, qty, cost }) {
   date = toInternalIfNeeded(date);
-  qty  = Number(qty);
+  qty = Number(qty);
   cost = Number(cost);
 
   if (!type || !name || qty <= 0 || cost <= 0) return;
@@ -259,23 +318,34 @@ function addStockEntry({ date, type, name, qty, cost }) {
   }
 
   saveStock();
+  cloudSync(KEY_STOCK, stock);
 }
+
 window.addStockEntry = addStockEntry;
 
+
 /* ===========================================================
-   LIMIT
+   LOW STOCK LIMIT
 =========================================================== */
-function setGlobalLimit(v) { localStorage.setItem(KEY_LIMIT, v); }
-function getGlobalLimit()  { return Number(localStorage.getItem(KEY_LIMIT) || 0); }
+
+function setGlobalLimit(v) {
+  localStorage.setItem(KEY_LIMIT, v);
+}
+
+function getGlobalLimit() {
+  return Number(localStorage.getItem(KEY_LIMIT) || 0);
+}
 
 window.setGlobalLimit = setGlobalLimit;
 window.getGlobalLimit = getGlobalLimit;
 
+
 /* ===========================================================
-   WANTING
+   WANTING LIST
 =========================================================== */
+
 function autoAddWanting(type, name, note = "Low Stock") {
-  if (!window.wanting.find(w => w.type === type && w.name === name)) {
+  if (!wanting.find(w => w.type === type && w.name === name)) {
     wanting.push({
       id: uid("want"),
       date: todayDate(),
@@ -283,14 +353,19 @@ function autoAddWanting(type, name, note = "Low Stock") {
       name,
       note
     });
+
     saveWanting();
+    cloudSync(KEY_WANTING, wanting);
   }
 }
+
 window.autoAddWanting = autoAddWanting;
 
+
 /* ===========================================================
-   EXPENSE
+   EXPENSES
 =========================================================== */
+
 function addExpense({ date, category, amount, note }) {
   expenses.push({
     id: uid("exp"),
@@ -299,33 +374,46 @@ function addExpense({ date, category, amount, note }) {
     amount: Number(amount || 0),
     note: note || ""
   });
+
   saveExpenses();
+  cloudSync(KEY_EXPENSES, expenses);
 }
+
 window.addExpense = addExpense;
 
-/* ===========================================================
-   NET PROFIT (Dynamic)
-=========================================================== */
-window.getTotalNetProfit = function () {
-  let salesProfit = 0, serviceProfit = 0, exp = 0;
 
+/* ===========================================================
+   NET PROFIT (Dynamic Calculator)
+=========================================================== */
+
+window.getTotalNetProfit = function () {
+  let salesProfit = 0,
+    serviceProfit = 0,
+    exp = 0;
+
+  // Sales profits (only non-credit)
   sales.forEach(s => {
     if ((s.status || "").toLowerCase() !== "credit") {
       salesProfit += Number(s.profit || 0);
     }
   });
 
-  services.forEach(j => serviceProfit += Number(j.profit || 0));
-  expenses.forEach(e => exp += Number(e.amount || 0));
+  // Service profit
+  services.forEach(j => (serviceProfit += Number(j.profit || 0)));
 
-  return (salesProfit + serviceProfit) - exp;
+  // Expenses
+  expenses.forEach(e => (exp += Number(e.amount || 0)));
+
+  return salesProfit + serviceProfit - exp;
 };
 
+
 /* ===========================================================
-   TAB SUMMARY BAR
+   TAB SUMMARY BAR (Top Green/Red Bar)
 =========================================================== */
+
 window.updateTabSummaryBar = function () {
-  const bar = qs("#tabSummaryBar");
+  const bar = document.getElementById("tabSummaryBar");
   if (!bar) return;
 
   const net = window.getTotalNetProfit();
@@ -340,70 +428,13 @@ window.updateTabSummaryBar = function () {
     bar.textContent = `Loss: -₹${Math.abs(net)}`;
   }
 };
-
 /* ===========================================================
-   CLOUD PULL (uses login info from firebase.js + security.js)
+   PART D — CLOUD PULL + STORAGE SYNC + INVESTMENTS + EMAIL TAG
 =========================================================== */
-async function cloudPullAllIfAvailable() {
-  if (typeof cloudLoad !== "function") return;
 
-  // 1) Firebase user
-  let email = "";
-  try {
-    if (window.getFirebaseUser && getFirebaseUser()) {
-      email = getFirebaseUser().email || "";
-    }
-  } catch {}
-
-  // 2) Local login (from security.js)
-  if (!email && window.getUserEmail) {
-    email = getUserEmail() || "";
-  }
-
-  // 3) Direct localStorage fallback
-  if (!email) {
-    email = localStorage.getItem(KEY_USER_EMAIL) || "";
-  }
-
-  if (!email) return; // still offline
-
-  const keys = [
-    KEY_TYPES,
-    KEY_STOCK,
-    KEY_SALES,
-    KEY_WANTING,
-    KEY_EXPENSES,
-    KEY_SERVICES,
-    KEY_COLLECTIONS
-  ];
-
-  for (const key of keys) {
-    const col = CLOUD_COLLECTIONS[key];
-    try {
-      const remote = await cloudLoad(col);
-      if (remote) {
-        const arr = toArray(remote);
-        window[keyToVarName(key)] = arr;
-        localStorage.setItem(key, JSON.stringify(arr));
-      }
-    } catch {}
-  }
-
-  ensureArrays();
-  normalizeAllDates();
-
-  try { renderTypes?.(); }          catch {}
-  try { renderStock?.(); }          catch {}
-  try { renderSales?.(); }          catch {}
-  try { renderWanting?.(); }        catch {}
-  try { renderExpenses?.(); }       catch {}
-  try { renderServiceTables?.(); }  catch {}
-  try { renderAnalytics?.(); }      catch {}
-  try { updateSummaryCards?.(); }   catch {}
-  try { updateTabSummaryBar?.(); }  catch {}
-  try { updateUniversalBar?.(); }   catch {}
-}
-
+/* -----------------------------------------------------------
+   KEY → GLOBAL VAR NAME MAP
+----------------------------------------------------------- */
 function keyToVarName(key) {
   switch (key) {
     case KEY_TYPES:       return "types";
@@ -417,26 +448,63 @@ function keyToVarName(key) {
   return key;
 }
 
-window.cloudPullAllIfAvailable = cloudPullAllIfAvailable;
+/* -----------------------------------------------------------
+   CLOUD PULL (Firestore → LocalStorage → Window Arrays)
+----------------------------------------------------------- */
+async function cloudPullAllIfAvailable() {
+  if (typeof cloudLoad !== "function") return;
 
-/* ===========================================================
-   AUTO CLOUD LOAD ON PAGE LOAD
-=========================================================== */
-window.addEventListener("load", () => {
-  setTimeout(cloudPullAllIfAvailable, 200);
-});
+  // 1) Firebase current user (if firebase.js exposes it)
+  let email = "";
+  try {
+    if (window.getFirebaseUser) {
+      const u = getFirebaseUser();
+      if (u && u.email) email = u.email;
+    }
+  } catch {}
 
-/* ===========================================================
-   STORAGE EVENTS (MULTI-TAB SYNC)
-=========================================================== */
-window.addEventListener("storage", () => {
-  types       = toArray(safeParse(localStorage.getItem(KEY_TYPES)));
-  stock       = toArray(safeParse(localStorage.getItem(KEY_STOCK)));
-  sales       = toArray(safeParse(localStorage.getItem(KEY_SALES)));
-  wanting     = toArray(safeParse(localStorage.getItem(KEY_WANTING)));
-  expenses    = toArray(safeParse(localStorage.getItem(KEY_EXPENSES)));
-  services    = toArray(safeParse(localStorage.getItem(KEY_SERVICES)));
-  collections = toArray(safeParse(localStorage.getItem(KEY_COLLECTIONS)));
+  // 2) Local login (security.js)
+  if (!email && window.getUserEmail) {
+    email = getUserEmail() || "";
+  }
+
+  // 3) Direct localStorage fallback
+  if (!email) {
+    email = localStorage.getItem(KEY_USER_EMAIL) || "";
+  }
+
+  // No email = treat as offline (local only)
+  if (!email) {
+    updateEmailTag();
+    return;
+  }
+
+  const keys = [
+    KEY_TYPES,
+    KEY_STOCK,
+    KEY_SALES,
+    KEY_WANTING,
+    KEY_EXPENSES,
+    KEY_SERVICES,
+    KEY_COLLECTIONS
+  ];
+
+  for (const key of keys) {
+    const col = CLOUD_COLLECTIONS[key];
+    if (!col) continue;
+
+    try {
+      const remote = await cloudLoad(col);
+      if (remote) {
+        const arr = toArray(remote);
+        const varName = keyToVarName(key);
+        window[varName] = arr;
+        localStorage.setItem(key, JSON.stringify(arr));
+      }
+    } catch (e) {
+      console.warn("Cloud pull failed for", key, e);
+    }
+  }
 
   ensureArrays();
   normalizeAllDates();
@@ -448,26 +516,72 @@ window.addEventListener("storage", () => {
   try { renderExpenses?.(); }       catch {}
   try { renderServiceTables?.(); }  catch {}
   try { renderAnalytics?.(); }      catch {}
+  try { renderCollection?.(); }     catch {}
+  try { renderPendingCollections?.(); } catch {}
+  try { updateSummaryCards?.(); }   catch {}
+  try { updateTabSummaryBar?.(); }  catch {}
+  try { updateUniversalBar?.(); }   catch {}
+  try { updateEmailTag?.(); }       catch {}
+}
+
+window.cloudPullAllIfAvailable = cloudPullAllIfAvailable;
+
+/* -----------------------------------------------------------
+   AUTO CLOUD LOAD ON PAGE LOAD
+----------------------------------------------------------- */
+window.addEventListener("load", () => {
+  setTimeout(() => {
+    try { cloudPullAllIfAvailable(); } catch {}
+    try { updateEmailTag(); } catch {}
+    try { updateTabSummaryBar?.(); } catch {}
+    try { updateUniversalBar?.(); } catch {}
+  }, 300);
+});
+
+/* -----------------------------------------------------------
+   STORAGE EVENTS (MULTI-TAB & LOCAL SYNC)
+----------------------------------------------------------- */
+window.addEventListener("storage", () => {
+  window.types       = toArray(safeParse(localStorage.getItem(KEY_TYPES)));
+  window.stock       = toArray(safeParse(localStorage.getItem(KEY_STOCK)));
+  window.sales       = toArray(safeParse(localStorage.getItem(KEY_SALES)));
+  window.wanting     = toArray(safeParse(localStorage.getItem(KEY_WANTING)));
+  window.expenses    = toArray(safeParse(localStorage.getItem(KEY_EXPENSES)));
+  window.services    = toArray(safeParse(localStorage.getItem(KEY_SERVICES)));
+  window.collections = toArray(safeParse(localStorage.getItem(KEY_COLLECTIONS)));
+
+  ensureArrays();
+  normalizeAllDates();
+
+  try { renderTypes?.(); }          catch {}
+  try { renderStock?.(); }          catch {}
+  try { renderSales?.(); }          catch {}
+  try { renderWanting?.(); }        catch {}
+  try { renderExpenses?.(); }       catch {}
+  try { renderServiceTables?.(); }  catch {}
+  try { renderAnalytics?.(); }      catch {}
+  try { renderCollection?.(); }     catch {}
+  try { renderPendingCollections?.(); } catch {}
   try { updateSummaryCards?.(); }   catch {}
   try { updateTabSummaryBar?.(); }  catch {}
   try { updateUniversalBar?.(); }   catch {}
   try { updateEmailTag?.(); }       catch {}
 });
 
-/* ===========================================================
+/* -----------------------------------------------------------
    UNIVERSAL INVESTMENT HELPERS
-=========================================================== */
+----------------------------------------------------------- */
 
 // 1) TOTAL STOCK INVESTMENT (before sale)
 window.getStockInvestmentCollected = function () {
   let total = 0;
-  stock.forEach(p => {
+  (stock || []).forEach(p => {
     if (p.history && p.history.length) {
       p.history.forEach(h => {
         total += Number(h.cost) * Number(h.qty);
       });
     } else {
-      total += Number(p.cost) * Number(p.qty);
+      total += Number(p.cost || 0) * Number(p.qty || 0);
     }
   });
   return total;
@@ -476,53 +590,54 @@ window.getStockInvestmentCollected = function () {
 // 2) AFTER SALE – remaining only
 window.getStockInvestmentAfterSale = function () {
   let total = 0;
-  stock.forEach(p => {
-    const remain = Number(p.qty) - Number(p.sold || 0);
-    if (remain > 0) total += remain * Number(p.cost);
+  (stock || []).forEach(p => {
+    const remain = Number(p.qty || 0) - Number(p.sold || 0);
+    if (remain > 0) total += remain * Number(p.cost || 0);
   });
   return total;
 };
 
 // 3) SALES INVESTMENT (sold qty × cost)
 window.getSalesInvestmentCollected = function () {
-  return sales.reduce((t, s) =>
-    t + (Number(s.qty || 0) * Number(s.cost || 0)), 0
+  return (sales || []).reduce(
+    (t, s) => t + Number(s.qty || 0) * Number(s.cost || 0),
+    0
   );
 };
 
 // 4) SALES PROFIT (paid only)
 window.getSalesProfitCollected = function () {
-  return sales
-    .filter(s => (s.status || "").toLowerCase() !== "credit")
+  return (sales || [])
+    .filter(s => (String(s.status || "").toLowerCase() !== "credit"))
     .reduce((t, s) => t + Number(s.profit || 0), 0);
 };
 
 // 5) SERVICE INVESTMENT (Completed only)
 window.getServiceInvestmentCollected = function () {
-  return services
-    .filter(s => s.status === "Completed")
+  return (services || [])
+    .filter(s => String(s.status || "").toLowerCase() === "completed")
     .reduce((t, s) => t + Number(s.invest || 0), 0);
 };
 
-// 6) SERVICE PROFIT
+// 6) SERVICE PROFIT (Completed only)
 window.getServiceProfitCollected = function () {
-  return services
-    .filter(s => s.status === "Completed")
+  return (services || [])
+    .filter(s => String(s.status || "").toLowerCase() === "completed")
     .reduce((t, s) => t + Number(s.profit || 0), 0);
 };
 
-/* ===========================================================
+/* -----------------------------------------------------------
    EMAIL TAG — TOPBAR STATUS
-=========================================================== */
+----------------------------------------------------------- */
 window.updateEmailTag = function () {
   const el = document.getElementById("emailTag");
   if (!el) return;
 
   let email = "";
 
-  // 1) Firebase current user
+  // 1) Firebase current user (if available)
   try {
-    if (window.getFirebaseUser && getFirebaseUser()) {
+    if (window.getFirebaseUser) {
       const u = getFirebaseUser();
       if (u && u.email) email = u.email;
     }
@@ -541,7 +656,5 @@ window.updateEmailTag = function () {
   el.textContent = email ? email : "Offline (Local mode)";
 };
 
-/* Run once after load */
-window.addEventListener("load", () => {
-  try { updateEmailTag(); } catch {}
-});
+/* Run once (in case cloudPull ఇంకా కాల్ కాక ముందు) */
+try { updateEmailTag(); } catch {}
