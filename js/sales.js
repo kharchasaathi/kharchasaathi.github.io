@@ -1,8 +1,8 @@
 /* ===========================================================
-   sales.js — REALTIME ONLINE VERSION (v13.0)
-   ✔ Instant Cloud Sync
-   ✔ Pending Credit → Collection Auto Refresh
-   ✔ UniversalBar, Dashboard live update
+   sales.js — REALTIME ONLINE VERSION (v14.0 FINAL)
+   ✔ Credit profit excluded until collection
+   ✔ Full sync with collection.js
+   ✔ UniversalBar, Dashboard, PieChart instant refresh
 =========================================================== */
 
 /* ------------------------------
@@ -29,7 +29,8 @@ function refreshSaleTypeSelector() {
 }
 
 /* ===========================================================
-   ADD SALE ENTRY (Real-time Cloud + UI Update)
+   ADD SALE ENTRY
+   ⭐ CREDIT profit NOT added here
 =========================================================== */
 function addSaleEntry({ date, type, product, qty, price, status, customer, phone }) {
 
@@ -38,7 +39,6 @@ function addSaleEntry({ date, type, product, qty, price, status, customer, phone
 
   if (!type || !product || qty <= 0 || price <= 0) return;
 
-  // Find stock product
   const p = (window.stock || []).find(
     x => x.type === type && x.name === product
   );
@@ -48,15 +48,20 @@ function addSaleEntry({ date, type, product, qty, price, status, customer, phone
   const remain = Number(p.qty) - Number(p.sold);
   if (remain < qty) { alert("Not enough stock!"); return; }
 
-  const cost = Number(p.cost);
+  const cost  = Number(p.cost);
   const total = qty * price;
   const profit = total - qty * cost;
 
-  // Update sold qty
+  /* -------------------------
+      STOCK UPDATE
+  ------------------------- */
   p.sold = Number(p.sold) + qty;
   window.saveStock?.();
 
-  // Add sale
+  /* -------------------------
+      ADD SALE ENTRY
+      ⭐ Profit only counts when PAID
+  ------------------------- */
   window.sales.push({
     id: uid("sale"),
     date: date || todayDate(),
@@ -68,15 +73,14 @@ function addSaleEntry({ date, type, product, qty, price, status, customer, phone
     total,
     profit,
     cost,
-    status: status || "Paid",
+    status: status || "Paid",  // Paid / Credit
     customer: customer || "",
     phone: phone || ""
   });
 
-  /* 🔥 CLOUD + LOCAL SAVE */
   window.saveSales?.();
 
-  /* 🔥 INSTANT UI REFRESH */
+  /* FULL UI REFRESH */
   renderSales?.();
   renderPendingCollections?.();
   renderCollection?.();
@@ -86,7 +90,9 @@ function addSaleEntry({ date, type, product, qty, price, status, customer, phone
 }
 
 /* ===========================================================
-   CREDIT → PAID (Instant Update Everywhere)
+   CREDIT → PAID
+   ⭐ Profit is added ONLY here.
+   ⭐ Pending must become 0 immediately.
 =========================================================== */
 function collectCreditSale(id) {
   const s = window.sales.find(x => x.id === id);
@@ -100,20 +106,43 @@ function collectCreditSale(id) {
   const msg = [
     `Product: ${s.product} (${s.type})`,
     `Qty: ${s.qty}`,
+    `Rate: ₹${s.price}`,
     `Total: ₹${s.total}`,
   ];
 
   if (s.customer) msg.push("Customer: " + s.customer);
   if (s.phone) msg.push("Phone: " + s.phone);
 
-  if (!confirm(msg.join("\n") + "\n\nMark as PAID?")) return;
+  if (!confirm(msg.join("\n") + "\n\nMark as PAID & Collect?")) return;
 
+  /* ---------------------------------
+     UPDATE STATUS
+  --------------------------------- */
   s.status = "Paid";
 
-  /* 🔥 CLOUD SAVE FIRST */
+  /* ---------------------------------
+     Profit is valid ONLY after collection
+  --------------------------------- */
+  s.profit = Number(s.total) - Number(s.qty * s.cost);
+
   window.saveSales?.();
 
-  /* 🔥 UI updates (NO REFRESH NEEDED) */
+  /* ---------------------------------
+     Add collection history entry
+     👉 Amount = ZERO
+     👉 Details include (Collected ₹xxx)
+  --------------------------------- */
+  const collected = s.total;
+
+  const details =
+    `${s.product} — Qty ${s.qty} × ₹${s.price} = ₹${s.total}` +
+    ` (Collected ₹${collected})` +
+    (s.customer ? ` — ${s.customer}` : "") +
+    (s.phone ? ` — ${s.phone}` : "");
+
+  window.addCollectionEntry("Sale (Credit cleared)", details, 0);
+
+  /* FULL REALTIME REFRESH */
   renderSales?.();
   renderPendingCollections?.();
   renderCollection?.();
@@ -121,7 +150,7 @@ function collectCreditSale(id) {
   window.updateSummaryCards?.();
   window.updateUniversalBar?.();
 
-  alert("Marked as PAID.");
+  alert("Credit Collected Successfully!");
 }
 
 window.collectCreditSale = collectCreditSale;
@@ -149,21 +178,21 @@ function renderSales() {
       const t = Number(s.total);
       totalSum += t;
 
-      if ((s.status || "").toLowerCase() !== "credit")
+      /* ⭐ Profit only from PAID sales */
+      if ((s.status || "").toLowerCase() === "paid")
         profitSum += Number(s.profit || 0);
 
-      const isCredit = (s.status || "").toLowerCase() === "credit";
-
-      const statusHTML = isCredit
-        ? `
-          <span class="status-credit">Credit</span>
-          <button class="small-btn"
-            style="background:#16a34a;color:white;padding:3px 8px;font-size:11px"
-            onclick="collectCreditSale('${s.id}')">
-            Collect
-          </button>
-        `
-        : `<span class="status-paid">Paid</span>`;
+      const statusHTML =
+        (s.status || "").toLowerCase() === "credit"
+          ? `
+            <span class="status-credit">Credit</span>
+            <button class="small-btn"
+              style="background:#16a34a;color:white;padding:3px 8px;font-size:11px"
+              onclick="collectCreditSale('${s.id}')">
+              Collect
+            </button>
+          `
+          : `<span class="status-paid">Paid</span>`;
 
       return `
         <tr>
