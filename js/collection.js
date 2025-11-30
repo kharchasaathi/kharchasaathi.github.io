@@ -1,10 +1,10 @@
 /* ===========================================================
-   collection.js — FINAL ONLINE VERSION (V10.0)
+   collection.js — FINAL ONLINE VERSION (V10.1 CUSTOM)
    ✔ Instant cloud sync (no refresh)
    ✔ Qty × Rate shown everywhere
    ✔ Customer + Phone visible
-   ✔ Credit → Paid with full detailed history
-   ✔ Fully synced with universalBar + core.js
+   ✔ Credit → Paid with detailed history (amount in brackets ONLY)
+   ✔ Fully synced with universalBar + core.js + analytics
 =========================================================== */
 
 /* -----------------------------
@@ -27,15 +27,18 @@ window.collections = Array.isArray(window.collections) ? window.collections : []
    SAVE (LOCAL + CLOUD)
 =========================================================== */
 function saveCollections() {
-  localStorage.setItem("ks-collections", JSON.stringify(window.collections));
+  try {
+    localStorage.setItem("ks-collections", JSON.stringify(window.collections || []));
+  } catch {}
   if (typeof cloudSaveDebounced === "function") {
-    cloudSaveDebounced("collections", window.collections);
+    cloudSaveDebounced("collections", window.collections || []);
   }
 }
 window.saveCollections = saveCollections;
 
 /* ===========================================================
    PUBLIC: addCollectionEntry
+   👉 amount ఇక్కడకి వస్తుంది. Credit clear case లో మనం 0 పంపిస్తాం.
 =========================================================== */
 window.addCollectionEntry = function (source, details, amount) {
   const entry = {
@@ -73,15 +76,20 @@ function getPendingList() {
   const list = [];
 
   (window.sales || []).forEach(s => {
-    if (String(s.status).toLowerCase() === "credit") {
+    if (String(s.status || "").toLowerCase() === "credit") {
+
+      const qty    = cNum(s.qty);
+      const price  = cNum(s.price);
+      const total  = cNum(s.total || (qty * price));
+
       list.push({
         id: s.id,
         name: s.product,
         type: s.type,
         date: s.date,
-        qty: cNum(s.qty),
-        price: cNum(s.price),
-        pending: cNum(s.total),
+        qty,
+        price,
+        pending: total,
         customer: escLocal(s.customer),
         phone: escLocal(s.phone)
       });
@@ -148,7 +156,9 @@ window.renderCollection = function () {
   const tbody = qs("#collectionHistory tbody");
   if (!tbody) return;
 
-  if (!window.collections.length) {
+  const list = window.collections || [];
+
+  if (!list.length) {
     tbody.innerHTML = `
       <tr><td colspan="4" style="text-align:center;opacity:0.6;">
         No collection history yet
@@ -156,12 +166,12 @@ window.renderCollection = function () {
     return;
   }
 
-  tbody.innerHTML = window.collections.map(e => `
+  tbody.innerHTML = list.map(e => `
     <tr>
       <td data-label="Date">${e.date}</td>
       <td data-label="Source">${escLocal(e.source)}</td>
       <td data-label="Details">${escLocal(e.details)}</td>
-      <td data-label="Amount">₹${e.amount}</td>
+      <td data-label="Amount">₹${cNum(e.amount)}</td>
     </tr>
   `).join("");
 };
@@ -179,6 +189,8 @@ document.addEventListener("click", e => {
       saveCollections();
       renderCollection();
       window.updateUniversalBar?.();
+      window.renderAnalytics?.();
+      window.updateSummaryCards?.();
     }
     return;
   }
@@ -191,21 +203,29 @@ document.addEventListener("click", e => {
   const amt = cNum(btn.dataset.amount);
 
   const sale = (window.sales || []).find(s => s.id === id);
-  if (!sale) return alert("Sale not found.");
-
-  if (String(sale.status).toLowerCase() !== "credit") {
-    alert("Already Paid");
-    return renderPendingCollections();
+  if (!sale) {
+    alert("Sale not found.");
+    return;
   }
+
+  if (String(sale.status || "").toLowerCase() !== "credit") {
+    alert("Already Paid");
+    renderPendingCollections();
+    return;
+  }
+
+  const qty   = cNum(sale.qty);
+  const price = cNum(sale.price);
+  const total = cNum(sale.total || (qty * price));
 
   const msg =
     `Product: ${sale.product}\n` +
-    `Qty: ${sale.qty}\n` +
-    `Rate: ₹${sale.price}\n` +
-    `Total: ₹${sale.total}\n` +
+    `Qty: ${qty}\n` +
+    `Rate: ₹${price}\n` +
+    `Total: ₹${total}\n` +
     (sale.customer ? `Customer: ${sale.customer}\n` : "") +
     (sale.phone ? `Phone: ${sale.phone}\n` : "") +
-    `\nMark as PAID?`;
+    `\nMark as PAID & collect now?`;
 
   if (!confirm(msg)) return;
 
@@ -213,19 +233,27 @@ document.addEventListener("click", e => {
   sale.status = "Paid";
   window.saveSales?.();
 
-  /* Add History Entry */
+  /* Build details text
+     👉 Amount historyలో కాదు, details లో bracket లో మాత్రమే */
+  const collectedAmt = amt || total;
+
   const fullDetails =
-    `${sale.product} — Qty ${sale.qty} × ₹${sale.price} = ₹${sale.total}` +
+    `${sale.product} — Qty ${qty} × ₹${price} = ₹${total}` +
+    ` (Collected ₹${collectedAmt})` +
     (sale.customer ? ` — ${sale.customer}` : "") +
     (sale.phone ? ` — ${sale.phone}` : "");
 
-  window.addCollectionEntry("Sale (Credit cleared)", fullDetails, amt);
+  /* IMPORTANT: amount = 0
+     👉 Credit amount మళ్ళీ Profit / Stock లోనే count అవుతుంది */
+  window.addCollectionEntry("Sale (Credit cleared)", fullDetails, 0);
 
   /* FULL REALTIME REFRESH */
   renderPendingCollections();
   renderCollection();
   window.renderSales?.();
+  window.renderAnalytics?.();
   window.updateUniversalBar?.();
+  window.updateSummaryCards?.();
 });
 
 /* ===========================================================
@@ -235,4 +263,6 @@ window.addEventListener("load", () => {
   renderPendingCollections();
   renderCollection();
   window.updateUniversalBar?.();
+  window.renderAnalytics?.();
+  window.updateSummaryCards?.();
 });
