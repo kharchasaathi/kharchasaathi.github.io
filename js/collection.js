@@ -1,10 +1,9 @@
 /* ===========================================================
-   collection.js — FINAL ONLINE VERSION (V11.0 HISTORY ONLY)
+   collection.js — FINAL ONLINE VERSION (V11.1 HISTORY ONLY)
    ✔ Instant cloud sync (no refresh)
    ✔ Summary cards: Sales, Service, Pending Credit, Investment
-   ✔ Collection tab = ONLY History (NO collect buttons here)
-   ✔ Credit → Paid logic NOW handled in sales.js / service.js
-   ✔ Fully synced with universalBar + core.js + analytics
+   ✔ Collection tab = ONLY History (NO pending list here)
+   ✔ Credit → Paid logic handled in sales.js / service.js only
 =========================================================== */
 
 /* -----------------------------
@@ -41,8 +40,11 @@ window.saveCollections = saveCollections;
 
 /* ===========================================================
    PUBLIC: addCollectionEntry
-   👉 Credit clear case లో amount = 0 మాత్రమే పంపాలి
-      (Collected amount details లో bracket లో ఉంటుంది)
+   👉 ఇక్కడ ఇప్పుడు ప్రధాన use:
+      - Universal Bar collect buttons (Net / Stock / Service)
+      - Manual collections (future లో)
+   👉 Credit clear case కోసం ఇకపైన ఈ function వాడకూడదు
+      (Credit history కోసం separate module పెట్టబోతున్నాం)
 =========================================================== */
 window.addCollectionEntry = function (source, details, amount) {
   const entry = {
@@ -50,7 +52,7 @@ window.addCollectionEntry = function (source, details, amount) {
     date: todayDate(),                // YYYY-MM-DD (core.js helper)
     source: escLocal(source),
     details: escLocal(details),
-    amount: cNum(amount)             // Credit clear అయితే 0
+    amount: cNum(amount)
   };
 
   window.collections.push(entry);
@@ -75,24 +77,22 @@ function computeCollectionSummary() {
 }
 
 /* ===========================================================
-   RENDER PENDING (INFO ONLY — NO COLLECT HERE)
-   👉 Collection tab లో "Pending Collections" table ఉన్నా,
-      ఇక్కడ నుంచి collect చేయం. Credit handling ఇప్పుడు
-      Sales / Service file లో మాత్రమే.
+   RENDER PENDING (INFO ONLY → NOW COMPLETELY HIDDEN)
+   👉 Collection tab లో Pending Collections block కనిపించకుండా
+      heading + table రెండిటినీ hide చేస్తున్నాం.
 =========================================================== */
 window.renderPendingCollections = function () {
-  const tbody = qs("#pendingCollectionTable tbody");
-  if (!tbody) return;
+  const table = qs("#pendingCollectionTable");
+  if (!table) return;
 
-  tbody.innerHTML = `
-    <tr>
-      <td colspan="5" style="text-align:center;opacity:0.7;">
-        Pending Credit ఇప్పుడు <b>Sales / Credit History</b> లో handle అవుతుంది.
-        <br>
-        ఇక్కడ only summary & history మాత్రమే.
-      </td>
-    </tr>
-  `;
+  // Hide table
+  table.style.display = "none";
+
+  // If previous sibling is the "Pending Collections" <h4>, hide that too
+  const prev = table.previousElementSibling;
+  if (prev && prev.tagName && prev.tagName.toLowerCase() === "h4") {
+    prev.style.display = "none";
+  }
 };
 
 /* ===========================================================
@@ -154,17 +154,18 @@ document.addEventListener("click", e => {
     return;
   }
 
-  // NOTE:
   // ❌ ఇకపై ఇక్కడ pending-collect-btn ఏదీ handle చేయం.
-  // Credit → Paid → Profit update → Collection entry
-  // ఇవన్నీ sales.js / service.js లోనె జరుగుతాయి.
+  // Credit → Paid → Profit update → Credit History
+  // ఇవన్నీ sales.js / service.js / credit-history.js లోనే జరుగుతాయి.
 });
 
 /* ===========================================================
    INIT
 =========================================================== */
 window.addEventListener("load", () => {
-  renderPendingCollections();   // Info-only message
+  // Pending block ను hide చెయ్యడం మాత్రమే
+  renderPendingCollections();
+
   renderCollection();
   window.updateUniversalBar?.();
   window.renderAnalytics?.();
