@@ -1,13 +1,13 @@
 /* ===========================================================
-   collection.js — FINAL CLEAN v6.0
-   ✔ Works with new sales.js v12.0 & stock.js v3.0
-   ✔ Uses universalBar metrics (no double calc)
-   ✔ Separate button class (no clash with top collect-btn)
+   collection.js — FINAL CLEAN v7.0
+   ✔ Fully compatible with sales.js v12 / stock.js v3
+   ✔ Customer + Phone display in pending list
    ✔ Credit → Paid update + history entry
+   ✔ Uses universalBar metrics
 =========================================================== */
 
 /* -----------------------------
-   Small helpers
+   Helpers
 ----------------------------- */
 function escLocal(x) {
   return (x === undefined || x === null) ? "" : String(x);
@@ -32,7 +32,7 @@ function saveCollections() {
 }
 
 /* ===========================================================
-   PUBLIC: addCollectionEntry (used by universalBar + others)
+   PUBLIC: addCollectionEntry
 =========================================================== */
 window.addCollectionEntry = function (source, details, amount) {
   const entry = {
@@ -52,32 +52,32 @@ window.addCollectionEntry = function (source, details, amount) {
 };
 
 /* ===========================================================
-   SUMMARY using universalBar metrics
+   SUMMARY (uses universalBar metrics)
 =========================================================== */
 function computeCollectionSummary() {
-  // Ensure universalBar metrics are up to date
   window.updateUniversalBar?.();
   const m = window.__unMetrics || {};
 
-  // We reuse same definitions to avoid mismatches
-  const salesCollected   = cNum(m.saleProfitCollected);
-  const serviceCollected = cNum(m.serviceProfitCollected);
-  const pendingCredit    = cNum(m.pendingCreditTotal);
-  const investmentRemain = cNum(m.stockInvestSold) + cNum(m.serviceInvestCompleted);
-
-  return { salesCollected, serviceCollected, pendingCredit, investmentRemain };
+  return {
+    salesCollected:   cNum(m.saleProfitCollected),
+    serviceCollected: cNum(m.serviceProfitCollected),
+    pendingCredit:    cNum(m.pendingCreditTotal),
+    investmentRemain: cNum(m.stockInvestSold) + cNum(m.serviceInvestCompleted)
+  };
 }
 
 /* ===========================================================
-   PENDING CREDIT LIST
+   GET PENDING CREDIT LIST
 =========================================================== */
 function getPendingList() {
   const list = [];
 
   (window.sales || []).forEach(s => {
     const st = String(s.status || "").toLowerCase();
+
     if (st === "credit") {
       const total = cNum(s.total || (cNum(s.qty) * cNum(s.price)));
+
       if (total > 0) {
         list.push({
           id: s.id,
@@ -97,7 +97,6 @@ function getPendingList() {
 
 /* ===========================================================
    RENDER PENDING COLLECTION TABLE
-   (USES .pending-collect-btn → no clash with top .collect-btn)
 =========================================================== */
 function renderPendingCollections() {
   const tbody = qs("#pendingCollectionTable tbody");
@@ -118,12 +117,16 @@ function renderPendingCollections() {
   tbody.innerHTML = list.map(r => `
     <tr>
       <td data-label="Date">${window.toDisplay ? toDisplay(r.date) : r.date}</td>
+
       <td data-label="Name">
         ${escLocal(r.name)}
         ${r.customer ? `<br><small>${escLocal(r.customer)}</small>` : ""}
+        ${r.phone ? `<br><small>📞 ${escLocal(r.phone)}</small>` : ""}
       </td>
+
       <td data-label="Type">${escLocal(r.type)}</td>
       <td data-label="Pending">₹${r.pending}</td>
+
       <td data-label="Action">
         <button class="small-btn pending-collect-btn"
                 data-id="${r.id}"
@@ -136,17 +139,16 @@ function renderPendingCollections() {
 }
 
 /* ===========================================================
-   RENDER COLLECTION SUMMARY + HISTORY TABLE
+   RENDER HISTORY + SUMMARY
 =========================================================== */
 function renderCollection() {
   const sum = computeCollectionSummary();
   const fmt = v => "₹" + Math.round(cNum(v));
 
-  // Summary cards
-  if (qs("#colSales"))      qs("#colSales").textContent      = fmt(sum.salesCollected);
-  if (qs("#colService"))    qs("#colService").textContent    = fmt(sum.serviceCollected);
-  if (qs("#colCredit"))     qs("#colCredit").textContent     = fmt(sum.pendingCredit);
-  if (qs("#colInvRemain"))  qs("#colInvRemain").textContent  = fmt(sum.investmentRemain);
+  if (qs("#colSales"))      qs("#colSales").textContent     = fmt(sum.salesCollected);
+  if (qs("#colService"))    qs("#colService").textContent   = fmt(sum.serviceCollected);
+  if (qs("#colCredit"))     qs("#colCredit").textContent    = fmt(sum.pendingCredit);
+  if (qs("#colInvRemain"))  qs("#colInvRemain").textContent = fmt(sum.investmentRemain);
 
   const tbody = qs("#collectionHistory tbody");
   if (!tbody) return;
@@ -177,13 +179,11 @@ window.renderCollection = renderCollection;
 
 /* ===========================================================
    GLOBAL CLICK HANDLER
-   - Clear history
-   - Pending credit collect button
 =========================================================== */
 document.addEventListener("click", e => {
   const target = e.target;
 
-  /* --- CLEAR HISTORY BUTTON --- */
+  /* --- CLEAR HISTORY --- */
   if (target.id === "clearCollectionBtn") {
     if (!confirm("Clear entire collection history?")) return;
     window.collections = [];
@@ -193,7 +193,7 @@ document.addEventListener("click", e => {
     return;
   }
 
-  /* --- PENDING CREDIT COLLECT BUTTON --- */
+  /* --- CREDIT → PAID (Collect) --- */
   const btn = target.closest(".pending-collect-btn");
   if (!btn) return;
 
@@ -201,13 +201,10 @@ document.addEventListener("click", e => {
   const amt = cNum(btn.getAttribute("data-amount") || 0);
 
   const sale = (window.sales || []).find(s => s.id == id);
-  if (!sale) {
-    alert("Sale not found.");
-    return;
-  }
+  if (!sale) return alert("Sale not found.");
 
   if (String(sale.status || "").toLowerCase() !== "credit") {
-    alert("This sale is not marked as CREDIT anymore.");
+    alert("This sale is not CREDIT anymore.");
     renderPendingCollections();
     renderCollection();
     return;
@@ -220,22 +217,22 @@ document.addEventListener("click", e => {
   if (sale.customer) lines.push(`Customer: ${sale.customer}`);
   if (sale.phone)    lines.push(`Phone: ${sale.phone}`);
 
-  if (!confirm(lines.join("\n") + "\n\nMark this as COLLECTED (Paid)?")) return;
+  if (!confirm(lines.join("\n") + "\n\nMark this as COLLECTED?")) return;
 
-  // 1) Mark sale as Paid (proper case!)
+  // 1) Mark as paid
   sale.status = "Paid";
   window.saveSales && window.saveSales();
 
-  // 2) Add collection history entry
+  // 2) Add history entry
   window.addCollectionEntry("Sale (Credit cleared)", sale.product, amt);
 
-  // 3) Refresh UI
+  // 3) UI refresh
   renderPendingCollections();
   renderCollection();
   window.renderSales?.();
   window.updateUniversalBar?.();
 
-  alert("Collection recorded and sale marked as Paid.");
+  alert("Collection recorded and marked as Paid.");
 });
 
 /* ===========================================================
