@@ -1,10 +1,9 @@
-// ===============================
-//  analytics.js — FINAL V5 (Universal Bar)
-//  • Today overview helpers (used by Dashboard tab)
-//  • Total analytics (Smart Dashboard tab)
-//  • Universal top metrics bar updater
-//  • Uses helpers from core.js (investment, etc.)
-// ===============================
+// ======================================================
+//  analytics.js — FINAL V6 (Dashboard Only)
+//  • Today overview helpers (Dashboard tab)
+//  • Smart Dashboard (Total) + Pie chart
+//  • Universal Bar is handled ONLY by universalBar.js
+// ======================================================
 
 let cleanPieChart = null;
 
@@ -72,7 +71,7 @@ window.getAnalyticsData = function () {
 
 /* --------------------------------
    GLOBAL TOTAL SUMMARY NUMBERS
-   (Used by Smart Dashboard + Universal Bar)
+   (Used by Smart Dashboard & Pie)
 ---------------------------------- */
 window.getSummaryTotals = function () {
   const sales    = window.sales    || [];
@@ -113,9 +112,9 @@ window.getSummaryTotals = function () {
 
   const netProfit = totalProfit - totalExpenses;
 
-  // INVESTMENTS
-  let stockAfter  = 0;
-  let serviceInv  = 0;
+  // INVESTMENTS (from core.js helpers)
+  let stockAfter = 0;
+  let serviceInv = 0;
 
   if (typeof window.getStockInvestmentAfterSale === "function") {
     stockAfter = Number(window.getStockInvestmentAfterSale() || 0);
@@ -146,13 +145,13 @@ window.renderAnalytics = function () {
     serviceProfit,
     totalProfit,
     totalExpenses,
-    netProfit,
+    netProfit,      // (ఇక్కడ direct గా use చేయకపోయినా future use కోసం)
     creditTotal,
     stockAfter,
     serviceInv
   } = window.getSummaryTotals();
 
-  // ---- SMART DASHBOARD CARDS ----
+  // ---- SMART DASHBOARD CAR్డ్స్ ----
   const dashProfit   = qs("#dashProfit");
   const dashExpenses = qs("#dashExpenses");
   const dashCredit   = qs("#dashCredit");
@@ -163,8 +162,10 @@ window.renderAnalytics = function () {
   if (dashCredit)   dashCredit.textContent   = "₹" + Math.round(creditTotal);
   if (dashInv)      dashInv.textContent      = "₹" + Math.round(stockAfter + serviceInv);
 
-  // ---- UNIVERSAL BAR ALSO UPDATE HERE ----
-  updateUniversalBar();
+  // ---- UNIVERSAL BAR UPDATE (delegate to universalBar.js) ----
+  if (typeof window.updateUniversalBar === "function") {
+    window.updateUniversalBar();
+  }
 
   // ---- PIE CHART ----
   const ctx = qs("#cleanPie");
@@ -183,7 +184,7 @@ window.renderAnalytics = function () {
           Number(creditTotal || 0),
           Number(stockAfter + serviceInv || 0)
         ],
-        backgroundColor: ["#2e7d32","#c62828","#1565c0","#fbc02d"]
+        backgroundColor: ["#2e7d32", "#c62828", "#1565c0", "#fbc02d"]
       }]
     },
     options: {
@@ -193,37 +194,6 @@ window.renderAnalytics = function () {
       }
     }
   });
-};
-
-/* --------------------------------
-   UNIVERSAL TOP METRICS BAR
----------------------------------- */
-window.updateUniversalBar = function () {
-  const {
-    salesProfit,
-    serviceProfit,
-    totalExpenses,
-    netProfit,
-    creditTotal,
-    stockAfter,
-    serviceInv
-  } = window.getSummaryTotals();
-
-  const elNet   = qs("#unNetProfit");
-  const elSale  = qs("#unSaleProfit");
-  const elServ  = qs("#unServiceProfit");
-  const elExp   = qs("#unExpenses");
-  const elStock = qs("#unStockInv");
-  const elSvcIn = qs("#unServiceInv");
-  const elCred  = qs("#unCreditSales");
-
-  if (elNet)   elNet.textContent   = "₹" + Math.round(netProfit);
-  if (elSale)  elSale.textContent  = "₹" + Math.round(salesProfit);
-  if (elServ)  elServ.textContent  = "₹" + Math.round(serviceProfit);
-  if (elExp)   elExp.textContent   = "₹" + Math.round(totalExpenses);
-  if (elStock) elStock.textContent = "₹" + Math.round(stockAfter);
-  if (elSvcIn) elSvcIn.textContent = "₹" + Math.round(serviceInv);
-  if (elCred)  elCred.textContent  = "₹" + Math.round(creditTotal);
 };
 
 /* --------------------------------
@@ -249,7 +219,7 @@ window.updateSummaryCards = function () {
    AUTO RENDER ON LOAD
 ---------------------------------- */
 window.addEventListener("load", () => {
-  try { renderAnalytics(); } catch (e) {}
-  try { updateSummaryCards(); } catch (e) {}
-  try { updateUniversalBar(); } catch (e) {}
+  try { renderAnalytics(); }      catch (e) {}
+  try { updateSummaryCards(); }   catch (e) {}
+  // universalBar.js కూడా load అయిన తర్వాత తన own init వేసుకుంటుంది
 });
