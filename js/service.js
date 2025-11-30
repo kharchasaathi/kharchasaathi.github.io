@@ -1,21 +1,24 @@
 /* ===========================================================
-   🛠 service.js — Service / Repair Manager (v15 FINAL)
+   🛠 service.js — Service / Repair Manager (v16 ONLINE)
    • Fully compatible with:
-       - universalBar.js v2
-       - collection.js v6
-       - analytics & dashboard
-   • Safe date handling (toDisplay optional)
-   • Updates universal bar on every change
+       - core.js v9 (saveServices, toDisplay, todayDate, esc)
+       - universalBar.js v3
+       - collection.js v8
+       - analytics + dashboard
+   • Uses cloud-aware saveServices() (NO direct localStorage key mismatch)
+   • Safe date handling (toInternalIfNeeded)
+   • Centralized refresh after each change
 =========================================================== */
 
 (function () {
 
-  const qs  = s => document.querySelector(s);
-  const esc = x => (x === undefined || x === null) ? "" : String(x);
+  const qs = s => document.querySelector(s);
 
-  const toDisplay  = window.toDisplay || (d => d);
-  const toInternal = window.toInternal;
-  const todayDateFn = window.todayDate || (() => new Date().toISOString().slice(0, 10));
+  // Use global helpers from core.js if available
+  const escSafe      = window.esc || (x => (x === undefined || x === null) ? "" : String(x));
+  const toDisplay    = window.toDisplay        || (d => d);
+  const toInternalIf = window.toInternalIfNeeded || (d => d);
+  const todayDateFn  = window.todayDate        || (() => new Date().toISOString().slice(0, 10));
 
   let svcPie = null;
 
@@ -28,14 +31,30 @@
   }
 
   function persistServices() {
+    // Prefer core.js saveServices (cloud + local sync)
     if (typeof window.saveServices === "function") {
-      try { window.saveServices(); return; } catch (e) {}
+      try {
+        window.saveServices();
+        return;
+      } catch (e) {
+        console.warn("saveServices() failed:", e);
+      }
     }
+
+    // Fallback: local cache under core.js key
     try {
-      localStorage.setItem("services", JSON.stringify(window.services));
+      localStorage.setItem("service-data", JSON.stringify(window.services));
     } catch (e) {
-      console.warn("Service save error:", e);
+      console.warn("Service local save error:", e);
     }
+  }
+
+  function refreshAllAfterChange() {
+    try { renderServiceTables(); }        catch {}
+    try { window.renderAnalytics?.(); }   catch {}
+    try { window.updateSummaryCards?.(); }catch {}
+    try { window.updateUniversalBar?.(); }catch {}
+    try { window.renderCollection?.(); }  catch {}
   }
 
   /* -----------------------------
@@ -44,8 +63,9 @@
   function nextJobId() {
     const list = ensureServices();
     const nums = list.map(j => Number(j.jobNum || j.jobId) || 0);
-    const max = nums.length ? Math.max(...nums) : 0;
-    const n = max + 1;
+    const max  = nums.length ? Math.max(...nums) : 0;
+    const n    = max + 1;
+
     return {
       jobNum: n,
       jobId: String(n).padStart(2, "0")
@@ -59,16 +79,14 @@
 
     let received = qs("#svcReceivedDate")?.value || todayDateFn();
 
-    // If user typed dd-mm-yy & toInternal exists → convert
-    if (received && received.split("-")[0].length === 2 && typeof toInternal === "function") {
-      received = toInternal(received);
-    }
+    // Use global safe converter (dd-mm-yyyy → yyyy-mm-dd)
+    received = toInternalIf(received);
 
-    const customer = esc(qs("#svcCustomer")?.value.trim());
-    const phone    = esc(qs("#svcPhone")?.value.trim());
+    const customer = (qs("#svcCustomer")?.value || "").trim();
+    const phone    = (qs("#svcPhone")?.value || "").trim();
     const item     = qs("#svcItemType")?.value || "Other";
-    const model    = esc(qs("#svcModel")?.value.trim());
-    const problem  = esc(qs("#svcProblem")?.value.trim());
+    const model    = (qs("#svcModel")?.value || "").trim();
+    const problem  = (qs("#svcProblem")?.value || "").trim();
     const advance  = Number(qs("#svcAdvance")?.value || 0);
 
     if (!customer || !phone || !problem) {
@@ -81,30 +99,39 @@
     const job = {
       id: "svc_" + Math.random().toString(36).slice(2, 9),
       jobNum: ids.jobNum,
-      jobId: ids.jobId,
-      date_in: received,
+      jobId:  ids.jobId,
+
+      date_in:  received,
       date_out: "",
+
       customer,
       phone,
       item,
       model,
       problem,
+
       advance,
       invest: 0,
       paid: 0,
       remaining: 0,
       profit: 0,
       returnedAdvance: 0,
+
       status: "Pending"
     };
 
     ensureServices().push(job);
     persistServices();
-    renderServiceTables();
-    window.renderAnalytics?.();
-    window.updateSummaryCards?.();
-    window.updateUniversalBar?.();
-    window.renderCollection?.();
+    refreshAllAfterChange();
+
+    // Clear form fields (optional, small UX)
+    try {
+      qs("#svcCustomer").value = "";
+      qs("#svcPhone").value    = "";
+      qs("#svcModel").value    = "";
+      qs("#svcProblem").value  = "";
+      qs("#svcAdvance").value  = "";
+    } catch {}
   }
 
   /* -----------------------------
@@ -112,11 +139,11 @@
   ------------------------------ */
   function markCompleted(id) {
     const list = ensureServices();
-    const job = list.find(j => j.id === id);
+    const job  = list.find(j => j.id === id);
     if (!job) return;
 
     const invest = Number(prompt("Parts / Repair Cost ₹:", job.invest || 0) || 0);
-    const full   = Number(prompt("Total Amount Collected ₹:", job.paid || 0) || 0);
+    const full   = Number(prompt("Total Amount Collected ₹:", job.paid   || 0) || 0);
 
     const remaining = full - job.advance;
     const profit    = full - invest;
@@ -135,14 +162,10 @@
     job.remaining = remaining;
     job.profit    = profit;
     job.status    = "Completed";
-    job.date_out  = todayDateFn();
+    job.date_out  = todayDateFn();   // already internal format
 
     persistServices();
-    renderServiceTables();
-    window.renderAnalytics?.();
-    window.updateSummaryCards?.();
-    window.updateUniversalBar?.();
-    window.renderCollection?.();
+    refreshAllAfterChange();
   }
 
   /* -----------------------------
@@ -150,7 +173,7 @@
   ------------------------------ */
   function markFailed(id) {
     const list = ensureServices();
-    const job = list.find(j => j.id === id);
+    const job  = list.find(j => j.id === id);
     if (!job) return;
 
     const returned = Number(prompt("Advance returned ₹:", job.advance || 0) || 0);
@@ -164,11 +187,7 @@
     job.date_out  = todayDateFn();
 
     persistServices();
-    renderServiceTables();
-    window.renderAnalytics?.();
-    window.updateSummaryCards?.();
-    window.updateUniversalBar?.();
-    window.renderCollection?.();
+    refreshAllAfterChange();
   }
 
   /* -----------------------------
@@ -176,13 +195,10 @@
   ------------------------------ */
   function deleteServiceJob(id) {
     if (!confirm("Delete this job?")) return;
+
     window.services = ensureServices().filter(j => j.id !== id);
     persistServices();
-    renderServiceTables();
-    window.renderAnalytics?.();
-    window.updateSummaryCards?.();
-    window.updateUniversalBar?.();
-    window.renderCollection?.();
+    refreshAllAfterChange();
   }
 
   /* -----------------------------
@@ -230,11 +246,11 @@
         <tr>
           <td data-label="Job ID">${j.jobId}</td>
           <td data-label="Received">${toDisplay(j.date_in)}</td>
-          <td data-label="Customer">${esc(j.customer)}</td>
-          <td data-label="Phone">${esc(j.phone)}</td>
-          <td data-label="Item">${esc(j.item)}</td>
-          <td data-label="Model">${esc(j.model)}</td>
-          <td data-label="Problem">${esc(j.problem)}</td>
+          <td data-label="Customer">${escSafe(j.customer)}</td>
+          <td data-label="Phone">${escSafe(j.phone)}</td>
+          <td data-label="Item">${escSafe(j.item)}</td>
+          <td data-label="Model">${escSafe(j.model)}</td>
+          <td data-label="Problem">${escSafe(j.problem)}</td>
           <td data-label="Status">${badge(j.status)}</td>
           <td data-label="Action">
             <button class="small-btn svc-view" data-id="${j.id}">Open</button>
@@ -250,8 +266,8 @@
           <td data-label="Job ID">${j.jobId}</td>
           <td data-label="Received">${toDisplay(j.date_in)}</td>
           <td data-label="Completed">${j.date_out ? toDisplay(j.date_out) : "-"}</td>
-          <td data-label="Customer">${esc(j.customer)}</td>
-          <td data-label="Item">${esc(j.item)}</td>
+          <td data-label="Customer">${escSafe(j.customer)}</td>
+          <td data-label="Item">${escSafe(j.item)}</td>
           <td data-label="Invest">₹${j.invest}</td>
           <td data-label="Paid">₹${j.paid}</td>
           <td data-label="Profit">₹${j.profit}</td>
@@ -260,11 +276,16 @@
       `).join("") ||
       `<tr><td colspan="9" style="text-align:center;opacity:0.6;">No history</td></tr>`;
 
-    qs("#svcPendingCount").textContent   = pending.length;
-    qs("#svcCompletedCount").textContent = completed.length;
+    // Summary cards
+    const pendingCount   = qs("#svcPendingCount");
+    const completedCount = qs("#svcCompletedCount");
+    const totalProfitEl  = qs("#svcTotalProfit");
+
+    if (pendingCount)   pendingCount.textContent   = pending.length;
+    if (completedCount) completedCount.textContent = completed.length;
 
     const totalProfit = list.reduce((s, j) => s + Number(j.profit || 0), 0);
-    qs("#svcTotalProfit").textContent = "₹" + totalProfit;
+    if (totalProfitEl) totalProfitEl.textContent = "₹" + totalProfit;
 
     renderServicePie();
   }
@@ -308,11 +329,7 @@
     if (!confirm("Delete ALL service jobs?")) return;
     window.services = [];
     persistServices();
-    renderServiceTables();
-    window.renderAnalytics?.();
-    window.updateSummaryCards?.();
-    window.updateUniversalBar?.();
-    window.renderCollection?.();
+    refreshAllAfterChange();
   });
 
   document.addEventListener("click", e => {
@@ -324,34 +341,14 @@
     }
   });
 
+  /* ==========================================================
+      INIT
+  ========================================================== */
   window.addEventListener("load", () => {
     renderServiceTables();
     window.updateUniversalBar?.();
   });
 
   window.renderServiceTables = renderServiceTables;
-
-  /* ==========================================================
-      UNIVERSAL HELPERS (for other modules if needed)
-  ========================================================== */
-  window.getServiceProfitCollected = function () {
-    let total = 0;
-    (window.services || []).forEach(j => {
-      if (String(j.status || "").toLowerCase() === "completed") {
-        total += Number(j.profit || 0);
-      }
-    });
-    return total;
-  };
-
-  window.getServiceInvestmentCollected = function () {
-    let total = 0;
-    (window.services || []).forEach(j => {
-      if (String(j.status || "").toLowerCase() === "completed") {
-        total += Number(j.invest || 0);
-      }
-    });
-    return total;
-  };
 
 })();
