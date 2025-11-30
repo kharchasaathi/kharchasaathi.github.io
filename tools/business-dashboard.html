@@ -575,18 +575,19 @@
 (function () {
   const v = Date.now();
   const js = [
-    "/js/core.js",
-    "/js/firebase.js",
-    "/js/types.js",
-    "/js/stock.js",
-    "/js/sales.js",
-    "/js/wanting.js",
-    "/js/expenses.js",
-    "/js/analytics.js",
-    "/js/service.js",
-    "/js/collection.js",
-    "/js/security.js"
-  ];
+  "/js/core.js",
+  "/js/firebase.js",
+  "/js/types.js",
+  "/js/stock.js",
+  "/js/sales.js",
+  "/js/wanting.js",
+  "/js/expenses.js",
+  "/js/analytics.js",
+  "/js/service.js",
+  "/js/collection.js",
+  "/js/universal-bar.js",   // ⭐ THIS IS MISSING
+  "/js/security.js"
+];
 
   js.forEach(f => {
     document.write(`<script src="${f}?v=${v}"><\/script>`);
