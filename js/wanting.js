@@ -1,16 +1,16 @@
 /* =======================================================
-   🛒 wanting.js — Wanting / Reorder Manager (FINAL V7.2 FIXED)
-   • Colorful table compatible
-   • Mobile-friendly (data-labels added)
-   • Add / Delete / Add-to-stock stable
-   • GLOBAL esc() used (core.js)
+   🛒 wanting.js — ONLINE REALTIME VERSION (V8.0)
+   ✔ Full cloud sync (saveWanting → cloudSaveDebounced)
+   ✔ Wanting → Stock instant sync
+   ✔ UniversalBar + Collection realtime update
+   ✔ Mobile friendly
 ======================================================= */
 
 const wToDisp = window.toDisplay;
 const wToInt  = window.toInternal;
 
 /* -------------------------------------------------------
-   🔁 RENDER WANTING TABLE  (UI UPGRADED + MOBILE FIX)
+   🔁 RENDER WANTING TABLE
 ------------------------------------------------------- */
 function renderWanting() {
   const tbody    = qs("#wantingTable tbody");
@@ -32,7 +32,6 @@ function renderWanting() {
     return;
   }
 
-  /* ---- TABLE ROWS ---- */
   tbody.innerHTML = list
     .map((w, i) => `
       <tr>
@@ -81,10 +80,12 @@ function addWantingItem() {
 
   qs("#wantName").value = "";
   qs("#wantNote").value = "";
+
+  window.updateUniversalBar?.();
 }
 
 /* -------------------------------------------------------
-   🔥 WANTING → STOCK
+   🔥 WANTING → STOCK (Real-time Online)
 ------------------------------------------------------- */
 function wantingToStock(i) {
   const w = window.wanting[i];
@@ -96,6 +97,7 @@ function wantingToStock(i) {
   const cost = Number(prompt("Enter purchase cost ₹ each:"));
   if (!cost || cost <= 0) return alert("Invalid cost");
 
+  /* Add to stock through core.js function */
   addStockEntry({
     date: todayDate(),
     type: w.type,
@@ -104,13 +106,17 @@ function wantingToStock(i) {
     cost
   });
 
+  /* Remove from wanting */
   window.wanting.splice(i, 1);
   saveWanting();
 
+  /* FULL REALTIME UPDATE */
   renderWanting();
   renderStock?.();
-  updateSummaryCards?.();
-  renderAnalytics?.();
+  renderSales?.();
+  renderPendingCollections?.();
+  renderCollection?.();
+  window.updateUniversalBar?.();
 }
 
 /* -------------------------------------------------------
@@ -122,6 +128,7 @@ function deleteWantingItem(i) {
   window.wanting.splice(i, 1);
   saveWanting();
   renderWanting();
+  window.updateUniversalBar?.();
 }
 
 /* -------------------------------------------------------
@@ -137,6 +144,7 @@ document.addEventListener("click", e => {
     window.wanting = [];
     saveWanting();
     renderWanting();
+    window.updateUniversalBar?.();
     return;
   }
 
