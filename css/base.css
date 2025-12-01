@@ -1,62 +1,206 @@
-/* ===========================
-   BASE.CSS — CLEAN FOUNDATION
-   No colors, no overrides.
-   Pure reset + typography.
-=========================== */
+/* ============================================================
+   base.css — GLOBAL RESET + CLEAN FOUNDATION (AURORA)
+   Makes UI look premium, responsive & consistent everywhere.
+   Works perfectly with style.css (AURORA THEME ENGINE)
+=========================================================== */
 
-*,
-*::before,
-*::after {
+/* ---------- CSS RESET (modern clean) ---------- */
+* {
+  margin: 0;
+  padding: 0;
   box-sizing: border-box;
-  margin: 0;
-  padding: 0;
 }
 
-html {
-  scroll-behavior: smooth;
-  -webkit-text-size-adjust: 100%;
+/* Disable ugly button outlines (keep accessibility) */
+button:focus,
+input:focus,
+select:focus,
+textarea:focus {
+  outline: 2px solid var(--ks-accent-soft);
+  outline-offset: 2px;
 }
 
-body {
+/* Disable text selection highlight tone issues */
+::selection {
+  background: var(--ks-accent-soft);
+  color: #fff;
+}
+
+/* ---------- BODY ---------- */
+html, body {
+  width: 100%;
+  height: 100%;
   font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-  line-height: 1.45;
-  overflow-x: hidden;
-  padding: 0;
-  margin: 0;
+  color: var(--ks-text-main);
+  background: var(--ks-gradient-bg);
+  scroll-behavior: smooth;
 }
 
-img,
-svg {
-  max-width: 100%;
-  height: auto;
+/* ---------- LINKS ---------- */
+a {
+  text-decoration: none;
+  color: var(--ks-accent);
+  transition: .2s;
+}
+a:hover {
+  color: var(--ks-accent-soft);
 }
 
-button {
+/* ---------- INPUTS / FORMS ---------- */
+input, select, textarea {
+  border: 1px solid var(--ks-border-soft);
+  background: var(--ks-bg-card);
+  padding: 6px 8px;
+  border-radius: 10px;
+  font-size: 14px;
+  color: var(--ks-text-main);
+  transition: .15s;
+}
+input:hover, select:hover, textarea:hover {
+  border-color: var(--ks-border-strong);
+}
+body.dark input,
+body.dark select,
+body.dark textarea {
+  background: #111827;
+  color: #e5e7eb;
+  border-color: #1f2937;
+}
+
+/* ---------- BUTTONS ---------- */
+button, .btn, .small-btn {
   border: none;
   cursor: pointer;
-  background: none;
-  font-family: inherit;
+  padding: 8px 14px;
+  font-size: 14px;
+  border-radius: var(--ks-radius-pill);
+  background: var(--ks-bg-card);
+  color: var(--ks-text-main);
+  font-weight: 600;
+  border: 1px solid var(--ks-border-soft);
+  box-shadow: 0 6px 14px rgba(15,23,42,.06);
+  transition: .2s;
 }
 
-input,
-select,
-textarea {
-  font-family: inherit;
-  outline: none;
-  border: none;
+button:hover {
+  background: var(--ks-bg-soft);
+  transform: translateY(-1px);
 }
 
+body.dark button {
+  background: #111827;
+  border-color: #1f2937;
+  color: #e5e7eb;
+}
+body.dark button:hover {
+  background: #1d2431;
+}
+
+/* Special buttons */
+.danger-btn {
+  background: #fee2e2;
+  border-color: #fecaca;
+  color: #b91c1c;
+}
+body.dark .danger-btn {
+  background: #2a0f0f;
+  border-color: #7f1d1d;
+  color: #fca5a5;
+}
+
+/* ---------- CARDS ---------- */
+.card {
+  background: var(--ks-bg-card);
+  border: 1px solid var(--ks-border-soft);
+  border-radius: var(--ks-radius-card);
+  padding: 12px;
+  box-shadow: var(--ks-shadow-soft);
+  transition: background .25s, border .25s, box-shadow .25s;
+}
+
+body.dark .card {
+  background: #111827;
+  border-color: #1f2937;
+  box-shadow: 0 14px 32px rgba(0,0,0,.65);
+}
+
+/* ---------- TABLES ---------- */
 table {
   width: 100%;
-  border-collapse: collapse;
+  border-collapse: separate;
+  border-spacing: 0;
+  border-radius: 12px;
+  overflow: hidden;
+  background: var(--ks-bg-card);
+  box-shadow: var(--ks-shadow-soft);
 }
 
-ul,
-ol {
-  list-style: none;
-  padding-left: 0;
+thead {
+  background: linear-gradient(to right, #e5edff, #dbeafe);
+  color: var(--ks-text-soft);
+}
+body.dark thead {
+  background: #111827;
+  color: #cbd5f5;
 }
 
-:focus {
-  outline: none;
+th, td {
+  padding: 8px 10px;
+  border-bottom: 1px solid var(--ks-border-soft);
+  border-right: 1px solid var(--ks-border-soft);
+  text-align: left;
+  font-size: 13px;
+}
+
+th:last-child, td:last-child {
+  border-right: none;
+}
+
+tbody tr:nth-child(even) {
+  background: #f9fafb;
+}
+tbody tr:nth-child(odd) {
+  background: #ffffff;
+}
+
+body.dark tbody tr:nth-child(even) {
+  background: #0f1520;
+}
+body.dark tbody tr:nth-child(odd) {
+  background: #111827;
+}
+
+tfoot td {
+  font-weight: 600;
+  background: #f1f5ff;
+}
+body.dark tfoot td {
+  background: #0d1117;
+  color: #f3f4f6;
+}
+
+/* ---------- SCROLLBAR (Dark mode only) ---------- */
+body.dark ::-webkit-scrollbar {
+  width: 8px;
+}
+body.dark ::-webkit-scrollbar-track {
+  background: #0d1117;
+}
+body.dark ::-webkit-scrollbar-thumb {
+  background: #1f2937;
+  border-radius: 10px;
+}
+body.dark ::-webkit-scrollbar-thumb:hover {
+  background: #374151;
+}
+
+/* ---------- MISC ---------- */
+hr {
+  border: none;
+  border-top: 1px dashed var(--ks-border-soft);
+  margin: 12px 0;
+}
+
+small {
+  opacity: .85;
 }
