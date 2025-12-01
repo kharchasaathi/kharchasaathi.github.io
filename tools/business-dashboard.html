@@ -257,25 +257,25 @@
     }
 
     .collect-btn{
-      position:absolute;
-      right:12px;
-      top:10px;
-      padding:4px 10px;
-      font-size:11px;
-      border-radius:var(--ks-radius-pill);
-      border:none;
-      cursor:pointer;
-      background:var(--ks-accent-green);
-      color:#f0fdf4;
-      font-weight:600;
-      box-shadow:0 8px 18px rgba(22,163,74,.4);
-      transition:.16s;
-      white-space:nowrap;
-    }
-    .collect-btn:hover{
-      transform:translateY(-1px);
-      background:#16a34a;
-    }
+  position:absolute;
+  right:12px;
+  bottom:10px;           /* 🔥 moved from TOP → BOTTOM */
+  padding:3px 8px;       /* 🔥 smaller button */
+  font-size:10px;        /* 🔥 small text */
+  border-radius:var(--ks-radius-pill);
+  border:none;
+  cursor:pointer;
+  background:var(--ks-accent-green);
+  color:#f0fdf4;
+  font-weight:600;
+  box-shadow:0 4px 10px rgba(22,163,74,.35); /* softer */
+  transition:.16s;
+  white-space:nowrap;
+}
+.collect-btn:hover{
+  transform:translateY(-1px);
+  background:#16a34a;
+}
 
     /* ===== TABS BAR ===== */
     .tabs{
