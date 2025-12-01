@@ -492,6 +492,247 @@
         grid-column:span 1;
       }
     }
+    /* =========================================
+   PREMIUM DARK THEME (SOFT, CLEAN)
+   Applied only when: <body class="dark">
+========================================= */
+
+body.dark{
+  background:#0d1117;
+  color:#e5e7eb;
+}
+
+/* TOPBAR */
+body.dark .topbar{
+  background:linear-gradient(to right,#020617,#020617);
+  border-bottom:1px solid rgba(148,163,184,0.35);
+  box-shadow:0 10px 30px rgba(15,23,42,.8);
+}
+
+body.dark .topbar h1{
+  color:#e5e7eb;
+}
+
+body.dark .topbar-logo{
+  background:radial-gradient(circle at 30% 20%,#06b6d4,#0f172a 65%);
+  box-shadow:0 0 18px rgba(56,189,248,.65);
+}
+
+body.dark span#emailTag{
+  background:rgba(15,23,42,.9);
+  border-color:rgba(148,163,184,.7);
+  color:#e5e7eb;
+}
+
+/* CLOCK */
+body.dark .simple-clock{
+  color:#9ca3af;
+}
+
+/* GLOBAL BUTTONS */
+body.dark .theme-btn,
+body.dark .small-btn{
+  background:#111827;
+  color:#e5e7eb;
+  border:1px solid rgba(148,163,184,.4);
+  box-shadow:0 4px 12px rgba(15,23,42,.7);
+}
+
+body.dark .theme-btn:hover,
+body.dark .small-btn:hover{
+  background:#1f2937;
+}
+
+body.dark #logoutBtn{
+  background:#ef4444;
+  border-color:#b91c1c;
+  color:#fee2e2;
+}
+
+/* UNIVERSAL BAR */
+body.dark #universalBar{
+  background:radial-gradient(circle at top,#020617,#020617 55%,#020617);
+  border-bottom:1px solid #1f2937;
+}
+
+body.dark .uni-card{
+  background:linear-gradient(135deg,#111827,#020617);
+  border:1px solid rgba(148,163,184,.45);
+  box-shadow:0 16px 36px rgba(15,23,42,.9);
+  color:#e5e7eb;
+}
+
+body.dark .uni-title{
+  color:#9ca3af;
+}
+
+body.dark .uni-value,
+body.dark .uni-value.small{
+  color:#f9fafb;
+}
+
+body.dark .uni-chip{
+  border-color:rgba(148,163,184,.6);
+  color:#cbd5f5;
+}
+
+/* COLLECT BUTTONS – DARK LOOK */
+body.dark .collect-btn{
+  background:#22c55e;
+  color:#022c22;
+  box-shadow:0 6px 16px rgba(22,163,74,.6);
+}
+
+body.dark .collect-btn:hover{
+  background:#16a34a;
+}
+
+/* TAB SUMMARY BAR */
+body.dark #tabSummaryBar{
+  background:#022c22;
+  color:#bbf7d0;
+  box-shadow:0 10px 26px rgba(6,95,70,.8);
+}
+
+/* TABS */
+body.dark .tabs{
+  background:linear-gradient(to right,#020617,#020617);
+  border-bottom:1px solid #1f2937;
+}
+
+body.dark .tab{
+  color:#9ca3af;
+  border-color:transparent;
+  background:transparent;
+}
+
+body.dark .tab.active{
+  background:linear-gradient(135deg,#06b6d4,#0ea5e9);
+  color:#0f172a;
+  border-color:transparent;
+  box-shadow:0 10px 20px rgba(56,189,248,.5);
+}
+
+/* SECTIONS & CARDS */
+body.dark .section{
+  background:transparent;
+}
+
+body.dark .card{
+  background:#111827;
+  border:1px solid rgba(148,163,184,.30);
+  box-shadow:0 14px 30px rgba(15,23,42,.85);
+  color:#e5e7eb;
+}
+
+/* TABLES */
+body.dark table{
+  background:#020617;
+  box-shadow:0 14px 34px rgba(15,23,42,.9);
+}
+
+body.dark thead{
+  background:#111827;
+  color:#cbd5f5;
+}
+
+body.dark th,
+body.dark td{
+  border-bottom:1px solid rgba(31,41,55,.9);
+}
+
+body.dark tbody tr:nth-child(odd){
+  background:#020617;
+}
+
+body.dark tbody tr:nth-child(even){
+  background:#050816;
+}
+
+body.dark tfoot td{
+  background:#020617;
+  color:#f9fafb;
+}
+
+/* INPUTS & SELECTS INSIDE DARK MODE */
+body.dark input,
+body.dark select,
+body.dark textarea{
+  background:#020617 !important;
+  color:#e5e7eb !important;
+  border:1px solid #1f2937 !important;
+}
+
+body.dark input::placeholder,
+body.dark textarea::placeholder{
+  color:#6b7280;
+}
+
+/* STATUS BADGES */
+body.dark .status-credit{
+  background:#fb923c;
+  color:#111827;
+}
+
+body.dark .status-paid{
+  background:#22c55e;
+  color:#022c22;
+}
+
+/* CREDIT CARD PANELS */
+body.dark .credit-card{
+  background:radial-gradient(circle at top left,#111827,#020617 60%);
+  border:1px solid rgba(148,163,184,.45);
+  box-shadow:0 16px 36px rgba(15,23,42,.9);
+}
+
+body.dark .credit-title{
+  color:#e5e7eb;
+}
+
+body.dark .credit-subtitle{
+  color:#e5e7eb;
+}
+
+/* LINK-STYLED BUTTONS */
+body.dark .btn-link{
+  background:#020617;
+  border-color:#1d4ed8;
+  color:#bfdbfe;
+}
+
+body.dark .btn-link:hover{
+  background:#1d4ed8;
+  color:#0f172a;
+}
+
+/* COLLECTION HISTORY TABLE */
+body.dark #collectionHistory{
+  background:#020617;
+}
+
+/* DASHBOARD PIE CHART CONTAINER */
+body.dark canvas#cleanPie{
+  background:transparent;
+}
+
+/* SCROLLBAR (Desktop) */
+@media (min-width: 768px){
+  body.dark ::-webkit-scrollbar{
+    width:8px;
+    height:8px;
+  }
+  body.dark ::-webkit-scrollbar-track{
+    background:#020617;
+  }
+  body.dark ::-webkit-scrollbar-thumb{
+    background:#1f2937;
+    border-radius:999px;
+  }
+  body.dark ::-webkit-scrollbar-thumb:hover{
+    background:#374151;
+  }
+}
   </style>
 </head>
 
