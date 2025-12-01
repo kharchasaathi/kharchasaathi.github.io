@@ -1,448 +1,169 @@
 /* ==========================================================
-   base.css – KharchaSaathi Design System v1
-   - Global reset
-   - Dark / Light theme tokens
-   - Typography, body background, scrollbars
-   - Mobile-first, super readable UI
+   KharchaSaathi – Apple Glass UI
+   Premium macOS Style Design System
 ========================================================== */
 
-/* -------------------------------
-   0. CSS Reset (modern minimal)
---------------------------------- */
+/* RESET */
 *,
 *::before,
 *::after {
-  box-sizing: border-box;
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
 }
-
 html, body {
-  margin: 0;
-  padding: 0;
-}
-
-img, svg {
-  max-width: 100%;
-  display: block;
-}
-
-button,
-input,
-select,
-textarea {
-  font: inherit;
+    margin: 0;
+    padding: 0;
 }
 
 /* -------------------------------
-   1. Design Tokens
+   1. Apple Color Tokens
 --------------------------------- */
 
 :root {
-  /* Font */
-  --ks-font-sans: system-ui, -apple-system, BlinkMacSystemFont, "Inter",
-                  "SF Pro Text", "Segoe UI", sans-serif;
+    /* Apple Neutral Greys */
+    --a-bg: #f5f5f7; /* Light */
+    --a-bg-dark: #1c1c1e; /* Dark mode base */
+    --a-elev-1: rgba(255,255,255,0.60);
+    --a-elev-2: rgba(255,255,255,0.35);
+    --a-elev-3: rgba(255,255,255,0.18);
 
-  /* DARK THEME (default) */
-  --ks-bg-body:          #020617; /* slate-950 */
-  --ks-bg-elevated:      #02081a; /* very dark navy */
-  --ks-bg-elevated-soft: #050b1f;
-  --ks-bg-header:        #020617;
+    --a-border-soft: rgba(0,0,0,0.08);
+    --a-border-strong: rgba(0,0,0,0.18);
 
-  --ks-border-subtle:    rgba(148, 163, 184, 0.18);
-  --ks-border-strong:    rgba(148, 163, 184, 0.4);
+    /* Accent */
+    --a-accent: #0A84FF; /* Apple Blue */
+    --a-accent-dark: #0066CC;
 
-  --ks-text-main:        #e5e7eb; /* slate-200 */
-  --ks-text-soft:        #9ca3af;
-  --ks-text-muted:       #6b7280;
-  --ks-text-invert:      #0b1120;
-
-  --ks-accent:           #2563eb; /* blue-600 */
-  --ks-accent-soft:      rgba(37, 99, 235, 0.14);
-  --ks-accent-strong:    #1d4ed8;
-
-  --ks-positive:         #22c55e;
-  --ks-positive-soft:    rgba(34, 197, 94, 0.16);
-  --ks-negative:         #ef4444;
-  --ks-negative-soft:    rgba(239, 68, 68, 0.18);
-  --ks-warning:          #eab308;
-
-  --ks-pill-bg:          rgba(15, 23, 42, 0.9);
-  --ks-pill-active:      #0b1120;
-
-  /* Shadows */
-  --ks-shadow-soft:      0 18px 45px rgba(15, 23, 42, 0.85);
-  --ks-shadow-card:      0 14px 30px rgba(15, 23, 42, 0.65);
-
-  /* Border radius */
-  --ks-radius-lg:        18px;
-  --ks-radius-xl:        22px;
-
-  /* Transitions */
-  --ks-trans-fast:       0.18s ease-out;
+    /* Text */
+    --a-text-main: #1c1c1e;
+    --a-text-soft: #6e6e73;
+    --a-text-muted: #8e8e93;
+    --a-text-light: #f2f2f7;
 }
 
-/* Light theme overrides (body.ks-light లేదా data-theme="light") */
-body.ks-light,
-body[data-theme="light"] {
-  --ks-bg-body:          #f3f4f6;  /* slate-100 */
-  --ks-bg-elevated:      #ffffff;
-  --ks-bg-elevated-soft: #f9fafb;
-  --ks-bg-header:        #ffffff;
+/* DARK MODE TOKENS */
+body.dark-mode {
+    --a-bg: #000000;
+    --a-elev-1: rgba(80,80,80,0.40);
+    --a-elev-2: rgba(60,60,60,0.30);
+    --a-elev-3: rgba(40,40,40,0.25);
 
-  --ks-border-subtle:    rgba(148, 163, 184, 0.38);
-  --ks-border-strong:    rgba(148, 163, 184, 0.7);
+    --a-border-soft: rgba(255,255,255,0.08);
+    --a-border-strong: rgba(255,255,255,0.15);
 
-  --ks-text-main:        #111827;
-  --ks-text-soft:        #4b5563;
-  --ks-text-muted:       #6b7280;
-  --ks-text-invert:      #ffffff;
-
-  --ks-pill-bg:          #e5e7eb;
-  --ks-pill-active:      #ffffff;
-
-  --ks-shadow-soft:      0 16px 34px rgba(15, 23, 42, 0.18);
-  --ks-shadow-card:      0 12px 26px rgba(15, 23, 42, 0.16);
+    --a-text-main: #f2f2f7;
+    --a-text-soft: #9e9e9e;
+    --a-text-muted: #7e7e7e;
 }
-
-/* అలాగే body.dark use చేస్తున్న చోట్ల
-   మీరు body కి ks-light / ks-dark classes కూడా add చేయొచ్చు:
-   body.ks-dark = dark theme (default)
------------------------------------ */
 
 /* -------------------------------
-   2. Body + Global Typography
+   2. Body Background + Typography
 --------------------------------- */
 
 body {
-  font-family: var(--ks-font-sans);
-  background: radial-gradient(circle at top, #0b1120 0, var(--ks-bg-body) 44%, #020617 100%);
-  color: var(--ks-text-main);
-  -webkit-font-smoothing: antialiased;
-  text-rendering: optimizeLegibility;
-  min-height: 100vh;
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", sans-serif;
+    background: var(--a-bg);
+    color: var(--a-text-main);
+    -webkit-font-smoothing: antialiased;
+
+    /* Apple signature diagonal gradient */
+    background: linear-gradient(145deg, #ffffff, #ececf0);
 }
 
-/* ప్రధాన app wrapper (already ఉన్నదైతే) */
-.app-shell,
-.ks-app {
-  max-width: 1240px;
-  margin: 0 auto;
-  padding: 12px 10px 40px;
-}
-
-/* Page title generic */
-h1, h2, h3, h4 {
-  font-weight: 600;
-  letter-spacing: 0.02em;
-  margin: 0;
-}
-
-/* small text */
-small {
-  font-size: 0.78rem;
-  color: var(--ks-text-soft);
-}
-
-/* Links */
-a {
-  color: var(--ks-accent);
-  text-decoration: none;
-}
-a:hover {
-  text-decoration: underline;
+body.dark-mode {
+    background: linear-gradient(145deg, #1c1c1e, #000000);
 }
 
 /* -------------------------------
-   3. Scrollbars (desktop only)
+   3. Apple Frosted Glass Cards
 --------------------------------- */
 
-@media (min-width: 768px) {
-  * {
-    scrollbar-width: thin;
-    scrollbar-color: var(--ks-accent) transparent;
-  }
-
-  *::-webkit-scrollbar {
-    width: 8px;
-    height: 8px;
-  }
-  *::-webkit-scrollbar-track {
-    background: transparent;
-  }
-  *::-webkit-scrollbar-thumb {
-    background: linear-gradient(
-      180deg,
-      var(--ks-accent),
-      var(--ks-accent-strong)
-    );
-    border-radius: 999px;
-  }
-}
-
-/* -------------------------------
-   4. Generic Layout Helpers
---------------------------------- */
-
-/* app top bar / header background */
-.ks-header,
-.top-shell,
-.top-bar {
-  background: linear-gradient(120deg, var(--ks-bg-header), #020617 70%);
-  border-radius: var(--ks-radius-xl);
-  border: 1px solid var(--ks-border-subtle);
-  box-shadow: var(--ks-shadow-card);
-}
-
-/* summary cards wrapper background */
-.ks-strip {
-  background: rgba(15, 23, 42, 0.85);
-  border-radius: var(--ks-radius-xl);
-  border: 1px solid var(--ks-border-subtle);
-}
-
-/* card / panel generic */
 .card,
-.ks-card,
-.panel {
-  background: var(--ks-bg-elevated);
-  border-radius: var(--ks-radius-lg);
-  border: 1px solid var(--ks-border-subtle);
-  box-shadow: var(--ks-shadow-card);
-  padding: 14px 16px;
+.panel,
+.ks-card {
+    background: var(--a-elev-1);
+    border-radius: 18px;
+    border: 1px solid var(--a-border-soft);
+    backdrop-filter: saturate(180%) blur(22px);
+    -webkit-backdrop-filter: saturate(180%) blur(22px);
+    padding: 14px 16px;
+    box-shadow: 0 12px 32px rgba(0,0,0,0.08);
 }
 
-.card-header,
-.panel-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 8px;
-  font-size: 0.9rem;
-  color: var(--ks-text-soft);
-}
-
-.card-title {
-  font-weight: 600;
-  color: var(--ks-text-main);
-}
-
-.card-body,
-.panel-body {
-  margin-top: 4px;
-}
-
-/* Tabs row (Types / Stock / Sales / Service / …) */
-.ks-tabs,
-.tab-row,
-.main-tabs {
-  display: flex;
-  gap: 8px;
-  padding: 8px 4px;
-  overflow-x: auto;
-}
-
-/* Individual pill-tab */
-.ks-tab-pill,
-.tab-pill,
-.nav-pill {
-  white-space: nowrap;
-  padding: 6px 14px;
-  border-radius: 999px;
-  border: 1px solid transparent;
-  background: var(--ks-pill-bg);
-  color: var(--ks-text-soft);
-  font-size: 0.84rem;
-  cursor: pointer;
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  transition: background var(--ks-trans-fast), color var(--ks-trans-fast),
-              border-color var(--ks-trans-fast), box-shadow var(--ks-trans-fast),
-              transform var(--ks-trans-fast);
-}
-
-.ks-tab-pill:hover,
-.tab-pill:hover,
-.nav-pill:hover {
-  border-color: var(--ks-border-strong);
-  color: var(--ks-text-main);
-  transform: translateY(-1px);
-}
-
-.ks-tab-pill.active,
-.tab-pill.active,
-.nav-pill.active {
-  background: var(--ks-accent-soft);
-  border-color: var(--ks-accent);
-  color: var(--ks-text-main);
-  box-shadow: 0 0 0 1px rgba(37, 99, 235, 0.35);
+body.dark-mode .card,
+body.dark-mode .panel {
+    background: rgba(40,40,40,0.45);
+    backdrop-filter: blur(14px);
 }
 
 /* -------------------------------
-   5. Buttons
+   4. Apple Navigation Pills (Tabs)
 --------------------------------- */
 
-.btn,
-.small-btn,
-.ks-btn {
-  border-radius: 999px;
-  border: 1px solid transparent;
-  padding: 6px 14px;
-  font-size: 0.82rem;
-  font-weight: 500;
-  cursor: pointer;
-  background: var(--ks-bg-elevated-soft);
-  color: var(--ks-text-main);
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  transition: background var(--ks-trans-fast), color var(--ks-trans-fast),
-              border-color var(--ks-trans-fast), box-shadow var(--ks-trans-fast),
-              transform var(--ks-trans-fast);
+.ks-tab-pill {
+    background: rgba(255,255,255,0.5);
+    border: 1px solid var(--a-border-soft);
+    border-radius: 14px;
+    padding: 7px 14px;
+    color: var(--a-text-soft);
+    transition: 0.2s;
 }
 
-.btn:hover,
-.small-btn:hover,
-.ks-btn:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 10px 20px rgba(15, 23, 42, 0.65);
-}
-
-/* primary (blue) */
-.btn-primary,
-.ks-btn-primary,
-.small-btn.primary {
-  background: linear-gradient(135deg, var(--ks-accent), var(--ks-accent-strong));
-  color: var(--ks-text-invert);
-}
-
-/* positive (green) */
-.btn-success,
-.ks-btn-success {
-  background: linear-gradient(135deg, var(--ks-positive), #16a34a);
-  color: var(--ks-text-invert);
-}
-
-/* danger (red / logout) */
-.btn-danger,
-.ks-btn-danger {
-  background: linear-gradient(135deg, #f97316, var(--ks-negative));
-  color: #fff;
-}
-
-/* subtle / ghost */
-.btn-ghost,
-.ks-btn-ghost {
-  background: transparent;
-  border-color: var(--ks-border-subtle);
-  color: var(--ks-text-soft);
-}
-.btn-ghost:hover {
-  background: rgba(15, 23, 42, 0.7);
-  color: var(--ks-text-main);
+.ks-tab-pill.active {
+    background: var(--a-accent);
+    color: white;
+    border-color: var(--a-accent-dark);
+    box-shadow: 0 4px 12px rgba(10,132,255,0.4);
 }
 
 /* -------------------------------
-   6. Status Badges (Paid / Credit etc.)
+   5. Apple Buttons
 --------------------------------- */
-.status-paid {
-  display: inline-flex;
-  align-items: center;
-  padding: 3px 10px;
-  border-radius: 999px;
-  background: var(--ks-positive-soft);
-  color: var(--ks-positive);
-  font-size: 0.74rem;
-  font-weight: 500;
+
+.btn-primary {
+    background: var(--a-accent);
+    border-radius: 12px;
+    padding: 8px 16px;
+    color: white;
+    border: none;
+    box-shadow: 0 4px 10px rgba(10,132,255,0.25);
+    transition: 0.2s;
+}
+.btn-primary:active {
+    background: var(--a-accent-dark);
+    transform: scale(0.97);
 }
 
-.status-credit {
-  display: inline-flex;
-  align-items: center;
-  padding: 3px 10px;
-  border-radius: 999px;
-  background: var(--ks-negative-soft);
-  color: var(--ks-negative);
-  font-size: 0.74rem;
-  font-weight: 500;
+/* Ghost button */
+.btn-ghost {
+    background: rgba(255,255,255,0.6);
+    border-radius: 12px;
+    padding: 6px 14px;
+    color: var(--a-text-soft);
 }
 
 /* -------------------------------
-   7. Tables – generic styling
+   6. Apple Table Style
 --------------------------------- */
 
 table {
-  width: 100%;
-  border-collapse: collapse;
-  font-size: 0.8rem;
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.9rem;
 }
 
 thead {
-  background: linear-gradient(90deg, #0f172a, #020617);
+    background: rgba(240,240,240,0.7);
+    backdrop-filter: blur(14px);
 }
 
-body.ks-light thead {
-  background: linear-gradient(90deg, #e5e7eb, #f9fafb);
+td, th {
+    padding: 10px 12px;
+    border-bottom: 1px solid var(--a-border-soft);
 }
 
-th,
-td {
-  padding: 8px 10px;
-  text-align: left;
-}
-
-th {
-  color: var(--ks-text-soft);
-  border-bottom: 1px solid rgba(148, 163, 184, 0.4);
-  font-weight: 500;
-}
-
-tbody tr {
-  border-bottom: 1px solid rgba(15, 23, 42, 0.8);
-}
-
-body.ks-light tbody tr {
-  border-bottom: 1px solid rgba(148, 163, 184, 0.25);
-}
-
-tbody tr:nth-child(even) {
-  background: rgba(15, 23, 42, 0.4);
-}
-
-body.ks-light tbody tr:nth-child(even) {
-  background: #f3f4f6;
-}
-
+/* Hover glow */
 tbody tr:hover {
-  background: rgba(37, 99, 235, 0.16);
-}
-
-/* mobile labels (data-label usage) */
-@media (max-width: 720px) {
-  table.responsive,
-  .table-responsive table {
-    border: 0;
-  }
-
-  table.responsive thead {
-    display: none;
-  }
-
-  table.responsive tr {
-    display: block;
-    margin-bottom: 10px;
-  }
-
-  table.responsive td {
-    display: flex;
-    justify-content: space-between;
-    padding: 6px 10px;
-    border-bottom: 1px solid rgba(15, 23, 42, 0.7);
-  }
-
-  table.responsive td::before {
-    content: attr(data-label);
-    font-weight: 500;
-    color: var(--ks-text-soft);
-    margin-right: 10px;
-  }
+    background: rgba(10,132,255,0.08);
 }
