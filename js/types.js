@@ -1,9 +1,10 @@
 /* ======================================================
-   🗂 types.js — FINAL STABLE v10
+   🗂 types.js — FINAL STABLE v10 (FIXED)
    • Auto-safe window.types
    • Cloud-safe rendering (no race)
    • Clean dropdown updates
    • Prevent duplicate types
+   • Added small safety guards to avoid console errors
 ====================================================== */
 
 /* Ensure global array */
@@ -16,22 +17,22 @@ function addType() {
   const input = document.getElementById("typeName");
   if (!input) return;
 
-  const name = input.value.trim();
+  const name = (input.value || "").trim();
   if (!name) return alert("Enter a valid type name.");
 
-  // Prevent duplicates
-  const exists = window.types.some(
-    t => t.name.toLowerCase() === name.toLowerCase()
+  // Prevent duplicates (safe guard if t.name missing)
+  const exists = (window.types || []).some(
+    t => String(t.name || "").toLowerCase() === name.toLowerCase()
   );
   if (exists) return alert("Type already exists!");
 
   window.types.push({
-    id: uid("type"),
+    id: (typeof uid === "function") ? uid("type") : ("type_" + Math.random().toString(36).slice(2,9)),
     name
   });
 
-  // Save (Local + Cloud)
-  window.saveTypes?.();
+  // Save (Local + Cloud) — safe call
+  if (typeof window.saveTypes === "function") window.saveTypes();
 
   refreshTypesUI();
   input.value = "";
@@ -44,7 +45,7 @@ function clearTypes() {
   if (!confirm("Delete ALL types?")) return;
 
   window.types = [];
-  window.saveTypes?.();
+  if (typeof window.saveTypes === "function") window.saveTypes();
 
   refreshTypesUI();
 }
@@ -56,7 +57,7 @@ function renderTypes() {
   const list = document.getElementById("typeList");
   if (!list) return;
 
-  const types = window.types || [];
+  const types = Array.isArray(window.types) ? window.types : [];
 
   if (!types.length) {
     list.innerHTML = "<li>No types added.</li>";
@@ -64,7 +65,7 @@ function renderTypes() {
   }
 
   list.innerHTML = types
-    .map(t => `<li>${esc(t.name)}</li>`)
+    .map(t => `<li>${(typeof esc === "function") ? esc(t.name) : String(t.name || "")}</li>`)
     .join("");
 }
 
@@ -72,7 +73,7 @@ function renderTypes() {
    🔽 UPDATE DROPDOWNS (Stock + Sales + Wanting)
 ------------------------------------------------------ */
 function updateTypeDropdowns() {
-  const types = window.types || [];
+  const types = Array.isArray(window.types) ? window.types : [];
 
   const stockType = document.getElementById("ptype");
   const filterStock = document.getElementById("filterType");
@@ -83,7 +84,7 @@ function updateTypeDropdowns() {
   if (stockType) {
     stockType.innerHTML =
       `<option value="">Select</option>` +
-      types.map(t => `<option value="${esc(t.name)}">${esc(t.name)}</option>`).join("");
+      types.map(t => `<option value="${(typeof esc === "function") ? esc(t.name) : String(t.name || "")}">${(typeof esc === "function") ? esc(t.name) : String(t.name || "")}</option>`).join("");
   }
 
   /* STOCK FILTER */
@@ -91,8 +92,8 @@ function updateTypeDropdowns() {
     const current = filterStock.value || "all";
     filterStock.innerHTML =
       `<option value="all">All Types</option>` +
-      types.map(t => `<option value="${esc(t.name)}">${esc(t.name)}</option>`).join("");
-    filterStock.value = current;
+      types.map(t => `<option value="${(typeof esc === "function") ? esc(t.name) : String(t.name || "")}">${(typeof esc === "function") ? esc(t.name) : String(t.name || "")}</option>`).join("");
+    try { filterStock.value = current; } catch (e) {}
   }
 
   /* SALES FILTER */
@@ -100,8 +101,8 @@ function updateTypeDropdowns() {
     const current = saleType.value || "all";
     saleType.innerHTML =
       `<option value="all">All Types</option>` +
-      types.map(t => `<option value="${esc(t.name)}">${esc(t.name)}</option>`).join("");
-    saleType.value = current;
+      types.map(t => `<option value="${(typeof esc === "function") ? esc(t.name) : String(t.name || "")}">${(typeof esc === "function") ? esc(t.name) : String(t.name || "")}</option>`).join("");
+    try { saleType.value = current; } catch (e) {}
   }
 
   /* WANTING LIST */
@@ -109,8 +110,8 @@ function updateTypeDropdowns() {
     const current = wantType.value || "";
     wantType.innerHTML =
       `<option value="">Select Type</option>` +
-      types.map(t => `<option value="${esc(t.name)}">${esc(t.name)}</option>`).join("");
-    wantType.value = current;
+      types.map(t => `<option value="${(typeof esc === "function") ? esc(t.name) : String(t.name || "")}">${(typeof esc === "function") ? esc(t.name) : String(t.name || "")}</option>`).join("");
+    try { wantType.value = current; } catch (e) {}
   }
 }
 
@@ -121,18 +122,18 @@ function refreshTypesUI() {
   renderTypes();
   updateTypeDropdowns();
 
-  // Also refresh dependent modules
-  renderStock?.();
-  renderSales?.();
-  renderWanting?.();
+  // Also refresh dependent modules (safe calls)
+  try { if (typeof renderStock === "function") renderStock(); } catch (e) {}
+  try { if (typeof renderSales === "function") renderSales(); } catch (e) {}
+  try { if (typeof renderWanting === "function") renderWanting(); } catch (e) {}
 }
 
 /* ------------------------------------------------------
    🖱 EVENTS
 ------------------------------------------------------ */
 document.addEventListener("click", e => {
-  if (e.target.id === "addTypeBtn") addType();
-  if (e.target.id === "clearTypesBtn") clearTypes();
+  if (e.target && e.target.id === "addTypeBtn") addType();
+  if (e.target && e.target.id === "clearTypesBtn") clearTypes();
 });
 
 /* ------------------------------------------------------
@@ -142,5 +143,6 @@ window.addEventListener("load", () => {
   refreshTypesUI();
 });
 
+/* Expose for other modules/tests */
 window.renderTypes = renderTypes;
 window.updateTypeDropdowns = updateTypeDropdowns;
