@@ -1,25 +1,27 @@
 // =======================================================
-// KharchaSaathi — Updated Service Worker (v3 Safe Edition)
-// No stale cache, auto-update, full tool support
+// KharchaSaathi — Service Worker v4 (Final Safe Edition)
+// - Fix: CCACHE_NAME bug
+// - Only essential assets cached
+// - Auto-update, no stale dashboard files
 // =======================================================
 
-const CACHE_NAME = "ks-cache-v3";
+const CACHE_NAME = "ks-cache-v4";
 
-// List only IMPORTANT core files.
-// Tools & dashboard load dynamically (cache-first-safe).
+// Cache ONLY core public files (safe to store offline)
 const CORE_ASSETS = [
   "/",
   "/index.html",
   "/manifest.json",
-  "/assets/favicon.png",
+  "/assets/favicon.png"
 ];
 
 // -------------------------------------------------------
-// INSTALL — Cache core files
+// INSTALL — Cache essential static assets
 // -------------------------------------------------------
 self.addEventListener("install", (event) => {
   event.waitUntil(
-    caches.open(CCACHE_NAME).then((cache) => {
+    caches.open(CACHE_NAME).then((cache) => {
+      console.log("[SW] Installing & caching core assets…");
       return cache.addAll(CORE_ASSETS);
     })
   );
@@ -39,23 +41,29 @@ self.addEventListener("activate", (event) => {
       )
     )
   );
+  console.log("[SW] Activated. Old caches removed.");
   self.clients.claim();
 });
 
 // -------------------------------------------------------
-// FETCH — Cache-first but safe-update (no stale files)
+// FETCH — Cache-first but update in background
 // -------------------------------------------------------
 self.addEventListener("fetch", (event) => {
   const req = event.request;
 
-  // Only GET requests
+  // Only GET requests should be cached
   if (req.method !== "GET") return;
+
+  // Never cache Firebase or API requests
+  const url = req.url;
+  if (url.includes("firestore") || url.includes("firebase")) {
+    return; // Always use network
+  }
 
   event.respondWith(
     caches.match(req).then((cached) => {
       const networkFetch = fetch(req)
         .then((res) => {
-          // Only cache safe responses
           if (res && res.status === 200) {
             caches.open(CACHE_NAME).then((cache) => {
               cache.put(req, res.clone());
@@ -63,9 +71,9 @@ self.addEventListener("fetch", (event) => {
           }
           return res;
         })
-        .catch(() => cached); // offline fallback
+        .catch(() => cached || new Response("Offline", { status: 503 }));
 
-      // Return cached immediately and update in background
+      // Fast return cached, update in background
       return cached || networkFetch;
     })
   );
