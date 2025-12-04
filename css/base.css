@@ -1,17 +1,16 @@
 /* ============================================================
-   base.css — GLOBAL RESET + CLEAN FOUNDATION (AURORA)
-   Makes UI look premium, responsive & consistent everywhere.
-   Works perfectly with style.css (AURORA THEME ENGINE)
+   base.css — CLEAN FOUNDATION (AURORA SAFE VERSION)
+   Conflict-free → Works with dashboard HTML + layout.css
 =========================================================== */
 
-/* ---------- CSS RESET (modern clean) ---------- */
+/* ---------- RESET ---------- */
 * {
   margin: 0;
   padding: 0;
   box-sizing: border-box;
 }
 
-/* Disable ugly button outlines (keep accessibility) */
+/* Focus Rings */
 button:focus,
 input:focus,
 select:focus,
@@ -20,7 +19,7 @@ textarea:focus {
   outline-offset: 2px;
 }
 
-/* Disable text selection highlight tone issues */
+/* Selection */
 ::selection {
   background: var(--ks-accent-soft);
   color: #fff;
@@ -32,7 +31,7 @@ html, body {
   height: 100%;
   font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   color: var(--ks-text-main);
-  background: var(--ks-gradient-bg);
+  background: var(--ks-bg);  /* dashboard handles gradient */
   scroll-behavior: smooth;
 }
 
@@ -46,7 +45,7 @@ a:hover {
   color: var(--ks-accent-soft);
 }
 
-/* ---------- INPUTS / FORMS ---------- */
+/* ---------- INPUTS ---------- */
 input, select, textarea {
   border: 1px solid var(--ks-border-soft);
   background: var(--ks-bg-card);
@@ -59,17 +58,18 @@ input, select, textarea {
 input:hover, select:hover, textarea:hover {
   border-color: var(--ks-border-strong);
 }
+
 body.dark input,
 body.dark select,
 body.dark textarea {
-  background: #111827;
+  background: #111827 !important; /* keep dark readable */
   color: #e5e7eb;
   border-color: #1f2937;
 }
 
 /* ---------- BUTTONS ---------- */
 button, .btn, .small-btn {
-  border: none;
+  border: 1px solid var(--ks-border-soft);
   cursor: pointer;
   padding: 8px 14px;
   font-size: 14px;
@@ -77,9 +77,8 @@ button, .btn, .small-btn {
   background: var(--ks-bg-card);
   color: var(--ks-text-main);
   font-weight: 600;
-  border: 1px solid var(--ks-border-soft);
-  box-shadow: 0 6px 14px rgba(15,23,42,.06);
   transition: .2s;
+  box-shadow: none; /* IMPORTANT — avoid conflicts */
 }
 
 button:hover {
@@ -96,7 +95,7 @@ body.dark button:hover {
   background: #1d2431;
 }
 
-/* Special buttons */
+/* Danger Button */
 .danger-btn {
   background: #fee2e2;
   border-color: #fecaca;
@@ -114,17 +113,17 @@ body.dark .danger-btn {
   border: 1px solid var(--ks-border-soft);
   border-radius: var(--ks-radius-card);
   padding: 12px;
-  box-shadow: var(--ks-shadow-soft);
-  transition: background .25s, border .25s, box-shadow .25s;
+  transition: background .25s, border .25s;
+  box-shadow: none; /* avoid double-shadow with dashboard */
 }
 
 body.dark .card {
   background: #111827;
   border-color: #1f2937;
-  box-shadow: 0 14px 32px rgba(0,0,0,.65);
 }
 
 /* ---------- TABLES ---------- */
+/* Only minimal rules — dashboard handles full design */
 table {
   width: 100%;
   border-collapse: separate;
@@ -132,11 +131,11 @@ table {
   border-radius: 12px;
   overflow: hidden;
   background: var(--ks-bg-card);
-  box-shadow: var(--ks-shadow-soft);
 }
 
+/* header */
 thead {
-  background: linear-gradient(to right, #e5edff, #dbeafe);
+  background: var(--ks-bg-soft);
   color: var(--ks-text-soft);
 }
 body.dark thead {
@@ -146,40 +145,29 @@ body.dark thead {
 
 th, td {
   padding: 8px 10px;
-  border-bottom: 1px solid var(--ks-border-soft);
-  border-right: 1px solid var(--ks-border-soft);
   text-align: left;
   font-size: 13px;
+  border-bottom: 1px solid var(--ks-border-soft);
+  border-right: 1px solid var(--ks-border-soft);
 }
-
 th:last-child, td:last-child {
   border-right: none;
 }
 
-tbody tr:nth-child(even) {
-  background: #f9fafb;
+/* Remove alternating row conflicts – dashboard handles colors */
+tbody tr {
+  background: transparent;
 }
-tbody tr:nth-child(odd) {
-  background: #ffffff;
-}
-
-body.dark tbody tr:nth-child(even) {
-  background: #0f1520;
-}
-body.dark tbody tr:nth-child(odd) {
-  background: #111827;
-}
-
 tfoot td {
   font-weight: 600;
-  background: #f1f5ff;
+  background: var(--ks-bg-soft);
 }
 body.dark tfoot td {
   background: #0d1117;
   color: #f3f4f6;
 }
 
-/* ---------- SCROLLBAR (Dark mode only) ---------- */
+/* ---------- SCROLLBAR (Dark) ---------- */
 body.dark ::-webkit-scrollbar {
   width: 8px;
 }
@@ -200,7 +188,6 @@ hr {
   border-top: 1px dashed var(--ks-border-soft);
   margin: 12px 0;
 }
-
 small {
   opacity: .85;
 }
