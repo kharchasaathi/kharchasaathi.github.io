@@ -1,10 +1,13 @@
 /* ======================================================
-   🗂 types.js — Product Type Manager (FINAL ONLINE v8.0)
-   • Fully compatible with new core.js cloud system
-   • Instant UI update (no refresh delay)
-   • Prevents duplicate types
-   • Updates Stock + Sales + Wanting dropdowns automatically
+   🗂 types.js — FINAL STABLE v10
+   • Auto-safe window.types
+   • Cloud-safe rendering (no race)
+   • Clean dropdown updates
+   • Prevent duplicate types
 ====================================================== */
+
+/* Ensure global array */
+window.types = Array.isArray(window.types) ? window.types : [];
 
 /* ------------------------------------------------------
    ➕ ADD TYPE
@@ -17,23 +20,20 @@ function addType() {
   if (!name) return alert("Enter a valid type name.");
 
   // Prevent duplicates
-  if ((window.types || []).find(t => t.name.toLowerCase() === name.toLowerCase())) {
-    return alert("Type already exists!");
-  }
+  const exists = window.types.some(
+    t => t.name.toLowerCase() === name.toLowerCase()
+  );
+  if (exists) return alert("Type already exists!");
 
-  // Push new object
   window.types.push({
     id: uid("type"),
     name
   });
 
   // Save (Local + Cloud)
-  if (window.saveTypes) window.saveTypes();
+  window.saveTypes?.();
 
-  // Refresh UI
-  renderTypes();
-  updateTypeDropdowns();
-
+  refreshTypesUI();
   input.value = "";
 }
 
@@ -44,10 +44,9 @@ function clearTypes() {
   if (!confirm("Delete ALL types?")) return;
 
   window.types = [];
-  if (window.saveTypes) window.saveTypes();
+  window.saveTypes?.();
 
-  renderTypes();
-  updateTypeDropdowns();
+  refreshTypesUI();
 }
 
 /* ------------------------------------------------------
@@ -73,41 +72,59 @@ function renderTypes() {
    🔽 UPDATE DROPDOWNS (Stock + Sales + Wanting)
 ------------------------------------------------------ */
 function updateTypeDropdowns() {
-
   const types = window.types || [];
 
-  const addStockType = document.getElementById("ptype");
-  const filterStock  = document.getElementById("filterType");
-  const saleType     = document.getElementById("saleType");
-  const wantType     = document.getElementById("wantType");
+  const stockType = document.getElementById("ptype");
+  const filterStock = document.getElementById("filterType");
+  const saleType = document.getElementById("saleType");
+  const wantType = document.getElementById("wantType");
 
-  /* STOCK → Add stock selector */
-  if (addStockType) {
-    addStockType.innerHTML =
+  /* STOCK → Add to stock dropdown */
+  if (stockType) {
+    stockType.innerHTML =
       `<option value="">Select</option>` +
       types.map(t => `<option value="${esc(t.name)}">${esc(t.name)}</option>`).join("");
   }
 
   /* STOCK FILTER */
   if (filterStock) {
+    const current = filterStock.value || "all";
     filterStock.innerHTML =
       `<option value="all">All Types</option>` +
       types.map(t => `<option value="${esc(t.name)}">${esc(t.name)}</option>`).join("");
+    filterStock.value = current;
   }
 
   /* SALES FILTER */
   if (saleType) {
+    const current = saleType.value || "all";
     saleType.innerHTML =
       `<option value="all">All Types</option>` +
       types.map(t => `<option value="${esc(t.name)}">${esc(t.name)}</option>`).join("");
+    saleType.value = current;
   }
 
-  /* WANTING → Type selector */
+  /* WANTING LIST */
   if (wantType) {
+    const current = wantType.value || "";
     wantType.innerHTML =
       `<option value="">Select Type</option>` +
       types.map(t => `<option value="${esc(t.name)}">${esc(t.name)}</option>`).join("");
+    wantType.value = current;
   }
+}
+
+/* ------------------------------------------------------
+   🔄 SAFE REFRESH (avoid cloud race condition)
+------------------------------------------------------ */
+function refreshTypesUI() {
+  renderTypes();
+  updateTypeDropdowns();
+
+  // Also refresh dependent modules
+  renderStock?.();
+  renderSales?.();
+  renderWanting?.();
 }
 
 /* ------------------------------------------------------
@@ -119,9 +136,11 @@ document.addEventListener("click", e => {
 });
 
 /* ------------------------------------------------------
-   🚀 INIT
+   🚀 INIT (after cloud pull)
 ------------------------------------------------------ */
 window.addEventListener("load", () => {
-  renderTypes();
-  updateTypeDropdowns();
+  refreshTypesUI();
 });
+
+window.renderTypes = renderTypes;
+window.updateTypeDropdowns = updateTypeDropdowns;
