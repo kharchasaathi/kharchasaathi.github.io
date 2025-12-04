@@ -1,6 +1,6 @@
 /* ======================================================
-   COMPONENTS.CSS — BUTTONS / CARDS / INPUTS / TABS
-   (No colors. All design comes from Aurora theme variables)
+   COMPONENTS.CSS — STRUCTURE ONLY
+   Safe version (no UI conflicts with base.css + dashboard)
 ====================================================== */
 
 /* ===== Buttons ===== */
@@ -19,7 +19,7 @@
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  box-shadow: var(--ks-shadow-soft);
+  box-shadow: none;         /* FIX: avoid double shadows */
 }
 
 .small-btn {
@@ -33,7 +33,7 @@
   transform: translateY(-1px);
 }
 
-/* Logout button special */
+/* Logout button (structural only) */
 .btn-danger {
   background: var(--ks-accent-orange);
   color: #fff;
@@ -51,7 +51,7 @@ textarea {
   color: var(--ks-text-main);
   font-size: 13px;
   width: auto;
-  box-shadow: var(--ks-shadow-soft);
+  box-shadow: none;        /* FIX: avoid double-shadow with base.css */
 }
 
 input:focus,
@@ -69,8 +69,8 @@ textarea:focus {
   border: 1px solid var(--ks-border-soft);
   background: var(--ks-bg-card);
   padding: 12px;
-  box-shadow: var(--ks-shadow-soft);
   position: relative;
+  box-shadow: none;        /* FIX: let dashboard control shadows */
 }
 
 /* ===== Tabs ===== */
@@ -99,8 +99,8 @@ textarea:focus {
   background: var(--ks-bg-soft);
 }
 
+/* DO NOT set background:var(--ks-accent) → dashboard has gradients */
 .tab.active {
-  background: var(--ks-accent);
   color: #fff;
 }
 
@@ -123,9 +123,10 @@ textarea:focus {
   font-weight: 600;
   border-radius: var(--ks-radius-pill);
   display: inline-block;
+  /* colors handled by dashboard inline styles */
 }
 
-/* ===== Collect Button (inside summary cards etc.) ===== */
+/* ===== Collect Button ===== */
 .collect-btn {
   position: absolute;
   right: 12px;
@@ -138,9 +139,10 @@ textarea:focus {
   font-weight: 600;
   transition: 0.16s;
   white-space: nowrap;
+  box-shadow: none;        /* FIX: avoid overriding HTML shadows */
 }
 
-/* ===== Credit History link button ===== */
+/* ===== Credit link button ===== */
 .btn-link {
   padding: 4px 9px;
   font-size: 11px;
