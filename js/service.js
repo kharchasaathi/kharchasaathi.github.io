@@ -1,308 +1,349 @@
-/* ===========================================================
-   service.js — FINAL (consolidated)
-   - Manage service jobs (add, complete, collect-credit)
-   - Uses window.services array and optional hooks:
-     window.saveServices, window.collectCreditService, window.updateSummaryCards,
-     window.updateUniversalBar, window.renderCollection, window.renderAnalytics
+/* ============================================================
+   SERVICE.JS — FINAL V10 (Stable, Integrated)
+   ------------------------------------------------------------
+   - window.services canonical store
+   - add / complete / collect credit logic
+   - sync with collection.js via collectCreditService()
+   - safe localStorage + optional cloud hook
+   - render pending table + history table + counters
 =========================================================== */
 
-(function(){
+(function () {
   const qs = s => document.querySelector(s);
   const qsa = s => Array.from(document.querySelectorAll(s));
   const esc = x => (x === undefined || x === null) ? "" : String(x);
+  const num = x => Number(x || 0);
+  const todayISO = () => (new Date()).toISOString().split("T")[0];
 
-  // Ensure global array exists
+  // canonical services array
   window.services = Array.isArray(window.services) ? window.services : [];
 
-  // Helpers
-  function uid(prefix = "svc"){
-    if (typeof window.uid === "function") return window.uid(prefix);
-    return (prefix + "_" + Date.now() + "_" + Math.floor(Math.random()*9999));
+  /* ===========================
+     Persistence
+  =========================== */
+  function saveServices() {
+    try {
+      localStorage.setItem("ks-services", JSON.stringify(window.services));
+    } catch (e) {
+      console.error("saveServices failed", e);
+    }
+    if (typeof cloudSaveDebounced === "function") {
+      cloudSaveDebounced("services", window.services);
+    }
   }
-  function nowDate(){ return (typeof todayDate === "function") ? todayDate() : (new Date()).toISOString().split("T")[0]; }
-  function nowTime(){ return new Date().toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" }); }
+  window.saveServices = saveServices;
 
-  /* -------------------------
-     Add new service job
-     params: { date_in, customer, phone, item, model, problem, advance (number) }
-  ------------------------- */
-  function addServiceJob(obj){
-    if (!obj) return;
+  /* ===========================
+     Utility: uid
+  =========================== */
+  function uid(prefix = "id") {
+    return prefix + "_" + Math.random().toString(36).slice(2, 9);
+  }
+
+  /* ===========================
+     Add Service Job
+     Fields in UI: svcReceivedDate, svcCustomer, svcPhone,
+                    svcItemType, svcModel, svcProblem, svcAdvance
+  =========================== */
+  window.addServiceJob = function () {
+    const date_in = qs("#svcReceivedDate")?.value || todayISO();
+    const customer = (qs("#svcCustomer")?.value || "").trim();
+    const phone = (qs("#svcPhone")?.value || "").trim();
+    const item = (qs("#svcItemType")?.value || "Other").trim();
+    const model = (qs("#svcModel")?.value || "").trim();
+    const problem = (qs("#svcProblem")?.value || "").trim();
+    const advance = num(qs("#svcAdvance")?.value || 0);
+
+    if (!customer && !phone && !problem) {
+      alert("Provide at least customer name / phone / problem.");
+      return;
+    }
+
     const job = {
-      id: obj.id || uid("job"),
-      date_in: obj.date_in || nowDate(),
-      time_in: obj.time_in || nowTime(),
-      customer: obj.customer || "",
-      phone: obj.phone || "",
-      item: obj.item || "Item",
-      model: obj.model || "",
-      problem: obj.problem || "",
-      invest: Number(obj.invest || 0),      // money spent on this job so far
-      paid: Number(obj.paid || 0),          // amount paid by customer
-      remaining: Number(obj.remaining || 0),// remaining credit (if any)
-      creditStatus: (obj.creditStatus || "").toLowerCase(), // "", "credit", "collected"
-      status: (obj.status || "pending")     // pending, inprogress, completed
+      id: uid("svc"),
+      date_in,
+      date_out: null,
+      customer,
+      phone,
+      item,
+      model,
+      problem,
+      invest: 0,          // money spent during service
+      paid: advance,      // amount paid so far
+      remaining: 0,       // amount yet to be paid
+      status: "pending",  // pending / completed / cancelled
+      creditStatus: "none", // none / credit / collected
+      creditCollectedAmount: 0,
+      creditCollectedOn: null,
+      createdAt: (new Date()).toISOString()
     };
 
-    window.services.push(job);
-    if (typeof window.saveServices === "function") {
-      try { window.saveServices(); } catch(e){ console.warn("saveServices failed", e); }
-    }
-
-    renderServiceTables();
-    renderServiceHistory();
-    window.updateSummaryCards?.();
-    window.updateUniversalBar?.();
-    window.renderAnalytics?.();
-    return job;
-  }
-  window.addServiceJob = addServiceJob;
-
-  /* -------------------------
-     Mark job as completed (but may have pending remaining credit)
-     params: id, finishInfo { date_out, paid, invest, remaining, creditStatus }
-  ------------------------- */
-  function completeServiceJob(id, finishInfo = {}){
-    const j = (window.services || []).find(x => x.id === id);
-    if (!j) { alert("Job not found"); return; }
-
-    // Update fields
-    j.date_out = finishInfo.date_out || nowDate();
-    j.time_out = finishInfo.time_out || nowTime();
-    j.invest = Number(finishInfo.invest ?? j.invest ?? 0);
-    j.paid = Number(finishInfo.paid ?? j.paid ?? 0);
-    j.remaining = Number(finishInfo.remaining ?? j.remaining ?? 0);
-    j.creditStatus = (finishInfo.creditStatus || j.creditStatus || "").toLowerCase();
-    j.status = "completed";
-
-    // If fully paid, ensure remaining = 0 and creditStatus = collected/none
-    if (!j.remaining || j.remaining <= 0){
-      j.remaining = 0;
-      if (j.creditStatus === "credit") j.creditStatus = "collected";
-    }
-
-    if (typeof window.saveServices === "function") {
-      try { window.saveServices(); } catch(e){ console.warn("saveServices failed", e); }
-    }
-
-    renderServiceTables();
-    renderServiceHistory();
-    window.updateSummaryCards?.();
-    window.updateUniversalBar?.();
-    window.renderAnalytics?.();
-  }
-  window.completeServiceJob = completeServiceJob;
-
-  /* -------------------------
-     Collect credit for a service job (mark collected)
-     - This should NOT push to generic collectionHistory.
-     - Instead call window.collectCreditService(job) so collection module manages credit-collected list.
-  ------------------------- */
-  function collectServiceCredit(id){
-    const j = (window.services || []).find(x => x.id === id);
-    if (!j) { alert("Job not found."); return; }
-
-    // Only applicable when there is remaining credit or creditStatus is 'credit'
-    const rem = Number(j.remaining || 0);
-    const creditFlag = String(j.creditStatus || "").toLowerCase();
-
-    if (rem <= 0 && creditFlag !== "credit") {
-      alert("No pending credit on this job.");
-      return;
-    }
-
-    // Confirm
-    const msg = [
-      `Collect payment for job: ${j.item} ${j.model}`.trim(),
-      `Customer: ${j.customer || "-"}`,
-      `Remaining: ₹${rem}`
-    ];
-    if (!confirm(msg.join("\n") + "\n\nMark as collected?")) return;
-
-    // Mark collected
-    j.paid = Number(j.paid || 0) + rem;
-    j.remaining = 0;
-    j.creditStatus = "collected";
-    j.status = j.status === "pending" ? "completed" : j.status;
-
-    // Persist
-    if (typeof window.saveServices === "function") {
-      try { window.saveServices(); } catch(e){ console.warn("saveServices failed", e); }
-    }
-
-    // Inform collection module to record credit-collected (so it goes to Credit History with delete icon)
-    try {
-      if (typeof window.collectCreditService === "function") {
-        // Provide necessary details (date, customer, phone, item, model, collected amount)
-        window.collectCreditService({
-          date_out: j.date_out || nowDate(),
-          customer: j.customer || "",
-          phone: j.phone || "",
-          item: j.item || "",
-          model: j.model || "",
-          creditCollectedOn: nowDate(),
-          creditCollectedAmount: rem
-        });
-      } else {
-        // fallback: if app doesn't have collectCreditService, fallback to add to generic collection (less preferred)
-        if (typeof window.addToCollectionHistory === "function"){
-          window.addToCollectionHistory({
-            date: nowDate(),
-            source: "Service (Collected)",
-            details: `${j.item} ${j.model} — ${j.customer || "-"}`,
-            amount: rem
-          });
-        }
-      }
-    } catch (err) {
-      console.warn("collectCreditService failed", err);
-    }
-
-    // update UI
-    renderServiceTables();
-    renderServiceHistory();
-    window.updateSummaryCards?.();
-    window.updateUniversalBar?.();
-    window.renderAnalytics?.();
-    window.renderCollection?.();
-  }
-  window.collectServiceCredit = collectServiceCredit;
-
-  /* -------------------------
-     Render pending / active jobs table (#svcTable)
-  ------------------------- */
-  function renderServiceTables(){
-    const tbody = qs("#svcTable tbody");
-    if (!tbody) return;
-
-    const list = (window.services || []).filter(s => String(s.status || "").toLowerCase() !== "archived");
-    if (!list.length) {
-      tbody.innerHTML = `<tr><td colspan="9" style="text-align:center;opacity:.6;">No service jobs</td></tr>`;
-      return;
-    }
-
-    tbody.innerHTML = list.map(j => {
-      const remaining = Number(j.remaining || 0);
-      const creditFlag = String(j.creditStatus || "").toLowerCase();
-      let actionHTML = "";
-
-      if (String(j.status || "").toLowerCase() === "completed") {
-        actionHTML = `<button class="btn-link" onclick="viewServiceJob('${j.id}')">View</button>`;
-        if (remaining > 0 || creditFlag === "credit") {
-          actionHTML += ` <button class="small-btn" style="padding:4px 8px;font-size:12px;margin-left:6px;" onclick="collectServiceCredit('${j.id}')">Collect</button>`;
-        }
-      } else {
-        actionHTML = `<button class="small-btn" onclick="startServiceJob('${j.id}')">Start</button>
-                      <button class="small-btn" style="margin-left:6px;" onclick="completeServiceJob('${j.id}', { remaining: ${remaining}, paid: ${j.paid || 0}, invest: ${j.invest || 0}, creditStatus: '${j.creditStatus || ""}' })">Complete</button>`;
-      }
-
-      return `
-        <tr>
-          <td>${esc(j.id)}</td>
-          <td>${esc(j.date_in || "")}${j.time_in ? `<br><small>${esc(j.time_in)}</small>` : ""}</td>
-          <td>${esc(j.customer || "-")}</td>
-          <td>${esc(j.phone || "")}</td>
-          <td>${esc(j.item || "")}</td>
-          <td>${esc(j.model || "")}</td>
-          <td>${esc(j.problem || "")}</td>
-          <td>
-            ${j.status === "completed" ? `<span class="status-paid">Completed</span>` : `<span class="status-credit">${esc(j.status || "")}</span>`}
-            ${remaining > 0 ? `<br><small style="color:#ea580c">Pending ₹${remaining}</small>` : ""}
-          </td>
-          <td>${actionHTML}</td>
-        </tr>
-      `;
-    }).join("");
-  }
-  window.renderServiceTables = renderServiceTables;
-
-  /* -------------------------
-     Render completed/history table (#svcHistoryTable)
-  ------------------------- */
-  function renderServiceHistory(){
-    const tbody = qs("#svcHistoryTable tbody");
-    if (!tbody) return;
-
-    const list = (window.services || []).filter(s => s.status === "completed");
-    if (!list.length){
-      tbody.innerHTML = `<tr><td colspan="9" style="text-align:center;opacity:.6;">No completed jobs</td></tr>`;
-      return;
-    }
-
-    tbody.innerHTML = list.map(j => {
-      return `
-        <tr>
-          <td>${esc(j.id)}</td>
-          <td>${esc(j.date_in || "")}</td>
-          <td>${esc(j.date_out || "")}</td>
-          <td>${esc(j.customer || "-")}</td>
-          <td>${esc(j.item || "")}</td>
-          <td>₹${Number(j.invest || 0)}</td>
-          <td>₹${Number(j.paid || 0)}</td>
-          <td>₹${Number((j.paid || 0) - (j.invest || 0))}</td>
-          <td>${esc(j.creditStatus || "")}</td>
-        </tr>
-      `;
-    }).join("");
-  }
-  window.renderServiceHistory = renderServiceHistory;
-
-  /* -------------------------
-     Start job (set status inprogress)
-  ------------------------- */
-  function startServiceJob(id){
-    const j = (window.services || []).find(x => x.id === id);
-    if (!j) { alert("Job not found"); return; }
-    j.status = "inprogress";
-    if (typeof window.saveServices === "function") try{ window.saveServices(); }catch(e){}
-
+    // If advance is zero, remaining is 0 until job is completed with final cost
+    window.services.unshift(job);
+    saveServices();
     renderServiceTables();
     window.updateSummaryCards?.();
-    window.updateUniversalBar?.();
-  }
-  window.startServiceJob = startServiceJob;
-
-  /* -------------------------
-     Delete / Clear all jobs (danger)
-  ------------------------- */
-  document.getElementById("clearServiceBtn")?.addEventListener("click", () => {
-    if (!confirm("Clear ALL service jobs? This cannot be undone.")) return;
-    window.services = [];
-    if (typeof window.saveServices === "function") try{ window.saveServices(); }catch(e){}
-    renderServiceTables();
-    renderServiceHistory();
-    window.updateSummaryCards?.();
-    window.updateUniversalBar?.();
-    window.renderAnalytics?.();
-  });
-
-  /* -------------------------
-     Utility: view job (simple alert / or open modal if exists)
-  ------------------------- */
-  window.viewServiceJob = function(id){
-    const j = (window.services || []).find(x => x.id === id);
-    if (!j) { alert("Job not found"); return; }
-    let info = [
-      `Job ID: ${j.id}`,
-      `Received: ${j.date_in} ${j.time_in || ""}`,
-      `Customer: ${j.customer || "-"}`,
-      `Phone: ${j.phone || "-"}`,
-      `Item: ${j.item} ${j.model || ""}`,
-      `Problem: ${j.problem || ""}`,
-      `Invest: ₹${j.invest || 0}`,
-      `Paid: ₹${j.paid || 0}`,
-      `Remaining: ₹${j.remaining || 0}`,
-      `Status: ${j.status} ${j.creditStatus ? "(" + j.creditStatus + ")" : ""}`
-    ];
-    alert(info.join("\n"));
+    alert("Service job added.");
   };
 
-  /* -------------------------
-     Init render on DOM ready
-  ------------------------- */
-  document.addEventListener("DOMContentLoaded", () => {
-    try { renderServiceTables(); } catch(e){ console.warn(e); }
-    try { renderServiceHistory(); } catch(e){ console.warn(e); }
+  /* ===========================
+     Complete Job
+     - sets invest, final paid amount, status completed
+     - determines remaining and credit flag
+     - if paid covers everything -> mark collected
+  =========================== */
+  window.completeServiceJob = function (id, { invest = 0, finalPaid = 0 } = {}) {
+    const job = window.services.find(j => j.id === id);
+    if (!job) return;
+
+    job.invest = num(invest);
+    job.paid = num(job.paid || 0) + num(finalPaid);
+    // determine total due: let's assume service price = invest + markup
+    // In absence of explicit price field, we'll treat (paid) as what's paid; remaining stays if more due.
+    // For simplicity: remaining = Math.max(0, expected - paid). We don't have expected price - so infer:
+    // If user paid something and wants to close, we'll mark remaining = 0 and status completed.
+    job.remaining = Math.max(0, num(job.remaining || 0));
+    job.status = "completed";
+    job.date_out = todayISO();
+
+    // If job.paid === 0 -> treat as pending credit equal to some estimate (use invest as default)
+    if (job.paid === 0 && job.invest > 0) {
+      job.creditStatus = "credit";
+      job.remaining = job.invest;
+    } else if (job.paid < job.invest) {
+      job.creditStatus = "credit";
+      job.remaining = job.invest - job.paid;
+    } else {
+      job.creditStatus = (job.remaining > 0) ? "credit" : "collected";
+      job.remaining = Math.max(0, job.remaining);
+      if (job.remaining === 0) job.creditStatus = "collected";
+    }
+
+    saveServices();
+    renderServiceTables();
+    window.updateSummaryCards?.();
+  };
+
+  /* ===========================
+     Collect Credit for a Service Job
+     - amount collected moves to creditServiceCollected (collection.js)
+     - job.creditStatus -> collected
+     - creditCollectedAmount, creditCollectedOn set
+     - Adds to investment/profit via external hooks if available
+  =========================== */
+  window.collectServicePayment = function (id, collectedAmount) {
+    collectedAmount = num(collectedAmount || 0);
+    const job = window.services.find(j => j.id === id);
+    if (!job) {
+      alert("Job not found.");
+      return;
+    }
+    if (collectedAmount <= 0) {
+      alert("Invalid collect amount.");
+      return;
+    }
+
+    // Update job bookkeeping
+    job.paid = num(job.paid || 0) + collectedAmount;
+    job.remaining = Math.max(0, num(job.remaining || 0) - collectedAmount);
+    job.creditStatus = (job.remaining > 0) ? "credit" : "collected";
+    job.creditCollectedAmount = (job.creditCollectedAmount || 0) + collectedAmount;
+    job.creditCollectedOn = todayISO();
+
+    // Persist
+    saveServices();
+    renderServiceTables();
+
+    // Inform collection module: prefer using collectCreditService() if exists
+    try {
+      if (typeof window.collectCreditService === "function") {
+        window.collectCreditService({
+          date_out: job.date_out || todayISO(),
+          date_in: job.date_in,
+          customer: job.customer,
+          phone: job.phone,
+          item: job.item,
+          model: job.model,
+          creditCollectedAmount: collectedAmount,
+          creditCollectedOn: job.creditCollectedOn
+        });
+      } else if (typeof window.addToCollectionHistory === "function") {
+        // fallback: push to collectionHistory
+        window.addToCollectionHistory({
+          date: todayISO(),
+          source: "Service (collected)",
+          details: `${job.item} ${job.model} — ${job.customer}`,
+          amount: collectedAmount
+        });
+      }
+    } catch (err) {
+      console.error("collectServicePayment: collection hook failed", err);
+    }
+
+    // Update summary/universal bars
+    try { window.updateSummaryCards && window.updateSummaryCards(); } catch (e) {}
+    try { window.renderCollection && window.renderCollection(); } catch (e) {}
+
+    alert("Collected ₹" + collectedAmount);
+  };
+
+  /* ===========================
+     Delete a job (from pending or history)
+  =========================== */
+  window.deleteServiceJob = function (id) {
+    if (!confirm("Delete this service job?")) return;
+    window.services = window.services.filter(j => j.id !== id);
+    saveServices();
+    renderServiceTables();
+    window.updateSummaryCards?.();
+  };
+
+  /* ===========================
+     Clear All Jobs
+  =========================== */
+  window.clearService = function () {
+    if (!confirm("Clear all service jobs?")) return;
+    window.services = [];
+    saveServices();
+    renderServiceTables();
+    window.updateSummaryCards?.();
+  };
+
+  /* ===========================
+     Render pending & history tables + counters
+  =========================== */
+  window.renderServiceTables = function () {
+    const pendingBody = qs("#svcTable tbody");
+    const historyBody = qs("#svcHistoryTable tbody");
+    const pendingCountEl = qs("#svcPendingCount");
+    const completedCountEl = qs("#svcCompletedCount");
+    const totalProfitEl = qs("#svcTotalProfit");
+
+    const pending = window.services.filter(j => String(j.status).toLowerCase() !== "completed");
+    const completed = window.services.filter(j => String(j.status).toLowerCase() === "completed");
+
+    // Pending
+    if (pendingBody) {
+      if (!pending.length) {
+        pendingBody.innerHTML = `<tr><td colspan="9" style="text-align:center;opacity:.6;">No pending jobs</td></tr>`;
+      } else {
+        pendingBody.innerHTML = pending.map(j => `
+          <tr data-id="${esc(j.id)}">
+            <td>${esc(j.id)}</td>
+            <td>${esc(j.date_in)}</td>
+            <td>${esc(j.customer || "-")}</td>
+            <td>${esc(j.phone || "")}</td>
+            <td>${esc(j.item)}</td>
+            <td>${esc(j.model)}</td>
+            <td>${esc(j.problem)}</td>
+            <td>${esc(j.status)}</td>
+            <td>
+              <button class="btn-link svc-complete" data-id="${esc(j.id)}">Complete</button>
+              <button class="btn-link svc-collect" data-id="${esc(j.id)}">Collect</button>
+              <button class="btn-link svc-delete" data-id="${esc(j.id)}">Delete</button>
+            </td>
+          </tr>
+        `).join("");
+      }
+    }
+
+    // History
+    if (historyBody) {
+      if (!completed.length) {
+        historyBody.innerHTML = `<tr><td colspan="9" style="text-align:center;opacity:.6;">No completed jobs</td></tr>`;
+      } else {
+        historyBody.innerHTML = completed.map(j => `
+          <tr data-id="${esc(j.id)}">
+            <td>${esc(j.id)}</td>
+            <td>${esc(j.date_in)}</td>
+            <td>${esc(j.date_out || "-")}</td>
+            <td>${esc(j.customer || "-")}</td>
+            <td>${esc(j.item)}</td>
+            <td>₹${num(j.invest || 0)}</td>
+            <td>₹${num(j.paid || 0)}</td>
+            <td>₹${num((j.paid || 0) - (j.invest || 0))}</td>
+            <td>
+              ${j.creditStatus === "credit" ? `<span class="status-credit">Pending ₹${num(j.remaining)}</span>` :
+                `<span class="status-paid">Collected</span>`}
+              <button class="btn-link svc-delete" data-id="${esc(j.id)}">Delete</button>
+            </td>
+          </tr>
+        `).join("");
+      }
+    }
+
+    // Counters
+    if (pendingCountEl) pendingCountEl.textContent = pending.length;
+    if (completedCountEl) completedCountEl.textContent = completed.length;
+
+    // Total repair profit: sum of (paid - invest) for completed
+    const totalProfit = completed.reduce((s, j) => s + (num(j.paid || 0) - num(j.invest || 0)), 0);
+    if (totalProfitEl) totalProfitEl.textContent = "₹" + totalProfit;
+
+    // attach handlers for row buttons (delegated)
+  };
+
+  /* ===========================
+     Delegated click handlers for table buttons
+  =========================== */
+  document.addEventListener("click", function (e) {
+    // Complete button (opens small prompt to enter invest & finalPaid)
+    const comp = e.target.closest(".svc-complete");
+    if (comp) {
+      const id = comp.dataset.id;
+      const invest = prompt("Enter invest/expense for this job (₹)", "0");
+      if (invest === null) return;
+      const finalPaid = prompt("Enter amount customer paid now (₹)", "0");
+      if (finalPaid === null) return;
+      window.completeServiceJob(id, { invest: num(invest), finalPaid: num(finalPaid) });
+      return;
+    }
+
+    // Collect button: ask collect amount, then call collectServicePayment
+    const coll = e.target.closest(".svc-collect");
+    if (coll) {
+      const id = coll.dataset.id;
+      const amount = prompt("Enter amount to collect (₹)", "0");
+      if (amount === null) return;
+      window.collectServicePayment(id, num(amount));
+      return;
+    }
+
+    // Delete job
+    const del = e.target.closest(".svc-delete");
+    if (del) {
+      const id = del.dataset.id;
+      window.deleteServiceJob(id);
+      return;
+    }
   });
+
+  /* ===========================
+     Initialize on load
+  =========================== */
+  document.addEventListener("DOMContentLoaded", function () {
+    // if services exist in localStorage, merge (avoid overwriting window.services if pre-populated)
+    try {
+      const raw = localStorage.getItem("ks-services");
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        if (Array.isArray(parsed) && !parsed.length === false) {
+          // merge non-duplicated by id, keep existing order (window.services may have been set by other modules)
+          const map = new Map((window.services || []).map(j => [j.id, j]));
+          parsed.forEach(j => {
+            if (!map.has(j.id)) map.set(j.id, j);
+          });
+          window.services = Array.from(map.values());
+        }
+      }
+    } catch (e) {
+      console.warn("Failed to hydrate services from storage:", e);
+    }
+
+    renderServiceTables();
+  });
+
+  // expose render name used across app
+  window.renderServiceTables = window.renderServiceTables || function () { renderServiceTables(); };
 
 })();
