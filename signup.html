@@ -80,6 +80,14 @@
     color:#ff7a00;
     text-decoration:none;
   }
+
+  #msg{
+    text-align:center;
+    color:#444;
+    font-size:13px;
+    margin-top:8px;
+    min-height:18px;
+  }
 </style>
 </head>
 
@@ -97,8 +105,10 @@
 
   <button id="signupBtn">Create Account</button>
 
+  <div id="msg"></div>
+
   <div class="login-link">
-    Already have an account? <a href="login.html">Login</a>
+    Already have an account? <a href="/login.html">Login</a>
   </div>
 </div>
 
@@ -116,44 +126,53 @@
 <script>
   const qs = s => document.querySelector(s);
 
-  // Password show/hide
+  // Toggle eye icon
   qs("#pwEye").addEventListener("click", () => {
     const pw = qs("#password");
     pw.type = pw.type === "password" ? "text" : "password";
   });
 
-  // SIGNUP CLICK
+  // SIGNUP BUTTON
   qs("#signupBtn").addEventListener("click", async () => {
 
     const email = qs("#email").value.trim();
     const pass  = qs("#password").value.trim();
+    const msg   = qs("#msg");
+
+    msg.textContent = "";
 
     if (!email || !pass) {
-      alert("Enter email & password");
+      msg.textContent = "Enter email & password.";
       return;
     }
 
     if (pass.length < 6) {
-      alert("Password must be at least 6 characters");
+      msg.textContent = "Password must be at least 6 characters.";
       return;
     }
 
-    // 🔥 FINAL: Use signupUser() from login-utils.js
+    qs("#signupBtn").disabled = true;
+    qs("#signupBtn").textContent = "Please wait…";
+
+    // Use login-utils.js
     const res = await signupUser(email, pass);
 
     if (res.success) {
-      alert("Account created successfully!");
+      msg.style.color = "green";
+      msg.textContent = "Account created successfully!";
 
-      // store email locally (for core.js)
       localStorage.setItem("ks-user-email", email);
 
-      // redirect to dashboard
-      window.location.href = "/tools/business-dashboard.html";
+      setTimeout(() => {
+        window.location.href = "/tools/business-dashboard.html";
+      }, 300);
 
     } else {
-      alert("Signup failed: " + res.error);
+      msg.style.color = "red";
+      msg.textContent = res.error.replace("Firebase:", "").trim();
+      qs("#signupBtn").disabled = false;
+      qs("#signupBtn").textContent = "Create Account";
     }
-
   });
 </script>
 
