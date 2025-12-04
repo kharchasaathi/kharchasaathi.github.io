@@ -1,4 +1,4 @@
-/* wanting.js — FINAL v9 (as previously fixed) */
+/* wanting.js — FINAL v9 (fixed remain handling in fallback) */
 (function(){
   const qsLocal = s => document.querySelector(s);
   const escLocal = x => (window.esc ? window.esc(x) : String(x||""));
@@ -45,10 +45,29 @@
     if(typeof window.addStockEntry==="function"){
       try{ window.addStockEntry({ date: window.todayDate?window.todayDate():new Date().toISOString().split("T")[0], type: w.type, name: w.name, qty, cost }); }catch(e){ console.error(e); return alert("Failed to add stock"); }
     } else {
+      // FALLBACK: safely update window.stock with proper fields (ensure remain exists)
       window.stock = Array.isArray(window.stock)?window.stock:[];
       const existing = window.stock.find(p=>p.type===w.type && String(p.name||"").toLowerCase()===String(w.name||"").toLowerCase());
-      if(!existing){ window.stock.push({ id: window.uid?window.uid("stk"):"stk_"+Math.random().toString(36).slice(2,9), date: window.todayDate?window.todayDate():new Date().toISOString().split("T")[0], type: w.type, name: w.name, qty, cost, sold:0, limit: window.getGlobalLimit?window.getGlobalLimit():0, history:[{date: window.todayDate?window.todayDate():new Date().toISOString().split("T")[0], qty, cost}] }); }
-      else { existing.qty = Number(existing.qty||0) + qty; existing.history = existing.history||[]; existing.history.push({ date: window.todayDate?window.todayDate():new Date().toISOString().split("T")[0], qty, cost }); existing.cost = cost; }
+      if(!existing){
+        window.stock.push({
+          id: window.uid?window.uid("stk"):"stk_"+Math.random().toString(36).slice(2,9),
+          date: window.todayDate?window.todayDate():new Date().toISOString().split("T")[0],
+          type: w.type,
+          name: w.name,
+          qty,
+          remain: qty,               // <<< FIX: set initial remain
+          cost,
+          sold:0,
+          limit: window.getGlobalLimit?window.getGlobalLimit():0,
+          history:[{date: window.todayDate?window.todayDate():new Date().toISOString().split("T")[0], qty, cost}]
+        });
+      } else {
+        existing.qty = Number(existing.qty||0) + qty;
+        existing.remain = Number(existing.remain||0) + qty; // <<< FIX: increment remain as well
+        existing.history = existing.history||[];
+        existing.history.push({ date: window.todayDate?window.todayDate():new Date().toISOString().split("T")[0], qty, cost });
+        existing.cost = cost;
+      }
       if(typeof window.saveStock==="function") window.saveStock();
     }
     window.wanting.splice(i,1);
