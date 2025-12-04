@@ -1,62 +1,57 @@
-/* collection.js - Reworked collect logic (v2)
-   - handleCollect(type) provided (net, stock, service)
-   - normal collected amounts -> collectionHistory
-   - credit collected -> creditSalesCollected / creditServiceCollected (NOT collectionHistory)
-   - collected-credit rows show DELETE (no GOTO)
-   - safe-guards + no-duplicate-collection checks
-   - exposes hooks:
-       window.onCollect(type, entry)            -> called for normal collections
-       window.onCreditCollected(kind, obj)     -> called when credit sale/service is collected
+/* collection.js — Final (v4)
+   - normal collections -> collectionHistory
+   - credit collections -> creditSalesCollected / creditServiceCollected
+   - safe-guards vs duplicates
+   - calls updateUniversalBar() and render hooks when available
 */
 
 (function(){
   const qs = s => document.querySelector(s);
   const qsa = s => Array.from(document.querySelectorAll(s));
   const esc = x => (x === undefined || x === null) ? "" : String(x);
+  const todayISO = () => (new Date()).toISOString().split('T')[0];
 
-  // In-memory stores (preserve existing if present)
+  // Persisted (or in-memory) collections used by other modules
   window.collectionHistory = Array.isArray(window.collectionHistory) ? window.collectionHistory : [];
   window.creditSalesCollected = Array.isArray(window.creditSalesCollected) ? window.creditSalesCollected : [];
   window.creditServiceCollected = Array.isArray(window.creditServiceCollected) ? window.creditServiceCollected : [];
 
-  // Utility: format date YYYY-MM-DD
-  function todayISO(d){
-    d = d || new Date();
-    return d.toISOString().split("T")[0];
+  // ---------------------
+  // Helpers
+  // ---------------------
+  function numeric(v){ return Number(v || 0); }
+
+  function findDuplicateCollection(entry){
+    return window.collectionHistory.find(e =>
+      e.source === entry.source &&
+      e.details === entry.details &&
+      numeric(e.amount) === numeric(entry.amount) &&
+      e.date === entry.date
+    );
   }
 
-  // Utility: unique key for collection entries (to avoid duplicate pushes)
-  function colKey(entry){
-    // source + details + amount + date (if id present prefer id)
-    if (entry && entry.id) return `id:${entry.id}`;
-    return `${entry.source}::${entry.details}::${Number(entry.amount||0)}::${entry.date||""}`;
+  function findDuplicateCredit(list, key){
+    // key is string composite to check duplicates
+    return list.find(r => r.__dupKey === key);
   }
 
-  // COLLECTION HISTORY - add with duplicate guard
-  function addToCollectionHistory(entry){
-    try {
-      if (!entry || !entry.amount || Number(entry.amount) <= 0) return false;
-      entry.date = entry.date || todayISO();
-      const key = colKey(entry);
-      // de-dup by key
-      const found = window.collectionHistory.find(e => (e._ck === key));
-      if (found) return false;
-      entry._ck = key;
-      // newest first
-      window.collectionHistory.unshift(entry);
-      renderCollectionHistory();
-      return true;
-    } catch (e){
-      console.error("addToCollectionHistory error:", e);
-      return false;
-    }
+  function makeKeyForSale(sale){
+    // prefer id if present
+    if (sale && sale.id) return `sale:${sale.id}`;
+    return `sale:${sale.date||''}|${sale.customer||''}|${sale.product||''}|${numeric(sale.total)}`;
+  }
+  function makeKeyForService(job){
+    if (job && job.id) return `svc:${job.id}`;
+    return `svc:${job.date_out||job.date_in||''}|${job.customer||''}|${job.item||''}|${numeric(job.creditCollectedAmount||job.collected||0)}`;
   }
 
-  // RENDER collection table
+  // ---------------------
+  // Renderers
+  // ---------------------
   function renderCollectionHistory(){
     const tbody = qs("#collectionHistory tbody");
-    if (!tbody) return;
-    if (!window.collectionHistory.length){
+    if(!tbody) return;
+    if(!window.collectionHistory.length){
       tbody.innerHTML = `<tr><td colspan="4" style="text-align:center;opacity:.6;">No collections yet</td></tr>`;
       return;
     }
@@ -65,31 +60,25 @@
         <td data-label="Date">${esc(row.date)}</td>
         <td data-label="Source">${esc(row.source)}</td>
         <td data-label="Details">${esc(row.details)}</td>
-        <td data-label="Amount">₹${Number(row.amount)}</td>
+        <td data-label="Amount">₹${Number(row.amount).toLocaleString()}</td>
       </tr>
     `).join("");
   }
 
-  // RENDER credit-collected lists (sales & service) with DELETE icon (no GOTO)
   function renderCreditCollectedTables(){
     const salesBody = qs("#creditSalesCollected tbody");
-    const svcBody = qs("#creditServiceCollected tbody");
+    const svcBody   = qs("#creditServiceCollected tbody");
 
     if (salesBody){
       if (!window.creditSalesCollected.length){
         salesBody.innerHTML = `<tr><td colspan="4" style="text-align:center;opacity:.6;">No collected credit sales yet</td></tr>`;
       } else {
         salesBody.innerHTML = window.creditSalesCollected.map((r, idx) => `
-          <tr data-idx="${idx}" data-type="sale">
-            <td data-label="Date">${esc(r.date)}</td>
-            <td data-label="Customer / Product">
-              ${esc(r.customer || "-")}<br>
-              <small>${esc(r.product || "")} ${r.qty ? `(${r.qty}×₹${r.price})` : ""}</small>
-            </td>
-            <td data-label="Collected"><span class="status-paid">Collected ₹${Number(r.collected)}</span></td>
-            <td data-label="Action">
-              <button class="btn-link credit-delete" data-which="sale" data-idx="${idx}" title="Delete">🗑️</button>
-            </td>
+          <tr data-idx="${idx}">
+            <td>${esc(r.date)}</td>
+            <td>${esc(r.customer || "-")}<br><small>${esc(r.product || "")} (${r.qty}×₹${r.price})</small></td>
+            <td><span class="status-paid">Collected ₹${Number(r.collected).toLocaleString()}</span></td>
+            <td><button class="btn-link credit-delete" data-which="sale" data-idx="${idx}" title="Delete">🗑️</button></td>
           </tr>
         `).join("");
       }
@@ -100,209 +89,223 @@
         svcBody.innerHTML = `<tr><td colspan="4" style="text-align:center;opacity:.6;">No collected service credits yet</td></tr>`;
       } else {
         svcBody.innerHTML = window.creditServiceCollected.map((r, idx) => `
-          <tr data-idx="${idx}" data-type="service">
-            <td data-label="Date">${esc(r.date)}</td>
-            <td data-label="Customer / Job">
-              ${esc(r.customer || "-")}<br>
-              <small>${esc(r.item || "")} ${esc(r.model || "")}</small>
-            </td>
-            <td data-label="Collected"><span class="status-paid">Collected ₹${Number(r.collected)}</span></td>
-            <td data-label="Action">
-              <button class="btn-link credit-delete" data-which="service" data-idx="${idx}" title="Delete">🗑️</button>
-            </td>
+          <tr data-idx="${idx}">
+            <td>${esc(r.date)}</td>
+            <td>${esc(r.customer || "-")}<br><small>${esc(r.item || "")} ${esc(r.model || "")}</small></td>
+            <td><span class="status-paid">Collected ₹${Number(r.collected).toLocaleString()}</span></td>
+            <td><button class="btn-link credit-delete" data-which="service" data-idx="${idx}" title="Delete">🗑️</button></td>
           </tr>
         `).join("");
       }
     }
   }
 
-  // CREDIT DELETE handler (removes from collected lists)
-  document.addEventListener("click", function(e){
-    const btn = e.target.closest(".credit-delete");
+  // ---------------------
+  // Delete handlers for credit-collected rows
+  // ---------------------
+  document.addEventListener("click", function(ev){
+    const btn = ev.target.closest(".credit-delete");
     if (!btn) return;
     const which = btn.dataset.which;
     const idx = Number(btn.dataset.idx);
     if (which === "sale"){
-      if (Array.isArray(window.creditSalesCollected) && window.creditSalesCollected[idx]){
-        // Optionally prompt
-        if (confirm("Delete this collected credit sale entry?")) {
-          window.creditSalesCollected.splice(idx, 1);
-          renderCreditCollectedTables();
-        }
+      if (window.creditSalesCollected && window.creditSalesCollected[idx]){
+        window.creditSalesCollected.splice(idx,1);
+        renderCreditCollectedTables();
+        try{ if (typeof window.updateUniversalBar === "function") window.updateUniversalBar(); } catch(e){}
       }
     } else if (which === "service"){
-      if (Array.isArray(window.creditServiceCollected) && window.creditServiceCollected[idx]){
-        if (confirm("Delete this collected service credit entry?")) {
-          window.creditServiceCollected.splice(idx, 1);
-          renderCreditCollectedTables();
-        }
+      if (window.creditServiceCollected && window.creditServiceCollected[idx]){
+        window.creditServiceCollected.splice(idx,1);
+        renderCreditCollectedTables();
+        try{ if (typeof window.updateUniversalBar === "function") window.updateUniversalBar(); } catch(e){}
       }
     }
   });
 
-  // handleCollect(type) - called by universal-card collect buttons
-  // type: "net" | "stock" | "service"
+  // ---------------------
+  // Add normal collection
+  // ---------------------
+  function addToCollectionHistory(entry){
+    // expects { date, source, details, amount }
+    entry.date = entry.date || todayISO();
+    entry.amount = numeric(entry.amount);
+    if (entry.amount <= 0) return false;
+    if (findDuplicateCollection(entry)) return false; // avoid duplicate
+    window.collectionHistory.unshift(entry); // newest first
+    renderCollectionHistory();
+    return true;
+  }
+
+  // ---------------------
+  // Collect credit sale (used when a credit sale gets paid)
+  // ---------------------
+  function addCreditSaleCollected(saleObj){
+    if (!saleObj) return false;
+    const key = makeKeyForSale(saleObj);
+    if (findDuplicateCredit(window.creditSalesCollected, key)) return false;
+    const collected = numeric(saleObj.collectedAmount || saleObj.collected || saleObj.total || (numeric(saleObj.qty)*numeric(saleObj.price)));
+    if (collected <= 0) return false;
+
+    const row = {
+      __dupKey: key,
+      date: saleObj.creditCollectedOn || todayISO(),
+      customer: saleObj.customer || "",
+      phone: saleObj.phone || "",
+      product: saleObj.product || "",
+      qty: saleObj.qty || 0,
+      price: saleObj.price || 0,
+      total: numeric(saleObj.total || collected),
+      collected: collected
+    };
+
+    window.creditSalesCollected.unshift(row);
+    renderCreditCollectedTables();
+    return true;
+  }
+
+  // ---------------------
+  // Collect credit service (used when service job credit collected)
+  // ---------------------
+  function addCreditServiceCollected(jobObj){
+    if (!jobObj) return false;
+    const key = makeKeyForService(jobObj);
+    if (findDuplicateCredit(window.creditServiceCollected, key)) return false;
+    const collected = numeric(jobObj.creditCollectedAmount || jobObj.collected || 0);
+    if (collected <= 0) return false;
+
+    const row = {
+      __dupKey: key,
+      date: jobObj.creditCollectedOn || todayISO(),
+      customer: jobObj.customer || "",
+      phone: jobObj.phone || "",
+      item: jobObj.item || "",
+      model: jobObj.model || "",
+      collected: collected
+    };
+
+    window.creditServiceCollected.unshift(row);
+    renderCreditCollectedTables();
+    return true;
+  }
+
+  // ---------------------
+  // Public API
+  // ---------------------
+  // handleCollect(type) invoked by UI (type: 'net'|'stock'|'service')
   window.handleCollect = async function(type){
     try {
       type = String(type || "").toLowerCase();
-      const idMap = {
-        net: "unNetProfit",
-        stock: "unStockInv",
-        service: "unServiceInv"
-      };
-      const domId = idMap[type];
-      const el = domId ? qs("#" + domId) : null;
-
-      // read numeric value from element text (handles "₹1,234")
-      let rawAmount = 0;
+      // map DOM ids (these exist in dashboard html)
+      const idMap = { net: "unNetProfit", stock: "unStockInv", service: "unServiceInv" };
+      const id = idMap[type];
+      const el = id ? qs("#" + id) : null;
+      let raw = 0;
       if (el){
-        const txt = (el.textContent || el.innerText || "").replace(/[₹,]/g,"").trim();
-        rawAmount = Number(txt) || 0;
+        raw = Number((el.textContent||el.innerText||"").replace(/[₹,]/g,"").trim()) || 0;
       }
-
-      if (!rawAmount || rawAmount <= 0){
+      if (!raw || raw <= 0){
         alert("Nothing to collect for: " + type);
         return;
       }
 
-      const now = todayISO();
+      // Normal collection => add to collectionHistory
       const entry = {
-        id: `col_${Date.now()}_${Math.floor(Math.random()*9999)}`,
-        date: now,
+        date: todayISO(),
         source: (type === "net") ? "Net Profit" : (type === "stock") ? "Stock Investment" : "Service Investment",
-        details: `Collected ${type}`,
-        amount: Number(rawAmount)
+        details: `Collected from ${type}`,
+        amount: raw
       };
+      addToCollectionHistory(entry);
 
-      // add to collectionHistory (cash collections only)
-      const added = addToCollectionHistory(entry);
+      // Reset the displayed value to zero (UI only)
+      if (el) el.textContent = "₹0";
 
-      // reset visible UI amount to 0 (do not assume underlying data mutated)
-      if (el) {
-        el.textContent = "₹0";
-      }
-
-      // call hook so other code (universalBar, analytics, backend) can adjust stored values
+      // If app has onCollect hook, call it (for persistent storage)
       if (typeof window.onCollect === "function"){
-        try {
-          await window.onCollect(type, entry);
-        } catch(e){
-          console.warn("onCollect hook failed:", e);
-        }
+        try { await window.onCollect(type, entry); } catch(e){ console.warn("onCollect hook failed", e); }
       }
 
-      // re-render and update any dashboards
+      // Update universal bar / other renderers
+      try{ if (typeof window.updateUniversalBar === "function") window.updateUniversalBar(); } catch(e){}
+      try{ if (typeof window.renderCollection === "function") window.renderCollection(); } catch(e){}
       renderCollectionHistory();
-      try { if (typeof window.updateSummaryCards === "function") window.updateSummaryCards(); } catch(e){}
-      try { if (typeof window.renderCollection === "function") window.renderCollection(); } catch(e){}
-
-      return added;
-
     } catch (err){
-      console.error("handleCollect failed:", err);
-      alert("Collect failed. See console.");
-      return false;
+      console.error("handleCollect error:", err);
+      alert("Collect failed — see console.");
     }
   };
 
-  // collectCreditSale(saleObj)
-  // saleObj: { id?, date?, customer?, product?, qty?, price?, total?, collectedAmount?, creditCollectedOn? }
-  // - pushes into creditSalesCollected (NOT collectionHistory)
-  // - calls window.onCreditCollected('sale', saleObj) hook for profit/stock updates
+  // collectCreditSale(saleObj) — called when a credit sale is collected (from sales module)
   window.collectCreditSale = function(saleObj){
     try {
-      if (!saleObj) return false;
-      const collected = Number(saleObj.collectedAmount || saleObj.total || (Number(saleObj.qty||0)*Number(saleObj.price||0)) || 0);
-      if (!collected || collected <= 0) return false;
+      const ok = addCreditSaleCollected(saleObj);
+      if (!ok) return false;
 
-      const row = {
-        id: saleObj.id || `sale_${Date.now()}_${Math.floor(Math.random()*9999)}`,
-        date: saleObj.creditCollectedOn || saleObj.date || todayISO(),
-        customer: saleObj.customer || "",
-        phone: saleObj.phone || "",
-        product: saleObj.product || "",
-        qty: saleObj.qty || 0,
-        price: saleObj.price || 0,
-        total: Number(saleObj.total || (Number(saleObj.qty||0)*Number(saleObj.price||0)) || collected),
-        collected: Number(collected)
-      };
-
-      // duplicate prevention by id OR signature
-      const sig = row.id ? (`id:${row.id}`) : (`${row.date}|${row.customer}|${row.product}|${Number(row.total)}`);
-      const exists = window.creditSalesCollected.find(r => (r._ck === sig || (r.id && r.id === row.id)));
-      if (exists) return false;
-      row._ck = sig;
-
-      window.creditSalesCollected.unshift(row);
-      renderCreditCollectedTables();
-
-      // hook for profit/stock updates (app-level logic should implement)
-      if (typeof window.onCreditCollected === "function"){
-        try {
-          window.onCreditCollected("sale", row);
-        } catch(e){
-          console.warn("onCreditCollected(sale) hook failed:", e);
+      // mark original sale as collected in window.sales if possible (safe update)
+      try {
+        if (saleObj && saleObj.id && Array.isArray(window.sales)){
+          const idx = window.sales.findIndex(s => s.id === saleObj.id);
+          if (idx >= 0){
+            window.sales[idx].wasCredit = true;
+            window.sales[idx].status = "paid";
+            window.sales[idx].collectedAmount = saleObj.collectedAmount || saleObj.total || (numeric(saleObj.qty)*numeric(saleObj.price));
+            window.sales[idx].creditCollectedOn = todayISO();
+          }
         }
-      }
+      } catch(e){ console.warn("marking sale paid failed", e); }
 
+      // As per your request: collected credit should also add to Net profit & Stock investment where applicable.
+      // We do not mutate calculations directly here — rely on updateUniversalBar which reads arrays.
+      try { if (typeof window.updateUniversalBar === "function") window.updateUniversalBar(); } catch(e){}
+      try { if (typeof window.renderCollection === "function") window.renderCollection(); } catch(e){}
       return true;
-    } catch (e){
-      console.error("collectCreditSale error:", e);
+    } catch(e){
+      console.error("collectCreditSale failed:", e);
       return false;
     }
   };
 
-  // collectCreditService(jobObj)
-  // jobObj: { id?, date_in?, date_out?, customer?, phone?, item?, model?, creditCollectedAmount?, creditCollectedOn? }
+  // collectCreditService(jobObj) — called when a service credit is collected
   window.collectCreditService = function(jobObj){
     try {
-      if (!jobObj) return false;
-      const collected = Number(jobObj.creditCollectedAmount || jobObj.collected || 0);
-      if (!collected || collected <= 0) return false;
+      const ok = addCreditServiceCollected(jobObj);
+      if (!ok) return false;
 
-      const row = {
-        id: jobObj.id || `svc_${Date.now()}_${Math.floor(Math.random()*9999)}`,
-        date: jobObj.creditCollectedOn || jobObj.date_out || jobObj.date_in || todayISO(),
-        customer: jobObj.customer || "",
-        phone: jobObj.phone || "",
-        item: jobObj.item || "",
-        model: jobObj.model || "",
-        collected: Number(collected)
-      };
-
-      const sig = row.id ? (`id:${row.id}`) : (`${row.date}|${row.customer}|${row.item}|${Number(row.collected)}`);
-      const exists = window.creditServiceCollected.find(r => (r._ck === sig || (r.id && r.id === row.id)));
-      if (exists) return false;
-      row._ck = sig;
-
-      window.creditServiceCollected.unshift(row);
-      renderCreditCollectedTables();
-
-      if (typeof window.onCreditCollected === "function"){
-        try {
-          window.onCreditCollected("service", row);
-        } catch(e){
-          console.warn("onCreditCollected(service) hook failed:", e);
+      // Mark job as paid/collected if possible
+      try {
+        if (jobObj && jobObj.id && Array.isArray(window.services)){
+          const idx = window.services.findIndex(s => s.id === jobObj.id);
+          if (idx >= 0){
+            window.services[idx].creditStatus = "collected";
+            window.services[idx].creditCollectedAmount = jobObj.creditCollectedAmount || jobObj.collected || 0;
+            window.services[idx].creditCollectedOn = todayISO();
+            window.services[idx].status = "collected";
+          }
         }
-      }
+      } catch(e){ console.warn("marking service collected failed", e); }
 
+      try { if (typeof window.updateUniversalBar === "function") window.updateUniversalBar(); } catch(e){}
+      try { if (typeof window.renderCollection === "function") window.renderCollection(); } catch(e){}
       return true;
-    } catch (e){
-      console.error("collectCreditService error:", e);
+    } catch(e){
+      console.error("collectCreditService failed:", e);
       return false;
     }
   };
 
-  // thin wrapper for external calls to re-render both collections and credit-collected lists
+  // expose render wrapper for compatibility
   window.renderCollection = function(){
     renderCollectionHistory();
     renderCreditCollectedTables();
   };
 
-  // initial render on DOM ready
+  // init on DOMContentLoaded
   document.addEventListener("DOMContentLoaded", () => {
-    renderCollectionHistory();
-    renderCreditCollectedTables();
+    try {
+      renderCollectionHistory();
+      renderCreditCollectedTables();
+    }catch(e){ console.error("collection init failed:", e); }
   });
 
 })();
