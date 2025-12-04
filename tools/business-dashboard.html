@@ -1,3 +1,4 @@
+<!-- Part 1: business-dashboard.html -->
 <!doctype html>
 <html lang="en">
 <head>
@@ -8,217 +9,192 @@
   <link rel="icon" href="/favicon.png" />
   <link rel="apple-touch-icon" href="/favicon.png" />
 
-  <!-- keep existing external CSS references (they may be customized) -->
+  <!-- external CSS (kept) -->
   <link rel="stylesheet" href="/css/base.css" />
   <link rel="stylesheet" href="/css/layout.css" />
   <link rel="stylesheet" href="/css/components.css" />
+  <link rel="stylesheet" href="/css/style.css" />
+  <link rel="stylesheet" href="/css/table.css" />
 
-  <!-- Consolidated theme CSS (light/dark variables + table styles) -->
+  <!-- Inline critical theme CSS (kept minimal) -->
   <style>
-    /* ... your CSS (unchanged) ... */
-    :root{
-      --ks-bg: #f3f4fb;
-      --ks-bg-soft: #eef1ff;
-      --ks-bg-card: #ffffff;
-      --ks-border-soft: #e2e8f0;
-      --ks-text-main: #0f172a;
-      --ks-text-soft: #6b7280;
-      --ks-accent: #2563eb;
-      --ks-accent-soft: #3b82f6;
-      --ks-accent-green: #16a34a;
-      --ks-accent-orange:#ea580c;
-      --ks-radius-card: 16px;
-      --ks-radius-pill: 999px;
-      --ks-shadow-soft: 0 14px 40px rgba(15,23,42,.08);
-    }
-    body.dark{ /* ... */ }
-    /* rest of CSS omitted here for brevity — keep your original block */
+    /* critical small theme vars (kept safe) */
+    :root { --ks-accent:#2563eb; --ks-accent-soft:#3b82f6; --ks-bg-card:#fff; --ks-border-soft:#e2e8f0; --ks-text-main:#0f172a; --ks-radius-pill:999px; }
+    body{ margin:0; font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; background:radial-gradient(circle at top,#eef2ff 0,#e5e7eb 40%,#e2e8f0 100%); color:var(--ks-text-main); min-height:100vh; -webkit-font-smoothing:antialiased;}
+    .topbar{ position:sticky; top:0; z-index:50; display:flex; justify-content:space-between; align-items:center; padding:10px 18px; background: rgba(255,255,255,.92); border-bottom:1px solid var(--ks-border-soft); }
+    .topbar h1{ margin:0; font-size:20px; display:flex; gap:10px; align-items:center; text-transform:uppercase; font-weight:700; }
+    .topbar-logo{ width:32px;height:32px;border-radius:999px; display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#22c55e,#2563eb); color:#fff; font-weight:700;}
+    .tabs{ display:flex; gap:10px; padding:10px; overflow-x:auto; border-bottom:1px solid var(--ks-border-soft); }
+    .tab{ padding:9px 18px; border-radius:999px; cursor:pointer; color:#6b7280; font-weight:600; }
+    .tab.active{ background:linear-gradient(135deg,var(--ks-accent-soft),var(--ks-accent)); color:#fff; }
+    .section{ display:none; padding:16px; max-width:1160px; margin:0 auto; }
+    .section.active{ display:block; }
   </style>
 </head>
 <body>
+<script>const qs=s=>document.querySelector(s), qsa=s=>Array.from(document.querySelectorAll(s));</script>
 
-  <!-- IMPORTANT: define safe global helpers ONCE (avoid const redeclare errors) -->
-  <script>
-    // If some other script already created window.qs/window.qsa, reuse them.
-    // This avoids "Identifier 'qs' has already been declared" when files load twice.
-    window.qs = window.qs || (s => document.querySelector(s));
-    window.qsa = window.qsa || (s => Array.from(document.querySelectorAll(s)));
-  </script>
-
-  <!-- Topbar + universal bar (unchanged) -->
-  <div class="topbar">
-    <h1>
-      <div class="topbar-logo"><span>₹</span></div>
-      KHARCHASAATHI
-    </h1>
-
-    <div class="topbar-right" style="display:flex;align-items:center;gap:10px;">
-      <span id="emailTag">Checking login…</span>
-      <div class="simple-clock" style="display:flex;flex-direction:column;align-items:flex-end;font-size:11px;">
-        <span id="clockTime" class="clock-line">--:--:--</span>
-        <span id="clockDate" class="clock-line small">--</span>
-      </div>
-      <button id="themeBtn" class="theme-btn">🌙</button>
-      <a class="small-btn" href="/index.html">🏠 Home</a>
-      <button id="logoutBtn" class="small-btn">🔓 Logout</button>
+<div class="topbar">
+  <h1><div class="topbar-logo">₹</div>KHARCHASAATHI</h1>
+  <div style="display:flex;gap:10px;align-items:center;">
+    <span id="emailTag">Checking login…</span>
+    <div style="text-align:right;font-size:12px;">
+      <div id="clockTime">--:--:--</div>
+      <div id="clockDate">--</div>
     </div>
+    <button id="themeBtn" class="theme-btn">🌙</button>
+    <a class="small-btn" href="/index.html">🏠 Home</a>
+    <button id="logoutBtn" class="small-btn btn-danger">🔓 Logout</button>
   </div>
+</div>
 
-  <div id="universalBar">
-    <!-- ... universal cards as you had ... -->
+<!-- universal bar -->
+<div id="universalBar" style="padding:12px 14px;border-bottom:1px solid var(--ks-border-soft);background:linear-gradient(to bottom,#eef2ff,#e5f3ff 55%,transparent);">
+  <div style="max-width:1160px;margin:0 auto;display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;">
+    <div class="card" style="position:relative;padding:12px;">
+      <button class="collect-btn" data-collect="net">₹ Collect</button>
+      <div class="uni-title">Net Profit (Sale+Service − Expenses)</div>
+      <div class="uni-value" id="unNetProfit">₹0</div>
+      <div class="uni-sub">
+        <span>Sale:</span><span id="unSaleProfit">₹0</span>
+        <span>Service:</span><span id="unServiceProfit">₹0</span>
+        <span>Exp:</span><span id="unExpenses">₹0</span>
+      </div>
+    </div>
+    <div class="card"><div class="uni-title">Stock Investment (Sold Items)</div><div class="uni-value" id="unStockInv">₹0</div></div>
+    <div class="card"><div class="uni-title">Service Investment (Completed)</div><div class="uni-value" id="unServiceInv">₹0</div></div>
+    <div class="card"><div class="uni-title">Pending Credit Sales</div><div class="uni-value" id="unCreditSales">₹0</div></div>
   </div>
+</div>
 
-  <div id="tabSummaryBar">Profit: +₹0</div>
+<div id="tabSummaryBar" style="text-align:center;padding:8px;margin:10px auto;max-width:1160px;border-radius:999px;background:#e6f4ea;color:#064e3b;">Profit: +₹0</div>
 
-  <div class="tabs" role="tablist" aria-label="Main tabs">
-    <div class="tab active" data-tab="types">📁 Types</div>
-    <div class="tab" data-tab="stock">📦 Stock</div>
-    <div class="tab" data-tab="sales">📈 Sales</div>
-    <div class="tab" data-tab="wanting">🛒 Wanting</div>
-    <div class="tab" data-tab="service">🛠 Service</div>
-    <div class="tab" data-tab="expenses">💸 Expenses</div>
-    <div class="tab" data-tab="creditHistory">🧾 Credit History</div>
-    <div class="tab" data-tab="dashboard">📊 Dashboard</div>
-    <div class="tab" data-tab="collection">🪙 Collection</div>
-  </div>
+<div class="tabs" role="tablist">
+  <div class="tab active" data-tab="types">📁 Types</div>
+  <div class="tab" data-tab="stock">📦 Stock</div>
+  <div class="tab" data-tab="sales">📈 Sales</div>
+  <div class="tab" data-tab="wanting">🛒 Wanting</div>
+  <div class="tab" data-tab="service">🛠 Service</div>
+  <div class="tab" data-tab="expenses">💸 Expenses</div>
+  <div class="tab" data-tab="creditHistory">🧾 Credit History</div>
+  <div class="tab" data-tab="dashboard">📊 Dashboard</div>
+  <div class="tab" data-tab="collection">🪙 Collection</div>
+</div>
 
-  <!-- (all sections + markup unchanged — keep your original HTML sections here) -->
-  <!-- ... (types, stock, sales, service, expenses, creditHistory, dashboard, collection) ... -->
+<!-- Sections skeleton — content filled in Part 4 modules, but include base placeholders so no undefined DOM -->
+<section id="types" class="section active"></section>
+<section id="stock" class="section"></section>
+<section id="sales" class="section"></section>
+<section id="wanting" class="section"></section>
+<section id="service" class="section"></section>
+<section id="expenses" class="section"></section>
+<section id="creditHistory" class="section"></section>
+<section id="dashboard" class="section"></section>
+<section id="collection" class="section"></section>
 
-  <!-- LIBRARIES -->
-  <script src="https://cdn.jsdelivr.net/npm/chart.js/dist/chart.umd.min.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.6.11/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.6.11/firebase-auth-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.6.11/firebase-firestore-compat.js"></script>
+<!-- libs: Chart.js + Firebase (compat) -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js/dist/chart.umd.min.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.6.11/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.6.11/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.6.11/firebase-firestore-compat.js"></script>
 
-  <!-- AUTO SCRIPT LOADER: keep marker to avoid double injections -->
-  <script>
-    (function () {
-      const v = Date.now();
-      const js = [
-        "/js/core.js",
-        "/js/firebase.js",
-        "/js/types.js",
-        "/js/stock.js",
-        "/js/sales.js",
-        "/js/wanting.js",
-        "/js/expenses.js",
-        "/js/analytics.js",
-        "/js/service.js",
-        "/js/collection.js",
-        "/js/universalBar.js",
-        "/js/security.js"
-      ];
-      if (!window.__ks_loader_injected) {
-        window.__ks_loader_injected = true;
-        js.forEach(f => {
-          const s = document.createElement('script');
-          s.src = f + "?v=" + v;
-          s.defer = true;
-          document.head.appendChild(s);
-        });
+<!-- AUTO LOADER (ensures correct order; firebase first) -->
+<script>
+(function(){
+  if (window.__ks_loader_injected) return;
+  window.__ks_loader_injected = true;
+
+  const v = Date.now();
+  const files = [
+    "/js/firebase.js",       // must come before core & auth helpers
+    "/js/core.js",
+    "/js/types.js",
+    "/js/stock.js",
+    "/js/sales.js",
+    "/js/wanting.js",
+    "/js/service.js",
+    "/js/expenses.js",
+    "/js/collection.js",
+    "/js/universalBar.js",
+    "/js/analytics.js",
+    "/js/security.js"
+  ];
+
+  files.forEach(src => {
+    const s = document.createElement("script");
+    s.src = src + "?v=" + v;
+    s.defer = true;
+    document.head.appendChild(s);
+  });
+})();
+</script>
+
+<!-- small inline bootstrap behaviors -->
+<script>
+(function(){
+  // clock
+  function updateClock(){ const d=new Date(); document.getElementById("clockTime").textContent = d.toLocaleTimeString(); document.getElementById("clockDate").textContent = d.toLocaleDateString(); }
+  setInterval(updateClock,1000); updateClock();
+
+  // theme
+  const btn = document.getElementById("themeBtn");
+  try{
+    const saved = localStorage.getItem("ks-theme");
+    if(saved==='dark') document.body.classList.add("dark");
+    if(btn) btn.addEventListener("click", ()=>{ const dark = document.body.classList.toggle("dark"); localStorage.setItem("ks-theme", dark?'dark':'light'); btn.textContent = dark ? '☀️' : '🌙'; });
+  }catch(e){console.warn(e);}
+
+  // logout (delegates to firebase logout if available)
+  document.getElementById("logoutBtn").addEventListener("click", async ()=>{
+    try {
+      if (typeof window.fsLogout === "function") { await window.fsLogout(); return; }
+      // fallback (shouldn't be used in online-only mode)
+      localStorage.removeItem("ks-user-email");
+      location.href = "/login.html";
+    } catch(e){ console.error("Logout failed", e); localStorage.removeItem("ks-user-email"); location.href="/login.html"; }
+  });
+
+  // tab switching
+  document.addEventListener("click", e => {
+    const t = e.target.closest(".tab");
+    if(!t) return;
+    const id = t.dataset.tab;
+    qsa(".tab").forEach(x=>x.classList.remove("active"));
+    t.classList.add("active");
+    qsa(".section").forEach(s=>s.classList.remove("active"));
+    const sec = document.getElementById(id);
+    if(sec) sec.classList.add("active");
+    // safe render hooks
+    try{ window.renderStock?.(); }catch{}
+    try{ window.renderSales?.(); }catch{}
+    try{ window.renderWanting?.(); }catch{}
+    try{ window.renderExpenses?.(); }catch{}
+    try{ window.renderServiceTables?.(); }catch{}
+    try{ window.renderCollection?.(); }catch{}
+    try{ window.renderAnalytics?.(); }catch{}
+  });
+
+  // collect button delegation
+  document.addEventListener("click", e => {
+    const c = e.target.closest(".collect-btn");
+    if(!c) return;
+    const type = c.dataset.collect;
+    try {
+      if (typeof window.handleCollect === "function") window.handleCollect(type);
+      else if (typeof window.onCollect === "function") {
+        // default: read numeric value from universal bar
+        const map = { net: "unNetProfit", stock: "unStockInv", service: "unServiceInv" };
+        const el = document.getElementById(map[type]);
+        const raw = el ? (el.textContent||"").replace(/[₹,]/g,"").trim() : "0";
+        const amount = Number(raw) || 0;
+        window.onCollect(type, { amount, details: `${type} collect` });
+      } else {
+        alert("Collect handler missing");
       }
-    })();
-  </script>
-
-  <!-- Part7: inline behaviors — use the global helpers without redeclaring them -->
-  <script>
-    // Use the global helpers (do NOT redeclare with const in global scope)
-    const qs = window.qs;
-    const qsa = window.qsa;
-
-    // CLOCK
-    function updateClock() {
-      const d = new Date();
-      if (qs("#clockTime")) qs("#clockTime").textContent = d.toLocaleTimeString();
-      if (qs("#clockDate")) qs("#clockDate").textContent = d.toLocaleDateString();
-    }
-    setInterval(updateClock, 1000);
-    updateClock();
-
-    // THEME BUTTON
-    (function initTheme(){
-      const btn = document.getElementById("themeBtn");
-      try {
-        const saved = localStorage.getItem("ks-theme");
-        if (saved === "dark") { document.body.classList.add("dark"); if (btn) btn.textContent = "☀️"; }
-        if (btn) btn.addEventListener("click", () => {
-          const dark = document.body.classList.toggle("dark");
-          localStorage.setItem("ks-theme", dark ? "dark" : "light");
-          btn.textContent = dark ? "☀️" : "🌙";
-        });
-      } catch(e){ console.warn("theme init failed", e); }
-    })();
-
-    // SAFE handleCollect fallback (if collection.js not loaded yet)
-    if (typeof window.handleCollect !== "function") {
-      window.handleCollect = function(type){
-        try {
-          type = String(type || "").toLowerCase();
-          const map = { net: "unNetProfit", stock: "unStockInv", service: "unServiceInv" };
-          const el = qs("#" + (map[type] || ""));
-          const raw = el ? (el.textContent || "").replace(/[₹,]/g,"").trim() : "0";
-          const amount = Number(raw) || 0;
-          if (!amount) { alert("Nothing to collect for: " + type); return; }
-          const now = new Date().toISOString().split("T")[0];
-          const entry = { date: now, source: (type === "net") ? "Net Profit" : (type === "stock") ? "Stock Investment" : "Service Investment", details: `Collected from ${type}`, amount };
-          window.collections = Array.isArray(window.collections) ? window.collections : [];
-          window.collections.unshift(entry);
-          try { window.saveCollections?.(); } catch {}
-          if (el) el.textContent = "₹0";
-          try { window.renderCollection?.(); } catch {}
-          try { window.updateUniversalBar?.(); } catch {}
-          try { window.updateSummaryCards?.(); } catch {}
-          alert("Collected ₹" + amount);
-        } catch (e){ console.error("handleCollect fallback error", e); alert("Collect failed"); }
-      };
-    }
-
-    // Collect button delegation (uses window.handleCollect)
-    document.addEventListener("click", e => {
-      const btn = e.target.closest(".collect-btn");
-      if (!btn) return;
-      const type = btn.dataset.collect;
-      if (typeof window.handleCollect === "function") return window.handleCollect(type);
-      alert("Collect handler missing");
-    });
-
-    // Tab switcher (idempotent)
-    function switchTab(id) {
-      qsa(".section").forEach(sec => sec.classList.remove("active"));
-      const target = qs("#" + id);
-      if (target) target.classList.add("active");
-      qsa(".tab").forEach(t => t.classList.remove("active"));
-      const tab = qs(`.tab[data-tab="${id}"]`); if (tab) tab.classList.add("active");
-
-      // safe renders
-      try { renderStock?.(); } catch {}
-      try { renderSales?.(); } catch {}
-      try { renderWanting?.(); } catch {}
-      try { renderExpenses?.(); } catch {}
-      try { renderServiceTables?.(); } catch {}
-      try { renderCollection?.(); } catch {}
-      try { renderAnalytics?.(); } catch {}
-      try { updateSummaryCards?.(); } catch {}
-      try { renderCreditHistory?.(); } catch {}
-    }
-    document.addEventListener("click", e => {
-      if (e.target.classList.contains("tab")) {
-        switchTab(e.target.dataset.tab);
-      }
-    });
-
-    // Boot-time safe render hooks
-    window.addEventListener("load", () => {
-      try { updateEmailTag?.(); } catch {}
-      try { renderCollection?.(); } catch {}
-      try { renderCreditHistory?.(); } catch {}
-      try { renderAnalytics?.(); } catch {}
-      try { updateSummaryCards?.(); } catch {}
-      try { updateTabSummaryBar?.(); } catch {}
-      try { updateUniversalBar?.(); } catch {}
-    });
-  </script>
+    } catch(err){ console.error("collect error", err); alert("Collect failed"); }
+  });
+})();
+</script>
 
 </body>
 </html>
