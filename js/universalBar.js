@@ -1,23 +1,11 @@
 /* ===========================================================
-   universalBar.js — FINAL STABLE VERSION (v10)
-   -----------------------------------------------------------
-   • Calculates EVERYTHING from single place:
-       - Net Profit
-       - Stock Investment (Sold Items)
-       - Service Investment (Completed Jobs)
-       - Pending Credit (Sales + Service)
-   • CREDIT-SAFE math (credit profit not counted)
-   • Collection logic 100% sync
-   • No duplicates, No stale values, No console errors
+   universalBar.js — FINAL STABLE VERSION (v11 FIXED)
 =========================================================== */
 
 (function(){
 
   const safeNum = n => Number(n || 0);
 
-  /* --------------------------------------------------------
-     Read global arrays (all modules update these)
-  -------------------------------------------------------- */
   function getAll() {
     return {
       sales: Array.isArray(window.sales) ? window.sales : [],
@@ -26,9 +14,7 @@
     };
   }
 
-  /* --------------------------------------------------------
-     CALCULATE STOCK INVESTMENT (sold items only)
-  -------------------------------------------------------- */
+  /* ---------------- STOCK INVESTMENT ---------------- */
   function calcStockInvestment() {
     const { stock } = getAll();
     let invested = 0;
@@ -42,9 +28,7 @@
     return invested;
   }
 
-  /* --------------------------------------------------------
-     CALCULATE SERVICE INVESTMENT (completed only)
-  -------------------------------------------------------- */
+  /* ---------------- SERVICE INVESTMENT ---------------- */
   function calcServiceInvestment() {
     const { services } = getAll();
     let invested = 0;
@@ -59,13 +43,9 @@
     return invested;
   }
 
-  /* --------------------------------------------------------
-     CALCULATE NET PROFIT (PAID ONLY)
-     ⭐ Credit profit excluded — added only after collection
-  -------------------------------------------------------- */
+  /* ---------------- NET PROFIT ---------------- */
   function calcNetProfit() {
     const { sales, services } = getAll();
-
     let saleProfit = 0;
     let serviceProfit = 0;
 
@@ -89,9 +69,7 @@
     };
   }
 
-  /* --------------------------------------------------------
-     CALCULATE PENDING CREDIT (sales + service)
-  -------------------------------------------------------- */
+  /* ---------------- PENDING CREDIT ---------------- */
   function calcPendingCredit() {
     const { sales, services } = getAll();
     let pending = 0;
@@ -111,9 +89,7 @@
     return pending;
   }
 
-  /* --------------------------------------------------------
-     UPDATE UI (Universal Bar Cards)
-  -------------------------------------------------------- */
+  /* ---------------- UPDATE UI ---------------- */
   function updateUI(values) {
     const set = (id, val) => {
       const el = document.getElementById(id);
@@ -124,12 +100,15 @@
     set("unNetProfit", values.net.total);
     set("unStockInv", values.stockInv);
     set("unServiceInv", values.serviceInv);
-    set("unPendingCredit", values.pendingCredit);
+
+    /* IMPORTANT FIX:
+       HTML uses id="unCreditSales"
+       So update that instead of unPendingCredit
+    */
+    set("unCreditSales", values.pendingCredit);
   }
 
-  /* --------------------------------------------------------
-     MASTER FUNCTION — used everywhere
-  -------------------------------------------------------- */
+  /* ---------------- MASTER EXPORT ---------------- */
   window.updateUniversalBar = function () {
     const stockInv = calcStockInvestment();
     const serviceInv = calcServiceInvestment();
@@ -138,15 +117,15 @@
 
     updateUI({ stockInv, serviceInv, net, pendingCredit });
 
+    // also update summary bar if exists
+    try { window.updateTabSummaryBar?.(); } catch {}
+
     return { stockInv, serviceInv, net, pendingCredit };
   };
 
-  /* --------------------------------------------------------
-     INIT — called on load
-  -------------------------------------------------------- */
+  /* ---------------- INIT ---------------- */
   document.addEventListener("DOMContentLoaded", () => {
-    try { window.updateUniversalBar(); }
-    catch(e){ console.error("UniversalBar init failed:", e); }
+    try { window.updateUniversalBar(); } catch(e){}
   });
 
 })();
