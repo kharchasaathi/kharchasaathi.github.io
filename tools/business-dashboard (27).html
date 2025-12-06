@@ -1,0 +1,1421 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>📦 KharchaSaathi — Business Manager</title>
+  <meta name="theme-color" content="#e5edff" />
+  <link rel="icon" href="/favicon.png" />
+  <link rel="apple-touch-icon" href="/favicon.png" />
+
+  <!-- existing global css (keep as it is) -->
+  <link rel="stylesheet" href="/css/base.css" />
+  <link rel="stylesheet" href="/css/layout.css" />
+  <link rel="stylesheet" href="/css/components.css" />
+
+  <!-- AURORA LIGHT / DARK DESIGN (CLEAN VERSION) -->
+  <style>
+    :root{
+      /* LIGHT THEME (default) */
+      --ks-bg:           #f3f4fb;
+      --ks-bg-soft:      #eef1ff;
+      --ks-bg-card:      #ffffff;
+      --ks-border-soft:  #e2e8f0;
+      --ks-border-strong:#cbd5e1;
+      --ks-text-main:    #0f172a;
+      --ks-text-soft:    #6b7280;
+      --ks-accent:       #2563eb;
+      --ks-accent-soft:  #3b82f6;
+      --ks-accent-green: #16a34a;
+      --ks-accent-orange:#ea580c;
+      --ks-shadow-soft:  0 14px 40px rgba(15,23,42,.08);
+      --ks-radius-card:  16px;
+      --ks-radius-pill:  999px;
+    }
+
+    /* DARK THEME OVERRIDES – body.dark లో */
+    body.dark{
+      --ks-bg:           #0d1117;
+      --ks-bg-soft:      #020617;
+      --ks-bg-card:      #020617;
+      --ks-border-soft:  #1f2937;
+      --ks-border-strong:#111827;
+      --ks-text-main:    #e5e7eb;
+      --ks-text-soft:    #9ca3af;
+      --ks-accent:       #38bdf8;
+      --ks-accent-soft:  #0ea5e9;
+      --ks-accent-green: #22c55e;
+      --ks-accent-orange:#f97316;
+      --ks-shadow-soft:  0 18px 55px rgba(15,23,42,.9);
+    }
+
+    body{
+      margin:0;
+      padding:0;
+      font-family: system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+      background: radial-gradient(circle at top,#eef2ff 0,#e5e7eb 40%,#e2e8f0 100%);
+      color: var(--ks-text-main);
+      min-height:100vh;
+    }
+    body.dark{
+      background:#0d1117;
+      color:var(--ks-text-main);
+    }
+
+    /* ===== TOP BAR ===== */
+    .topbar{
+      position:sticky;
+      top:0;
+      z-index:50;
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      padding:10px 18px;
+      background: rgba(255,255,255,.92);
+      backdrop-filter: blur(16px);
+      border-bottom:1px solid var(--ks-border-soft);
+      box-shadow:0 8px 18px rgba(15,23,42,.08);
+    }
+    body.dark .topbar{
+      background:linear-gradient(to right,#020617,#020617);
+      border-bottom:1px solid rgba(148,163,184,0.35);
+      box-shadow:0 10px 30px rgba(15,23,42,.8);
+    }
+
+    .topbar h1{
+      margin:0;
+      font-size:20px;
+      letter-spacing:.12em;
+      text-transform:uppercase;
+      display:flex;
+      align-items:center;
+      gap:10px;
+      color:var(--ks-text-main);
+      font-weight:700;
+    }
+    body.dark .topbar h1{
+      color:#e5e7eb;
+    }
+
+    .topbar-logo{
+      width:32px;
+      height:32px;
+      border-radius:var(--ks-radius-pill);
+      background: radial-gradient(circle at 30% 20%,#22c55e,#2563eb 55%,#0f172a 90%);
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      box-shadow:0 0 18px rgba(37,99,235,.45);
+      flex-shrink:0;
+    }
+    body.dark .topbar-logo{
+      background:radial-gradient(circle at 30% 20%,#06b6d4,#0f172a 65%);
+      box-shadow:0 0 18px rgba(56,189,248,.65);
+    }
+    .topbar-logo span{
+      font-size:18px;
+      color:#f9fafb;
+      font-weight:700;
+    }
+
+    .topbar-right{
+      display:flex;
+      align-items:center;
+      gap:10px;
+      flex-wrap:wrap;
+      justify-content:flex-end;
+    }
+
+    .simple-clock{
+      display:flex;
+      flex-direction:column;
+      align-items:flex-end;
+      font-size:11px;
+      line-height:1.1;
+      color:var(--ks-text-soft);
+    }
+    body.dark .simple-clock{color:#9ca3af;}
+    .clock-line{font-variant-numeric:tabular-nums;}
+    .clock-line.small{font-size:11px;}
+
+    #emailTag{
+      padding:4px 10px;
+      border-radius:var(--ks-radius-pill);
+      font-size:12px;
+      background: rgba(226,232,240,.8);
+      border:1px solid var(--ks-border-soft);
+      color:var(--ks-text-soft);
+    }
+    body.dark #emailTag{
+      background:rgba(15,23,42,.9);
+      border-color:rgba(148,163,184,.7);
+      color:#e5e7eb;
+    }
+
+    .theme-btn,.small-btn{
+      border:none;
+      cursor:pointer;
+      border-radius:var(--ks-radius-pill);
+      padding:8px 16px;
+      font-size:13px;
+      font-weight:600;
+      background:#ffffff;
+      color: var(--ks-text-main);
+      border:1px solid var(--ks-border-soft);
+      box-shadow:0 6px 14px rgba(15,23,42,.07);
+      transition:.18s;
+    }
+    .theme-btn:hover,.small-btn:hover{
+      background:#eff6ff;
+      transform:translateY(-1px);
+    }
+    body.dark .theme-btn,
+    body.dark .small-btn{
+      background:#111827;
+      color:#e5e7eb;
+      border:1px solid rgba(148,163,184,.4);
+      box-shadow:0 4px 12px rgba(15,23,42,.7);
+    }
+    body.dark .theme-btn:hover,
+    body.dark .small-btn:hover{
+      background:#1f2937;
+    }
+
+    #logoutBtn{
+      background:#ef4444;
+      border-color:#dc2626;
+      color:#fff;
+      box-shadow:0 6px 16px rgba(239,68,68,.45);
+    }
+    #logoutBtn:hover{
+      background:#dc2626;
+    }
+    body.dark #logoutBtn{
+      background:#ef4444;
+      border-color:#b91c1c;
+      color:#fee2e2;
+    }
+
+    /* ===== UNIVERSAL BAR ===== */
+    #universalBar{
+      padding:12px 14px 8px;
+      border-bottom:1px solid var(--ks-border-soft);
+      background:linear-gradient(to bottom,#eef2ff,#e5f3ff 55%,transparent);
+    }
+    body.dark #universalBar{
+      background:radial-gradient(circle at top,#020617,#020617 55%,#020617);
+      border-bottom:1px solid #1f2937;
+    }
+
+    .uni-row{
+      display:grid;
+      grid-template-columns:repeat(auto-fit,minmax(230px,1fr));
+      gap:12px;
+      max-width:1160px;
+      margin:0 auto;
+    }
+
+    .uni-card{
+      position:relative;
+      padding:12px 14px 14px;
+      border-radius:var(--ks-radius-card);
+      background:var(--ks-bg-card);
+      border:1px solid var(--ks-border-soft);
+      box-shadow:var(--ks-shadow-soft);
+      overflow:hidden;
+    }
+    .uni-card.main{
+      grid-column:span 2;
+      min-width:260px;
+    }
+    body.dark .uni-card{
+      background:linear-gradient(135deg,#111827,#020617);
+      border:1px solid rgba(148,163,184,.45);
+      box-shadow:0 16px 36px rgba(15,23,42,.9);
+      color:#e5e7eb;
+    }
+
+    .uni-title{
+      font-size:11px;
+      text-transform:uppercase;
+      letter-spacing:.18em;
+      color:var(--ks-text-soft);
+      margin-bottom:4px;
+      font-weight:600;
+    }
+    .uni-value{
+      font-size:23px;
+      font-weight:700;
+      color:var(--ks-text-main);
+    }
+    .uni-value.small{font-size:20px;}
+    body.dark .uni-value,
+    body.dark .uni-value.small{color:#f9fafb;}
+
+    .uni-sub{
+      margin-top:6px;
+      display:grid;
+      grid-template-columns:auto 1fr auto 1fr;
+      gap:4px 6px;
+      font-size:11px;
+      align-items:center;
+      color:var(--ks-text-soft);
+    }
+    .uni-exp-label{opacity:.8;}
+    .uni-exp-value{color:var(--ks-accent-orange);font-weight:600;}
+
+    .uni-chip{
+      display:inline-flex;
+      align-items:center;
+      padding:3px 8px;
+      border-radius:var(--ks-radius-pill);
+      border:1px solid var(--ks-border-soft);
+      font-size:10px;
+      color:var(--ks-text-soft);
+      background:rgba(226,232,240,.6);
+    }
+    body.dark .uni-chip{
+      background:rgba(15,23,42,.9);
+      border-color:#1f2937;
+      color:#cbd5f5;
+    }
+
+    /* COLLECT BUTTON – slightly bigger, bottom-right */
+    .collect-btn{
+      position:absolute;
+      right:12px;
+      bottom:10px;
+      padding:5px 11px;
+      font-size:11px;
+      border-radius:var(--ks-radius-pill);
+      border:none;
+      cursor:pointer;
+      background:var(--ks-accent-green);
+      color:#f0fdf4;
+      font-weight:600;
+      box-shadow:0 4px 10px rgba(22,163,74,.35);
+      transition:.16s;
+      white-space:nowrap;
+    }
+    .collect-btn:hover{
+      transform:translateY(-1px);
+      background:#16a34a;
+    }
+    body.dark .collect-btn{
+      background:#22c55e;
+      color:#022c22;
+      box-shadow:0 6px 16px rgba(22,163,74,.6);
+    }
+
+    /* ===== TABS BAR ===== */
+    .tabs{
+      display:flex;
+      gap:10px;
+      padding:10px 12px 10px;
+      overflow-x:auto;
+      border-bottom:1px solid var(--ks-border-soft);
+      background: linear-gradient(to right,#f9fafb,#eef2ff,#f9fafb);
+    }
+    body.dark .tabs{
+      background:linear-gradient(to right,#020617,#020617);
+      border-bottom:1px solid #1f2937;
+    }
+
+    .tab{
+      padding:9px 18px;
+      border-radius:var(--ks-radius-pill);
+      font-size:14px;
+      cursor:pointer;
+      white-space:nowrap;
+      color:var(--ks-text-soft);
+      border:1px solid transparent;
+      transition:.16s;
+      display:flex;
+      align-items:center;
+      gap:6px;
+      background:transparent;
+      font-weight:600;   /* 🔥 tabs bold */
+    }
+    .tab:hover{
+      border-color:var(--ks-border-soft);
+      background:rgba(226,232,240,.7);
+      color:var(--ks-text-main);
+    }
+    .tab.active{
+      background:linear-gradient(135deg,var(--ks-accent-soft),var(--ks-accent));
+      color:#f9fafb;
+      border-color:transparent;
+      box-shadow:0 10px 20px rgba(37,99,235,.35);
+    }
+    body.dark .tab{
+      color:#9ca3af;
+      border-color:transparent;
+      background:transparent;
+    }
+    body.dark .tab.active{
+      background:linear-gradient(135deg,#06b6d4,#0ea5e9);
+      color:#0f172a;
+      border-color:transparent;
+      box-shadow:0 10px 20px rgba(56,189,248,.5);
+    }
+
+    /* ===== SECTIONS ===== */
+    .section{
+      display:none;
+      padding:16px 14px 28px;
+      max-width:1160px;
+      margin:0 auto;
+    }
+    .section.active{display:block;}
+
+    #tabSummaryBar{
+      margin:10px auto 0;
+      max-width:1160px;
+      padding:7px 12px;
+      border-radius:var(--ks-radius-pill);
+      font-size:13px;
+      text-align:center;
+      background:rgba(22,163,74,.1);
+      color:#065f46;
+      border:1px solid rgba(22,163,74,.25);
+      box-shadow:0 8px 22px rgba(22,163,74,.20);
+      font-weight:600;
+    }
+    body.dark #tabSummaryBar{
+      background:#022c22;
+      color:#bbf7d0;
+      border-color:#064e3b;
+      box-shadow:0 10px 26px rgba(6,95,70,.8);
+    }
+
+    /* ===== TABLES – Excel style (thin vertical borders) ===== */
+    table{
+      width:100%;
+      border-collapse:separate;
+      border-spacing:0;
+      margin-top:10px;
+      font-size:13px;
+      border-radius:14px;
+      overflow:hidden;
+      background:var(--ks-bg-card);
+      box-shadow:var(--ks-shadow-soft);
+    }
+    thead{
+      background:linear-gradient(to right,#e5edff,#dbeafe);
+      color:var(--ks-text-soft);
+    }
+    body.dark thead{
+      background:#111827;
+      color:#cbd5f5;
+    }
+    th,td{
+      padding:7px 8px;
+      border-bottom:1px solid var(--ks-border-soft);
+      border-right:1px solid var(--ks-border-soft);   /* 🔥 vertical borders */
+      text-align:left;
+    }
+    th:last-child,
+    td:last-child{
+      border-right:none;
+    }
+    tbody tr:nth-child(even){
+      background:#f9fafb;
+    }
+    tbody tr:nth-child(odd){
+      background:#ffffff;
+    }
+    body.dark tbody tr:nth-child(odd){
+      background:#020617;
+    }
+    body.dark tbody tr:nth-child(even){
+      background:#050816;
+    }
+    tfoot td{
+      background:#edf2ff;
+      font-weight:600;
+    }
+    body.dark tfoot td{
+      background:#020617;
+      color:#f9fafb;
+    }
+
+    .status-credit{
+      display:inline-block;
+      padding:3px 8px;
+      border-radius:var(--ks-radius-pill);
+      background:var(--ks-accent-orange);
+      color:#111827;
+      font-size:11px;
+      font-weight:600;
+    }
+    .status-paid{
+      display:inline-block;
+      padding:3px 8px;
+      border-radius:var(--ks-radius-pill);
+      background:var(--ks-accent-green);
+      color:#022c22;
+      font-size:11px;
+      font-weight:600;
+    }
+
+    .card{
+      background:var(--ks-bg-card);
+      border-radius:var(--ks-radius-card);
+      border:1px solid var(--ks-border-soft);
+      box-shadow:var(--ks-shadow-soft);
+    }
+    body.dark .card{
+      background:#111827;
+      border:1px solid rgba(148,163,184,.30);
+      box-shadow:0 14px 30px rgba(15,23,42,.85);
+      color:#e5e7eb;
+    }
+
+    /* CREDIT HISTORY cards */
+    .credit-grid{
+      display:grid;
+      grid-template-columns:repeat(auto-fit,minmax(320px,1fr));
+      gap:14px;
+      margin-top:8px;
+    }
+    .credit-card{
+      padding:12px 12px 14px;
+      border-radius:var(--ks-radius-card);
+      background:var(--ks-bg-card);
+      border:1px solid var(--ks-border-soft);
+      box-shadow:var(--ks-shadow-soft);
+    }
+    body.dark .credit-card{
+      background:radial-gradient(circle at top left,#111827,#020617 60%);
+      border:1px solid rgba(148,163,184,.45);
+      box-shadow:0 16px 36px rgba(15,23,42,.9);
+    }
+    .credit-header{
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      margin-bottom:8px;
+    }
+    .credit-title{
+      font-size:14px;
+      font-weight:600;
+    }
+    .credit-sub{
+      font-size:11px;
+      color:var(--ks-text-soft);
+    }
+    .credit-subtitle{
+      font-size:12px;
+      margin:6px 0 4px;
+      color:var(--ks-text-main);
+      font-weight:600;
+    }
+    body.dark .credit-subtitle{color:#e5e7eb;}
+
+    .btn-link{
+      padding:4px 9px;
+      border-radius:var(--ks-radius-pill);
+      border:1px solid #1d4ed8;
+      background:#eff6ff;
+      color:#1d4ed8;
+      font-size:11px;
+      cursor:pointer;
+      transition:.15s;
+      font-weight:500;
+    }
+    .btn-link:hover{
+      background:#1d4ed8;
+      color:#f9fafb;
+    }
+    body.dark .btn-link{
+      background:#020617;
+      border-color:#1d4ed8;
+      color:#bfdbfe;
+    }
+    body.dark .btn-link:hover{
+      background:#1d4ed8;
+      color:#0f172a;
+    }
+
+    /* SCROLLBAR for dark */
+    @media (min-width: 768px){
+      body.dark ::-webkit-scrollbar{
+        width:8px;
+        height:8px;
+      }
+      body.dark ::-webkit-scrollbar-track{
+        background:#020617;
+      }
+      body.dark ::-webkit-scrollbar-thumb{
+        background:#1f2937;
+        border-radius:999px;
+      }
+      body.dark ::-webkit-scrollbar-thumb:hover{
+        background:#374151;
+      }
+    }
+
+    @media(max-width:768px){
+      .topbar{
+        flex-direction:column;
+        align-items:flex-start;
+        gap:6px;
+      }
+      .topbar-right{
+        width:100%;
+        justify-content:space-between;
+      }
+      .uni-card.main{
+        grid-column:span 1;
+      }
+    }
+  </style>
+</head>
+<body>
+<script>
+  const qs = s => document.querySelector(s);
+  const qsa = s => Array.from(document.querySelectorAll(s));
+</script>
+
+<div class="topbar">
+  <h1>
+    <div class="topbar-logo"><span>₹</span></div>
+    KHARCHASAATHI
+  </h1>
+  <div class="topbar-right">
+    <span id="emailTag">Checking login…</span>
+    <div class="simple-clock">
+      <span id="clockTime" class="clock-line">--:--:--</span>
+      <span id="clockDate" class="clock-line small">--</span>
+    </div>
+    <button id="themeBtn" class="theme-btn">🌙</button>
+    <a class="small-btn" href="/index.html">🏠 Home</a>
+    <button id="logoutBtn" class="small-btn">🔓 Logout</button>
+  </div>
+</div>
+
+<div id="universalBar">
+  <div class="uni-row">
+    <div class="uni-card main">
+      <button class="collect-btn" data-collect="net">₹ Collect</button>
+      <div class="uni-title">Net Profit (Sale + Service − Expenses)</div>
+      <div class="uni-value" id="unNetProfit">₹0</div>
+      <div class="uni-sub">
+        <span>Sale:</span><span id="unSaleProfit">₹0</span>
+        <span>Service:</span><span id="unServiceProfit">₹0</span>
+        <span class="uni-exp-label">Exp:</span>
+        <span id="unExpenses" class="uni-exp-value">₹0</span>
+      </div>
+    </div>
+
+    <div class="uni-card">
+      <button class="collect-btn" data-collect="stock">₹ Collect</button>
+      <div class="uni-title">Stock Investment (Sold Items)</div>
+      <div class="uni-value small" id="unStockInv">₹0</div>
+      <div class="uni-sub">
+        <span class="uni-chip">Sold stock</span>
+      </div>
+    </div>
+
+    <div class="uni-card">
+      <button class="collect-btn" data-collect="service">₹ Collect</button>
+      <div class="uni-title">Service Investment (Completed)</div>
+      <div class="uni-value small" id="unServiceInv">₹0</div>
+      <div class="uni-sub">
+        <span class="uni-chip">Closed jobs</span>
+      </div>
+    </div>
+
+    <div class="uni-card">
+      <div class="uni-title">Pending Credit Sales</div>
+      <div class="uni-value small" id="unCreditSales">₹0</div>
+      <div class="uni-sub">
+        <span class="uni-chip">To be collected</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="tabSummaryBar">Profit: +₹0</div>
+
+<div class="tabs" role="tablist">
+  <div class="tab active" data-tab="types">📁 Types</div>
+  <div class="tab" data-tab="stock">📦 Stock</div>
+  <div class="tab" data-tab="sales">📈 Sales</div>
+  <div class="tab" data-tab="wanting">🛒 Wanting</div>
+  <div class="tab" data-tab="service">🛠 Service</div>
+  <div class="tab" data-tab="expenses">💸 Expenses</div>
+  <div class="tab" data-tab="creditHistory">🧾 Credit History</div>
+  <div class="tab" data-tab="dashboard">📊 Dashboard</div>
+  <div class="tab" data-tab="collection">🪙 Collection</div>
+</div>
+
+<!-- =============== TYPES =============== -->
+<section id="types" class="section active">
+  <h3>🗂 Manage Item Types</h3>
+  <div class="row-inline" style="margin-top:8px;display:flex;gap:8px;flex-wrap:wrap;">
+    <input id="typeName" type="text" placeholder="Add new type"
+      style="flex:1;min-width:160px;padding:8px 10px;border-radius:12px;border:1px solid var(--ks-border-soft);background:var(--ks-bg-card);color:var(--ks-text-main);">
+    <button id="addTypeBtn" class="small-btn">Add</button>
+    <button id="clearTypesBtn" class="small-btn">Clear All</button>
+  </div>
+  <ul id="typeList" style="margin-top:10px;padding-left:18px;font-size:13px;"></ul>
+</section>
+
+<!-- =============== STOCK =============== -->
+<section id="stock" class="section">
+  <h3>📦 Current Stock</h3>
+
+  <div class="row-inline" style="margin-top:6px;display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
+    <label>Low Stock:</label>
+    <input id="globalLimit" type="number" placeholder="2"
+      style="width:90px;padding:6px 8px;border-radius:10px;border:1px solid var(--ks-border-soft);background:var(--ks-bg-card);color:var(--ks-text-main);">
+    <button id="setLimitBtn" class="small-btn">Set</button>
+    <button id="clearStockBtn" class="small-btn" style="background:#fee2e2;border-color:#fecaca;color:#b91c1c;">Clear All</button>
+  </div>
+
+  <div class="row-inline" style="margin-top:12px;display:flex;flex-wrap:wrap;gap:8px;">
+    <input id="pdate" type="date"
+      style="padding:6px 8px;border-radius:10px;border:1px solid var(--ks-border-soft);background:var(--ks-bg-card);color:var(--ks-text-main);">
+    <select id="ptype"
+      style="padding:6px 8px;border-radius:10px;border:1px solid var(--ks-border-soft);background:var(--ks-bg-card);color:var(--ks-text-main);"></select>
+    <input id="pname" type="text" placeholder="Product"
+      style="padding:6px 8px;border-radius:10px;border:1px solid var(--ks-border-soft);background:var(--ks-bg-card);color:var(--ks-text-main);min-width:140px;">
+    <input id="pqty" type="number" placeholder="Qty"
+      style="width:80px;padding:6px 8px;border-radius:10px;border:1px solid var(--ks-border-soft);background:var(--ks-bg-card);color:var(--ks-text-main);">
+    <input id="pcost" type="number" placeholder="Cost ₹"
+      style="width:100px;padding:6px 8px;border-radius:10px;border:1px solid var(--ks-border-soft);background:var(--ks-bg-card);color:var(--ks-text-main);">
+    <button id="addStockBtn" class="small-btn">Add</button>
+  </div>
+
+  <div style="margin-top:12px; display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
+    <b>Filter Type:</b>
+    <select id="filterType"
+      style="padding:6px 8px;border-radius:10px;border:1px solid var(--ks-border-soft);background:var(--ks-bg-card);color:var(--ks-text-main);">
+      <option value="all">All</option>
+    </select>
+    <input id="productSearch" placeholder="Search product..."
+      style="padding:6px 10px;border-radius:12px;border:1px solid var(--ks-border-soft);background:var(--ks-bg-card);color:var(--ks-text-main);min-width:160px;">
+  </div>
+
+  <div id="stockInvBox"
+    style="margin-top:10px;padding:10px;background:#fefce8;border-radius:12px;border:1px solid #facc15;max-width:280px;margin-left:auto;font-weight:600;font-size:13px;box-shadow:var(--ks-shadow-soft);">
+    📦 Stock Investment (Before Sale):
+    <span id="stockInvValue" style="color:#ca8a04;">₹0</span>
+  </div>
+
+  <table id="stockTable" style="margin-top:10px;">
+    <thead>
+      <tr>
+        <th>Date</th>
+        <th>Type</th>
+        <th>Product</th>
+        <th>Qty</th>
+        <th>Sold</th>
+        <th>Remain</th>
+        <th>Alert</th>
+        <th>Limit</th>
+        <th>Action</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+</section>
+
+<!-- =============== SALES =============== -->
+<section id="sales" class="section">
+  <h3>💰 Sales & Profit</h3>
+  <div class="row-inline" style="margin:10px 0;display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
+    <label>Date:</label>
+    <input id="saleDate" type="date"
+      style="padding:6px 8px;border-radius:10px;border:1px solid var(--ks-border-soft);background:var(--ks-bg-card);color:var(--ks-text-main);">
+    <label style="margin-left:4px">Filter Type:</label>
+    <select id="saleType"
+      style="padding:6px 8px;border-radius:10px;border:1px solid var(--ks-border-soft);background:var(--ks-bg-card);color:var(--ks-text-main);">
+      <option value="all">All Types</option>
+    </select>
+    <button id="filterSalesBtn" class="small-btn" style="margin-left:4px">Filter</button>
+    <button id="clearSalesBtn" class="small-btn"
+      style="background:#fee2e2;color:#b91c1c;border-color:#fecaca;margin-left:8px">🗑️ Clear All</button>
+  </div>
+
+  <table id="salesTable">
+    <thead>
+      <tr>
+        <th>Date</th>
+        <th>Type</th>
+        <th>Product</th>
+        <th>Qty</th>
+        <th>Price</th>
+        <th>Total</th>
+        <th>Profit</th>
+        <th>Status</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+    <tfoot>
+      <tr>
+        <td colspan="5" style="text-align:right">Total:</td>
+        <td id="salesTotal">0</td>
+        <td id="profitTotal">0</td>
+        <td></td>
+      </tr>
+    </tfoot>
+  </table>
+</section>
+
+<!-- =============== WANTING =============== -->
+<section id="wanting" class="section">
+  <h3>🛒 Wanting List</h3>
+  <div class="want-form" style="margin-bottom:10px;display:flex;gap:8px;flex-wrap:wrap;">
+    <select id="wantType"
+      style="padding:6px 8px;border-radius:10px;border:1px solid var(--ks-border-soft);background:var(--ks-bg-card);color:var(--ks-text-main);"></select>
+    <input id="wantName" type="text" placeholder="Product"
+      style="padding:6px 8px;border-radius:10px;border:1px solid var(--ks-border-soft);background:var(--ks-bg-card);color:var(--ks-text-main);min-width:140px;">
+    <input id="wantNote" type="text" placeholder="Note"
+      style="padding:6px 8px;border-radius:10px;border:1px solid var(--ks-border-soft);background:var(--ks-bg-card);color:var(--ks-text-main);min-width:160px;">
+    <button id="addWantBtn" class="small-btn">Add</button>
+    <button id="clearWantBtn" class="small-btn">Clear</button>
+    <button id="printWantBtn" class="small-btn">Print</button>
+  </div>
+
+  <table id="wantingTable">
+    <thead>
+      <tr>
+        <th>Date</th>
+        <th>Type</th>
+        <th>Product</th>
+        <th>Note</th>
+        <th>Action</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+</section>
+<!-- =============== SERVICE =============== -->
+<section id="service" class="section">
+  <h3>🛠 Service / Repair Manager</h3>
+  <div class="row-inline"
+    style="margin:10px 0;align-items:center;gap:8px;display:flex;flex-wrap:wrap;">
+    <input id="svcReceivedDate" type="date"
+      style="width:160px;padding:6px 8px;border-radius:10px;border:1px solid var(--ks-border-soft);background:var(--ks-bg-card);color:var(--ks-text-main);">
+    <input id="svcCustomer" type="text" placeholder="Customer name"
+      style="min-width:160px;padding:6px 8px;border-radius:10px;border:1px solid var(--ks-border-soft);background:var(--ks-bg-card);color:var(--ks-text-main);">
+    <input id="svcPhone" type="text" placeholder="Phone Number"
+      style="width:140px;padding:6px 8px;border-radius:10px;border:1px solid var(--ks-border-soft);background:var(--ks-bg-card);color:var(--ks-text-main);">
+    <select id="svcItemType"
+      style="width:120px;padding:6px 8px;border-radius:10px;border:1px solid var(--ks-border-soft);background:var(--ks-bg-card);color:var(--ks-text-main);">
+      <option value="Mobile">Mobile</option>
+      <option value="Laptop">Laptop</option>
+      <option value="Other">Other</option>
+    </select>
+    <input id="svcModel" type="text" placeholder="Model"
+      style="min-width:130px;padding:6px 8px;border-radius:10px;border:1px solid var(--ks-border-soft);background:var(--ks-bg-card);color:var(--ks-text-main);">
+    <input id="svcProblem" type="text" placeholder="Problem / Complaint"
+      style="min-width:220px;padding:6px 8px;border-radius:10px;border:1px solid var(--ks-border-soft);background:var(--ks-bg-card);color:var(--ks-text-main);">
+    <input id="svcAdvance" type="number" placeholder="Advance ₹ (0)"
+      style="width:120px;padding:6px 8px;border-radius:10px;border:1px solid var(--ks-border-soft);background:var(--ks-bg-card);color:var(--ks-text-main);">
+    <button id="addServiceBtn" class="small-btn">Add Job</button>
+  </div>
+
+  <div class="flex-row"
+    style="margin:8px 0;display:flex;gap:10px;flex-wrap:wrap;">
+    <div class="card"
+      style="flex:1;min-width:120px;padding:8px 10px;">
+      <small>Pending</small>
+      <div id="svcPendingCount" style="font-size:18px;font-weight:700;">0</div>
+    </div>
+    <div class="card"
+      style="flex:1;min-width:120px;padding:8px 10px;border-color:#bbf7d0;background:#ecfdf5;">
+      <small>Completed</small>
+      <div id="svcCompletedCount" style="font-size:18px;font-weight:700;color:#16a34a;">0</div>
+    </div>
+    <div class="card"
+      style="flex:1;min-width:160px;padding:8px 10px;border-color:#fed7aa;background:#fff7ed;">
+      <small>Total Repair Profit</small>
+      <div id="svcTotalProfit" style="font-size:18px;font-weight:700;color:#c2410c;">₹0</div>
+    </div>
+  </div>
+
+  <h4>Pending / Active Jobs</h4>
+  <table id="svcTable">
+    <thead>
+      <tr>
+        <th>Job ID</th>
+        <th>Received</th>
+        <th>Customer</th>
+        <th>Phone</th>
+        <th>Item</th>
+        <th>Model</th>
+        <th>Problem</th>
+        <th>Status</th>
+        <th>Action</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+
+  <button id="clearServiceBtn"
+    class="small-btn"
+    style="background:#fee2e2;color:#b91c1c;margin:10px 0;border-color:#fecaca;">
+    🗑️ Clear All Jobs
+  </button>
+
+  <h4 style="margin-top:14px">Completed / History</h4>
+  <table id="svcHistoryTable">
+    <thead>
+      <tr>
+        <th>Job ID</th>
+        <th>Received</th>
+        <th>Completed</th>
+        <th>Customer</th>
+        <th>Item</th>
+        <th>Invest</th>
+        <th>Paid</th>
+        <th>Profit</th>
+        <th>Status</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+
+  <div style="max-width:520px;margin:14px auto;">
+    <canvas id="svcPie" height="150"></canvas>
+  </div>
+</section>
+
+<!-- =============== EXPENSES =============== -->
+<section id="expenses" class="section">
+  <h3>🧾 Expenses</h3>
+  <div class="row-inline" style="margin-bottom:8px;display:flex;gap:8px;flex-wrap:wrap;">
+    <input id="expDate" type="date" onfocus="if(!this.value)this.value=todayDate()"
+      style="padding:6px 8px;border-radius:10px;border:1px solid var(--ks-border-soft);background:var(--ks-bg-card);color:var(--ks-text-main);">
+    <input id="expCat" type="text" placeholder="Category"
+      style="min-width:140px;padding:6px 8px;border-radius:10px;border:1px solid var(--ks-border-soft);background:var(--ks-bg-card);color:var(--ks-text-main);">
+    <input id="expAmount" type="number" placeholder="Amount"
+      style="width:120px;padding:6px 8px;border-radius:10px;border:1px solid var(--ks-border-soft);background:var(--ks-bg-card);color:var(--ks-text-main);">
+    <input id="expNote" type="text" placeholder="Note"
+      style="min-width:200px;padding:6px 8px;border-radius:10px;border:1px solid var(--ks-border-soft);background:var(--ks-bg-card);color:var(--ks-text-main);">
+    <button id="addExpenseBtn" class="small-btn">Add Expense</button>
+    <button id="clearExpensesBtn" class="small-btn" style="background:#fee2e2;border-color:#fecaca;color:#b91c1c;">Clear All</button>
+  </div>
+
+  <table id="expensesTable">
+    <thead>
+      <tr>
+        <th>Date</th>
+        <th>Category</th>
+        <th>Amount</th>
+        <th>Note</th>
+        <th>Action</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+    <tfoot>
+      <tr>
+        <td colspan="2" style="text-align:right">Total:</td>
+        <td id="expTotal">0</td>
+        <td></td><td></td>
+      </tr>
+    </tfoot>
+  </table>
+</section>
+
+<!-- =============== CREDIT HISTORY SECTION =============== -->
+<section id="creditHistory" class="section">
+  <h3>🧾 Credit History (Sales + Service)</h3>
+
+  <div class="credit-grid">
+    <!-- SALES CREDIT PANEL -->
+    <div class="credit-card">
+      <div class="credit-header">
+        <div>
+          <div class="credit-title">Sales Credit</div>
+          <small class="credit-sub">Pending &amp; Collected from Sales</small>
+        </div>
+      </div>
+
+      <h4 class="credit-subtitle">Pending Credit (Sales)</h4>
+      <table id="creditSalesPending">
+        <thead>
+          <tr>
+            <th>Date</th>
+            <th>Customer / Product</th>
+            <th>Amount</th>
+            <th>Goto</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+
+      <h4 class="credit-subtitle" style="margin-top:14px;">Collected Credit (Sales)</h4>
+      <table id="creditSalesCollected">
+        <thead>
+          <tr>
+            <th>Date</th>
+            <th>Customer / Product</th>
+            <th>Collected</th>
+            <th>Goto</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+
+    <!-- SERVICE CREDIT PANEL -->
+    <div class="credit-card">
+      <div class="credit-header">
+        <div>
+          <div class="credit-title">Service Credit</div>
+          <small class="credit-sub">Pending &amp; Collected from Service Jobs</small>
+        </div>
+      </div>
+
+      <h4 class="credit-subtitle">Pending Credit (Service)</h4>
+      <table id="creditServicePending">
+        <thead>
+          <tr>
+            <th>Date</th>
+            <th>Customer / Job</th>
+            <th>Amount</th>
+            <th>Goto</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+
+      <h4 class="credit-subtitle" style="margin-top:14px;">Collected Credit (Service)</h4>
+      <table id="creditServiceCollected">
+        <thead>
+          <tr>
+            <th>Date</th>
+            <th>Customer / Job</th>
+            <th>Collected</th>
+            <th>Goto</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<!-- =============== DASHBOARD (TODAY + TOTAL) =============== -->
+<section id="dashboard" class="section">
+  <h3>📊 Dashboard (Today + Total)</h3>
+  <div id="summaryCards" class="flex-row"
+    style="margin-top:10px;display:flex;gap:10px;flex-wrap:wrap;">
+    <div class="card" style="flex:1;min-width:140px;padding:10px;border-radius:14px;">
+      <div style="font-size:24px">💰</div>
+      <b id="todaySales" style="font-size:18px;color:var(--ks-accent);">₹0</b><br>
+      <small>Today's Sales</small>
+    </div>
+    <div class="card" style="flex:1;min-width:140px;padding:10px;border-radius:14px;">
+      <div style="font-size:24px">💳</div>
+      <b id="todayCredit" style="font-size:18px;color:var(--ks-accent);">₹0</b><br>
+      <small>Today's Credit</small>
+    </div>
+    <div class="card" style="flex:1;min-width:140px;padding:10px;border-radius:14px;background:#fff7ed;border-color:#fed7aa;">
+      <div style="font-size:24px">🧾</div>
+      <b id="todayExpenses" style="font-size:18px;color:#ea580c;">₹0</b><br>
+      <small>Today's Expenses</small>
+    </div>
+    <div class="card" style="flex:1;min-width:140px;padding:10px;border-radius:14px;background:#ecfdf5;border-color:#bbf7d0;">
+      <div style="font-size:24px">📈</div>
+      <b id="todayGross" style="font-size:18px;color:#16a34a;">₹0</b><br>
+      <small>Today's Gross Profit</small>
+    </div>
+    <div class="card" style="flex:1;min-width:140px;padding:10px;border-radius:14px;background:#ecfdf5;border-color:#bbf7d0;">
+      <div style="font-size:24px">💹</div>
+      <b id="todayNet" style="font-size:18px;color:#16a34a;">₹0</b><br>
+      <small>Today's NET Profit</small>
+    </div>
+  </div>
+
+  <hr style="margin:18px 0;border:none;border-top:1px dashed var(--ks-border-soft);">
+
+  <h4>Smart Dashboard (Total)</h4>
+  <div class="flex-row" style="margin-bottom:18px;display:flex;gap:10px;flex-wrap:wrap;">
+    <div class="card" style="flex:1;min-width:160px;padding:10px;border-radius:14px;background:#ecfdf5;border-color:#bbf7d0;">
+      <h4 style="margin:0 0 4px 0;font-size:13px;">Total Profit</h4>
+      <b id="dashProfit" style="font-size:22px;color:#16a34a;">₹0</b>
+      <small>Sale + Service (collected only)</small>
+    </div>
+    <div class="card" style="flex:1;min-width:160px;padding:10px;border-radius:14px;background:#fff7ed;border-color:#fed7aa;">
+      <h4 style="margin:0 0 4px 0;font-size:13px;">Total Expenses</h4>
+      <b id="dashExpenses" style="font-size:22px;color:#ea580c;">₹0</b>
+    </div>
+    <div class="card" style="flex:1;min-width:160px;padding:10px;border-radius:14px;">
+      <h4 style="margin:0 0 4px 0;font-size:13px;">Credit Sales (Pending)</h4>
+      <b id="dashCredit" style="font-size:22px;color:var(--ks-accent);">₹0</b>
+    </div>
+    <div class="card" style="flex:1;min-width:160px;padding:10px;border-radius:14px;background:#fefce8;border-color:#facc15;">
+      <h4 style="margin:0 0 4px 0;font-size:13px;">Total Investment (Sold Items)</h4>
+      <b id="dashInv" style="font-size:22px;color:#ca8a04;">₹0</b>
+      <small>Sold stock + Service invest</small>
+    </div>
+  </div>
+
+  <div style="max-width:600px;margin:auto;">
+    <canvas id="cleanPie" height="150"></canvas>
+  </div>
+</section>
+
+<!-- =============== COLLECTION TAB =============== -->
+<section id="collection" class="section">
+  <h3>🪙 Collection Center</h3>
+
+  <div class="flex-row" style="margin-bottom:14px;display:flex;gap:10px;flex-wrap:wrap;">
+    <div class="card" style="flex:1;min-width:160px;padding:10px;border-radius:14px;background:#ecfdf5;border-color:#bbf7d0;">
+      <h4 style="margin:0 0 4px 0;font-size:13px;">Sales Profit (Collected)</h4>
+      <b id="colSales" style="font-size:20px;color:#16a34a;">₹0</b>
+    </div>
+    <div class="card" style="flex:1;min-width:160px;padding:10px;border-radius:14px;">
+      <h4 style="margin:0 0 4px 0;font-size:13px;">Service Profit (Collected)</h4>
+      <b id="colService" style="font-size:20px;color:var(--ks-accent);">₹0</b>
+    </div>
+    <div class="card" style="flex:1;min-width:160px;padding:10px;border-radius:14px;background:#fff7ed;border-color:#fed7aa;">
+      <h4 style="margin:0 0 4px 0;font-size:13px;">Pending Credits</h4>
+      <b id="colCredit" style="font-size:20px;color:#ea580c;">₹0</b>
+    </div>
+    <div class="card" style="flex:1;min-width:160px;padding:10px;border-radius:14px;background:#fefce8;border-color:#facc15;">
+      <h4 style="margin:0 0 4px 0;font-size:13px;">Total Investment (Sold Items)</h4>
+      <b id="colInvRemain" style="font-size:20px;color:#ca8a04;">₹0</b>
+    </div>
+  </div>
+
+  <h4 style="margin-top:10px">Collection History</h4>
+  <table id="collectionHistory">
+    <thead>
+      <tr>
+        <th>Date</th>
+        <th>Source</th>
+        <th>Details</th>
+        <th>Amount</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+
+  <button id="clearCollectionBtn"
+    class="small-btn"
+    style="background:#fee2e2;color:#b91c1c;margin-top:10px;border-color:#fecaca;">
+    🗑 Clear Collection History
+  </button>
+</section>
+
+<!-- =============== LIBRARIES =============== -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js/dist/chart.umd.min.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.6.11/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.6.11/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.6.11/firebase-firestore-compat.js"></script>
+<!-- =============== AUTO SCRIPT LOADER =============== -->
+<script>
+(function () {
+  const v = Date.now();
+  const js = [
+    "/js/core.js",
+    "/js/firebase.js",
+    "/js/types.js",
+    "/js/stock.js",
+    "/js/sales.js",
+    "/js/wanting.js",
+    "/js/expenses.js",
+    "/js/analytics.js",
+    "/js/service.js",
+    "/js/collection.js",
+    "/js/universalBar.js",
+    "/js/security.js"
+  ];
+  js.forEach(f => {
+    document.write(`<script src="${f}?v=${v}"><\/script>`);
+  });
+})();
+</script>
+
+<script>
+window.addEventListener("load", () => {
+  try { updateEmailTag && updateEmailTag(); } catch (e) {
+    console.error("emailTag update failed:", e);
+  }
+});
+</script>
+
+<!-- =============== COLLECT BUTTON CLICK HANDLER =============== -->
+<script>
+document.addEventListener("click", e => {
+  const btn = e.target.closest(".collect-btn");
+  if (!btn) return;
+  const type = btn.dataset.collect;
+  if (typeof window.handleCollect === "function") {
+    handleCollect(type);
+  } else {
+    alert("Collect handler missing: " + type);
+  }
+});
+</script>
+
+<!-- =============== TAB SWITCHER =============== -->
+<script>
+function switchTab(id) {
+  qsa(".section").forEach(sec => sec.classList.remove("active"));
+  const target = qs("#" + id);
+  if (target) target.classList.add("active");
+
+  qsa(".tab").forEach(t => t.classList.remove("active"));
+  const tab = qs(`.tab[data-tab="${id}"]`);
+  if (tab) tab.classList.add("active");
+
+  try { renderStock?.(); } catch {}
+  try { renderSales?.(); } catch {}
+  try { renderWanting?.(); } catch {}
+  try { renderExpenses?.(); } catch {}
+  try { renderServiceTables?.(); } catch {}
+  try { renderCollection?.(); } catch {}
+  try { renderAnalytics?.(); } catch {}
+  try { updateSummaryCards?.(); } catch {}
+  try { renderCreditHistory?.(); } catch {}
+}
+
+document.addEventListener("click", e => {
+  if (e.target.classList.contains("tab")) {
+    switchTab(e.target.dataset.tab);
+  }
+});
+</script>
+
+<!-- =============== CLOCK =============== -->
+<script>
+function updateClock() {
+  const d = new Date();
+  const t = qs("#clockTime");
+  const dt = qs("#clockDate");
+  if (t) t.textContent = d.toLocaleTimeString();
+  if (dt) dt.textContent = d.toLocaleDateString();
+}
+setInterval(updateClock, 1000);
+updateClock();
+</script>
+
+<!-- =============== THEME BUTTON =============== -->
+<script>
+(function(){
+  const btn = document.getElementById("themeBtn");
+  if(!btn) return;
+  const saved = localStorage.getItem("ks-theme");
+  if(saved === "dark"){
+    document.body.classList.add("dark");
+    btn.textContent = "☀️";
+  }
+  btn.addEventListener("click",()=>{
+    const dark = document.body.classList.toggle("dark");
+    localStorage.setItem("ks-theme", dark ? "dark" : "light");
+    btn.textContent = dark ? "☀️" : "🌙";
+  });
+})();
+</script>
+
+<!-- =============== LOGOUT BUTTON =============== -->
+<script>
+document.getElementById("logoutBtn")?.addEventListener("click", async () => {
+  try {
+    if (window.fsLogout) {
+      await window.fsLogout();
+    } else {
+      localStorage.removeItem("ks-user-email");
+      window.location.href = "/login.html";
+    }
+  } catch (e) {
+    console.error("Logout failed:", e);
+    localStorage.removeItem("ks-user-email");
+    window.location.href = "/login.html";
+  }
+});
+</script>
+
+<!-- =============== CREDIT HISTORY LOGIC =============== -->
+<script>
+function renderCreditHistory() {
+  const sales    = Array.isArray(window.sales)    ? window.sales    : [];
+  const services = Array.isArray(window.services) ? window.services : [];
+
+  const sPendBody   = qs("#creditSalesPending tbody");
+  const sCollBody   = qs("#creditSalesCollected tbody");
+  const svcPendBody = qs("#creditServicePending tbody");
+  const svcCollBody = qs("#creditServiceCollected tbody");
+
+  if (!sPendBody || !sCollBody || !svcPendBody || !svcCollBody) return;
+
+  const esc = window.esc || (x => (x === undefined || x === null) ? "" : String(x));
+
+  const creditSalesPending   = [];
+  const creditSalesCollected = [];
+
+  sales.forEach(s => {
+    const status = String(s.status || "").toLowerCase();
+    const total  = Number(s.total || (Number(s.qty||0)*Number(s.price||0)));
+    const isCredit  = status === "credit";
+    const wasCredit = !!s.wasCredit;
+
+    if (isCredit) {
+      creditSalesPending.push({
+        date: s.date,
+        customer: s.customer || "",
+        phone: s.phone || "",
+        product: s.product || "",
+        qty: s.qty,
+        price: s.price,
+        total,
+      });
+    } else if (wasCredit) {
+      const collected = Number(s.collectedAmount || total);
+      creditSalesCollected.push({
+        date: s.creditCollectedOn || s.date,
+        customer: s.customer || "",
+        phone: s.phone || "",
+        product: s.product || "",
+        qty: s.qty,
+        price: s.price,
+        total,
+        collected,
+      });
+    }
+  });
+
+  if (!creditSalesPending.length) {
+    sPendBody.innerHTML =
+      `<tr><td colspan="4" style="text-align:center;opacity:.6;">No pending credit sales</td></tr>`;
+  } else {
+    sPendBody.innerHTML = creditSalesPending.map(r => `
+      <tr>
+        <td data-label="Date">${window.toDisplay ? toDisplay(r.date) : r.date}</td>
+        <td data-label="Customer / Product">
+          ${esc(r.customer || "-")}<br>
+          <small>${esc(r.product)} (${r.qty} × ₹${r.price})</small>
+          ${r.phone ? `<br><small>📞 ${esc(r.phone)}</small>` : ""}
+        </td>
+        <td data-label="Amount">₹${r.total}</td>
+        <td data-label="Goto">
+          <button class="btn-link" onclick="gotoSaleFromCredit('${r.date}')">Sales</button>
+        </td>
+      </tr>
+    `).join("");
+  }
+
+  if (!creditSalesCollected.length) {
+    sCollBody.innerHTML =
+      `<tr><td colspan="4" style="text-align:center;opacity:.6;">No collected credit sales yet</td></tr>`;
+  } else {
+    sCollBody.innerHTML = creditSalesCollected.map(r => `
+      <tr>
+        <td data-label="Date">${window.toDisplay ? toDisplay(r.date) : r.date}</td>
+        <td data-label="Customer / Product">
+          ${esc(r.customer || "-")}<br>
+          <small>${esc(r.product)} (${r.qty} × ₹${r.price})</small>
+          ${r.phone ? `<br><small>📞 ${esc(r.phone)}</small>` : ""}
+        </td>
+        <td data-label="Collected">
+          <span class="status-paid">Collected ₹${r.collected}</span>
+        </td>
+        <td data-label="Goto">
+          <button class="btn-link" onclick="gotoSaleFromCredit('${r.date}')">Sales</button>
+        </td>
+      </tr>
+    `).join("");
+  }
+
+  const svcPending   = [];
+  const svcCollected = [];
+
+  services.forEach(j => {
+    const status      = String(j.status || "").toLowerCase();
+    const remaining   = Number(j.remaining || 0);
+    const creditFlag  = String(j.creditStatus || "").toLowerCase();
+
+    if (creditFlag === "credit" || (status === "completed" && remaining > 0)) {
+      svcPending.push({
+        date: j.date_out || j.date_in,
+        customer: j.customer || "",
+        phone: j.phone || "",
+        item: j.item || "",
+        model: j.model || "",
+        pending: remaining
+      });
+    } else if (creditFlag === "collected") {
+      const collected = Number(j.creditCollectedAmount || 0);
+      svcCollected.push({
+        date: j.creditCollectedOn || j.date_out || j.date_in,
+        customer: j.customer || "",
+        phone: j.phone || "",
+        item: j.item || "",
+        model: j.model || "",
+        collected
+      });
+    }
+  });
+
+  if (!svcPending.length) {
+    svcPendBody.innerHTML =
+      `<tr><td colspan="4" style="text-align:center;opacity:.6;">No pending service credits</td></tr>`;
+  } else {
+    svcPendBody.innerHTML = svcPending.map(r => `
+      <tr>
+        <td data-label="Date">${window.toDisplay ? toDisplay(r.date) : r.date}</td>
+        <td data-label="Customer / Job">
+          ${esc(r.customer || "-")}<br>
+          <small>${esc(r.item)} ${esc(r.model)}</small>
+          ${r.phone ? `<br><small>📞 ${esc(r.phone)}</small>` : ""}
+        </td>
+        <td data-label="Amount">₹${r.pending}</td>
+        <td data-label="Goto">
+          <button class="btn-link" onclick="gotoServiceFromCredit()">Service</button>
+        </td>
+      </tr>
+    `).join("");
+  }
+
+  if (!svcCollected.length) {
+    svcCollBody.innerHTML =
+      `<tr><td colspan="4" style="text-align:center;opacity:.6;">No collected service credits yet</td></tr>`;
+  } else {
+    svcCollBody.innerHTML = svcCollected.map(r => `
+      <tr>
+        <td data-label="Date">${window.toDisplay ? toDisplay(r.date) : r.date}</td>
+        <td data-label="Customer / Job">
+          ${esc(r.customer || "-")}<br>
+          <small>${esc(r.item)} ${esc(r.model)}</small>
+          ${r.phone ? `<br><small>📞 ${esc(r.phone)}</small>` : ""}
+        </td>
+        <td data-label="Collected">
+          <span class="status-paid">Collected ₹${r.collected}</span>
+        </td>
+        <td data-label="Goto">
+          <button class="btn-link" onclick="gotoServiceFromCredit()">Service</button>
+        </td>
+      </tr>
+    `).join("");
+  }
+}
+
+window.renderCreditHistory = renderCreditHistory;
+
+function gotoSaleFromCredit(date) {
+  const dateInput = document.getElementById("saleDate");
+  if (dateInput) {
+    dateInput.value = date;
+  }
+  switchTab("sales");
+  try { renderSales?.(); } catch {}
+}
+
+function gotoServiceFromCredit() {
+  switchTab("service");
+}
+
+window.addEventListener("load", () => {
+  try { renderCreditHistory(); } catch {}
+});
+</script>
+
+</body>
+</html>
