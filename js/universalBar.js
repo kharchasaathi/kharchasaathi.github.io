@@ -1,176 +1,240 @@
 /* ===========================================================
-   universalBar.js — FINAL V12 (Net Profit + Dark-Safe)
-   -----------------------------------------------------------
-   ✔ Service profit = paid − invest (same as analytics.js)
-   ✔ Uses ONLY status + paid/invest (no svc.profit dependency)
-   ✔ Updates:
-        - Net Profit
-        - Stock Investment
-        - Service Investment
-        - Pending Credit (Sales + Service)
-        - Sub values: Sale, Service, Expenses
-   ✔ Safe if some elements missing (no JS error)
-=========================================================== */
-
+   universal-bar.js — FINAL v3.2 (FIXED SERVICE INVEST KEY)
+   ✔ Matches sales.js v12, stock.js v3, collection.js v10
+   ✔ Labels exactly same as dashboard cards
+   ✔ Accurate metrics: profit, credit, investments
+   ✔ Safe even if arrays missing or empty
+============================================================ */
 (function () {
 
-  const safeNum = n => Number(n || 0);
+  /* -------------------------------
+     Utility Helpers
+  --------------------------------*/
+  const num = v => (isNaN(v = Number(v))) ? 0 : v;
+  const money = v => "₹" + Math.round(num(v));
 
-  function getAll() {
-    return {
-      sales: Array.isArray(window.sales) ? window.sales : [],
-      services: Array.isArray(window.services) ? window.services : [],
-      expenses: Array.isArray(window.expenses) ? window.expenses : [],
-      stock: Array.isArray(window.stock) ? window.stock : []
-    };
-  }
+  /* ===========================================================
+     CENTRAL METRIC CALCULATOR
+     * This runs on a timer to update the top bar
+  ============================================================ */
+  function computeMetrics() {
 
-  /* ---------------- STOCK INVESTMENT (Sold Items) ---------------- */
-  function calcStockInvestment() {
-    const { stock } = getAll();
-    let invested = 0;
+    // Ensure data is an array (core.js already does this, but for safety)
+    const sales    = Array.isArray(window.sales)    ? window.sales    : [];
+    const services = Array.isArray(window.services) ? window.services : [];
+    const expenses = Array.isArray(window.expenses) ? window.expenses : [];
+    const stock    = Array.isArray(window.stock)    ? window.stock    : [];
 
-    stock.forEach(item => {
-      const qtySold = safeNum(item.sold);
-      const cost    = safeNum(item.cost);
-      invested += qtySold * cost;
-    });
+    let saleProfitCollected     = 0;
+    let serviceProfitCollected  = 0;
+    let pendingCreditTotal      = 0;
+    let totalExpenses           = 0;
+    let stockInvestSold         = 0;
+    let serviceInvestCompleted  = 0;
 
-    return invested;
-  }
-
-  /* ---------------- SERVICE INVESTMENT (Completed / Collected) --- */
-  function calcServiceInvestment() {
-    const { services } = getAll();
-    let invested = 0;
-
-    services.forEach(svc => {
-      const st = String(svc.status || "").toLowerCase();
-      if (st === "completed" || st === "collected") {
-        invested += safeNum(svc.invest);
-      }
-    });
-
-    return invested;
-  }
-
-  /* ---------------- NET PROFIT (Sale + Service − Expenses) ------- */
-  function calcNetAndParts() {
-    const { sales, services, expenses } = getAll();
-
-    let saleProfit = 0;
-    let serviceProfit = 0;
-    let totalExpenses = 0;
-
-    // SALES: Only paid sales contribute to realized profit
+    /* -------------------------------
+       SALES PROFIT + CREDIT
+    --------------------------------*/
     sales.forEach(s => {
-      if (!s) return;
       const status = String(s.status || "").toLowerCase();
-      if (status === "paid") {
-        saleProfit += safeNum(s.profit);
+      const qty    = num(s.qty);
+      const price  = num(s.price);
+
+      if (status !== "credit") {
+        saleProfitCollected += num(s.profit); // Use s.profit calculated in sales.js
+      } else {
+        const total = num(s.total) || (qty * price);
+        pendingCreditTotal += total;
       }
     });
 
-    // SERVICES: profit = paid − invest for completed / collected
-    services.forEach(svc => {
-      if (!svc) return;
-      const st = String(svc.status || "").toLowerCase();
-      if (st === "completed" || st === "collected") {
-        const paid   = safeNum(svc.paid);
-        const invest = safeNum(svc.invest);
-        serviceProfit += (paid - invest);
+    /* -------------------------------
+       SERVICE PROFIT + CREDIT
+    --------------------------------*/
+    services.forEach(j => {
+      const status = String(j.status || "").toLowerCase();
+      
+      if (status === "completed") {
+        serviceProfitCollected += num(j.profit);
+        serviceInvestCompleted += num(j.cost); // ✅ FIX: j.cost ను ఉపయోగిస్తుంది
+      } else if (status === "credit") {
+        pendingCreditTotal += num(j.price);
       }
     });
 
-    // EXPENSES
+    /* -------------------------------
+       EXPENSES
+    --------------------------------*/
     expenses.forEach(e => {
-      if (!e) return;
-      totalExpenses += safeNum(e.amount);
+      totalExpenses += num(e.amount);
+    });
+    
+    /* -------------------------------
+       STOCK INVESTMENT (Sold items)
+    --------------------------------*/
+    stock.forEach(p => {
+        const sold = num(p.sold);
+        const cost = num(p.cost);
+        stockInvestSold += sold * cost;
     });
 
-    const totalProfit = saleProfit + serviceProfit;
-    const netProfit   = totalProfit - totalExpenses;
-
-    return { saleProfit, serviceProfit, totalExpenses, totalProfit, netProfit };
+    return {
+      saleProfitCollected,
+      serviceProfitCollected,
+      pendingCreditTotal,
+      totalExpenses,
+      stockInvestSold,
+      serviceInvestCompleted,
+      netProfit: saleProfitCollected + serviceProfitCollected - totalExpenses
+    };
   }
 
-  /* ---------------- PENDING CREDIT (Sales + Service) -------------- */
-  function calcPendingCredit() {
-    const { sales, services } = getAll();
-    let pending = 0;
+  /* ===========================================================
+     UI UPDATER (Called by other modules like sales.js)
+  ============================================================ */
+  function updateUniversalBar() {
+    const m = computeMetrics();
+    const isMobile = window.innerWidth < 600;
 
-    // Sales credit (status = "credit") uses full total
-    sales.forEach(s => {
-      if (!s) return;
-      if (String(s.status || "").toLowerCase() === "credit") {
-        pending += safeNum(s.total);
+    const bar = document.getElementById("universalBar");
+    if (!bar) return;
+
+    let items = [];
+
+    // 1. Net Profit
+    items.push({
+      kind: "net",
+      label: isMobile ? "Net" : "Net Profit",
+      value: money(m.netProfit),
+      class: m.netProfit >= 0 ? "positive" : "negative",
+      color: m.netProfit >= 0 ? "#16a34a" : "#dc2626"
+    });
+
+    // 2. Pending Credit (Sales + Service)
+    items.push({
+      kind: "credit",
+      label: isMobile ? "Credit" : "Pending Credit",
+      value: money(m.pendingCreditTotal),
+      class: "warning",
+      color: "#facc15",
+      action: "collect-credit" // New button link to credit tab
+    });
+
+    // 3. Stock Investment (Sold Items)
+    items.push({
+      kind: "stock",
+      label: isMobile ? "Sold Inv" : "Stock Investment (Sold)",
+      value: money(m.stockInvestSold),
+      color: "#0284c7"
+    });
+
+    // 4. Service Investment (Completed Jobs)
+    items.push({
+      kind: "service",
+      label: isMobile ? "Service Inv" : "Service Investment (Completed)",
+      value: money(m.serviceInvestCompleted),
+      color: "#1d4ed8"
+    });
+
+    // 5. Total Expenses
+    items.push({
+      kind: "expenses",
+      label: isMobile ? "Expenses" : "Total Expenses",
+      value: money(m.totalExpenses),
+      class: "negative",
+      color: "#94a3b8"
+    });
+
+
+    // Render items
+    bar.innerHTML = items.map(item => `
+      <div class="card universal-card ${item.class || ""}" style="border-left: 4px solid ${item.color};">
+        <p class="label">${item.label}</p>
+        <p class="value">${item.value}</p>
+        ${item.action ? `
+          <button class="small-btn collect-btn" data-collect="${item.action}">
+            Collect
+          </button>
+        ` : ''}
+      </div>
+    `).join("");
+  }
+  window.updateUniversalBar = updateUniversalBar;
+  window.computeMetrics = computeMetrics;
+
+  /* ===========================================================
+     CREDIT COLLECTION (from top bar)
+  ============================================================ */
+  function handleCollect(kind) {
+    if (kind === "collect-credit") {
+      // Direct link to the credit tab (defined in core.js)
+      if (typeof window.switchTab === "function") {
+        window.switchTab("credit");
+      } else {
+        alert("Switch to Credit tab to collect pending payments.");
       }
-    });
+      return;
+    }
 
-    // Service credit (either creditStatus or status says "credit")
-    services.forEach(svc => {
-      if (!svc) return;
-      const creditFlag =
-        String(svc.creditStatus || "").toLowerCase() ||
-        String(svc.status || "").toLowerCase();
+    // Old logic (should not run if core.js is setup correctly)
+    const m = computeMetrics();
 
-      if (creditFlag === "credit") {
-        pending += safeNum(svc.remaining);
-      }
-    });
-
-    return pending;
-  }
-
-  /* ---------------- UPDATE DOM ---------------- */
-  function setText(id, value) {
-    const el = document.getElementById(id);
-    if (!el) return;
-    el.textContent = "₹" + Number(value || 0).toLocaleString();
-  }
-
-  function updateUI(values) {
-    // Main Net cards
-    setText("unNetProfit",   values.netProfit);
-    setText("unStockInv",    values.stockInv);
-    setText("unServiceInv",  values.serviceInv);
-    setText("unCreditSales", values.pendingCredit);
-
-    // Sub values (if those spans exist in HTML)
-    setText("unSaleProfit",   values.saleProfit);
-    setText("unServiceProfit",values.serviceProfit);
-    setText("unExpenses",     values.totalExpenses);
-  }
-
-  /* ---------------- PUBLIC API ---------------- */
-  window.updateUniversalBar = function () {
-    const stockInv    = calcStockInvestment();
-    const serviceInv  = calcServiceInvestment();
-    const netParts    = calcNetAndParts();
-    const pendingCred = calcPendingCredit();
-
-    const result = {
-      stockInv,
-      serviceInv,
-      pendingCredit: pendingCred,
-      saleProfit:    netParts.saleProfit,
-      serviceProfit: netParts.serviceProfit,
-      totalExpenses: netParts.totalExpenses,
-      totalProfit:   netParts.totalProfit,
-      netProfit:     netParts.netProfit
+    const labels = {
+      net: [
+        "Net Profit (Sale + Service − Expenses)",
+        m.netProfit
+      ],
+      stock: [
+        "Stock Investment (Sold Items)",
+        m.stockInvestSold
+      ],
+      service: [
+        "Service Investment (Completed)",
+        m.serviceInvestCompleted
+      ]
     };
 
-    updateUI(result);
+    if (!labels[kind]) return;
 
-    // summary bar కూడా refresh చేయమంటాం
-    try { window.updateTabSummaryBar?.(); } catch {}
+    const [label, approx] = labels[kind];
 
-    return result;
-  };
+    const val = prompt(
+      `${label}\nApprox: ₹${Math.round(approx)}\n\nEnter amount:`
+    );
 
-  /* ---------------- INIT ---------------- */
-  document.addEventListener("DOMContentLoaded", () => {
-    try { window.updateUniversalBar(); } catch (e) { console.warn(e); }
+    if (!val) return;
+
+    const amt = num(val);
+    if (amt <= 0) {
+      alert("Invalid amount.");
+      return;
+    }
+
+    const note = prompt("Optional note:", "") || "";
+    window.addCollectionEntry(label, note, amt);
+
+    updateUniversalBar();
+    window.renderCollection?.();
+    alert("Collection recorded.");
+  }
+
+  window.handleCollect = handleCollect;
+
+  /* ===========================================================
+     CLICK LISTENER (Top bar buttons)
+  ============================================================ */
+  document.addEventListener("click", e => {
+    const btn = e.target.closest(".collect-btn");
+    if (!btn) return;
+    handleCollect(btn.dataset.collect);
+  });
+
+  /* ===========================================================
+     INITIAL LOAD
+  ============================================================ */
+  window.addEventListener("load", () => {
+    // tiny delay gives HTML time to render → prevents “Loading...” freeze
+    setTimeout(updateUniversalBar, 150);
   });
 
 })();
