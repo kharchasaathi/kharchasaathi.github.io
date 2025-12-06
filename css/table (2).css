@@ -1,0 +1,117 @@
+/* ============================
+   table.css
+   Corporate Excel-style tables
+=============================== */
+
+table {
+  width: 100%;
+  border-collapse: collapse;      /* full grid */
+  font-size: 13px;
+  background: #ffffff;
+  border-radius: 14px;
+  overflow: hidden;
+  box-shadow: 0 10px 30px rgba(15,23,42,0.06);
+}
+
+/* wrap table in container if needed */
+.section table {
+  margin-top: 8px;
+}
+
+/* HEADER */
+table thead {
+  background: linear-gradient(90deg, #1e88e5, #42a5f5);
+  color: #ffffff;
+}
+table thead th {
+  padding: 8px 10px;
+  font-weight: 600;
+  text-align: left;
+  border-right: 1px solid rgba(255,255,255,0.35);
+  border-bottom: 1px solid rgba(0,0,0,0.08);
+}
+table thead th:last-child {
+  border-right: none;
+}
+
+/* BODY */
+table tbody tr {
+  background: #ffffff;
+}
+table tbody td {
+  padding: 7px 10px;
+  border-right: 1px solid var(--border-soft);
+  border-bottom: 1px solid var(--border-soft);
+  vertical-align: middle;
+}
+table tbody tr:last-child td {
+  border-bottom: none;
+}
+table tbody td:last-child {
+  border-right: none;
+}
+
+/* footer */
+table tfoot td {
+  padding: 7px 10px;
+  border-top: 1px solid var(--border-soft);
+  font-weight: 600;
+}
+
+/* zebra & hover */
+table tbody tr:nth-child(even) {
+  background: #f7f9ff;
+}
+table tbody tr:hover {
+  background: #e9f1ff;
+}
+
+/* ACTION BUTTONS INSIDE TABLES */
+table .small-btn {
+  border-radius: 999px;
+  font-size: 11px;
+  padding: 4px 10px !important;
+}
+
+/* MOBILE: card-like rows with labels */
+@media (max-width: 600px) {
+
+  table {
+    border-radius: 16px;
+  }
+
+  table thead {
+    display: none;
+  }
+
+  table tbody,
+  table tfoot {
+    display: block;
+  }
+
+  table tbody tr {
+    display: block;
+    margin: 8px 10px;
+    border-radius: 14px;
+    border: 1px solid var(--border-soft);
+    box-shadow: 0 6px 16px rgba(15,23,42,0.06);
+  }
+
+  table tbody td {
+    display: flex;
+    justify-content: space-between;
+    border: none;
+    border-bottom: 1px dashed var(--border-soft);
+  }
+
+  table tbody tr td:last-child {
+    border-bottom: none;
+  }
+
+  table tbody td::before {
+    content: attr(data-label);
+    font-weight: 600;
+    color: var(--text-soft);
+    margin-right: 10px;
+  }
+}
