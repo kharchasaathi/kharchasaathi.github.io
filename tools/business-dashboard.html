@@ -14,77 +14,6 @@
   <link rel="stylesheet" href="/css/components.css" />
   <link rel="stylesheet" href="/css/style.css" />
   <link rel="stylesheet" href="/css/table.css" />
-
-  <style>
-    .topbar{
-      position:sticky; top:0; z-index:50;
-      display:flex; justify-content:space-between; align-items:center;
-      padding:10px 18px;
-      background:var(--ks-bg-card);
-      border-bottom:1px solid var(--ks-border-soft);
-      backdrop-filter:blur(12px);
-    }
-    .topbar h1{ margin:0; font-size:20px; display:flex; gap:10px; align-items:center; font-weight:700; }
-    .topbar-logo{
-      width:32px;height:32px;border-radius:999px;
-      display:flex;align-items:center;justify-content:center;
-      background:linear-gradient(135deg,#22c55e,#2563eb);
-      color:#fff;
-    }
-    #universalBar{
-      padding:12px 14px;
-      border-bottom:1px solid var(--ks-border-soft);
-    }
-    #tabSummaryBar{
-      text-align:center;
-      padding:8px;
-      margin:10px auto;
-      max-width:1160px;
-      border-radius:999px;
-      background:var(--ks-bg-soft);
-      color:var(--ks-accent-green);
-      font-weight:600;
-    }
-    .section{
-      display:none;
-      padding:16px 14px 28px;
-      max-width:1160px;
-      margin:0 auto;
-    }
-    .section.active{ display:block; }
-    .tabs{
-      display:flex;
-      gap:10px;
-      overflow-x:auto;
-      padding:10px;
-    }
-    .tab{
-      padding:9px 18px;
-      border-radius:999px;
-      font-size:14px;
-      font-weight:600;
-      cursor:pointer;
-      white-space:nowrap;
-      background:var(--ks-bg-card);
-      color:var(--ks-text-soft);
-      border:1px solid var(--ks-border-soft);
-    }
-    .tab.active{
-      background:var(--ks-accent);
-      color:#fff;
-    }
-    table{
-      width:100%;
-      border-collapse:collapse;
-      margin-top:10px;
-    }
-    table th, table td{
-      padding:6px 10px;
-      border:1px solid #e5e7eb;
-      font-size:13px;
-    }
-    table th{ background:#f1f5f9; }
-  </style>
 </head>
 
 <body>
@@ -111,7 +40,6 @@
 
 <div id="universalBar">
   <div style="max-width:1160px;margin:0 auto;display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;">
-
     <div class="card" style="position:relative;">
       <button class="collect-btn" data-collect="net">₹ Collect</button>
       <div class="uni-title">Net Profit (Sale + Service − Expense)</div>
@@ -122,19 +50,16 @@
         <span>Exp:</span><span id="unExpenses">₹0</span>
       </div>
     </div>
-
     <div class="card" style="position:relative;">
       <button class="collect-btn" data-collect="stock">₹ Collect</button>
       <div class="uni-title">Stock Investment (Sold Items)</div>
       <div class="uni-value" id="unStockInv">₹0</div>
     </div>
-
     <div class="card" style="position:relative;">
       <button class="collect-btn" data-collect="service">₹ Collect</button>
       <div class="uni-title">Service Investment (Completed)</div>
       <div class="uni-value" id="unServiceInv">₹0</div>
     </div>
-
     <div class="card">
       <div class="uni-title">Pending Credit</div>
       <div class="uni-value" id="unCreditSales">₹0</div>
@@ -155,47 +80,41 @@
   <div class="tab" data-tab="dashboard">📊 Dashboard</div>
   <div class="tab" data-tab="collection">🪙 Collection</div>
 </div>
-<!-- ===================== SECTIONS ===================== -->
-
 <!-- TYPES -->
 <section id="types" class="section active">
-  <div style="margin-bottom:10px;display:flex;gap:8px;flex-wrap:wrap;">
-    <input id="typeName" placeholder="Enter Type" class="input" />
+  <div style="margin-bottom:10px;display:flex;gap:8px;">
+    <input id="typeName" placeholder="Enter Type" />
     <button id="addTypeBtn" class="small-btn">Add</button>
     <button id="clearTypesBtn" class="small-btn danger-btn">Clear</button>
   </div>
-
-  <ul id="typeList" class="list-card"></ul>
+  <ul id="typeList"></ul>
 </section>
 
 <!-- STOCK -->
 <section id="stock" class="section">
   <div style="margin-bottom:10px;display:flex;gap:8px;flex-wrap:wrap;">
-    <input id="productSearch" placeholder="Search Product" class="input" />
-    <select id="filterType" class="input"></select>
+    <input id="productSearch" placeholder="Search Product" />
+    <select id="filterType"></select>
   </div>
-
   <table id="stockTable"></table>
 </section>
 
 <!-- SALES -->
 <section id="sales" class="section">
   <div style="margin-bottom:10px;">
-    <select id="saleType" class="input"></select>
+    <select id="saleType"></select>
   </div>
-
   <table id="salesTable"></table>
 </section>
 
 <!-- WANTING -->
 <section id="wanting" class="section">
   <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px;">
-    <select id="wantType" class="input"></select>
-    <input id="wantName" placeholder="Product Name" class="input"/>
-    <input id="wantNote" placeholder="Note" class="input"/>
+    <select id="wantType"></select>
+    <input id="wantName" placeholder="Product Name"/>
+    <input id="wantNote" placeholder="Note"/>
     <button id="addWantBtn" class="small-btn">Add</button>
   </div>
-
   <table id="wantingTable"></table>
 </section>
 
@@ -218,25 +137,24 @@
 
 <!-- DASHBOARD -->
 <section id="dashboard" class="section">
-  <canvas id="dashChart" style="max-width:100%;height:260px;"></canvas>
+  <canvas id="cleanPie" height="180"></canvas>
 </section>
 
 <!-- COLLECTION -->
 <section id="collection" class="section">
-  <table id="collectionTable"></table>
+  <table id="pendingCollectionTable"></table>
+  <hr/>
+  <table id="collectionHistory"></table>
 </section>
-<!-- ===================== LIBRARIES ===================== -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js/dist/chart.umd.min.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.6.11/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.6.11/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.6.11/firebase-firestore-compat.js"></script>
 
-<!-- ===================== AUTO SCRIPT LOADER ===================== -->
 <script>
 (function(){
   if (window.__ks_loader_injected) return;
   window.__ks_loader_injected = true;
-
   const v = Date.now();
   const files = [
     "/js/firebase.js",
@@ -251,7 +169,6 @@
     "/js/universalBar.js",
     "/js/analytics.js"
   ];
-
   files.forEach(src => {
     const s = document.createElement("script");
     s.src = src + "?v=" + v;
@@ -261,63 +178,44 @@
 })();
 </script>
 
-<!-- ===================== RUNTIME UI LOGIC ===================== -->
 <script>
-(function() {
-  document.addEventListener("DOMContentLoaded", () => {
+document.addEventListener("DOMContentLoaded", () => {
+  setInterval(()=>{
+    const d=new Date();
+    qs("#clockTime").textContent = d.toLocaleTimeString();
+    qs("#clockDate").textContent = d.toLocaleDateString();
+  },1000);
 
-    /* CLOCK */
-    function updateClock(){
-      const d=new Date();
-      qs("#clockTime").textContent = d.toLocaleTimeString();
-      qs("#clockDate").textContent = d.toLocaleDateString();
-    }
-    setInterval(updateClock,1000); updateClock();
+  const t=localStorage.getItem("ks-theme");
+  if(t==='dark'){ document.body.classList.add("dark"); qs("#themeBtn").textContent="☀️"; }
+  qs("#themeBtn").onclick=()=>{
+    const dark=document.body.classList.toggle("dark");
+    localStorage.setItem("ks-theme",dark?'dark':'light');
+    qs("#themeBtn").textContent=dark?"☀️":"🌙";
+  };
 
-    /* THEME */
-    const btn = qs("#themeBtn");
-    const saved = localStorage.getItem("ks-theme");
-    if(saved==='dark'){ document.body.classList.add("dark"); btn.textContent="☀️"; }
-    btn.addEventListener("click", ()=>{
-      const dark = document.body.classList.toggle("dark");
-      localStorage.setItem("ks-theme", dark?'dark':'light');
-      btn.textContent = dark ? "☀️" : "🌙";
-    });
-
-    /* LOGOUT */
-    qs("#logoutBtn").addEventListener("click", async ()=>{
-      if (typeof fsLogout === "function") { await fsLogout(); return; }
-      localStorage.removeItem("ks-user-email");
-      location.href="/login.html";
-    });
-
-    /* TAB SWITCHING */
-    document.addEventListener("click", e => {
-      const t = e.target.closest(".tab");
-      if(!t) return;
-      const id=t.dataset.tab;
-
-      qsa(".tab").forEach(x=>x.classList.remove("active"));
-      t.classList.add("active");
-
-      qsa(".section").forEach(s=>s.classList.remove("active"));
-      const sec = document.getElementById(id);
-      if (sec) sec.classList.add("active");
-
-      try{ window.updateUniversalBar?.(); }catch{}
-    });
-
-    /* COLLECT HANDLER */
-    document.addEventListener("click", e => {
-      const c = e.target.closest(".collect-btn");
-      if(!c) return;
-      const type=c.dataset.collect;
-      try { window.handleCollect?.(type); }
-      catch(err){ console.error("collect failed", err); }
-    });
-
+  document.addEventListener("click", e => {
+    const tb=e.target.closest(".tab");
+    if(!tb) return;
+    const id=tb.dataset.tab;
+    qsa(".tab").forEach(x=>x.classList.remove("active"));
+    tb.classList.add("active");
+    qsa(".section").forEach(s=>s.classList.remove("active"));
+    qs("#"+id).classList.add("active");
+    window.updateUniversalBar?.();
   });
-})();
+
+  document.addEventListener("click", e => {
+    const c=e.target.closest(".collect-btn");
+    if(!c) return;
+    window.handleCollect?.(c.dataset.collect);
+  });
+
+  qs("#logoutBtn").onclick=()=>{
+    localStorage.removeItem("ks-user-email");
+    location.href="/login.html";
+  };
+});
 </script>
 </body>
 </html>
