@@ -3,321 +3,312 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>📦 KharchaSaathi — Business Manager</title>
-  <meta name="theme-color" content="#e5edff" />
+  <title>📦 KharchaSaathi — Business Dashboard (v3.3 Material)</title>
+  <meta name="theme-color" content="#1565d8" />
   <link rel="icon" href="/favicon.png" />
   <link rel="apple-touch-icon" href="/favicon.png" />
 
+  <style>
+    /* Material Design Blue Palette (from business-dashboard 19) */
+    :root{
+      --primary:#1565d8;
+      --primary-dark:#0d47a1;
+      --primary-soft:#e3f2fd;
+
+      --accent-green:#1b9e64;
+      --accent-red:#d32f2f;
+      --accent-amber:#ffb300;
+      --accent-grey:#607d8b;
+
+      --bg:#eef3fb;          /* page background */
+      --bg-soft:#f6f8ff;      /* soft panels */
+      --card:#ffffff;
+      --text:#1b2430;
+
+      --dark-bg:#0b1020;
+      --dark-card:#151b2c;
+      --dark-text:#f5f6ff;
+      --dark-border:#273148;
+
+      --border-soft:#d5ddf5;
+      --shadow-soft:0 14px 30px rgba(15, 35, 75, .08);
+    }
+    
+    /* Common UI Elements from (19) */
+    body {
+        font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        background: var(--bg);
+        color: var(--text);
+    }
+    .container {
+        width: 100%;
+        max-width: 1160px;
+        margin: auto;
+        padding-left: 12px;
+        padding-right: 12px;
+    }
+    .card {
+        padding: 16px;
+        border-radius: 12px;
+        background: var(--card);
+        box-shadow: var(--shadow-soft);
+    }
+    .tab-container {
+      display: flex;
+      gap: 10px;
+      overflow-x: auto;
+      padding: 10px 0;
+    }
+    .tab {
+      padding: 8px 16px;
+      border-radius: 999px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      white-space: nowrap;
+      border: 1px solid transparent;
+      background: transparent;
+      color: var(--accent-grey);
+      transition: 0.16s;
+    }
+    .tab.active {
+      background: var(--primary);
+      color: #fff;
+    }
+    /* ... (You can add more styles from your base/layout/components CSS files here if needed) ... */
+  </style>
+  
   <link rel="stylesheet" href="/css/base.css" />
   <link rel="stylesheet" href="/css/layout.css" />
   <link rel="stylesheet" href="/css/components.css" />
-  <link rel="stylesheet" href="/css/style.css" />
-  <link rel="stylesheet" href="/css/table.css" />
+  <link rel="stylesheet" href="/css/table.css" /> 
 </head>
-
 <body>
 
-<script>
-  const qs = s => document.querySelector(s);
-  const qsa = s => Array.from(document.querySelectorAll(s));
-</script>
-
-<div class="topbar">
-  <h1><div class="topbar-logo">₹</div>KHARCHASAATHI</h1>
-
-  <div style="display:flex;gap:10px;align-items:center;">
-    <span id="emailTag">Checking login…</span>
-    <div style="text-align:right;font-size:12px;">
-      <div id="clockTime">--:--:--</div>
-      <div id="clockDate">--</div>
-    </div>
-    <button id="themeBtn" class="small-btn">🌙</button>
-    <a class="small-btn" href="/index.html">🏠 Home</a>
-    <button id="logoutBtn" class="small-btn danger-btn">🔓 Logout</button>
-  </div>
-</div>
-
-<div id="universalBar">
-  <div style="max-width:1160px;margin:0 auto;display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;">
-
-    <div class="card" style="position:relative;">
-      <button class="collect-btn" data-collect="net">₹ Collect</button>
-      <div class="uni-title">Net Profit (Sale + Service − Expense)</div>
-      <div class="uni-value" id="unNetProfit">₹0</div>
-      <div class="uni-sub">
-        <span>Sale:</span><span id="unSaleProfit">₹0</span>
-        <span>Service:</span><span id="unServiceProfit">₹0</span>
-        <span>Exp:</span><span id="unExpenses">₹0</span>
+  <header id="topbar">
+    <div class="container flex justify-between items-center" style="height:60px;">
+      <div class="flex items-center gap-2">
+        <h2 id="clockTime" style="font-size:18px; color:var(--primary-dark);">00:00</h2>
+        <small id="clockDate" style="color:var(--accent-grey);"></small>
+      </div>
+      
+      <div class="flex items-center gap-3">
+        <div id="universalBar" class="flex items-center gap-2" style="font-size:13px; font-weight:600;">
+          <span style="color:var(--accent-green);">Profit: <span id="ubProfit">₹0</span></span>
+          <span style="color:var(--accent-amber);">Credit: <span id="ubCredit">₹0</span></span>
+        </div>
+        
+        <button class="small-btn btn-danger" onclick="logoutUser()">
+          Logout
+        </button>
       </div>
     </div>
+  </header>
 
-    <div class="card" style="position:relative;">
-      <button class="collect-btn" data-collect="stock">₹ Collect</button>
-      <div class="uni-title">Stock Investment (Sold Items)</div>
-      <div class="uni-value" id="unStockInv">₹0</div>
+  <nav id="navtabs" style="background:var(--bg-soft); border-bottom:1px solid var(--border-soft);">
+    <div class="container tab-container">
+      <button class="tab active" data-tab="overview">Dashboard</button>
+      <button class="tab" data-tab="stock">Stock</button>
+      <button class="tab" data-tab="sales">Sales</button>
+      <button class="tab" data-tab="types">Types</button>
+      <button class="tab" data-tab="wanting">Wanting</button>
+      <button class="tab" data-tab="expenses">Expenses</button>
+      <button class="tab" data-tab="service">Service</button>
+      <button class="tab" data-tab="collection">Collection</button>
     </div>
+  </nav>
 
-    <div class="card" style="position:relative;">
-      <button class="collect-btn" data-collect="service">₹ Collect</button>
-      <div class="uni-title">Service Investment (Completed)</div>
-      <div class="uni-value" id="unServiceInv">₹0</div>
+  <main>
+    <div class="container">
+      
+      <section id="overview" class="section active">
+        <h2>📊 Dashboard</h2>
+        <div class="grid-4" style="margin-bottom:20px;">
+          <div class="card">Today Sales: <span id="todaySales">₹0</span></div>
+          <div class="card">Credit Sales: <span id="todayCredit">₹0</span></div>
+          <div class="card">Today Expenses: <span id="todayExpenses">₹0</span></div>
+          <div class="card">Net Profit: <span id="todayNet">₹0</span></div>
+        </div>
+        
+        <h3>Overall Analytics</h3>
+        <canvas id="cleanPieChart" style="max-width:400px; margin:20px auto;"></canvas>
+      </section>
+
+      <section id="stock" class="section">
+        <h2>📦 Stock Management</h2>
+        
+        <div class="card flex flex-wrap gap-3" style="margin-bottom:20px;">
+          <select id="productType" style="width:150px;">
+            <option value="">Select Type</option>
+          </select>
+          <input type="text" id="productName" placeholder="Product Name" style="flex-grow:1;"/>
+          <input type="number" id="productQty" placeholder="Qty" style="width:80px;"/>
+          <input type="number" id="productCost" placeholder="Cost" style="width:100px;"/>
+          <input type="number" id="productLimit" placeholder="Limit" style="width:80px;"/>
+          <button class="btn" id="addStockBtn">➕ Add Stock</button>
+        </div>
+        
+        <div class="flex justify-between items-center" style="margin-bottom:10px;">
+          <div class="flex gap-2">
+            <select id="filterType" style="width:150px;">
+              <option value="all">All Types</option>
+            </select>
+            <input type="text" id="productSearch" placeholder="Search Product..." style="width:200px;"/>
+          </div>
+          <div>
+            <span style="font-weight:600;">Investment: </span><span id="stockInvValue">₹0</span>
+            <button class="small-btn btn-danger" id="clearStockBtn">🗑 Clear All</button>
+          </div>
+        </div>
+        
+        <table id="stockTable">
+          <thead>
+            <tr>
+              <th>Date</th>
+              <th>Type</th>
+              <th>Product</th>
+              <th>Qty</th>
+              <th>Sold</th>
+              <th>Remain</th>
+              <th>Alert</th>
+              <th>Limit</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody id="stockTableBody">
+            </tbody>
+        </table>
+      </section>
+
+      <section id="sales" class="section">
+        <h2>💸 Sales History</h2>
+        </section>
+
+      <section id="types" class="section">
+        <h2>🗂 Manage Product Types</h2>
+        
+        <div class="card flex gap-3" style="margin-bottom:20px;">
+          <input type="text" id="typeName" placeholder="Enter New Type Name (e.g., Mobiles, Accessories)" style="flex-grow:1;"/>
+          <button class="btn" id="addTypeBtn">➕ Add Type</button>
+        </div>
+
+        <div class="flex justify-between items-center" style="margin-bottom:10px;">
+          <h3>Existing Types</h3>
+          <button class="small-btn btn-danger" id="clearTypesBtn">🗑 Clear All</button>
+        </div>
+        
+        <table id="typesTable">
+          <thead>
+            <tr>
+              <th>Type Name</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody id="typesTableBody">
+            </tbody>
+        </table>
+      </section>
+
+      <section id="wanting" class="section">
+        <h2>🛒 Wanting List</h2>
+        </section>
+
+      <section id="expenses" class="section">
+        <h2>🧾 Expenses</h2>
+        </section>
+
+      <section id="service" class="section">
+        <h2>🛠 Service/Repair Jobs</h2>
+        </section>
+
+      <section id="collection" class="section">
+        <h2>💰 Collection History</h2>
+        </section>
+      
     </div>
+  </main>
 
-    <div class="card">
-      <div class="uni-title">Pending Credit</div>
-      <div class="uni-value" id="unCreditSales">₹0</div>
-    </div>
-  </div>
-</div>
+  <script>
+    function qs(s) { return document.querySelector(s); }
+    function qsa(s) { return Array.from(document.querySelectorAll(s)); }
+  </script>
 
-<div id="tabSummaryBar">Profit: +₹0</div>
+  <script>
+    // Dynamically load all JS files with a version number
+    (function loadScripts() {
+      const v = 34; // Version control
+      const js = [
+        "/js/core.js", // Core helpers and initial data loading
+        "/js/firebase.js", // Cloud sync and auth
+        "/js/universalBar.js",
+        "/js/analytics.js",
+        "/js/security.js",
+        "/js/types.js", 
+        "/js/stock.js",
+        "/js/sales.js",
+        "/js/wanting.js",
+        "/js/expenses.js",
+        "/js/service.js",
+        "/js/collection.js",
+      ];
+      // Note: document.write is used here as per the old version (19) structure.
+      js.forEach(f => {
+        document.write(`<script src="${f}?v=${v}"><\/script>`);
+      });
+    })();
+  </script>
 
-<div class="tabs" role="tablist">
-  <div class="tab active" data-tab="types">📁 Types</div>
-  <div class="tab" data-tab="stock">📦 Stock</div>
-  <div class="tab" data-tab="sales">📈 Sales</div>
-  <div class="tab" data-tab="wanting">🛒 Wanting</div>
-  <div class="tab" data-tab="service">🛠 Service</div>
-  <div class="tab" data-tab="expenses">💸 Expenses</div>
-  <div class="tab" data-tab="creditHistory">🧾 Credit History</div>
-  <div class="tab" data-tab="dashboard">📊 Dashboard</div>
-  <div class="tab" data-tab="collection">🪙 Collection</div>
-</div>
-<section id="types" class="section active">
-  <div style="margin-bottom:10px;display:flex;gap:8px;flex-wrap:wrap;">
-    <input id="typeName" placeholder="Enter Type" class="input" />
-    <button id="addTypeBtn" class="small-btn">Add</button>
-    <button id="clearTypesBtn" class="small-btn danger-btn">Clear</button>
-  </div>
-  <ul id="typeList" class="list-card"></ul>
-</section>
+  <script>
+    // Switch function is made global for use in other JS files
+    window.switchTab = function(id) {
+      // Hide all sections
+      qsa(".section").forEach(sec => sec.classList.remove("active"));
+      // Show selected
+      const target = qs("#" + id);
+      if (target) target.classList.add("active");
 
-<section id="stock" class="section">
-  <div style="margin-bottom:10px;display:flex;gap:8px;flex-wrap:wrap;">
-    <select id="productType" class="input" style="flex:1;">
-        <option value="">Select Type</option>
-    </select>
-    <input id="productName" placeholder="Product Name" class="input" style="flex:1;" />
-    <input id="productQty" type="number" placeholder="Qty" class="input" style="width:70px;" />
-    <input id="productCost" type="number" placeholder="Cost" class="input" style="width:90px;" />
-    <input id="productPrice" type="number" placeholder="Price" class="input" style="width:90px;" />
-    <input id="productLimit" type="number" placeholder="Limit" class="input" style="width:70px;" />
-    <button id="addStockBtn" class="small-btn">Add Stock</button>
-    <button id="clearStockBtn" class="small-btn danger-btn">Clear</button>
-  </div>
+      // Highlight tab
+      qsa(".tab").forEach(t => t.classList.remove("active"));
+      const tab = qs(`.tab[data-tab="${id}"]`);
+      if (tab) tab.classList.add("active");
 
-  <div style="margin-bottom:10px;display:flex;gap:8px;flex-wrap:wrap;">
-    <input id="productSearch" placeholder="Search Product" class="input" />
-    <select id="filterType" class="input"></select>
-  </div>
-  <table id="stockTable"></table>
-</section>
-
-<section id="sales" class="section">
-  <div style="margin-bottom:10px;display:flex;gap:8px;flex-wrap:wrap;align-items:flex-end;">
-    <div style="display:flex;flex-direction:column;gap:5px;">
-      <small>Date</small>
-      <input id="saleDate" type="date" class="input" style="width:140px;" />
-    </div>
-    <select id="saleType" class="input" style="flex:1;"></select>
-    <input id="saleProduct" placeholder="Product Name" class="input" style="flex:2;" />
-    <input id="saleQty" type="number" placeholder="Qty" class="input" style="width:70px;" />
-    <input id="salePrice" type="number" placeholder="Price" class="input" style="width:90px;" />
-  </div>
-  <div style="margin-bottom:10px;display:flex;gap:8px;flex-wrap:wrap;align-items:flex-end;">
-    <input id="saleCustomer" placeholder="Customer Name" class="input" style="flex:2;" />
-    <input id="salePhone" type="tel" placeholder="Phone (Optional)" class="input" style="flex:1.5;" />
-    <div style="display:flex;gap:8px;align-items:center;">
-        <label><input type="radio" name="saleStatus" id="saleStatusPaid" value="Paid" checked> Paid</label>
-        <label><input type="radio" name="saleStatus" id="saleStatusCredit" value="Credit"> Credit</label>
-    </div>
-    <button id="addSaleBtn" class="small-btn" style="height:38px;">Add Sale</button>
-    <button id="clearSalesBtn" class="small-btn danger-btn" style="height:38px;">Clear All</button>
-  </div>
-  <table id="salesTable"></table>
-</section>
-
-<section id="wanting" class="section">
-  <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px;">
-    <select id="wantType" class="input"></select>
-    <input id="wantName" placeholder="Product Name" class="input" />
-    <input id="wantNote" placeholder="Note" class="input" />
-    <button id="addWantBtn" class="small-btn">Add</button>
-  </div>
-  <table id="wantingTable"></table>
-</section>
-
-<section id="service" class="section">
-  <div style="margin-bottom:10px;display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:8px;">
-    <input id="svcCustomer" placeholder="Customer Name" class="input" />
-    <input id="svcPhone" type="tel" placeholder="Phone (Optional)" class="input" />
-    <input id="svcItem" placeholder="Item Name (e.g., Laptop)" class="input" />
-    <input id="svcModel" placeholder="Model (e.g., Dell 5590)" class="input" />
-    <input id="svcPrice" type="number" placeholder="Price (₹)" class="input" />
-    <input id="svcCost" type="number" placeholder="Cost/Invest (₹)" class="input" />
-    <div style="display:flex;flex-direction:column;gap:5px;">
-      <small>Date In</small>
-      <input id="svcDateIn" type="date" class="input" />
-    </div>
-    <div style="display:flex;flex-direction:column;gap:5px;">
-      <small>Date Out (Expected)</small>
-      <input id="svcDateOut" type="date" class="input" />
-    </div>
-    <textarea id="svcProblem" placeholder="Problem Description" class="input" style="grid-column:1/-1;"></textarea>
-    <textarea id="svcSolution" placeholder="Solution / Notes" class="input" style="grid-column:1/-1;"></textarea>
-    <select id="svcStatusSelect" class="input" style="grid-column:1/3;">
-        <option value="Pending">Pending</option>
-        <option value="Completed">Completed (Paid)</option>
-        <option value="Credit">Completed (Credit)</option>
-        <option value="Failed/Returned">Failed/Returned</option>
-    </select>
-    <button id="addServiceBtn" class="small-btn" style="grid-column:3/-1;">Add Job</button>
-    <button id="clearServiceBtn" class="small-btn danger-btn" style="grid-column:1/-1;margin-top:-5px;">Clear ALL Jobs</button>
-  </div>
-  <hr />
-  <table id="svcTable"></table>
-  <hr />
-  <table id="svcHistoryTable"></table>
-</section>
-
-<section id="expenses" class="section">
-  <div style="margin-bottom:10px;display:flex;gap:8px;flex-wrap:wrap;align-items:flex-end;">
-    <div style="display:flex;flex-direction:column;gap:5px;">
-      <small>Date</small>
-      <input id="expDate" type="date" class="input" style="width:140px;" />
-    </div>
-    <input id="expCat" placeholder="Category (e.g., Rent, Salary)" class="input" style="flex:1;" />
-    <input id="expAmount" type="number" placeholder="Amount (₹)" class="input" style="width:120px;" />
-    <input id="expNote" placeholder="Note (Optional)" class="input" style="flex:1.5;" />
-    <button id="addExpenseBtn" class="small-btn" style="height:38px;">Add Expense</button>
-    <button id="clearExpensesBtn" class="small-btn danger-btn" style="height:38px;">Clear All</button>
-  </div>
-  <div class="uni-sub" style="margin-bottom:10px;">
-    Total Expenses: <span id="expTotal">₹0</span>
-  </div>
-  <table id="expensesTable"></table>
-</section>
-
-<section id="creditHistory" class="section">
-  <table id="collectionHistory"></table>
-</section>
-
-<section id="dashboard" class="section">
-  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;margin-bottom:20px;">
-      <div class="card"><div class="uni-title">Today Sales</div><div class="uni-value" id="todaySales">₹0</div></div>
-      <div class="card"><div class="uni-title">Today Credit Sales</div><div class="uni-value" id="todayCredit">₹0</div></div>
-      <div class="card"><div class="uni-title">Today Expenses</div><div class="uni-value" id="todayExpenses">₹0</div></div>
-      <div class="card"><div class="uni-title">Today Gross Profit</div><div class="uni-value" id="todayGross">₹0</div></div>
-      <div class="card"><div class="uni-title">Today Net Profit</div><div class="uni-value" id="todayNet">₹0</div></div>
-  </div>
-  <canvas id="cleanPie" height="260" style="max-width:100%;"></canvas>
-</section>
-
-<section id="collection" class="section">
-  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
-    <h2 style="font-size:1.2em;color:var(--ks-text-main);">Pending Credit Collections</h2>
-  </div>
-  <table id="pendingCollectionTable"></table>
-  
-  <hr style="margin:20px 0;"/>
-  
-  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
-    <h2 style="font-size:1.2em;color:var(--ks-text-main);">Collection History</h2>
-    <button id="clearCollectionBtn" class="small-btn danger-btn">Clear History</button>
-  </div>
-  <table id="collectionHistory"></table>
-</section>
-
-<script src="https://cdn.jsdelivr.net/npm/chart.js/dist/chart.umd.min.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.6.11/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.6.11/firebase-auth-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.6.11/firebase-firestore-compat.js"></script>
-
-<script>
-(function(){
-  if (window.__ks_loader_injected) return;
-  window.__ks_loader_injected = true;
-
-  const v = Date.now();
-  const files = [
-    "/js/firebase.js",
-    "/js/core.js",
-    "/js/types.js",
-    "/js/stock.js",
-    "/js/sales.js",
-    "/js/wanting.js",
-    "/js/service.js",
-    "/js/expenses.js",
-    "/js/collection.js",
-    "/js/universalBar.js",
-    "/js/analytics.js"
-  ];
-
-  files.forEach(src => {
-    const s = document.createElement("script");
-    s.src = src + "?v=" + v;
-    s.defer = true;
-    document.head.appendChild(s);
-  });
-})();
-</script>
-
-<script>
-document.addEventListener("DOMContentLoaded", () => {
-
-  /* CLOCK */
-  function updateClock(){
-    const d=new Date();
-    qs("#clockTime").textContent = d.toLocaleTimeString();
-    qs("#clockDate").textContent = d.toLocaleDateString();
-  }
-  setInterval(updateClock,1000); updateClock();
-
-  /* THEME SWITCH */
-  const saved = localStorage.getItem("ks-theme");
-  if(saved==='dark'){
-    document.body.classList.add("dark");
-    qs("#themeBtn").textContent="☀️";
-  }
-  qs("#themeBtn").onclick=()=>{
-    const dark=document.body.classList.toggle("dark");
-    localStorage.setItem("ks-theme",dark?'dark':'light');
-    qs("#themeBtn").textContent=dark?"☀️":"🌙";
-  };
-
-  /* LOGOUT */
-  qs("#logoutBtn").onclick=()=>{
-    localStorage.removeItem("ks-user-email");
-    location.href="/login.html";
-  };
-
-  /* TAB SWITCHING */
-  document.addEventListener("click", e => {
-    const t = e.target.closest(".tab");
-    if(!t) return;
-
-    const id = t.dataset.tab;
-
-    qsa(".tab").forEach(x=>x.classList.remove("active"));
-    t.classList.add("active");
-
-    qsa(".section").forEach(s=>s.classList.remove("active"));
-    qs("#"+id).classList.add("active");
-
-    try{ window.updateUniversalBar?.(); }catch{}
-  });
-
-  /* COLLECT HANDLER */
-  document.addEventListener("click", e => {
-    const c = e.target.closest(".collect-btn");
-    if(!c) return;
-    try {
-      window.handleCollect?.(c.dataset.collect);
-    }catch(err){
-      console.error("collect failed", err);
+      // Refresh screens
+      // This ensures data is up to date when switching tabs
+      try { renderTypes?.(); } catch {}
+      try { renderStock?.(); } catch {}
+      try { renderSales?.(); } catch {}
+      try { renderWanting?.(); } catch {}
+      try { renderExpenses?.(); } catch {}
+      try { renderServiceTables?.(); } catch {}
+      try { renderCollection?.(); } catch {}
+      try { renderAnalytics?.(); } catch {}
+      try { updateSummaryCards?.(); } catch {}
+      try { window.updateUniversalBar?.(); } catch {}
     }
-  });
-});
-</script>
+
+    document.addEventListener("click", e => {
+      if (e.target.classList.contains("tab")) {
+        switchTab(e.target.dataset.tab);
+      }
+    });
+
+    // Initial load switch
+    window.addEventListener("load", () => {
+      switchTab("overview");
+    });
+  </script>
+
+  <script>
+    function updateClock() {
+      const d = new Date();
+      const t = qs("#clockTime");
+      const dt = qs("#clockDate");
+      if (t) t.textContent = d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+      if (dt) dt.textContent = d.toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
+    }
+    setInterval(updateClock, 1000);
+    updateClock();
+  </script>
+
 </body>
 </html>
