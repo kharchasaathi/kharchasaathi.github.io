@@ -40,6 +40,7 @@
 
 <div id="universalBar">
   <div style="max-width:1160px;margin:0 auto;display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;">
+
     <div class="card" style="position:relative;">
       <button class="collect-btn" data-collect="net">₹ Collect</button>
       <div class="uni-title">Net Profit (Sale + Service − Expense)</div>
@@ -50,16 +51,19 @@
         <span>Exp:</span><span id="unExpenses">₹0</span>
       </div>
     </div>
+
     <div class="card" style="position:relative;">
       <button class="collect-btn" data-collect="stock">₹ Collect</button>
       <div class="uni-title">Stock Investment (Sold Items)</div>
       <div class="uni-value" id="unStockInv">₹0</div>
     </div>
+
     <div class="card" style="position:relative;">
       <button class="collect-btn" data-collect="service">₹ Collect</button>
       <div class="uni-title">Service Investment (Completed)</div>
       <div class="uni-value" id="unServiceInv">₹0</div>
     </div>
+
     <div class="card">
       <div class="uni-title">Pending Credit</div>
       <div class="uni-value" id="unCreditSales">₹0</div>
@@ -82,19 +86,19 @@
 </div>
 <!-- TYPES -->
 <section id="types" class="section active">
-  <div style="margin-bottom:10px;display:flex;gap:8px;">
-    <input id="typeName" placeholder="Enter Type" />
+  <div style="margin-bottom:10px;display:flex;gap:8px;flex-wrap:wrap;">
+    <input id="typeName" placeholder="Enter Type" class="input" />
     <button id="addTypeBtn" class="small-btn">Add</button>
     <button id="clearTypesBtn" class="small-btn danger-btn">Clear</button>
   </div>
-  <ul id="typeList"></ul>
+  <ul id="typeList" class="list-card"></ul>
 </section>
 
 <!-- STOCK -->
 <section id="stock" class="section">
   <div style="margin-bottom:10px;display:flex;gap:8px;flex-wrap:wrap;">
-    <input id="productSearch" placeholder="Search Product" />
-    <select id="filterType"></select>
+    <input id="productSearch" placeholder="Search Product" class="input" />
+    <select id="filterType" class="input"></select>
   </div>
   <table id="stockTable"></table>
 </section>
@@ -102,7 +106,7 @@
 <!-- SALES -->
 <section id="sales" class="section">
   <div style="margin-bottom:10px;">
-    <select id="saleType"></select>
+    <select id="saleType" class="input"></select>
   </div>
   <table id="salesTable"></table>
 </section>
@@ -110,9 +114,9 @@
 <!-- WANTING -->
 <section id="wanting" class="section">
   <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px;">
-    <select id="wantType"></select>
-    <input id="wantName" placeholder="Product Name"/>
-    <input id="wantNote" placeholder="Note"/>
+    <select id="wantType" class="input"></select>
+    <input id="wantName" placeholder="Product Name" class="input" />
+    <input id="wantNote" placeholder="Note" class="input" />
     <button id="addWantBtn" class="small-btn">Add</button>
   </div>
   <table id="wantingTable"></table>
@@ -137,7 +141,7 @@
 
 <!-- DASHBOARD -->
 <section id="dashboard" class="section">
-  <canvas id="cleanPie" height="180"></canvas>
+  <canvas id="cleanPie" style="max-width:100%;height:260px;"></canvas>
 </section>
 
 <!-- COLLECTION -->
@@ -146,15 +150,18 @@
   <hr/>
   <table id="collectionHistory"></table>
 </section>
+<!-- ===================== LIBRARIES ===================== -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js/dist/chart.umd.min.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.6.11/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.6.11/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.6.11/firebase-firestore-compat.js"></script>
 
+<!-- ===================== AUTO SCRIPT LOADER ===================== -->
 <script>
 (function(){
   if (window.__ks_loader_injected) return;
   window.__ks_loader_injected = true;
+
   const v = Date.now();
   const files = [
     "/js/firebase.js",
@@ -169,6 +176,7 @@
     "/js/universalBar.js",
     "/js/analytics.js"
   ];
+
   files.forEach(src => {
     const s = document.createElement("script");
     s.src = src + "?v=" + v;
@@ -178,43 +186,62 @@
 })();
 </script>
 
+<!-- ===================== RUNTIME UI LOGIC ===================== -->
 <script>
 document.addEventListener("DOMContentLoaded", () => {
-  setInterval(()=>{
+
+  /* CLOCK */
+  function updateClock(){
     const d=new Date();
     qs("#clockTime").textContent = d.toLocaleTimeString();
     qs("#clockDate").textContent = d.toLocaleDateString();
-  },1000);
+  }
+  setInterval(updateClock,1000); updateClock();
 
-  const t=localStorage.getItem("ks-theme");
-  if(t==='dark'){ document.body.classList.add("dark"); qs("#themeBtn").textContent="☀️"; }
+  /* THEME SWITCH */
+  const saved = localStorage.getItem("ks-theme");
+  if(saved==='dark'){
+    document.body.classList.add("dark");
+    qs("#themeBtn").textContent="☀️";
+  }
   qs("#themeBtn").onclick=()=>{
     const dark=document.body.classList.toggle("dark");
     localStorage.setItem("ks-theme",dark?'dark':'light');
     qs("#themeBtn").textContent=dark?"☀️":"🌙";
   };
 
-  document.addEventListener("click", e => {
-    const tb=e.target.closest(".tab");
-    if(!tb) return;
-    const id=tb.dataset.tab;
-    qsa(".tab").forEach(x=>x.classList.remove("active"));
-    tb.classList.add("active");
-    qsa(".section").forEach(s=>s.classList.remove("active"));
-    qs("#"+id).classList.add("active");
-    window.updateUniversalBar?.();
-  });
-
-  document.addEventListener("click", e => {
-    const c=e.target.closest(".collect-btn");
-    if(!c) return;
-    window.handleCollect?.(c.dataset.collect);
-  });
-
+  /* LOGOUT */
   qs("#logoutBtn").onclick=()=>{
     localStorage.removeItem("ks-user-email");
     location.href="/login.html";
   };
+
+  /* TAB SWITCHING */
+  document.addEventListener("click", e => {
+    const t = e.target.closest(".tab");
+    if(!t) return;
+
+    const id = t.dataset.tab;
+
+    qsa(".tab").forEach(x=>x.classList.remove("active"));
+    t.classList.add("active");
+
+    qsa(".section").forEach(s=>s.classList.remove("active"));
+    qs("#"+id).classList.add("active");
+
+    try{ window.updateUniversalBar?.(); }catch{}
+  });
+
+  /* COLLECT HANDLER */
+  document.addEventListener("click", e => {
+    const c = e.target.closest(".collect-btn");
+    if(!c) return;
+    try {
+      window.handleCollect?.(c.dataset.collect);
+    }catch(err){
+      console.error("collect failed", err);
+    }
+  });
 });
 </script>
 </body>
