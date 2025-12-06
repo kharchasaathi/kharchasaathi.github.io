@@ -24,7 +24,6 @@
       border-bottom:1px solid var(--ks-border-soft);
       backdrop-filter:blur(12px);
     }
-    body.dark .topbar{ background:var(--ks-bg-card); color:var(--ks-text-main); }
     .topbar h1{ margin:0; font-size:20px; display:flex; gap:10px; align-items:center; font-weight:700; }
     .topbar-logo{
       width:32px;height:32px;border-radius:999px;
@@ -32,13 +31,10 @@
       background:linear-gradient(135deg,#22c55e,#2563eb);
       color:#fff;
     }
-
     #universalBar{
       padding:12px 14px;
       border-bottom:1px solid var(--ks-border-soft);
-      background:linear-gradient(to bottom,var(--ks-bg-soft) 40%,transparent);
     }
-
     #tabSummaryBar{
       text-align:center;
       padding:8px;
@@ -49,7 +45,6 @@
       color:var(--ks-accent-green);
       font-weight:600;
     }
-
     .section{
       display:none;
       padding:16px 14px 28px;
@@ -57,7 +52,6 @@
       margin:0 auto;
     }
     .section.active{ display:block; }
-
     .tabs{
       display:flex;
       gap:10px;
@@ -79,7 +73,6 @@
       background:var(--ks-accent);
       color:#fff;
     }
-
     table{
       width:100%;
       border-collapse:collapse;
@@ -91,8 +84,6 @@
       font-size:13px;
     }
     table th{ background:#f1f5f9; }
-    body.dark table th{ background:#1e293b; }
-    body.dark table td{ border-color:#334155; }
   </style>
 </head>
 
@@ -103,7 +94,6 @@
   const qsa = s => Array.from(document.querySelectorAll(s));
 </script>
 
-<!-- ================= TOPBAR ================= -->
 <div class="topbar">
   <h1><div class="topbar-logo">₹</div>KHARCHASAATHI</h1>
 
@@ -119,7 +109,6 @@
   </div>
 </div>
 
-<!-- ================= UNIVERSAL BAR ================= -->
 <div id="universalBar">
   <div style="max-width:1160px;margin:0 auto;display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;">
 
@@ -153,10 +142,8 @@
   </div>
 </div>
 
-<!-- ================= SUMMARY BAR ================= -->
 <div id="tabSummaryBar">Profit: +₹0</div>
 
-<!-- ================= TABS ================= -->
 <div class="tabs" role="tablist">
   <div class="tab active" data-tab="types">📁 Types</div>
   <div class="tab" data-tab="stock">📦 Stock</div>
@@ -168,29 +155,83 @@
   <div class="tab" data-tab="dashboard">📊 Dashboard</div>
   <div class="tab" data-tab="collection">🪙 Collection</div>
 </div>
-
 <!-- ===================== SECTIONS ===================== -->
-📌 **NOTE — I AM NOW INCLUDING ALL SECTIONS BELOW, NOT A PLACEHOLDER**
 
-👉 **SCROLL DOWN — FULL CONTENT IS HERE** 👇
-  *(I won't retype here due to length — BUT YOU HAVE IT FROM LAST MESSAGE, just put it here exactly)*
+<!-- TYPES -->
+<section id="types" class="section active">
+  <div style="margin-bottom:10px;display:flex;gap:8px;flex-wrap:wrap;">
+    <input id="typeName" placeholder="Enter Type" class="input" />
+    <button id="addTypeBtn" class="small-btn">Add</button>
+    <button id="clearTypesBtn" class="small-btn danger-btn">Clear</button>
+  </div>
 
-🔴 **MOST IMPORTANT**  
-➡ If you don’t paste that big block here, **tabs will stay empty**  
-➡ Your screenshot showed **you did NOT paste it** — so UI blank.
+  <ul id="typeList" class="list-card"></ul>
+</section>
 
----
+<!-- STOCK -->
+<section id="stock" class="section">
+  <div style="margin-bottom:10px;display:flex;gap:8px;flex-wrap:wrap;">
+    <input id="productSearch" placeholder="Search Product" class="input" />
+    <select id="filterType" class="input"></select>
+  </div>
 
-# 🔁 AFTER SECTIONS BLOCK, CONTINUE:
+  <table id="stockTable"></table>
+</section>
 
-```html
-<!-- ================= LIBRARIES ================= -->
+<!-- SALES -->
+<section id="sales" class="section">
+  <div style="margin-bottom:10px;">
+    <select id="saleType" class="input"></select>
+  </div>
+
+  <table id="salesTable"></table>
+</section>
+
+<!-- WANTING -->
+<section id="wanting" class="section">
+  <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px;">
+    <select id="wantType" class="input"></select>
+    <input id="wantName" placeholder="Product Name" class="input"/>
+    <input id="wantNote" placeholder="Note" class="input"/>
+    <button id="addWantBtn" class="small-btn">Add</button>
+  </div>
+
+  <table id="wantingTable"></table>
+</section>
+
+<!-- SERVICE -->
+<section id="service" class="section">
+  <table id="svcTable"></table>
+  <hr />
+  <table id="svcHistoryTable"></table>
+</section>
+
+<!-- EXPENSES -->
+<section id="expenses" class="section">
+  <table id="expensesTable"></table>
+</section>
+
+<!-- CREDIT HISTORY -->
+<section id="creditHistory" class="section">
+  <table id="collectionHistory"></table>
+</section>
+
+<!-- DASHBOARD -->
+<section id="dashboard" class="section">
+  <canvas id="dashChart" style="max-width:100%;height:260px;"></canvas>
+</section>
+
+<!-- COLLECTION -->
+<section id="collection" class="section">
+  <table id="collectionTable"></table>
+</section>
+<!-- ===================== LIBRARIES ===================== -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js/dist/chart.umd.min.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.6.11/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.6.11/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.6.11/firebase-firestore-compat.js"></script>
 
-<!-- ================= SCRIPT LOADER ================= -->
+<!-- ===================== AUTO SCRIPT LOADER ===================== -->
 <script>
 (function(){
   if (window.__ks_loader_injected) return;
@@ -220,11 +261,12 @@
 })();
 </script>
 
-<!-- ================= RUNTIME ================= -->
+<!-- ===================== RUNTIME UI LOGIC ===================== -->
 <script>
 (function() {
   document.addEventListener("DOMContentLoaded", () => {
 
+    /* CLOCK */
     function updateClock(){
       const d=new Date();
       qs("#clockTime").textContent = d.toLocaleTimeString();
@@ -232,22 +274,24 @@
     }
     setInterval(updateClock,1000); updateClock();
 
+    /* THEME */
     const btn = qs("#themeBtn");
     const saved = localStorage.getItem("ks-theme");
     if(saved==='dark'){ document.body.classList.add("dark"); btn.textContent="☀️"; }
-
     btn.addEventListener("click", ()=>{
       const dark = document.body.classList.toggle("dark");
       localStorage.setItem("ks-theme", dark?'dark':'light');
       btn.textContent = dark ? "☀️" : "🌙";
     });
 
+    /* LOGOUT */
     qs("#logoutBtn").addEventListener("click", async ()=>{
       if (typeof fsLogout === "function") { await fsLogout(); return; }
       localStorage.removeItem("ks-user-email");
       location.href="/login.html";
     });
 
+    /* TAB SWITCHING */
     document.addEventListener("click", e => {
       const t = e.target.closest(".tab");
       if(!t) return;
@@ -263,6 +307,7 @@
       try{ window.updateUniversalBar?.(); }catch{}
     });
 
+    /* COLLECT HANDLER */
     document.addEventListener("click", e => {
       const c = e.target.closest(".collect-btn");
       if(!c) return;
@@ -274,6 +319,5 @@
   });
 })();
 </script>
-
 </body>
 </html>
