@@ -1,7 +1,7 @@
 /* ============================================================
-   analytics.js — FINAL V7 (Service Profit Synced)
+   analytics.js — FINAL V8.0 (Service Profit Key Fixed)
    ------------------------------------------------------------
-   ✔ Service profit = paid - invest (same as universalBar.js)
+   ✔ Service profit = paid - cost (FIXED)
    ✔ No dependency on service.profit field
    ✔ 100% synced, zero mismatch
 =========================================================== */
@@ -43,11 +43,12 @@
       }
     });
 
-    /* SERVICES — profit = paid - invest */
+    /* SERVICES — profit = paid - cost (FIXED) */
     services.forEach(sv => {
       if (!sv) return;
       if (String(sv.date_out || "") === today) {
-        const p = escNum(sv.paid) - escNum(sv.invest);
+        // ❌ పాతది: escNum(sv.paid) - escNum(sv.invest);
+        const p = escNum(sv.paid) - escNum(sv.cost); // ✅ NEW: sv.cost
         grossProfit += p;
       }
     });
@@ -95,7 +96,8 @@
 
       const st = String(j.status || "").toLowerCase();
       if (st === "completed" || st === "collected") {
-        serviceProfit += escNum(j.paid) - escNum(j.invest);
+        // ❌ పాతది: escNum(j.paid) - escNum(j.invest);
+        serviceProfit += escNum(j.paid) - escNum(j.cost); // ✅ NEW: j.cost
       }
     });
 
@@ -138,6 +140,7 @@
     const { totalProfit, totalExpenses, creditTotal, stockAfter, serviceInv } =
       getSummaryTotals();
 
+    // ... Dashboard Card Updates ...
     qs("#dashProfit") &&
       (qs("#dashProfit").textContent = "₹" + Math.round(totalProfit));
     qs("#dashExpenses") &&
@@ -153,7 +156,8 @@
     } catch {}
 
     const canvas = qs("#cleanPie");
-    if (!canvas || typeof Chart === "undefined") return;
+    // 💡 పై చార్ట్ మిస్ అయితే, #cleanPie అనే ID తో డాష్‌బోర్డ్ HTML లో <canvas> ట్యాగ్ ఉందో లేదో, మరియు Chart.js లైబ్రరీ లోడ్ అయిందో లేదో సరిచూడండి.
+    if (!canvas || typeof Chart === "undefined") return; 
 
     if (cleanPieChart?.destroy) cleanPieChart.destroy();
 
@@ -171,7 +175,8 @@
           labels: ["Profit", "Expenses", "Credit", "Investment"],
           datasets: [
             {
-              data: values,
+              // 💡 Fix: Number() ensures zero/valid data even if functions return null/undefined
+              data: values.map(v => escNum(v)), 
               backgroundColor: [
                 "#2e7d32",
                 "#c62828",
