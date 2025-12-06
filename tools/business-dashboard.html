@@ -21,13 +21,13 @@
       position:sticky; top:0; z-index:50;
       display:flex; justify-content:space-between; align-items:center;
       padding:10px 18px;
-      background:var(--ks-bg-card);              /* FIX */
+      background:var(--ks-bg-card);
       border-bottom:1px solid var(--ks-border-soft);
       backdrop-filter:blur(12px);
     }
     body.dark .topbar{
-      background:var(--ks-bg-card);              /* FIX */
-      color:var(--ks-text-main);                 /* FIX */
+      background:var(--ks-bg-card);
+      color:var(--ks-text-main);
     }
     .topbar h1{ margin:0; font-size:20px; display:flex; gap:10px; align-items:center; font-weight:700; }
     .topbar-logo{
@@ -47,23 +47,9 @@
       background:linear-gradient(to bottom,var(--ks-bg-soft) 30%,transparent);
     }
 
-    .uni-title{
-      font-size:13px;
-      opacity:.75;
-      margin-bottom:4px;
-    }
-    .uni-value{
-      font-size:22px;
-      font-weight:700;
-      margin-bottom:6px;
-    }
-    .uni-sub{
-      display:flex;
-      gap:10px;
-      flex-wrap:wrap;
-      font-size:12px;
-      opacity:.85;
-    }
+    .uni-title{ font-size:13px; opacity:.75; margin-bottom:4px; }
+    .uni-value{ font-size:22px; font-weight:700; margin-bottom:6px; }
+    .uni-sub{ display:flex; gap:10px; flex-wrap:wrap; font-size:12px; opacity:.85; }
 
     .collect-btn{
       position:absolute;
@@ -81,7 +67,7 @@
       color:var(--ks-accent-soft);
     }
 
-    /* ===================== SUMMARY BAR (DARK SAFE) ===================== */
+    /* ===================== SUMMARY BAR ===================== */
     #tabSummaryBar{
       text-align:center;
       padding:8px;
@@ -92,12 +78,8 @@
       color:var(--ks-accent-green);
       font-weight:600;
     }
-    body.dark #tabSummaryBar{
-      background:var(--ks-bg-soft);
-      color:var(--ks-accent-green);
-    }
 
-    /* ===================== SECTION STYLE ===================== */
+    /* ===================== SECTION AREA ===================== */
     .section{
       display:none;
       padding:16px 14px 28px;
@@ -106,7 +88,7 @@
     }
     .section.active{ display:block; }
 
-    /* ===================== TAB FIX ===================== */
+    /* ===================== TABS ===================== */
     .tabs{
       display:flex;
       gap:10px;
@@ -136,7 +118,6 @@
       background:var(--ks-accent-soft);
       color:#fff;
     }
-
   </style>
 </head>
 <body>
@@ -217,16 +198,73 @@
   <div class="tab" data-tab="collection">🪙 Collection</div>
 </div>
 
-<!-- ===================== SECTIONS ===================== -->
-<section id="types" class="section"></section>
-<section id="stock" class="section"></section>
-<section id="sales" class="section"></section>
-<section id="wanting" class="section"></section>
-<section id="service" class="section"></section>
-<section id="expenses" class="section"></section>
-<section id="creditHistory" class="section"></section>
-<section id="dashboard" class="section"></section>
-<section id="collection" class="section"></section>
+<!-- ===================== SECTIONS WITH STRUCTURE ===================== -->
+
+<!-- ⭐ TYPES -->
+<section id="types" class="section active">
+  <div style="margin-bottom:10px;display:flex;gap:8px;">
+    <input id="typeName" placeholder="Enter Type" />
+    <button id="addTypeBtn">Add</button>
+    <button id="clearTypesBtn" class="danger-btn">Clear</button>
+  </div>
+  <ul id="typeList" class="list-card"></ul>
+</section>
+
+<!-- ⭐ STOCK -->
+<section id="stock" class="section">
+  <div style="margin-bottom:10px;display:flex;gap:8px;flex-wrap:wrap;">
+    <input id="productSearch" placeholder="Search Product" />
+    <select id="filterType"></select>
+  </div>
+  <table id="stockTable" class="table"></table>
+</section>
+
+<!-- ⭐ SALES -->
+<section id="sales" class="section">
+  <select id="saleType"></select>
+  <table id="salesTable" class="table"></table>
+</section>
+
+<!-- ⭐ WANTING -->
+<section id="wanting" class="section">
+  <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px;">
+    <select id="wantType"></select>
+    <input id="wantName" placeholder="Product Name"/>
+    <input id="wantNote" placeholder="Note"/>
+  </div>
+  <table id="wantingTable" class="table"></table>
+</section>
+
+<!-- ⭐ SERVICE -->
+<section id="service" class="section">
+  <table id="svcTable" class="table"></table>
+  <hr/>
+  <table id="svcHistoryTable" class="table"></table>
+</section>
+
+<!-- ⭐ EXPENSES -->
+<section id="expenses" class="section">
+  <table id="expensesTable" class="table"></table>
+</section>
+
+<!-- ⭐ CREDIT HISTORY -->
+<section id="creditHistory" class="section">
+  <table id="collectionHistory" class="table"></table>
+</section>
+
+<!-- ⭐ DASHBOARD -->
+<section id="dashboard" class="section">
+  <!-- analytics.js will render charts here -->
+  <canvas id="salesBar"></canvas>
+  <canvas id="salesPie"></canvas>
+  <canvas id="svcPie"></canvas>
+</section>
+
+<!-- ⭐ COLLECTION -->
+<section id="collection" class="section">
+  <table id="creditSalesCollected" class="table"></table>
+  <table id="creditServiceCollected" class="table"></table>
+</section>
 
 <!-- ===================== LIBS ===================== -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js/dist/chart.umd.min.js"></script>
