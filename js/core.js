@@ -1,4 +1,4 @@
-/* core.js — FINAL V13 (bug-fixed: remain + key-guards + robust loads) */
+/* core.js — FINAL V14.0 (bug-fixed: remain + key-guards + robust loads + Service Investment Fix) */
 (function(){
   // STORAGE KEYS (primary names used by core)
   const KEY_TYPES_DEFAULT       = "item-types";
@@ -347,6 +347,26 @@
     const net = window.getTotalNetProfit();
     if (net >= 0) { el.style.background = "#004d00"; el.style.color = "#fff"; el.textContent = `Profit: +₹${net}`; }
     else { el.style.background = "#4d0000"; el.style.color = "#fff"; el.textContent = `Loss: -₹${Math.abs(net)}`; }
+  };
+
+  /* -------------------------------------------------------------------------
+     DASBOARD/ANALYTICS GLOBAL METRICS (Added back for backward compatibility)
+  ------------------------------------------------------------------------- */
+  // 1) REMAINING STOCK INVESTMENT (for Dashboard Pie Chart Investment)
+  window.getStockInvestmentAfterSale = function () {
+    return (window.stock || []).reduce((sum, p) => {
+      // This calculates the value of remaining stock (qty - sold) * cost
+      const remain = Number(p.qty || 0) - Number(p.sold || 0);
+      return sum + (remain * Number(p.cost || 0));
+    }, 0);
+  };
+
+  // 2) SERVICE INVESTMENT (Completed/Collected only) - FIXED KEY: s.cost
+  window.getServiceInvestmentCollected = function () {
+    return (window.services || [])
+      // Completed or Collected status are considered
+      .filter(s => String(s.status || "").toLowerCase() === "completed" || String(s.status || "").toLowerCase() === "collected")
+      .reduce((t, s) => t + Number(s.cost || 0), 0); // ✅ FIXED: using s.cost
   };
 
   /* ---------- Collections helpers (single source-of-truth: window.collections) ---------- */
