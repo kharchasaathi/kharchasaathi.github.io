@@ -1,0 +1,158 @@
+/* ======================================================
+   COMPONENTS.CSS — BUTTONS / CARDS / INPUTS / TABS
+   (No colors. All design comes from Aurora theme variables)
+====================================================== */
+
+/* ===== Buttons ===== */
+.btn,
+.small-btn,
+.theme-btn {
+  padding: 8px 16px;
+  border-radius: var(--ks-radius-pill);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  border: 1px solid var(--ks-border-soft);
+  background: var(--ks-bg-card);
+  color: var(--ks-text-main);
+  transition: 0.16s;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  box-shadow: var(--ks-shadow-soft);
+}
+
+.small-btn {
+  padding: 6px 12px;
+  font-size: 12px;
+}
+
+.btn:hover,
+.small-btn:hover,
+.theme-btn:hover {
+  transform: translateY(-1px);
+}
+
+/* Logout button special */
+.btn-danger {
+  background: var(--ks-accent-orange);
+  color: #fff;
+  border-color: transparent;
+}
+
+/* ===== Inputs ===== */
+input,
+select,
+textarea {
+  padding: 8px 10px;
+  border-radius: 12px;
+  border: 1px solid var(--ks-border-soft);
+  background: var(--ks-bg-card);
+  color: var(--ks-text-main);
+  font-size: 13px;
+  width: auto;
+  box-shadow: var(--ks-shadow-soft);
+}
+
+input:focus,
+select:focus,
+textarea:focus {
+  outline: none;
+  border-color: var(--ks-accent);
+}
+
+/* ===== Cards ===== */
+.card,
+.uni-card,
+.credit-card {
+  border-radius: var(--ks-radius-card);
+  border: 1px solid var(--ks-border-soft);
+  background: var(--ks-bg-card);
+  padding: 12px;
+  box-shadow: var(--ks-shadow-soft);
+  position: relative;
+}
+
+/* ===== Tabs ===== */
+.tabs {
+  display: flex;
+  gap: 10px;
+  overflow-x: auto;
+  padding: 10px;
+}
+
+.tab {
+  padding: 9px 18px;
+  border-radius: var(--ks-radius-pill);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--ks-text-soft);
+  transition: 0.16s;
+}
+
+.tab:hover {
+  border-color: var(--ks-border-soft);
+  background: var(--ks-bg-soft);
+}
+
+.tab.active {
+  background: var(--ks-accent);
+  color: #fff;
+}
+
+/* ===== Section visibility ===== */
+.section {
+  display: none;
+  padding: 16px 14px 28px;
+  max-width: 1160px;
+  margin: 0 auto;
+}
+.section.active {
+  display: block;
+}
+
+/* ===== Status badges ===== */
+.status-credit,
+.status-paid {
+  padding: 3px 8px;
+  font-size: 11px;
+  font-weight: 600;
+  border-radius: var(--ks-radius-pill);
+  display: inline-block;
+}
+
+/* ===== Collect Button (inside summary cards etc.) ===== */
+.collect-btn {
+  position: absolute;
+  right: 12px;
+  bottom: 10px;
+  padding: 6px 14px;
+  font-size: 12px;
+  border-radius: var(--ks-radius-pill);
+  cursor: pointer;
+  border: none;
+  font-weight: 600;
+  transition: 0.16s;
+  white-space: nowrap;
+}
+
+/* ===== Credit History link button ===== */
+.btn-link {
+  padding: 4px 9px;
+  font-size: 11px;
+  border-radius: var(--ks-radius-pill);
+  cursor: pointer;
+  transition: 0.15s;
+  border: 1px solid var(--ks-accent);
+  background: var(--ks-bg-soft);
+  color: var(--ks-accent);
+}
+
+.btn-link:hover {
+  background: var(--ks-accent);
+  color: #fff;
+}
