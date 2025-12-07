@@ -1,8 +1,5 @@
 // ======================================================
-//  analytics.js — FINAL V6 (Dashboard Only)
-//  • Today overview helpers (Dashboard tab)
-//  • Smart Dashboard (Total) + Pie chart
-//  • Universal Bar is handled ONLY by universalBar.js
+//  analytics.js — FINAL V7 (Dashboard + Fix + Pie Resize)
 // ======================================================
 
 let cleanPieChart = null;
@@ -71,7 +68,6 @@ window.getAnalyticsData = function () {
 
 /* --------------------------------
    GLOBAL TOTAL SUMMARY NUMBERS
-   (Used by Smart Dashboard & Pie)
 ---------------------------------- */
 window.getSummaryTotals = function () {
   const sales    = window.sales    || [];
@@ -93,12 +89,11 @@ window.getSummaryTotals = function () {
     if (status === "credit") {
       creditTotal += total;
     } else {
-      // Only non-credit sales count as collected profit
       salesProfit += Number(s.profit || 0);
     }
   });
 
-  // SERVICE PROFIT (completed only - because only then profit is set)
+  // SERVICE PROFIT
   services.forEach(j => {
     serviceProfit += Number(j.profit || 0);
   });
@@ -112,7 +107,7 @@ window.getSummaryTotals = function () {
 
   const netProfit = totalProfit - totalExpenses;
 
-  // INVESTMENTS (from core.js helpers)
+  // INVESTMENT (live function)
   let stockAfter = 0;
   let serviceInv = 0;
 
@@ -145,13 +140,12 @@ window.renderAnalytics = function () {
     serviceProfit,
     totalProfit,
     totalExpenses,
-    netProfit,      // (ఇక్కడ direct గా use చేయకపోయినా future use కోసం)
     creditTotal,
     stockAfter,
     serviceInv
   } = window.getSummaryTotals();
 
-  // ---- SMART DASHBOARD CAR్డ్స్ ----
+  // ---- SMART DASHBOARD ----
   const dashProfit   = qs("#dashProfit");
   const dashExpenses = qs("#dashExpenses");
   const dashCredit   = qs("#dashCredit");
@@ -162,7 +156,7 @@ window.renderAnalytics = function () {
   if (dashCredit)   dashCredit.textContent   = "₹" + Math.round(creditTotal);
   if (dashInv)      dashInv.textContent      = "₹" + Math.round(stockAfter + serviceInv);
 
-  // ---- UNIVERSAL BAR UPDATE (delegate to universalBar.js) ----
+  // ---- UNIVERSAL BAR ----
   if (typeof window.updateUniversalBar === "function") {
     window.updateUniversalBar();
   }
@@ -183,12 +177,12 @@ window.renderAnalytics = function () {
           Number(totalExpenses || 0),
           Number(creditTotal || 0),
           Number(stockAfter + serviceInv || 0)
-        ],
-        backgroundColor: ["#2e7d32", "#c62828", "#1565c0", "#fbc02d"]
+        ]
       }]
     },
     options: {
       responsive: true,
+      maintainAspectRatio: false,  // ⭐ PIE SMALL FIX
       plugins: {
         legend: { position: "bottom" }
       }
@@ -197,7 +191,7 @@ window.renderAnalytics = function () {
 };
 
 /* --------------------------------
-   TODAY SUMMARY CARDS (Overview Tab)
+   TODAY SUMMARY CARDS (Overview)
 ---------------------------------- */
 window.updateSummaryCards = function () {
   const data = window.getAnalyticsData();
@@ -221,5 +215,4 @@ window.updateSummaryCards = function () {
 window.addEventListener("load", () => {
   try { renderAnalytics(); }      catch (e) {}
   try { updateSummaryCards(); }   catch (e) {}
-  // universalBar.js కూడా load అయిన తర్వాత తన own init వేసుకుంటుంది
 });
