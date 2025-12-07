@@ -476,13 +476,16 @@ function keyToVarName(key) {
 }
 
 /* -----------------------------------------------------------
-   CLOUD PULL (Firestore → LocalStorage → Window Arrays)
+   CLOUD PULL — FIXED VERSION
+   (Firestore → LocalStorage → Window Arrays)
+   ⭐ ALWAYS SYNC — EVEN IF REMOTE IS EMPTY
 ----------------------------------------------------------- */
 async function cloudPullAllIfAvailable() {
   if (typeof cloudLoad !== "function") return;
 
-  // 1) Firebase current user (if firebase.js exposes it)
   let email = "";
+
+  // 1) Firebase auth
   try {
     if (window.getFirebaseUser) {
       const u = getFirebaseUser();
@@ -495,12 +498,12 @@ async function cloudPullAllIfAvailable() {
     email = getUserEmail() || "";
   }
 
-  // 3) Direct localStorage fallback
+  // 3) LocalStorage fallback
   if (!email) {
     email = localStorage.getItem(KEY_USER_EMAIL) || "";
   }
 
-  // No email = treat as offline (local only)
+  // No email = offline mode
   if (!email) {
     updateEmailTag();
     return;
@@ -521,15 +524,20 @@ async function cloudPullAllIfAvailable() {
     if (!col) continue;
 
     try {
+      // ⭐ remote may be null → treat as empty always
       const remote = await cloudLoad(col);
-      if (remote) {
-        const arr = toArray(remote);
-        const varName = keyToVarName(key);
-        window[varName] = arr;
-        localStorage.setItem(key, JSON.stringify(arr));
-      }
+      const arr = toArray(remote);         // always array
+
+      const varName = keyToVarName(key);
+      window[varName] = arr;               // assign fresh
+      localStorage.setItem(key, JSON.stringify(arr));  // overwrite local
     } catch (e) {
       console.warn("Cloud pull failed for", key, e);
+
+      // fallback = local storage if any
+      const localArr = toArray(safeParse(localStorage.getItem(key)));
+      const varName = keyToVarName(key);
+      window[varName] = localArr;
     }
   }
 
@@ -662,7 +670,6 @@ window.updateEmailTag = function () {
 
   let email = "";
 
-  // 1) Firebase current user (if available)
   try {
     if (window.getFirebaseUser) {
       const u = getFirebaseUser();
@@ -670,12 +677,10 @@ window.updateEmailTag = function () {
     }
   } catch {}
 
-  // 2) Local login (security.js)
   if (!email && window.getUserEmail) {
     email = getUserEmail() || "";
   }
 
-  // 3) Fallback from localStorage
   if (!email) {
     email = localStorage.getItem(KEY_USER_EMAIL) || "";
   }
@@ -683,5 +688,5 @@ window.updateEmailTag = function () {
   el.textContent = email ? email : "Offline (Local mode)";
 };
 
-/* Run once (in case cloudPull ఇంకా కాల్ కాక ముందు) */
+/* Run once */
 try { updateEmailTag(); } catch {}
