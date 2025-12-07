@@ -276,7 +276,9 @@ function addType(name) {
   saveTypes();
   cloudSync(KEY_TYPES, types);
 }
-refreshSaleTypeSelector?.();
+if (typeof refreshSaleTypeSelector === "function") {
+    refreshSaleTypeSelector();
+}
 
 window.addType = addType;
 
