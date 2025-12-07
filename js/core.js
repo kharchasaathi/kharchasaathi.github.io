@@ -276,6 +276,7 @@ function addType(name) {
   saveTypes();
   cloudSync(KEY_TYPES, types);
 }
+refreshSaleTypeSelector?.();
 
 window.addType = addType;
 
@@ -571,6 +572,7 @@ async function cloudPullAllIfAvailable() {
   try { renderTypes?.(); }          catch {}
   try { renderStock?.(); }          catch {}
   try { renderSales?.(); }          catch {}
+  try { refreshSaleTypeSelector?.(); } catch {}
   try { renderWanting?.(); }        catch {}
   try { renderExpenses?.(); }       catch {}
   try { renderServiceTables?.(); }  catch {}
