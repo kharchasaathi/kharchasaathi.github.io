@@ -1,9 +1,9 @@
 /* ===========================================================
-   🛠 service.js — FINAL BUSINESS V25
+   🛠 service.js — BUSINESS FINAL V26
    ✔ Pending + Cash + Credit Pending + Credit Paid History
-   ✔ Profit activates only when collected
-   ✔ Collection history entry on credit-clear
-   ✔ LIVE Refresh: Dashboard + Analytics + Universal Bar
+   ✔ Profit activates only after collection
+   ✔ History filtering same as Sales tab
+   ✔ Clear-All only allowed for Cash or Credit-Paid
 =========================================================== */
 
 (function () {
@@ -16,7 +16,7 @@
   const todayDateFn   = window.todayDate          || (() => new Date().toISOString().slice(0, 10));
 
   /* ======================================================
-        STORAGE + SYNC
+        STORAGE
   ====================================================== */
   function ensureServices() {
     if (!Array.isArray(window.services)) window.services = [];
@@ -101,7 +101,7 @@
   }
 
   /* ======================================================
-      COMPLETE JOB
+        COMPLETE JOB
   ====================================================== */
   function markCompleted(id, mode) {
     const job = ensureServices().find(j => j.id === id);
@@ -119,7 +119,6 @@
     const alreadyGot  = Number(job.advance || 0);
 
     if (mode === "paid") {
-
       const collectNow = full - alreadyGot;
 
       const ok = confirm(
@@ -152,14 +151,14 @@
       const ok = confirm(
         `Job ${job.jobId}\nCustomer: ${job.customer}\n\n` +
         `Invest: ₹${invest}\nAdvance: ₹${alreadyGot}\nPending Credit: ₹${pendingDue}\n` +
-        `Profit will activate only after collection.\n\nConfirm CREDIT?`
+        `Profit will activate after collection.\n\nConfirm CREDIT?`
       );
       if (!ok) return;
 
       job.invest    = invest;
       job.paid      = alreadyGot;
       job.remaining = pendingDue;
-      job.profit    = totalProfit;     // stored but inactive
+      job.profit    = totalProfit;   // inactive until collection
       job.status    = "Credit";
       job.date_out  = todayDateFn();
     }
@@ -169,7 +168,7 @@
   }
 
   /* ======================================================
-      CREDIT COLLECTION
+        CREDIT COLLECTION
   ====================================================== */
   window.collectServiceCredit = function (id) {
     const job = ensureServices().find(j => j.id === id);
@@ -199,7 +198,7 @@
 
     job.paid      = job.paid + due;
     job.remaining = 0;
-    job.status    = "Completed";   // ⭐ profit activates now
+    job.status    = "Completed";
     persistServices();
     fullRefresh();
 
@@ -207,7 +206,7 @@
   };
 
   /* ======================================================
-       DELETE
+        DELETE SINGLE JOB (ALLOWED ANYTIME)
   ====================================================== */
   function deleteServiceJob(id) {
     if (!confirm("Delete this job?")) return;
@@ -217,7 +216,7 @@
   }
 
   /* ======================================================
-       FILTER LOGIC FOR HISTORY TABLE
+        HISTORY FILTER
   ====================================================== */
   function filterHistory(all) {
     const v = qs("#svcView")?.value || "all";
@@ -234,8 +233,7 @@
       return all.filter(j =>
         j.status === "Completed" &&
         j.remaining === 0 &&
-        j.paid > 0 &&
-        j.advance < j.paid          // means credit cleared
+        j.paid > j.advance         // means credit cleared
       );
     }
 
@@ -243,19 +241,54 @@
   }
 
   /* ======================================================
-       RENDER TABLES
+        CLEAR HISTORY (NEW BUSINESS RULE)
+        ⭐ Allowed ONLY for:
+        - cash view
+        - credit-paid view
+        ❌ NOT allowed for credit-pending
+  ====================================================== */
+  function clearServiceHistory() {
+    const view = qs("#svcView")?.value || "all";
+
+    if (!(view === "cash" || view === "credit-paid")) {
+      alert("❌ Cannot clear credit-pending jobs!");
+      return;
+    }
+
+    if (!confirm("Clear ALL records in this view?")) return;
+
+    window.services = window.services.filter(j => {
+      const cleared = (j.status === "Completed" && j.remaining === 0);
+
+      if (view === "cash") {
+        return !(cleared && j.paid === j.profit); // pure cash completed
+      }
+
+      if (view === "credit-paid") {
+        return !(cleared && j.paid > j.advance); // credit-paid
+      }
+
+      return true;
+    });
+
+    persistServices();
+    fullRefresh();
+  }
+
+  window.clearServiceHistory = clearServiceHistory;
+
+  /* ======================================================
+        RENDER TABLES
   ====================================================== */
   function renderServiceTables() {
     const pendBody = qs("#svcTable tbody");
     const histBody = qs("#svcHistoryTable tbody");
+    const clearBtn = qs("#clearServiceBtnHistory"); // ⭐ new button
     if (!pendBody || !histBody) return;
 
     const list = ensureServices();
 
     const pending   = list.filter(j => j.status === "Pending");
-    const completed = list.filter(j => j.status === "Completed");
-    const credit    = list.filter(j => j.status === "Credit");
-    const failed    = list.filter(j => j.status === "Failed/Returned");
 
     /* ---------- PENDING ---------- */
     pendBody.innerHTML =
@@ -277,14 +310,14 @@
       `).join("") ||
       `<tr><td colspan="9" style="text-align:center;opacity:.6;">No pending</td></tr>`;
 
-    /* ---------- HISTORY FILTER  ---------- */
-    let historyAll = [...completed, ...credit, ...failed];
+    /* ---------- HISTORY ---------- */
+    let historyAll = [...list.filter(j => j.status !== "Pending")];
     historyAll = filterHistory(historyAll);
 
     histBody.innerHTML =
       historyAll.map(j => {
         const isCred = j.status === "Credit" && j.remaining > 0;
-        const creditBtn = isCred
+        const collectBtn = isCred
           ? `<button class="small-btn"
               style="background:#16a34a;color:white;font-size:11px"
               onclick="collectServiceCredit('${j.id}')">Collect</button>`
@@ -308,15 +341,25 @@
             <td>₹${j.invest}</td>
             <td>${paidText}</td>
             <td>${prof}</td>
-            <td>${creditBtn}</td>
+            <td>${collectBtn}</td>
           </tr>
         `;
       }).join("") ||
       `<tr><td colspan="9" style="text-align:center;opacity:.6;">No history</td></tr>`;
+
+    /* ⭐ CLEAR BUTTON CONTROL */
+    if (clearBtn) {
+      const v = qs("#svcView")?.value || "all";
+      if (v === "cash" || v === "credit-paid") {
+        clearBtn.style.display = "";
+      } else {
+        clearBtn.style.display = "none";
+      }
+    }
   }
 
   /* ======================================================
-       EVENTS
+        EVENTS
   ====================================================== */
   document.addEventListener("click", e => {
     if (e.target.classList.contains("svc-view"))
@@ -332,7 +375,6 @@
     renderServiceTables();
   });
 
-  /* EXPORT */
   window.renderServiceTables = renderServiceTables;
 
 })();
