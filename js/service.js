@@ -1,9 +1,9 @@
 /* ===========================================================
-   🛠 service.js — BUSINESS FINAL V30
+   🛠 service.js — BUSINESS FINAL V31
    ✔ Pending + Cash + Credit Pending + Credit Paid History
    ✔ Profit activates only after collection
-   ✔ Collection auto entry
-   ✔ Pie Chart working
+   ✔ Clear allowed only for Cash / Credit-Paid
+   ✔ Service Pie (Pending / Completed / Failed) — 3 slices
 =========================================================== */
 
 (function () {
@@ -14,6 +14,8 @@
   const toDisplay     = window.toDisplay          || (d => d);
   const toInternalIf  = window.toInternalIfNeeded || (d => d);
   const todayDateFn   = window.todayDate          || (() => new Date().toISOString().slice(0, 10));
+
+  let svcPieInstance = null;   // ⭐ pie chart instance
 
   /* ======================================================
         STORAGE
@@ -91,6 +93,7 @@
       paid: 0,
       remaining: 0,
       profit: 0,
+      returnedAdvance: 0,
 
       status: "Pending"
     };
@@ -101,7 +104,7 @@
   }
 
   /* ======================================================
-        COMPLETE JOB
+        COMPLETE JOB (PAID or CREDIT)
   ====================================================== */
   function markCompleted(id, mode) {
     const job = ensureServices().find(j => j.id === id);
@@ -145,6 +148,7 @@
       }
 
     } else {
+      /** CREDIT MODE **/
       const pendingDue = full - alreadyGot;
 
       const ok = confirm(
@@ -173,7 +177,13 @@
     const job = ensureServices().find(j => j.id === id);
     if (!job) return;
 
+    if (job.status !== "Credit") {
+      alert("Not a credit job.");
+      return;
+    }
+
     const due = Number(job.remaining || 0);
+
     if (due <= 0) {
       alert("No pending credit.");
       return;
@@ -191,8 +201,7 @@
 
     job.paid      = job.paid + due;
     job.remaining = 0;
-    job.status    = "Completed";
-
+    job.status    = "Completed";  // profit now valid
     persistServices();
     fullRefresh();
 
@@ -236,6 +245,8 @@
 
   /* ======================================================
        CLEAR HISTORY BUTTON
+       ⭐ Only for cash / credit-paid
+       ❌ Never for credit-pending
   ====================================================== */
   window.clearServiceHistory = function () {
     const view = qs("#svcView")?.value || "all";
@@ -248,14 +259,15 @@
     if (!confirm("Clear ALL displayed records?")) return;
 
     window.services = window.services.filter(j => {
+
       const completed = (j.status === "Completed" && j.remaining === 0);
 
       if (view === "cash") {
-        return !(completed && j.paid === j.profit);
+        return !(completed && j.paid === j.profit); // pure cash completed (approx)
       }
 
       if (view === "credit-paid") {
-        return !(completed && j.paid > j.advance);
+        return !(completed && j.paid > j.advance); // cleared credit
       }
 
       return true;
@@ -266,7 +278,44 @@
   };
 
   /* ======================================================
-       RENDER TABLES
+       SERVICE PIE — 3 SLICES (Pending / Completed / Failed)
+       👉 Completed == status "Completed" OR "Credit"
+  ====================================================== */
+  function renderSvcPie() {
+    const canvas = qs("#svcPie");
+    if (!canvas || typeof Chart === "undefined") return;
+
+    const list = ensureServices();
+
+    const pending = list.filter(j => j.status === "Pending").length;
+    const completed = list.filter(j =>
+      j.status === "Completed" || j.status === "Credit"
+    ).length;
+    const failed = list.filter(j => j.status === "Failed/Returned").length;
+
+    const data = [pending, completed, failed];
+
+    if (svcPieInstance) svcPieInstance.destroy();
+
+    svcPieInstance = new Chart(canvas, {
+      type: "pie",
+      data: {
+        labels: ["Pending", "Completed", "Failed/Returned"],
+        datasets: [{
+          data,
+          backgroundColor: [
+            "#facc15", // Pending - yellow
+            "#22c55e", // Completed - green
+            "#ef4444"  // Failed - red
+          ],
+          borderWidth: 1
+        }]
+      }
+    });
+  }
+
+  /* ======================================================
+       RENDER TABLES + TOP CARDS
   ====================================================== */
   function renderServiceTables() {
     const pendBody = qs("#svcTable tbody");
@@ -291,8 +340,7 @@
           <td>${escSafe(j.problem)}</td>
           <td><span class="status-credit">Pending</span></td>
           <td>
-            <button class="small-btn" onclick="markCompleted('${j.id}','paid')">Paid</button>
-            <button class="small-btn" onclick="markCompleted('${j.id}','credit')">Credit</button>
+            <button class="small-btn svc-view" data-id="${j.id}">Open</button>
             <button class="small-btn svc-del" data-id="${j.id}" style="background:#b71c1c">🗑</button>
           </td>
         </tr>
@@ -328,7 +376,23 @@
       }).join("") ||
       `<tr><td colspan="9" style="text-align:center;opacity:.6;">No history</td></tr>`;
 
-    /* SHOW/HIDE CLEAR BTN */
+    /* ---------- TOP CARDS (pending/completed/profit) ---------- */
+    const pendingCount = pending.length;
+    const completedCount = list.filter(j =>
+      j.status === "Completed" || j.status === "Credit"
+    ).length;
+    const totalRepairProfit = list
+      .filter(j => j.status === "Completed" && j.remaining === 0)
+      .reduce((sum, j) => sum + Number(j.profit || 0), 0);
+
+    if (qs("#svcPendingCount"))
+      qs("#svcPendingCount").textContent = pendingCount;
+    if (qs("#svcCompletedCount"))
+      qs("#svcCompletedCount").textContent = completedCount;
+    if (qs("#svcTotalProfit"))
+      qs("#svcTotalProfit").textContent = "₹" + totalRepairProfit;
+
+    /* ⭐ SHOW/HIDE CLEAR BUTTON */
     if (clearBtn) {
       const v = qs("#svcView")?.value || "all";
       if (v === "cash" || v === "credit-paid") {
@@ -337,58 +401,39 @@
         clearBtn.style.display = "none";
       }
     }
-  }
 
-  /* ======================================================
-       PIE CHART
-  ====================================================== */
-  let svcPieInstance;
-
-  function renderSvcPie() {
-    const canvas = qs("#svcPie");
-    if (!canvas) return;
-
-    const list = ensureServices();
-
-    const cash = list.filter(j => j.status === "Completed" && j.remaining === 0).length;
-    const creditPending = list.filter(j => j.status === "Credit" && j.remaining > 0).length;
-    const creditPaid = list.filter(j => j.status === "Completed" && j.paid > j.advance).length;
-
-    const data = [cash, creditPending, creditPaid];
-
-    if (svcPieInstance) svcPieInstance.destroy();
-
-    svcPieInstance = new Chart(canvas, {
-      type: "pie",
-      data: {
-        labels: ["Cash", "Credit Pending", "Credit Paid"],
-        datasets: [{
-          data
-        }]
-      }
-    });
+    /* PIE */
+    renderSvcPie();
   }
 
   /* ======================================================
        EVENTS
   ====================================================== */
-  qs("#addServiceBtn")?.addEventListener("click", addServiceJob);
-  qs("#svcView")?.addEventListener("change", () => {
-    renderServiceTables();
-    renderSvcPie();
-  });
-
   document.addEventListener("click", e => {
+    if (e.target.classList.contains("svc-view"))
+      openJob(e.target.dataset.id);
+
     if (e.target.classList.contains("svc-del"))
       deleteServiceJob(e.target.dataset.id);
   });
 
-  window.addEventListener("load", () => {
-    renderServiceTables();
-    renderSvcPie();
+  qs("#svcView")?.addEventListener("change", renderServiceTables);
+
+  qs("#clearSvcHistoryBtn")?.addEventListener("click", clearServiceHistory);
+
+  // ⭐ Add job button + Enter shortcut
+  qs("#addServiceBtn")?.addEventListener("click", addServiceJob);
+  qs("#svcAdvance")?.addEventListener("keydown", e => {
+    if (e.key === "Enter") addServiceJob();
   });
 
+  window.addEventListener("load", () => {
+    renderServiceTables();
+  });
+
+  /* EXPORTS */
   window.renderServiceTables = renderServiceTables;
-  window.renderSvcPie = renderSvcPie;
+  window.markCompleted = markCompleted;
+  window.addServiceJob = addServiceJob;
 
 })();
