@@ -1,11 +1,10 @@
 /* ===========================================================
-   collection.js — FINAL SAFE AUTO DOM VERSION (V12.0)
-   ✔ Auto-create required DOM nodes
-   ✔ Never crashes if HTML IDs missing
-   ✔ Instant cloud sync + universal bar update
-   ✔ Works without Pending table
+   collection.js — FIXED COLLECT LOGIC (V13 FINAL)
+   ✔ One-click collect (no duplicates)
+   ✔ Resets universal bar source to ZERO immediately
+   ✔ Updates analytics, dashboard & universal bar
+   ✔ Saves clean history
 =========================================================== */
-
 
 
 /* ----------------------------------------------------------
@@ -23,9 +22,12 @@ function cNum(v) {
 /* ----------------------------------------------------------
    LOCAL LOAD
 ---------------------------------------------------------- */
-window.collections = Array.isArray(window.collections)
-  ? window.collections
-  : [];
+try {
+  window.collections = JSON.parse(localStorage.getItem("ks-collections") || "[]");
+  if (!Array.isArray(window.collections)) window.collections = [];
+} catch {
+  window.collections = [];
+}
 
 /* ----------------------------------------------------------
    SAVE (LOCAL + CLOUD)
@@ -41,63 +43,9 @@ function saveCollections() {
 }
 window.saveCollections = saveCollections;
 
-/* ===========================================================
-   AUTO DOM FIX — IF ELEMENTS ARE MISSING, CREATE THEM
-=========================================================== */
-function ensureCollectionDOM() {
-  const section = qs("#collection");
-  if (!section) return;  // user may hide tab
-
-  /* ---- SUMMARY CARDS CONTAINER ---- */
-  let sumBox = qs("#colSummaryBox");
-  if (!sumBox) {
-    sumBox = document.createElement("div");
-    sumBox.id = "colSummaryBox";
-    sumBox.style.margin = "6px 0 12px";
-    sumBox.innerHTML = `
-      <div>
-        Sales Collected: <b id="colSales">₹0</b> |
-        Service Collected: <b id="colService">₹0</b> |
-        Pending Credit: <b id="colCredit">₹0</b> |
-        Investment Remaining: <b id="colInvRemain">₹0</b>
-      </div>
-    `;
-    section.appendChild(sumBox);
-  }
-
-  /* ---- HISTORY TABLE ---- */
-  let table = qs("#collectionHistory");
-  if (!table) {
-    table = document.createElement("table");
-    table.id = "collectionHistory";
-    table.innerHTML = `
-      <thead>
-        <tr>
-          <th>Date</th>
-          <th>Source</th>
-          <th>Details</th>
-          <th>Amount</th>
-        </tr>
-      </thead>
-      <tbody></tbody>
-    `;
-    section.appendChild(table);
-  }
-
-  /* ---- CLEAR BUTTON ---- */
-  let clr = qs("#clearCollectionBtn");
-  if (!clr) {
-    clr = document.createElement("button");
-    clr.id = "clearCollectionBtn";
-    clr.className = "small-btn";
-    clr.style.marginTop = "10px";
-    clr.textContent = "Clear History";
-    section.appendChild(clr);
-  }
-}
 
 /* ===========================================================
-   PUBLIC: ADD COLLECTION ENTRY
+   ADD COLLECTION ENTRY — HISTORY
 =========================================================== */
 window.addCollectionEntry = function (source, details, amount) {
   const entry = {
@@ -110,10 +58,72 @@ window.addCollectionEntry = function (source, details, amount) {
 
   window.collections.push(entry);
   saveCollections();
-
   renderCollection();
   window.updateUniversalBar?.();
 };
+
+
+/* ===========================================================
+   MAIN FIX — HANDLE COLLECT BUTTON (ONE CLICK ONLY)
+=========================================================== */
+window.handleCollect = function (type) {
+
+  // ---- BLOCK MULTIPLE CLICKS ----
+  if (window.__collectBusy) return;
+  window.__collectBusy = true;
+  setTimeout(() => window.__collectBusy = false, 800);   // release after 0.8 sec
+
+  if (!window.__unMetrics) {
+    alert("Still calculating… retry");
+    return;
+  }
+
+  const m = window.__unMetrics;
+  let amt = 0, label = "", details = "";
+
+  switch(type){
+    case "net":
+      amt = cNum(m.netProfit);
+      label = "Net Profit";
+      details = "Sale + Service - Expenses";
+      window.__unMetrics.netProfit = 0;
+      break;
+
+    case "stock":
+      amt = cNum(m.stockInvestSold);
+      label = "Stock Investment";
+      details = "Sold items";
+      window.__unMetrics.stockInvestSold = 0;
+      break;
+
+    case "service":
+      amt = cNum(m.serviceInvestCompleted);
+      label = "Service Investment";
+      details = "Completed jobs";
+      window.__unMetrics.serviceInvestCompleted = 0;
+      break;
+
+    default:
+      alert("Unknown collect type: " + type);
+      return;
+  }
+
+  // ---- ZERO BLOCK ----
+  if (amt <= 0) {
+    alert("Nothing to collect");
+    return;
+  }
+
+  // ---- SAVE HISTORY ----
+  window.addCollectionEntry(label, details, amt);
+
+  // ---- UPDATE METRICS (RESET JUST DONE VALUE) ----
+  window.updateUniversalBar?.();
+  window.renderAnalytics?.();
+  window.updateSummaryCards?.();
+  window.renderCollection?.();
+};
+
 
 /* ===========================================================
    SUMMARY
@@ -129,40 +139,15 @@ function computeCollectionSummary() {
   };
 }
 
-/* ===========================================================
-   HIDE PENDING SECTION (IF EXISTS)
-=========================================================== */
-window.renderPendingCollections = function () {
-  const table = qs("#pendingCollectionTable");
-  if (!table) return;
-
-  table.style.display = "none";
-
-  const prev = table.previousElementSibling;
-  if (prev && prev.tagName.toLowerCase() === "h4") {
-    prev.style.display = "none";
-  }
-};
 
 /* ===========================================================
-   RENDER HISTORY TABLE (AUTO DOM SAFE)
+   RENDER COLLECTION HISTORY
 =========================================================== */
 window.renderCollection = function () {
-  ensureCollectionDOM();
-
-  const sum = computeCollectionSummary();
-  const fmt = v => "₹" + Math.round(cNum(v));
-
-  if (qs("#colSales"))     qs("#colSales").textContent     = fmt(sum.salesCollected);
-  if (qs("#colService"))   qs("#colService").textContent   = fmt(sum.serviceCollected);
-  if (qs("#colCredit"))    qs("#colCredit").textContent    = fmt(sum.pendingCredit);
-  if (qs("#colInvRemain")) qs("#colInvRemain").textContent = fmt(sum.investmentRemain);
-
   const tbody = qs("#collectionHistory tbody");
   if (!tbody) return;
 
   const list = window.collections || [];
-
   if (!list.length) {
     tbody.innerHTML = `
       <tr>
@@ -175,21 +160,20 @@ window.renderCollection = function () {
 
   tbody.innerHTML = list.map(e => `
     <tr>
-      <td data-label="Date">${e.date}</td>
-      <td data-label="Source">${escLocal(e.source)}</td>
-      <td data-label="Details">${escLocal(e.details)}</td>
-      <td data-label="Amount">₹${cNum(e.amount)}</td>
+      <td>${e.date}</td>
+      <td>${escLocal(e.source)}</td>
+      <td>${escLocal(e.details)}</td>
+      <td>₹${cNum(e.amount)}</td>
     </tr>
   `).join("");
 };
 
+
 /* ===========================================================
-   CLICK HANDLER — CLEAR HISTORY ONLY
+   CLEAR COLLECTION HISTORY
 =========================================================== */
 document.addEventListener("click", e => {
-  const t = e.target;
-
-  if (t.id === "clearCollectionBtn") {
+  if (e.target.id === "clearCollectionBtn") {
     if (!confirm("Clear entire collection history?")) return;
 
     window.collections = [];
@@ -202,11 +186,11 @@ document.addEventListener("click", e => {
   }
 });
 
+
 /* ===========================================================
    INIT
 =========================================================== */
 window.addEventListener("load", () => {
-  renderPendingCollections();
   renderCollection();
   window.updateUniversalBar?.();
   window.renderAnalytics?.();
