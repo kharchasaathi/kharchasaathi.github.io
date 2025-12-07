@@ -1,16 +1,7 @@
 /* ===========================================================
    sales.js — BUSINESS VERSION (v17)
-   ✔ Sales + Credit unified
-   ✔ Credit profit added only after collection
-   ✔ fromCredit flag → “Credit paid history” filter
-   ✔ Collection history entry for paid credit
-   ✔ UniversalBar, Dashboard, Analytics LIVE refresh
-   ✔ NEW: Clear-All allowed only for CASH or CREDIT-PAID
 =========================================================== */
 
-/* ------------------------------
-   TIME FORMAT
------------------------------- */
 function getCurrentTime12hr() {
   return new Date().toLocaleTimeString("en-IN", {
     hour: "2-digit",
@@ -18,9 +9,6 @@ function getCurrentTime12hr() {
   });
 }
 
-/* ------------------------------
-   REFRESH SALE TYPE DROPDOWN
------------------------------- */
 function refreshSaleTypeSelector() {
   const sel = document.getElementById("saleType");
   if (!sel) return;
@@ -66,7 +54,6 @@ function addSaleEntry({ date, type, product, qty, price, status, customer, phone
   p.sold = Number(p.sold) + qty;
   window.saveStock?.();
 
-  /* NEW SALE RECORD */
   window.sales.push({
     id: uid("sale"),
     date: date || todayDate(),
@@ -138,7 +125,9 @@ function collectCreditSale(id) {
   renderCollection?.();
   window.renderAnalytics?.();
   window.updateSummaryCards?.();
-  window.updateUniversalBar?.();
+
+  /* ⭐ delayed universal refresh gives correct net always */
+  setTimeout(() => window.updateUniversalBar?.(), 50);
 
   alert("Credit Collected Successfully!");
 }
@@ -146,7 +135,7 @@ function collectCreditSale(id) {
 window.collectCreditSale = collectCreditSale;
 
 /* ===========================================================
-   RENDER SALES TABLE  + VIEW FILTER
+   RENDER SALES TABLE
 =========================================================== */
 function renderSales() {
   const tbody = document.querySelector("#salesTable tbody");
@@ -166,15 +155,9 @@ function renderSales() {
     const status = String(s.status || "").toLowerCase();
     const fromCredit = Boolean(s.fromCredit);
 
-    if (view === "cash") {
-      return status === "paid" && !fromCredit;
-    }
-    if (view === "credit-pending") {
-      return status === "credit";
-    }
-    if (view === "credit-paid") {
-      return status === "paid" && fromCredit;
-    }
+    if (view === "cash")       return status === "paid" && !fromCredit;
+    if (view === "credit-pending") return status === "credit";
+    if (view === "credit-paid")    return status === "paid" && fromCredit;
     return true;
   });
 
@@ -220,14 +203,10 @@ function renderSales() {
   document.getElementById("salesTotal").textContent  = totalSum;
   document.getElementById("profitTotal").textContent = profitSum;
 
-  /* ⭐ CLEAR BUTTON RULE */
   const btn = document.getElementById("clearSalesBtn");
   if (btn) {
-    if (view === "cash" || view === "credit-paid") {
-      btn.style.display = "";
-    } else {
-      btn.style.display = "none";
-    }
+    if (view === "cash" || view === "credit-paid") btn.style.display = "";
+    else btn.style.display = "none";
   }
 
   window.updateUniversalBar?.();
@@ -235,7 +214,7 @@ function renderSales() {
 window.renderSales = renderSales;
 
 /* ===========================================================
-   FILTER & VIEW EVENTS
+   FILTER EVENTS
 =========================================================== */
 document.getElementById("filterSalesBtn")?.addEventListener("click", () => {
   renderSales();
@@ -245,7 +224,7 @@ document.getElementById("saleView")?.addEventListener("change", () => {
 });
 
 /* ===========================================================
-   CLEAR SALES (ONLY CASH or CREDIT-PAID)
+   CLEAR SALES
 =========================================================== */
 document.getElementById("clearSalesBtn")?.addEventListener("click", () => {
   const view = document.getElementById("saleView")?.value || "all";
@@ -261,13 +240,8 @@ document.getElementById("clearSalesBtn")?.addEventListener("click", () => {
     const status = s.status.toLowerCase();
     const fromCredit = Boolean(s.fromCredit);
 
-    if (view === "cash") {
-      return !(status === "paid" && !fromCredit);
-    }
-
-    if (view === "credit-paid") {
-      return !(status === "paid" && fromCredit);
-    }
+    if (view === "cash")       return !(status === "paid" && !fromCredit);
+    if (view === "credit-paid") return !(status === "paid" && fromCredit);
 
     return true;
   });
@@ -279,5 +253,5 @@ document.getElementById("clearSalesBtn")?.addEventListener("click", () => {
   renderCollection?.();
   window.renderAnalytics?.();
   window.updateSummaryCards?.();
-  window.updateUniversalBar?.();
+  setTimeout(() => window.updateUniversalBar?.(), 50);
 });
