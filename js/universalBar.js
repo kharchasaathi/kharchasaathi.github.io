@@ -1,9 +1,9 @@
 /* ===========================================================
-   universal-bar.js — FINAL FIXED VERSION v4.0
-   ✔ Net profit collection ZEROES metrics after collect
-   ✔ Prevents repeated net collections
-   ✔ UI refresh everywhere (bar + cards + analytics)
-   ✔ Safe if arrays missing or empty
+   universal-bar.js — FINAL FIXED VERSION v6.0
+   ✔ Uses collectedNetTotal offset (PERMANENT)
+   ✔ Net profit becomes ZERO immediately & after reload
+   ✔ No double collection possible
+   ✔ Safe UI refresh everywhere
 =========================================================== */
 (function () {
 
@@ -12,6 +12,7 @@
 
   /* ===========================================================
      CENTRAL METRIC CALCULATOR
+     (Uses collectedNetTotal offset from core.js)
   ============================================================ */
   function computeMetrics() {
 
@@ -65,6 +66,9 @@
       }
     });
 
+    /* ⭐ IMPORTANT — minus already collected net offset */
+    const collectedOffset = num(window.collectedNetTotal || 0);
+
     return {
       saleProfitCollected,
       serviceProfitCollected,
@@ -72,7 +76,9 @@
       totalExpenses,
       stockInvestSold,
       serviceInvestCompleted,
-      netProfit: saleProfitCollected + serviceProfitCollected - totalExpenses
+      netProfit:
+        (saleProfitCollected + serviceProfitCollected - totalExpenses)
+        - collectedOffset
     };
   }
 
@@ -106,7 +112,7 @@
   window.updateUniversalBar = updateUniversalBar;
 
   /* ===========================================================
-     COLLECT HANDLER — FIXED FOR NET PROFIT
+     COLLECT HANDLER — FIX FOR NET PROFIT OFFSET
   ============================================================ */
   function handleCollect(kind) {
 
@@ -115,7 +121,6 @@
       return;
     }
 
-    // always fresh
     updateUniversalBar();
     const m = window.__unMetrics;
 
@@ -138,43 +143,52 @@
 
     const [label, approx] = labels[kind];
 
+    /* ⭐ SPECIAL HANDLING — NET PROFIT */
     if (kind === "net") {
+
       if (m.netProfit <= 0) {
         alert("No profit to collect.");
         return;
       }
 
-      // ask amount once
       const val = prompt(
         `${label}\nApprox: ₹${Math.round(m.netProfit)}\n\nEnter amount:`
       );
       if (!val) return;
 
       const amt = num(val);
-      if (amt <= 0) return alert("Invalid amount.");
+      if (amt <= 0) {
+        alert("Invalid amount.");
+        return;
+      }
 
       const note = prompt("Optional note:", "") || "";
-      addCollectionEntry("Net Profit", note, amt);
 
-      /* ⭐ VERY IMPORTANT — ZERO OUT PROFIT AFTER COLLECT */
-      window.__unMetrics.saleProfitCollected = 0;
-      window.__unMetrics.serviceProfitCollected = 0;
+      /** 1️⃣ Add entry to collection history */
+      window.addCollectionEntry("Net Profit", note, amt);
 
-      /* ⭐ UI REFRESH */
+      /** 2️⃣ OFFSET PERMANENTLY STORED */
+      window.collectedNetTotal =
+        num(window.collectedNetTotal || 0) + amt;
+
+      /** 3️⃣ SAVE OFFSET permanently */
+      window.saveCollectedNetTotal?.();
+
+      /** 4️⃣ REFRESH UI everywhere */
       updateUniversalBar();
       window.renderCollection?.();
-      window.updateSummaryCards?.();
       window.renderAnalytics?.();
+      window.updateSummaryCards?.();
+      window.updateTabSummaryBar?.();
 
-      alert("Collection recorded.");
+      alert("Net Profit collected!");
       return;
     }
 
-    /* ⭐ STOCK / SERVICE NORMAL COLLECTION (unchanged) */
+    /* ⭐ STOCK / SERVICE NORMAL COLLECTION */
     const val = prompt(
       `${label}\nApprox: ₹${Math.round(approx)}\n\nEnter amount:`
     );
-
     if (!val) return;
 
     const amt = num(val);
@@ -206,7 +220,7 @@
      INITIAL LOAD
   ============================================================ */
   window.addEventListener("load", () => {
-    setTimeout(updateUniversalBar, 150);
+    setTimeout(updateUniversalBar, 200);
   });
 
 })();
