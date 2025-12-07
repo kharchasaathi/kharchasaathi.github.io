@@ -210,13 +210,40 @@ function _localSave(k, v) {
   } catch {}
 }
 
-function saveTypes()       { _localSave(KEY_TYPES, types); }
-function saveStock()       { _localSave(KEY_STOCK, stock); }
-function saveSales()       { _localSave(KEY_SALES, sales); }
-function saveWanting()     { _localSave(KEY_WANTING, wanting); }
-function saveExpenses()    { _localSave(KEY_EXPENSES, expenses); }
-function saveServices()    { _localSave(KEY_SERVICES, services); }
-function saveCollections() { _localSave(KEY_COLLECTIONS, collections); }
+function saveTypes() {
+  _localSave(KEY_TYPES, types);
+  cloudSync(KEY_TYPES, types);   // NEW
+}
+
+function saveStock() {
+  _localSave(KEY_STOCK, stock);
+  cloudSync(KEY_STOCK, stock);   // NEW
+}
+
+function saveSales() {
+  _localSave(KEY_SALES, sales);
+  cloudSync(KEY_SALES, sales);   // NEW
+}
+
+function saveWanting() {
+  _localSave(KEY_WANTING, wanting);
+  cloudSync(KEY_WANTING, wanting);   // NEW
+}
+
+function saveExpenses() {
+  _localSave(KEY_EXPENSES, expenses);
+  cloudSync(KEY_EXPENSES, expenses); // NEW
+}
+
+function saveServices() {
+  _localSave(KEY_SERVICES, services);
+  cloudSync(KEY_SERVICES, services); // NEW
+}
+
+function saveCollections() {
+  _localSave(KEY_COLLECTIONS, collections);
+  cloudSync(KEY_COLLECTIONS, collections);  // NEW
+}
 
 window.saveTypes       = saveTypes;
 window.saveStock       = saveStock;
