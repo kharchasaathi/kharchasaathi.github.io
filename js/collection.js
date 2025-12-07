@@ -1,14 +1,16 @@
 /* ===========================================================
-   collection.js — FINAL ONLINE VERSION (V11.1 HISTORY ONLY)
-   ✔ Instant cloud sync (no refresh)
-   ✔ Summary cards: Sales, Service, Pending Credit, Investment
-   ✔ Collection tab = ONLY History (NO pending list here)
-   ✔ Credit → Paid logic handled in sales.js / service.js only
+   collection.js — FINAL SAFE AUTO DOM VERSION (V12.0)
+   ✔ Auto-create required DOM nodes
+   ✔ Never crashes if HTML IDs missing
+   ✔ Instant cloud sync + universal bar update
+   ✔ Works without Pending table
 =========================================================== */
 
-/* -----------------------------
-   Helpers
------------------------------ */
+const qs = s => document.querySelector(s);
+
+/* ----------------------------------------------------------
+   HELPERS
+---------------------------------------------------------- */
 function escLocal(x) {
   return (x === undefined || x === null) ? "" : String(x);
 }
@@ -18,38 +20,89 @@ function cNum(v) {
   return isNaN(n) ? 0 : n;
 }
 
-/* ===========================================================
-   LOAD LOCAL (Cloud sync handled by core.js)
-=========================================================== */
-window.collections = Array.isArray(window.collections) ? window.collections : [];
+/* ----------------------------------------------------------
+   LOCAL LOAD
+---------------------------------------------------------- */
+window.collections = Array.isArray(window.collections)
+  ? window.collections
+  : [];
 
-/* ===========================================================
+/* ----------------------------------------------------------
    SAVE (LOCAL + CLOUD)
-=========================================================== */
+---------------------------------------------------------- */
 function saveCollections() {
   try {
     localStorage.setItem("ks-collections", JSON.stringify(window.collections || []));
   } catch {}
 
   if (typeof cloudSaveDebounced === "function") {
-    // Firestore collection name → "collections" (core.js లో map ఉంది)
     cloudSaveDebounced("collections", window.collections || []);
   }
 }
 window.saveCollections = saveCollections;
 
 /* ===========================================================
-   PUBLIC: addCollectionEntry
-   👉 ఇక్కడ ఇప్పుడు ప్రధాన use:
-      - Universal Bar collect buttons (Net / Stock / Service)
-      - Manual collections (future లో)
-   👉 Credit clear case కోసం ఇకపైన ఈ function వాడకూడదు
-      (Credit history కోసం separate module పెట్టబోతున్నాం)
+   AUTO DOM FIX — IF ELEMENTS ARE MISSING, CREATE THEM
+=========================================================== */
+function ensureCollectionDOM() {
+  const section = qs("#collection");
+  if (!section) return;  // user may hide tab
+
+  /* ---- SUMMARY CARDS CONTAINER ---- */
+  let sumBox = qs("#colSummaryBox");
+  if (!sumBox) {
+    sumBox = document.createElement("div");
+    sumBox.id = "colSummaryBox";
+    sumBox.style.margin = "6px 0 12px";
+    sumBox.innerHTML = `
+      <div>
+        Sales Collected: <b id="colSales">₹0</b> |
+        Service Collected: <b id="colService">₹0</b> |
+        Pending Credit: <b id="colCredit">₹0</b> |
+        Investment Remaining: <b id="colInvRemain">₹0</b>
+      </div>
+    `;
+    section.appendChild(sumBox);
+  }
+
+  /* ---- HISTORY TABLE ---- */
+  let table = qs("#collectionHistory");
+  if (!table) {
+    table = document.createElement("table");
+    table.id = "collectionHistory";
+    table.innerHTML = `
+      <thead>
+        <tr>
+          <th>Date</th>
+          <th>Source</th>
+          <th>Details</th>
+          <th>Amount</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    `;
+    section.appendChild(table);
+  }
+
+  /* ---- CLEAR BUTTON ---- */
+  let clr = qs("#clearCollectionBtn");
+  if (!clr) {
+    clr = document.createElement("button");
+    clr.id = "clearCollectionBtn";
+    clr.className = "small-btn";
+    clr.style.marginTop = "10px";
+    clr.textContent = "Clear History";
+    section.appendChild(clr);
+  }
+}
+
+/* ===========================================================
+   PUBLIC: ADD COLLECTION ENTRY
 =========================================================== */
 window.addCollectionEntry = function (source, details, amount) {
   const entry = {
     id: uid("coll"),
-    date: todayDate(),                // YYYY-MM-DD (core.js helper)
+    date: todayDate(),
     source: escLocal(source),
     details: escLocal(details),
     amount: cNum(amount)
@@ -63,7 +116,7 @@ window.addCollectionEntry = function (source, details, amount) {
 };
 
 /* ===========================================================
-   SUMMARY (Uses universalBar metrics)
+   SUMMARY
 =========================================================== */
 function computeCollectionSummary() {
   const m = window.__unMetrics || {};
@@ -77,32 +130,29 @@ function computeCollectionSummary() {
 }
 
 /* ===========================================================
-   RENDER PENDING (INFO ONLY → NOW COMPLETELY HIDDEN)
-   👉 Collection tab లో Pending Collections block కనిపించకుండా
-      heading + table రెండిటినీ hide చేస్తున్నాం.
+   HIDE PENDING SECTION (IF EXISTS)
 =========================================================== */
 window.renderPendingCollections = function () {
   const table = qs("#pendingCollectionTable");
   if (!table) return;
 
-  // Hide table
   table.style.display = "none";
 
-  // If previous sibling is the "Pending Collections" <h4>, hide that too
   const prev = table.previousElementSibling;
-  if (prev && prev.tagName && prev.tagName.toLowerCase() === "h4") {
+  if (prev && prev.tagName.toLowerCase() === "h4") {
     prev.style.display = "none";
   }
 };
 
 /* ===========================================================
-   RENDER HISTORY (Collection Tab Main Table)
+   RENDER HISTORY TABLE (AUTO DOM SAFE)
 =========================================================== */
 window.renderCollection = function () {
+  ensureCollectionDOM();
+
   const sum = computeCollectionSummary();
   const fmt = v => "₹" + Math.round(cNum(v));
 
-  // Top cards
   if (qs("#colSales"))     qs("#colSales").textContent     = fmt(sum.salesCollected);
   if (qs("#colService"))   qs("#colService").textContent   = fmt(sum.serviceCollected);
   if (qs("#colCredit"))    qs("#colCredit").textContent    = fmt(sum.pendingCredit);
@@ -134,14 +184,12 @@ window.renderCollection = function () {
 };
 
 /* ===========================================================
-   GLOBAL CLICK HANDLER
-   👉 ఇక్కడ ఇప్పుడు ఒక్క Clear History మాత్రమే ఉంది
+   CLICK HANDLER — CLEAR HISTORY ONLY
 =========================================================== */
 document.addEventListener("click", e => {
-  const target = e.target;
+  const t = e.target;
 
-  /* Clear entire history */
-  if (target.id === "clearCollectionBtn") {
+  if (t.id === "clearCollectionBtn") {
     if (!confirm("Clear entire collection history?")) return;
 
     window.collections = [];
@@ -151,21 +199,14 @@ document.addEventListener("click", e => {
     window.updateUniversalBar?.();
     window.renderAnalytics?.();
     window.updateSummaryCards?.();
-    return;
   }
-
-  // ❌ ఇకపై ఇక్కడ pending-collect-btn ఏదీ handle చేయం.
-  // Credit → Paid → Profit update → Credit History
-  // ఇవన్నీ sales.js / service.js / credit-history.js లోనే జరుగుతాయి.
 });
 
 /* ===========================================================
    INIT
 =========================================================== */
 window.addEventListener("load", () => {
-  // Pending block ను hide చెయ్యడం మాత్రమే
   renderPendingCollections();
-
   renderCollection();
   window.updateUniversalBar?.();
   window.renderAnalytics?.();
