@@ -1,20 +1,34 @@
 /* ==========================================================
-   stock.js — ONLINE REALTIME VERSION (v5.0 WITH HISTORY)
-   ✔ Fully online (core.js + firebase.js compatible)
-   ✔ Cloud sync instant
-   ✔ Full purchase history (date + qty + cost)
-   ✔ Popup history view
+   stock.js — ONLINE REALTIME VERSION (v6.0 WITH FIXED HISTORY)
 ========================================================== */
 
-/* -----------------------------
-   Helpers
------------------------------ */
 const $  = s => document.querySelector(s);
 const num = v => isNaN(Number(v)) ? 0 : Number(v);
 const toDisp = d => (typeof window.toDisplay === "function" ? toDisplay(d) : d);
 
 /* ==========================================================
-   SAVE STOCK (LOCAL + CLOUD)
+   NORMALIZE ALL STOCK HISTORY (ON LOAD)
+========================================================== */
+function normalizeStockHistory() {
+  (window.stock || []).forEach(p => {
+    // If no history but qty exists → convert to proper history
+    if (!Array.isArray(p.history) || !p.history.length) {
+      if (num(p.qty) > 0 && num(p.cost) > 0) {
+        const dt = toInternalIfNeeded(p.date || todayDate());
+        p.history = [{
+          date: dt,
+          qty : num(p.qty),
+          cost: num(p.cost)
+        }];
+      }
+    }
+  });
+  window.saveStock?.();
+}
+normalizeStockHistory();
+
+/* ==========================================================
+   SAVE STOCK
 ========================================================== */
 window.saveStock = function () {
   try {
@@ -43,13 +57,11 @@ $("#addStockBtn")?.addEventListener("click", () => {
     return;
   }
 
-  // Find existing product
   const p = (window.stock || []).find(
     x => x.type === type && x.name.toLowerCase() === name.toLowerCase()
   );
 
   if (!p) {
-    // NEW product
     window.stock.push({
       id: uid("stk"),
       type,
@@ -59,17 +71,18 @@ $("#addStockBtn")?.addEventListener("click", () => {
       sold: 0,
       cost,
       limit: num($("#globalLimit").value || 2),
-      history: [{ date, qty, cost }]     // 📌 HISTORY BLOCK
+      history: [{ date, qty, cost }]
     });
+
   } else {
-    // EXISTING product — update qty + cost and append history
     p.qty += qty;
     p.cost = cost;
 
     if (!Array.isArray(p.history)) p.history = [];
-    p.history.push({ date, qty, cost });   // 📌 HISTORY BLOCK
+    p.history.push({ date, qty, cost });
   }
 
+  normalizeStockHistory();   // ⭐ auto repair
   window.saveStock();
   renderStock();
   window.updateUniversalBar?.();
@@ -101,12 +114,11 @@ function showStockHistory(id) {
 
   const avg = totalQty ? (totalCost / totalQty).toFixed(2) : 0;
 
-  msg += `\nTotal Qty: ${totalQty}`;
+  msg += `\nTotal Purchased Qty: ${totalQty}`;
   msg += `\nAverage Cost: ₹${avg}`;
 
   alert(msg);
 }
-
 window.showStockHistory = showStockHistory;
 
 /* ==========================================================
@@ -114,10 +126,8 @@ window.showStockHistory = showStockHistory;
 ========================================================== */
 $("#clearStockBtn")?.addEventListener("click", () => {
   if (!confirm("Delete ALL stock?")) return;
-
   window.stock = [];
   window.saveStock();
-
   renderStock();
   window.updateUniversalBar?.();
 });
@@ -128,7 +138,6 @@ $("#clearStockBtn")?.addEventListener("click", () => {
 $("#setLimitBtn")?.addEventListener("click", () => {
   const limit = num($("#globalLimit").value || 2);
   window.stock.forEach(p => p.limit = limit);
-
   window.saveStock();
   renderStock();
 });
@@ -160,11 +169,9 @@ function stockQuickSale(i, mode) {
   const total  = qty * price;
   const profit = total - qty * cost;
 
-  /* Update sold qty */
   p.sold += qty;
   window.saveStock();
 
-  /* Add sale entry */
   window.sales.push({
     id: uid("sale"),
     date: todayDate(),
@@ -183,7 +190,6 @@ function stockQuickSale(i, mode) {
 
   window.saveSales?.();
 
-  /* Auto Wanting */
   if (p.sold >= p.qty && window.autoAddWanting) {
     window.autoAddWanting(p.type, p.name, "Finished");
   }
@@ -233,7 +239,6 @@ function renderStock() {
         <td>${alert}</td>
         <td>${p.limit}</td>
         <td>
-          <!-- 👇 **NEW HISTORY BUTTON** -->
           <button class="small-btn"
                   style="background:#555;color:#fff;"
                   onclick="showStockHistory('${p.id}')">📜</button>
@@ -272,6 +277,7 @@ $("#filterType")?.addEventListener("change", renderStock);
    INIT
 ========================================================== */
 window.addEventListener("load", () => {
+  normalizeStockHistory();
   renderStock();
   updateStockInvestment();
   window.updateUniversalBar?.();
