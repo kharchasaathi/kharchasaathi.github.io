@@ -1,9 +1,9 @@
 /* ===========================================================
-   universal-bar.js — FINAL FIXED VERSION v6.0
-   ✔ Uses collectedNetTotal offset (PERMANENT)
-   ✔ Net profit becomes ZERO immediately & after reload
-   ✔ No double collection possible
-   ✔ Safe UI refresh everywhere
+   universal-bar.js — FINAL OFFSET VERSION v7.0
+   ✔ Net Profit offset (permanent)
+   ✔ Stock Investment offset (permanent)
+   ✔ Service Investment offset (permanent)
+   ✔ All 3 collections ZERO instantly + after reload
 =========================================================== */
 (function () {
 
@@ -11,8 +11,7 @@
   const money = v => "₹" + Math.round(num(v));
 
   /* ===========================================================
-     CENTRAL METRIC CALCULATOR
-     (Uses collectedNetTotal offset from core.js)
+     CENTRAL METRIC CALCULATOR  (offset aware)
   ============================================================ */
   function computeMetrics() {
 
@@ -28,7 +27,6 @@
     let stockInvestSold         = 0;
     let serviceInvestCompleted  = 0;
 
-    /* ---------------- SALES PROFIT + CREDIT ---------------- */
     sales.forEach(s => {
       const status = String(s.status || "").toLowerCase();
       const qty    = num(s.qty);
@@ -43,7 +41,6 @@
       }
     });
 
-    /* ---------------- SERVICE PROFIT + INVEST ---------------- */
     services.forEach(j => {
       const status = String(j.status || "").toLowerCase();
       if (status === "completed") {
@@ -52,12 +49,10 @@
       }
     });
 
-    /* ---------------- EXPENSES ---------------- */
     expenses.forEach(e => {
       totalExpenses += num(e.amount || e.value);
     });
 
-    /* ---------------- SOLD STOCK INVEST ---------------- */
     stock.forEach(p => {
       const soldQty = num(p.sold);
       const cost    = num(p.cost);
@@ -66,19 +61,24 @@
       }
     });
 
-    /* ⭐ IMPORTANT — minus already collected net offset */
-    const collectedOffset = num(window.collectedNetTotal || 0);
+    /* ⭐ OFFSETS (loaded later from core.js) */
+    const netOffset     = num(window.collectedNetTotal     || 0);
+    const stockOffset   = num(window.collectedStockTotal   || 0);
+    const serviceOffset = num(window.collectedServiceTotal || 0);
 
     return {
       saleProfitCollected,
       serviceProfitCollected,
       pendingCreditTotal,
       totalExpenses,
-      stockInvestSold,
-      serviceInvestCompleted,
+
+      /* ⭐ Proper ZERO logic */
+      stockInvestSold: stockInvestSold - stockOffset,
+      serviceInvestCompleted: serviceInvestCompleted - serviceOffset,
+
       netProfit:
         (saleProfitCollected + serviceProfitCollected - totalExpenses)
-        - collectedOffset
+        - netOffset
     };
   }
 
@@ -112,15 +112,9 @@
   window.updateUniversalBar = updateUniversalBar;
 
   /* ===========================================================
-     COLLECT HANDLER — FIX FOR NET PROFIT OFFSET
+     COLLECT HANDLER — ALL OFFSETS
   ============================================================ */
   function handleCollect(kind) {
-
-    if (!window.addCollectionEntry) {
-      alert("Collection module missing.");
-      return;
-    }
-
     updateUniversalBar();
     const m = window.__unMetrics;
 
@@ -140,75 +134,83 @@
     };
 
     if (!labels[kind]) return;
-
     const [label, approx] = labels[kind];
 
-    /* ⭐ SPECIAL HANDLING — NET PROFIT */
-    if (kind === "net") {
-
-      if (m.netProfit <= 0) {
-        alert("No profit to collect.");
-        return;
-      }
-
-      const val = prompt(
-        `${label}\nApprox: ₹${Math.round(m.netProfit)}\n\nEnter amount:`
-      );
-      if (!val) return;
-
-      const amt = num(val);
-      if (amt <= 0) {
-        alert("Invalid amount.");
-        return;
-      }
-
-      const note = prompt("Optional note:", "") || "";
-
-      /** 1️⃣ Add entry to collection history */
-      window.addCollectionEntry("Net Profit", note, amt);
-
-      /** 2️⃣ OFFSET PERMANENTLY STORED */
-      window.collectedNetTotal =
-        num(window.collectedNetTotal || 0) + amt;
-
-      /** 3️⃣ SAVE OFFSET permanently */
-      window.saveCollectedNetTotal?.();
-
-      /** 4️⃣ REFRESH UI everywhere */
-      updateUniversalBar();
-      window.renderCollection?.();
-      window.renderAnalytics?.();
-      window.updateSummaryCards?.();
-      window.updateTabSummaryBar?.();
-
-      alert("Net Profit collected!");
-      return;
-    }
-
-    /* ⭐ STOCK / SERVICE NORMAL COLLECTION */
     const val = prompt(
       `${label}\nApprox: ₹${Math.round(approx)}\n\nEnter amount:`
     );
     if (!val) return;
 
     const amt = num(val);
-    if (amt <= 0) {
-      alert("Invalid amount.");
+    if (amt <= 0) return alert("Invalid amount.");
+
+    const note = prompt("Optional note:", "") || "";
+
+    /* ================================
+       ⭐ 1) NET PROFIT OFFSET
+    ==================================*/
+    if (kind === "net") {
+      window.addCollectionEntry("Net Profit", note, amt);
+
+      window.collectedNetTotal =
+        num(window.collectedNetTotal || 0) + amt;
+
+      window.saveCollectedNetTotal?.();
+
+      updateUniversalBar();
+      window.renderCollection?.();
+      window.renderAnalytics?.();
+      window.updateSummaryCards?.();
+      window.updateTabSummaryBar?.();
+      alert("Net Profit collected!");
       return;
     }
 
-    const note = prompt("Optional note:", "") || "";
-    addCollectionEntry(label, note, amt);
+    /* ================================
+       ⭐ 2) STOCK INVESTMENT OFFSET
+    ==================================*/
+    if (kind === "stock") {
+      window.addCollectionEntry("Stock Investment", note, amt);
 
-    updateUniversalBar();
-    window.renderCollection?.();
-    alert("Collection recorded.");
+      window.collectedStockTotal =
+        num(window.collectedStockTotal || 0) + amt;
+
+      window.saveCollectedStockTotal?.();
+
+      updateUniversalBar();
+      window.renderCollection?.();
+      window.renderAnalytics?.();
+      window.updateSummaryCards?.();
+      window.updateTabSummaryBar?.();
+      alert("Stock Investment collected!");
+      return;
+    }
+
+    /* ================================
+       ⭐ 3) SERVICE INVESTMENT OFFSET
+    ==================================*/
+    if (kind === "service") {
+      window.addCollectionEntry("Service Investment", note, amt);
+
+      window.collectedServiceTotal =
+        num(window.collectedServiceTotal || 0) + amt;
+
+      window.saveCollectedServiceTotal?.();
+
+      updateUniversalBar();
+      window.renderCollection?.();
+      window.renderAnalytics?.();
+      window.updateSummaryCards?.();
+      window.updateTabSummaryBar?.();
+      alert("Service Investment collected!");
+      return;
+    }
   }
 
   window.handleCollect = handleCollect;
 
   /* ===========================================================
-     CLICK LISTENER
+     CLICK HANDLER
   ============================================================ */
   document.addEventListener("click", e => {
     const btn = e.target.closest(".collect-btn");
@@ -216,11 +218,8 @@
     handleCollect(btn.dataset.collect);
   });
 
-  /* ===========================================================
-     INITIAL LOAD
-  ============================================================ */
   window.addEventListener("load", () => {
-    setTimeout(updateUniversalBar, 200);
+    setTimeout(updateUniversalBar, 250);
   });
 
 })();
