@@ -1,5 +1,5 @@
 // ======================================================
-//  analytics.js — FINAL V7 (Dashboard + Fix + Pie Resize)
+//  analytics.js — FINAL V8 (Pie Size + Dashboard Fix)
 // ======================================================
 
 let cleanPieChart = null;
@@ -25,12 +25,10 @@ window.getAnalyticsData = function () {
   // ---- TODAY SALES ----
   sales.forEach(s => {
     if (!s.date || s.date !== today) return;
-
     const total = Number(
       s.total || s.amount ||
       (Number(s.qty || 0) * Number(s.price || 0))
     );
-
     const status = String(s.status || "").toLowerCase();
 
     if (status === "credit") {
@@ -107,7 +105,7 @@ window.getSummaryTotals = function () {
 
   const netProfit = totalProfit - totalExpenses;
 
-  // INVESTMENT (live function)
+  // INVESTMENT (after sale + service)
   let stockAfter = 0;
   let serviceInv = 0;
 
@@ -177,21 +175,19 @@ window.renderAnalytics = function () {
           Number(totalExpenses || 0),
           Number(creditTotal || 0),
           Number(stockAfter + serviceInv || 0)
-        ]
+        ],
+        backgroundColor: ["#2e7d32","#c62828","#1565c0","#fbc02d"]
       }]
     },
     options: {
       responsive: true,
-      maintainAspectRatio: false,  // ⭐ PIE SMALL FIX
-      plugins: {
-        legend: { position: "bottom" }
-      }
+      legend: { position: "bottom" }
     }
   });
 };
 
 /* --------------------------------
-   TODAY SUMMARY CARDS (Overview)
+   TODAY SUMMARY CARDS
 ---------------------------------- */
 window.updateSummaryCards = function () {
   const data = window.getAnalyticsData();
@@ -210,7 +206,7 @@ window.updateSummaryCards = function () {
 };
 
 /* --------------------------------
-   AUTO RENDER ON LOAD
+   AUTO RENDER
 ---------------------------------- */
 window.addEventListener("load", () => {
   try { renderAnalytics(); }      catch (e) {}
