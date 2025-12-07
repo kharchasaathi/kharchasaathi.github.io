@@ -809,7 +809,9 @@
     🗑️ Clear All Jobs
   </button>
 
-  <h4 style="margin-top:14px">Completed / History</h4>
+<h4 style="margin-top:14px">Completed / History</h4>
+
+<!-- ⭐ VIEW FILTER BLOCK -->
 <div style="margin:6px 0 8px;display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
   <label>View:</label>
   <select id="svcView"
@@ -820,27 +822,29 @@
     <option value="credit-paid">Credit paid history</option>
   </select>
 </div>
-  <table id="svcHistoryTable">
-    <thead>
-      <tr>
-        <th>Job ID</th>
-        <th>Received</th>
-        <th>Completed</th>
-        <th>Customer</th>
-        <th>Item</th>
-        <th>Invest</th>
-        <th>Paid</th>
-        <th>Profit</th>
-        <th>Status</th>
-      </tr>
-    </thead>
-    <tbody></tbody>
-  </table>
 
-  <div style="max-width:520px;margin:14px auto;">
-    <canvas id="svcPie" height="150"></canvas>
-  </div>
-</section>
+<!-- ⭐ HISTORY TABLE -->
+<table id="svcHistoryTable">
+  <thead>
+    <tr>
+      <th>Job ID</th>
+      <th>Received</th>
+      <th>Completed</th>
+      <th>Customer</th>
+      <th>Item</th>
+      <th>Invest</th>
+      <th>Paid</th>
+      <th>Profit</th>
+      <th>Status</th>
+    </tr>
+  </thead>
+  <tbody></tbody>
+</table>
+
+<!-- ⭐ PIE CHART -->
+<div style="max-width:520px;margin:14px auto;">
+  <canvas id="svcPie" height="150"></canvas>
+</div>
 
 <!-- =============== EXPENSES =============== -->
 <section id="expenses" class="section">
