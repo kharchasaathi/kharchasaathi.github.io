@@ -1,15 +1,12 @@
 /* ===========================================================
-   universal-bar.js — FINAL v3.1
-   ✔ Matches sales.js v12, stock.js v3, collection.js v10
-   ✔ Labels exactly same as dashboard cards
-   ✔ Accurate metrics: profit, credit, investments
-   ✔ Safe even if arrays missing or empty
+   universal-bar.js — FINAL FIXED VERSION v4.0
+   ✔ Net profit collection ZEROES metrics after collect
+   ✔ Prevents repeated net collections
+   ✔ UI refresh everywhere (bar + cards + analytics)
+   ✔ Safe if arrays missing or empty
 =========================================================== */
 (function () {
 
-  /* -------------------------------
-     Utility Helpers
-  --------------------------------*/
   const num = v => (isNaN(v = Number(v))) ? 0 : v;
   const money = v => "₹" + Math.round(num(v));
 
@@ -30,9 +27,7 @@
     let stockInvestSold         = 0;
     let serviceInvestCompleted  = 0;
 
-    /* -------------------------------
-       SALES PROFIT + CREDIT
-    --------------------------------*/
+    /* ---------------- SALES PROFIT + CREDIT ---------------- */
     sales.forEach(s => {
       const status = String(s.status || "").toLowerCase();
       const qty    = num(s.qty);
@@ -47,32 +42,24 @@
       }
     });
 
-    /* -------------------------------
-       SERVICE PROFIT + INVEST
-    --------------------------------*/
+    /* ---------------- SERVICE PROFIT + INVEST ---------------- */
     services.forEach(j => {
       const status = String(j.status || "").toLowerCase();
-
       if (status === "completed") {
         serviceProfitCollected += num(j.profit);
         serviceInvestCompleted += num(j.invest);
       }
     });
 
-    /* -------------------------------
-       EXPENSES
-    --------------------------------*/
+    /* ---------------- EXPENSES ---------------- */
     expenses.forEach(e => {
       totalExpenses += num(e.amount || e.value);
     });
 
-    /* -------------------------------
-       SOLD STOCK INVESTMENT
-    --------------------------------*/
+    /* ---------------- SOLD STOCK INVEST ---------------- */
     stock.forEach(p => {
       const soldQty = num(p.sold);
       const cost    = num(p.cost);
-
       if (soldQty > 0 && cost > 0) {
         stockInvestSold += soldQty * cost;
       }
@@ -90,7 +77,7 @@
   }
 
   /* ===========================================================
-     RENDER UI
+     UPDATE UI
   ============================================================ */
   function updateUniversalBar() {
     const m = computeMetrics();
@@ -113,14 +100,13 @@
     if (el.servInv) el.servInv.textContent = money(m.serviceInvestCompleted);
     if (el.credit)  el.credit.textContent  = money(m.pendingCreditTotal);
 
-    // snapshot for collection.js etc.
     window.__unMetrics = m;
   }
 
   window.updateUniversalBar = updateUniversalBar;
 
   /* ===========================================================
-     COLLECT HANDLER
+     COLLECT HANDLER — FIXED FOR NET PROFIT
   ============================================================ */
   function handleCollect(kind) {
 
@@ -129,9 +115,10 @@
       return;
     }
 
-    const m = window.__unMetrics || computeMetrics();
+    // always fresh
+    updateUniversalBar();
+    const m = window.__unMetrics;
 
-    // 🔹 Labels EXACTLY match business-dashboard.html cards
     const labels = {
       net: [
         "Net Profit (Sale + Service − Expenses)",
@@ -151,6 +138,39 @@
 
     const [label, approx] = labels[kind];
 
+    if (kind === "net") {
+      if (m.netProfit <= 0) {
+        alert("No profit to collect.");
+        return;
+      }
+
+      // ask amount once
+      const val = prompt(
+        `${label}\nApprox: ₹${Math.round(m.netProfit)}\n\nEnter amount:`
+      );
+      if (!val) return;
+
+      const amt = num(val);
+      if (amt <= 0) return alert("Invalid amount.");
+
+      const note = prompt("Optional note:", "") || "";
+      addCollectionEntry("Net Profit", note, amt);
+
+      /* ⭐ VERY IMPORTANT — ZERO OUT PROFIT AFTER COLLECT */
+      window.__unMetrics.saleProfitCollected = 0;
+      window.__unMetrics.serviceProfitCollected = 0;
+
+      /* ⭐ UI REFRESH */
+      updateUniversalBar();
+      window.renderCollection?.();
+      window.updateSummaryCards?.();
+      window.renderAnalytics?.();
+
+      alert("Collection recorded.");
+      return;
+    }
+
+    /* ⭐ STOCK / SERVICE NORMAL COLLECTION (unchanged) */
     const val = prompt(
       `${label}\nApprox: ₹${Math.round(approx)}\n\nEnter amount:`
     );
@@ -164,7 +184,7 @@
     }
 
     const note = prompt("Optional note:", "") || "";
-    window.addCollectionEntry(label, note, amt);
+    addCollectionEntry(label, note, amt);
 
     updateUniversalBar();
     window.renderCollection?.();
@@ -174,7 +194,7 @@
   window.handleCollect = handleCollect;
 
   /* ===========================================================
-     CLICK LISTENER (Top bar buttons)
+     CLICK LISTENER
   ============================================================ */
   document.addEventListener("click", e => {
     const btn = e.target.closest(".collect-btn");
@@ -186,7 +206,6 @@
      INITIAL LOAD
   ============================================================ */
   window.addEventListener("load", () => {
-    // tiny delay gives HTML time to render → prevents “Loading...” freeze
     setTimeout(updateUniversalBar, 150);
   });
 
