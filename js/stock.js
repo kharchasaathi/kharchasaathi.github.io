@@ -1,5 +1,5 @@
 /* ==========================================================
-   stock.js — ONLINE REALTIME VERSION (v6.0 WITH FIXED HISTORY)
+   stock.js — ONLINE REALTIME VERSION (v6.1)
 ========================================================== */
 
 const $  = s => document.querySelector(s);
@@ -7,11 +7,10 @@ const num = v => isNaN(Number(v)) ? 0 : Number(v);
 const toDisp = d => (typeof window.toDisplay === "function" ? toDisplay(d) : d);
 
 /* ==========================================================
-   NORMALIZE ALL STOCK HISTORY (ON LOAD)
+   NORMALIZE ALL STOCK HISTORY (RUN ONLY AFTER LOAD)
 ========================================================== */
 function normalizeStockHistory() {
   (window.stock || []).forEach(p => {
-    // If no history but qty exists → convert to proper history
     if (!Array.isArray(p.history) || !p.history.length) {
       if (num(p.qty) > 0 && num(p.cost) > 0) {
         const dt = toInternalIfNeeded(p.date || todayDate());
@@ -23,9 +22,9 @@ function normalizeStockHistory() {
       }
     }
   });
+
   window.saveStock?.();
 }
-normalizeStockHistory();
 
 /* ==========================================================
    SAVE STOCK
@@ -41,7 +40,7 @@ window.saveStock = function () {
 };
 
 /* ==========================================================
-   ADD STOCK  (WITH HISTORY)
+   ADD STOCK (WITH HISTORY)
 ========================================================== */
 $("#addStockBtn")?.addEventListener("click", () => {
   let date = $("#pdate").value || todayDate();
@@ -57,6 +56,7 @@ $("#addStockBtn")?.addEventListener("click", () => {
     return;
   }
 
+  // Find existing product
   const p = (window.stock || []).find(
     x => x.type === type && x.name.toLowerCase() === name.toLowerCase()
   );
@@ -77,12 +77,10 @@ $("#addStockBtn")?.addEventListener("click", () => {
   } else {
     p.qty += qty;
     p.cost = cost;
-
     if (!Array.isArray(p.history)) p.history = [];
     p.history.push({ date, qty, cost });
   }
 
-  normalizeStockHistory();   // ⭐ auto repair
   window.saveStock();
   renderStock();
   window.updateUniversalBar?.();
@@ -143,7 +141,7 @@ $("#setLimitBtn")?.addEventListener("click", () => {
 });
 
 /* ==========================================================
-   STOCK QUICK SALE (Cash / Credit)
+   STOCK QUICK SALE
 ========================================================== */
 function stockQuickSale(i, mode) {
   const p = window.stock[i];
@@ -268,16 +266,10 @@ function updateStockInvestment() {
 }
 
 /* ==========================================================
-   EVENTS
-========================================================== */
-$("#productSearch")?.addEventListener("input", renderStock);
-$("#filterType")?.addEventListener("change", renderStock);
-
-/* ==========================================================
    INIT
 ========================================================== */
 window.addEventListener("load", () => {
-  normalizeStockHistory();
+  normalizeStockHistory();  // ⭐ only once
   renderStock();
   updateStockInvestment();
   window.updateUniversalBar?.();
