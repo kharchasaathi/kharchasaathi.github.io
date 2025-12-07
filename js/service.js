@@ -1,9 +1,9 @@
 /* ===========================================================
-   🛠 service.js — Service / Repair Manager (v20 BUSINESS)
-   ✔ Old UI intact
-   ✔ Credit stored, profit counted only when collected
+   🛠 service.js — FINAL BUSINESS V25
+   ✔ Pending + Cash + Credit Pending + Credit Paid History
+   ✔ Profit activates only when collected
    ✔ Collection history entry on credit-clear
-   ✔ UniversalBar, Dashboard, Analytics live refresh
+   ✔ LIVE Refresh: Dashboard + Analytics + Universal Bar
 =========================================================== */
 
 (function () {
@@ -14,8 +14,6 @@
   const toDisplay     = window.toDisplay          || (d => d);
   const toInternalIf  = window.toInternalIfNeeded || (d => d);
   const todayDateFn   = window.todayDate          || (() => new Date().toISOString().slice(0, 10));
-
-  let svcPie = null;
 
   /* ======================================================
         STORAGE + SYNC
@@ -41,7 +39,7 @@
   }
 
   /* ======================================================
-        JOB ID
+        NEW JOB
   ====================================================== */
   function nextJobId() {
     const list = ensureServices();
@@ -54,9 +52,6 @@
     };
   }
 
-  /* ======================================================
-        ADD NEW SERVICE JOB
-  ====================================================== */
   function addServiceJob() {
 
     let received = qs("#svcReceivedDate")?.value || todayDateFn();
@@ -97,26 +92,16 @@
       profit: 0,
       returnedAdvance: 0,
 
-      status: "Pending"  // MAIN STATES
-                         // Pending / Completed / Credit / Failed/Returned
+      status: "Pending"
     };
 
     ensureServices().push(job);
     persistServices();
     fullRefresh();
-
-    try {
-      qs("#svcCustomer").value = "";
-      qs("#svcPhone").value    = "";
-      qs("#svcModel").value    = "";
-      qs("#svcProblem").value  = "";
-      qs("#svcAdvance").value  = "";
-    } catch {}
   }
 
   /* ======================================================
       COMPLETE JOB
-      mode = "paid" | "credit"
   ====================================================== */
   function markCompleted(id, mode) {
     const job = ensureServices().find(j => j.id === id);
@@ -135,52 +120,47 @@
 
     if (mode === "paid") {
 
-      const remainingNow = full - alreadyGot;
+      const collectNow = full - alreadyGot;
 
       const ok = confirm(
         `Job ${job.jobId}\nCustomer: ${job.customer}\n\n` +
-        `Invest: ₹${invest}\nAdvance: ₹${alreadyGot}\n` +
-        `Collect Now: ₹${remainingNow}\n` +
-        `Final Profit: ₹${totalProfit}\n\n` +
-        `Mark COMPLETED (PAID)?`
+        `Invest: ₹${invest}\nAdvance: ₹${alreadyGot}\nCollect Now: ₹${collectNow}\n` +
+        `Final Profit: ₹${totalProfit}\n\nConfirm PAID?`
       );
       if (!ok) return;
 
       job.invest    = invest;
       job.paid      = full;
       job.remaining = 0;
-      job.profit    = totalProfit;     // ⭐ profit activates immediately
+      job.profit    = totalProfit;
       job.status    = "Completed";
       job.date_out  = todayDateFn();
 
-      // Collection history entry for this remainingNow
-      if (remainingNow > 0) {
+      if (collectNow > 0) {
         window.addCollectionEntry(
           "Service (Paid)",
           `Job ${job.jobId} — ${job.customer}`,
-          remainingNow
+          collectNow
         );
       }
 
     } else {
-      /** mode === credit **/
+      /** CREDIT MODE **/
 
-      const remainingDue = full - alreadyGot;
+      const pendingDue = full - alreadyGot;
 
       const ok = confirm(
         `Job ${job.jobId}\nCustomer: ${job.customer}\n\n` +
-        `Invest: ₹${invest}\nAdvance: ₹${alreadyGot}\n` +
-        `Pending Credit: ₹${remainingDue}\n` +
-        `Profit after collection: ₹${totalProfit}\n\n` +
-        `Mark COMPLETED (CREDIT)?`
+        `Invest: ₹${invest}\nAdvance: ₹${alreadyGot}\nPending Credit: ₹${pendingDue}\n` +
+        `Profit will activate only after collection.\n\nConfirm CREDIT?`
       );
       if (!ok) return;
 
       job.invest    = invest;
-      job.paid      = alreadyGot;       // only advance received
-      job.remaining = remainingDue;     // pending
-      job.profit    = totalProfit;      // ⭐ profit STORED but NOT activated yet
-      job.status    = "Credit";         // metrics IGNORE now
+      job.paid      = alreadyGot;
+      job.remaining = pendingDue;
+      job.profit    = totalProfit;     // stored but inactive
+      job.status    = "Credit";
       job.date_out  = todayDateFn();
     }
 
@@ -189,28 +169,45 @@
   }
 
   /* ======================================================
-        FAIL / RETURNED JOB
+      CREDIT COLLECTION
   ====================================================== */
-  function markFailed(id) {
+  window.collectServiceCredit = function (id) {
     const job = ensureServices().find(j => j.id === id);
     if (!job) return;
 
-    const returned = Number(prompt("Advance returned ₹:", job.advance || 0) || 0);
+    if (job.status !== "Credit") {
+      alert("Not a credit job.");
+      return;
+    }
 
-    job.returnedAdvance = returned;
-    job.invest    = 0;
-    job.paid      = 0;
+    const due = Number(job.remaining || 0);
+
+    if (due <= 0) {
+      alert("No pending credit.");
+      return;
+    }
+
+    if (!confirm(
+      `Job ${job.jobId}\nCustomer: ${job.customer}\nCollect Pending: ₹${due}\n\nConfirm?`
+    )) return;
+
+    window.addCollectionEntry(
+      "Service (Credit Cleared)",
+      `Job ${job.jobId} — ${job.customer}`,
+      due
+    );
+
+    job.paid      = job.paid + due;
     job.remaining = 0;
-    job.profit    = 0;
-    job.status    = "Failed/Returned";
-    job.date_out  = todayDateFn();
-
+    job.status    = "Completed";   // ⭐ profit activates now
     persistServices();
     fullRefresh();
-  }
+
+    alert("Collected successfully!");
+  };
 
   /* ======================================================
-        DELETE JOB
+       DELETE
   ====================================================== */
   function deleteServiceJob(id) {
     if (!confirm("Delete this job?")) return;
@@ -220,66 +217,30 @@
   }
 
   /* ======================================================
-        QUICK MENU
+       FILTER LOGIC FOR HISTORY TABLE
   ====================================================== */
-  function openJob(id) {
-    const j = ensureServices().find(x => x.id === id);
-    if (!j) return;
+  function filterHistory(all) {
+    const v = qs("#svcView")?.value || "all";
 
-    const msg =
-      `Job ${j.jobId}\n` +
-      `Customer: ${j.customer}\nPhone: ${j.phone}\n` +
-      `Item: ${j.item} — ${j.model}\nProblem: ${j.problem}\nAdvance: ₹${j.advance}\n\n` +
-      `1 — Completed (Paid)\n` +
-      `2 — Completed (Credit)\n` +
-      `3 — Failed/Returned`;
+    if (v === "cash") {
+      return all.filter(j => j.status === "Completed" && j.remaining === 0);
+    }
 
-    const ch = prompt(msg, "1");
-    if (ch === "1") return markCompleted(id, "paid");
-    if (ch === "2") return markCompleted(id, "credit");
-    if (ch === "3") return markFailed(id);
+    if (v === "credit-pending") {
+      return all.filter(j => j.status === "Credit" && j.remaining > 0);
+    }
+
+    if (v === "credit-paid") {
+      return all.filter(j =>
+        j.status === "Completed" &&
+        j.remaining === 0 &&
+        j.paid > 0 &&
+        j.advance < j.paid          // means credit cleared
+      );
+    }
+
+    return all;
   }
-
-  /* ======================================================
-        CREDIT COLLECTION (NEW)
-        👉 Activate profit & reduce pending credits
-  ====================================================== */
-  window.collectServiceCredit = function (id) {
-    const job = ensureServices().find(j => j.id === id);
-    if (!job) return;
-
-    if (job.status !== "Credit") {
-      alert("Not a Credit Job");
-      return;
-    }
-
-    const due = Number(job.remaining || 0);
-    if (due <= 0) {
-      alert("No pending credit.");
-      return;
-    }
-
-    if (!confirm(
-      `Job ${job.jobId}\nCustomer: ${job.customer}\n` +
-      `Collect Pending: ₹${due}\n\nConfirm?`
-    )) return;
-
-    // Cash collected
-    window.addCollectionEntry(
-      "Service (Credit cleared)",
-      `Job ${job.jobId} — ${job.customer}`,
-      due
-    );
-
-    // Activate profit now
-    job.paid      = job.paid + due;
-    job.remaining = 0;
-    job.status    = "Completed";      // NOW profit is valid
-    persistServices();
-    fullRefresh();
-
-    alert("Service Credit Collected!");
-  };
 
   /* ======================================================
        RENDER TABLES
@@ -296,14 +257,7 @@
     const credit    = list.filter(j => j.status === "Credit");
     const failed    = list.filter(j => j.status === "Failed/Returned");
 
-    const badge = s => {
-      if (s === "Pending")  return `<span class="status-credit">Pending</span>`;
-      if (s === "Completed")return `<span class="status-paid">Completed</span>`;
-      if (s === "Credit")   return `<span class="status-credit" style="background:#facc15;color:#000;">Credit</span>`;
-      return `<span class="status-credit" style="background:#e53935;color:#fff;">Failed</span>`;
-    };
-
-    /* ---------- PENDING TABLE ---------- */
+    /* ---------- PENDING ---------- */
     pendBody.innerHTML =
       pending.map(j => `
         <tr>
@@ -314,34 +268,35 @@
           <td>${escSafe(j.item)}</td>
           <td>${escSafe(j.model)}</td>
           <td>${escSafe(j.problem)}</td>
-          <td>${badge(j.status)}</td>
+          <td><span class="status-credit">Pending</span></td>
           <td>
             <button class="small-btn svc-view" data-id="${j.id}">Open</button>
             <button class="small-btn svc-del" data-id="${j.id}" style="background:#b71c1c">🗑</button>
           </td>
         </tr>
       `).join("") ||
-      `<tr><td colspan="9" style="text-align:center;opacity:.6;">No pending jobs</td></tr>`;
+      `<tr><td colspan="9" style="text-align:center;opacity:.6;">No pending</td></tr>`;
 
-    /* ---------- HISTORY TABLE ---------- */
-    const historyList = [...completed, ...credit, ...failed];
+    /* ---------- HISTORY FILTER  ---------- */
+    let historyAll = [...completed, ...credit, ...failed];
+    historyAll = filterHistory(historyAll);
 
     histBody.innerHTML =
-      historyList.map(j => {
-        const isCredit = j.status === "Credit";
-        const profitText = isCredit
-          ? `₹${j.profit} (credit)`
-          : `₹${j.profit}`;
+      historyAll.map(j => {
+        const isCred = j.status === "Credit" && j.remaining > 0;
+        const creditBtn = isCred
+          ? `<button class="small-btn"
+              style="background:#16a34a;color:white;font-size:11px"
+              onclick="collectServiceCredit('${j.id}')">Collect</button>`
+          : "";
 
-        const paidText = isCredit
-          ? `₹${j.paid} (advance)`
+        const paidText = j.status === "Credit"
+          ? `₹${j.paid} (adv)`
           : `₹${j.paid}`;
 
-        const creditBtn =
-          isCredit
-            ? `<button class="small-btn" style="background:#16a34a;color:white;font-size:11px"
-                onclick="collectServiceCredit('${j.id}')">Collect</button>`
-            : "";
+        const prof = j.status === "Credit"
+          ? `₹${j.profit} (credit)`
+          : `₹${j.profit}`;
 
         return `
           <tr>
@@ -352,94 +307,32 @@
             <td>${escSafe(j.item)}</td>
             <td>₹${j.invest}</td>
             <td>${paidText}</td>
-            <td>${profitText}</td>
-            <td>${badge(j.status)} ${creditBtn}</td>
+            <td>${prof}</td>
+            <td>${creditBtn}</td>
           </tr>
         `;
       }).join("") ||
       `<tr><td colspan="9" style="text-align:center;opacity:.6;">No history</td></tr>`;
-
-    /* ---------- SUMMARY CARDS ---------- */
-    const pendingCount   = qs("#svcPendingCount");
-    const completedCount = qs("#svcCompletedCount");
-    const totalProfitEl  = qs("#svcTotalProfit");
-
-    if (pendingCount)   pendingCount.textContent   = pending.length;
-    if (completedCount) completedCount.textContent = completed.length;
-
-    // ⭐ profit only from completed = real profit
-    const totalProfit = list.reduce((s, j) => {
-      if (j.status === "Completed") {
-        return s + Number(j.profit || 0);
-      }
-      return s;
-    }, 0);
-
-    if (totalProfitEl) totalProfitEl.textContent = "₹" + totalProfit;
-
-    renderServicePie();
   }
 
   /* ======================================================
-       PIE CHART
+       EVENTS
   ====================================================== */
-  function renderServicePie() {
-    const ctx = qs("#svcPie");
-    if (!ctx || typeof Chart === "undefined") return;
-
-    const list = ensureServices();
-    const P = list.filter(j => j.status === "Pending").length;
-    const C = list.filter(j => j.status === "Completed").length;
-    const R = list.filter(j => j.status === "Credit").length;
-    const F = list.filter(j => j.status === "Failed/Returned").length;
-
-    if (svcPie) svcPie.destroy();
-
-    svcPie = new Chart(ctx, {
-      type: "pie",
-      data: {
-        labels: ["Pending", "Completed", "Credit", "Failed/Returned"],
-        datasets: [{
-          data: [P, C, R, F],
-          backgroundColor: ["#FFEB3B", "#4CAF50", "#FACC15", "#E53935"]
-        }]
-      },
-      options: {
-        responsive: true,
-        plugins: { legend: { position: "bottom" } }
-      }
-    });
-  }
-
-  /* ======================================================
-        EVENT BINDINGS
-  ====================================================== */
-  qs("#addServiceBtn")?.addEventListener("click", addServiceJob);
-
-  qs("#clearServiceBtn")?.addEventListener("click", () => {
-    if (!confirm("Delete ALL service jobs?")) return;
-    window.services = [];
-    persistServices();
-    fullRefresh();
-  });
-
   document.addEventListener("click", e => {
-    if (e.target.classList.contains("svc-view")) {
+    if (e.target.classList.contains("svc-view"))
       openJob(e.target.dataset.id);
-    }
-    if (e.target.classList.contains("svc-del")) {
+
+    if (e.target.classList.contains("svc-del"))
       deleteServiceJob(e.target.dataset.id);
-    }
   });
 
-  /* ======================================================
-        INIT
-  ====================================================== */
+  qs("#svcView")?.addEventListener("change", renderServiceTables);
+
   window.addEventListener("load", () => {
     renderServiceTables();
-    window.updateUniversalBar?.();
   });
 
+  /* EXPORT */
   window.renderServiceTables = renderServiceTables;
 
 })();
