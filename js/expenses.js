@@ -5,7 +5,6 @@
    ✔ Fully compatible with core.js cloud sync
 =========================================================== */
 
-const qs = s => document.querySelector(s);
 
 /* ===========================================================
    ENSURE REQUIRED DOM EXISTS (AUTO CREATE)
