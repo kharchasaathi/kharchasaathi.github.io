@@ -224,3 +224,12 @@ window.addEventListener("load", () => {
   try { renderAnalytics(); }      catch {}
   try { updateSummaryCards(); }   catch {}
 });
+window.addEventListener("load", () => {
+  setTimeout(() => {
+    renderAnalytics?.();
+    renderCollection?.();
+    renderExpenses?.();
+    updateSummaryCards?.();
+    updateUniversalBar?.();
+  }, 300);
+});
