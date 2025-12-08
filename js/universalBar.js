@@ -1,9 +1,10 @@
 /* ===========================================================
-   universal-bar.js — FINAL OFFSET VERSION v7.0
+   universal-bar.js — FINAL OFFSET VERSION v7.1
    ✔ Net Profit offset (permanent)
    ✔ Stock Investment offset (permanent)
    ✔ Service Investment offset (permanent)
    ✔ All 3 collections ZERO instantly + after reload
+   ✔ Net profit can never go negative (clamped)
 =========================================================== */
 (function () {
 
@@ -11,7 +12,7 @@
   const money = v => "₹" + Math.round(num(v));
 
   /* ===========================================================
-     CENTRAL METRIC CALCULATOR  (offset aware)
+     CENTRAL METRIC CALCULATOR (offset aware)
   ============================================================ */
   function computeMetrics() {
 
@@ -65,10 +66,14 @@
       }
     });
 
-    /* ⭐ OFFSETS (core.js లో load అయ్యేవి) */
+    /* ⭐ OFFSETS (core.js loads them) */
     const netOffset     = num(window.collectedNetTotal     || 0);
     const stockOffset   = num(window.collectedStockTotal   || 0);
     const serviceOffset = num(window.collectedServiceTotal || 0);
+
+    /* ⭐ NEW — NEVER NEGATIVE NET PROFIT */
+    const rawNet = saleProfitCollected + serviceProfitCollected - totalExpenses;
+    const netAfterOffset = rawNet - netOffset;
 
     return {
       saleProfitCollected,
@@ -76,13 +81,12 @@
       pendingCreditTotal,
       totalExpenses,
 
-      /* ⭐ Proper ZERO logic (negative కాకుండా) */
+      /* ⭐ Proper ZERO logic (negative not allowed) */
       stockInvestSold: Math.max(0, stockInvestSold - stockOffset),
       serviceInvestCompleted: Math.max(0, serviceInvestCompleted - serviceOffset),
 
-      netProfit:
-        (saleProfitCollected + serviceProfitCollected - totalExpenses)
-        - netOffset
+      /* ⭐ FINAL — NEVER NEGATIVE NET PROFIT */
+      netProfit: Math.max(0, netAfterOffset)
     };
   }
 
@@ -110,7 +114,6 @@
     if (el.servInv) el.servInv.textContent = money(m.serviceInvestCompleted);
     if (el.credit)  el.credit.textContent  = money(m.pendingCreditTotal);
 
-    // snapshot — ఇతర modules (collection.js, dashboard వంటివి) use చేస్తాయి
     window.__unMetrics = m;
   }
 
@@ -131,7 +134,7 @@
 
     const labels = {
       net: [
-        "Net Profit (Sale + Service − Expenses)",
+        "Net Profit (Sale + Service – Expenses)",
         m.netProfit
       ],
       stock: [
@@ -147,27 +150,27 @@
     if (!labels[kind]) return;
     const [label, approx] = labels[kind];
 
-    // zero లేదా minus ఉంటే collect చేయకూడదు
+    // -------------- BLOCK ZERO/MINUS COLLECT --------------
     if (kind === "net" && num(m.netProfit) <= 0) {
-      alert("Net profit collect చేయడానికి ఏమీ లేదు.");
+      alert("No net profit available to collect.");
       return;
     }
     if (kind === "stock" && num(m.stockInvestSold) <= 0) {
-      alert("Stock investment collect చేయడానికి ఏమీ లేదు.");
+      alert("No stock investment available to collect.");
       return;
     }
     if (kind === "service" && num(m.serviceInvestCompleted) <= 0) {
-      alert("Service investment collect చేయడానికి ఏమీ లేదు.");
+      alert("No service investment available to collect.");
       return;
     }
 
     const val = prompt(
-      `${label}\nApprox: ₹${Math.round(approx)}\n\nEnter amount:`
+      `${label}\nApprox: ₹${Math.round(approx)}\n\nEnter amount to collect:`
     );
     if (!val) return;
 
     const amt = num(val);
-    if (amt <= 0) return alert("Invalid amount.");
+    if (amt <= 0) return alert("Invalid amount entered.");
 
     const note = prompt("Optional note:", "") || "";
 
@@ -187,7 +190,7 @@
       window.renderAnalytics?.();
       window.updateSummaryCards?.();
       window.updateTabSummaryBar?.();
-      alert("Net Profit collected!");
+      alert("Net profit collected successfully!");
       return;
     }
 
@@ -207,7 +210,7 @@
       window.renderAnalytics?.();
       window.updateSummaryCards?.();
       window.updateTabSummaryBar?.();
-      alert("Stock Investment collected!");
+      alert("Stock investment collected successfully!");
       return;
     }
 
@@ -227,7 +230,7 @@
       window.renderAnalytics?.();
       window.updateSummaryCards?.();
       window.updateTabSummaryBar?.();
-      alert("Service Investment collected!");
+      alert("Service investment collected successfully!");
       return;
     }
   }
