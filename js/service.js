@@ -1,5 +1,5 @@
 /* ===========================================================
-   🛠 service.js — FINAL FIXED (Investment & Profit Correct)
+   🛠 service.js — FINAL FIXED (Investment, Profit, Offset Safe)
 =========================================================== */
 
 (function () {
@@ -13,6 +13,7 @@
 
   let svcPieInstance = null;
 
+  /* ---------------- STORAGE ---------------- */
   function ensureServices() {
     if (!Array.isArray(window.services)) window.services = [];
     return window.services;
@@ -34,6 +35,7 @@
     try { window.renderCollection?.(); }   catch {}
   }
 
+  /* ---------------- NEW JOB ---------------- */
   function nextJobId() {
     const list = ensureServices();
     const nums = list.map(j => Number(j.jobNum || j.jobId) || 0);
@@ -86,9 +88,16 @@
     ensureServices().push(job);
     persistServices();
     fullRefresh();
+
+    /* ⭐ AUTO CLEAR all input fields */
+    qs("#svcCustomer").value = "";
+    qs("#svcPhone").value = "";
+    qs("#svcModel").value = "";
+    qs("#svcProblem").value = "";
+    qs("#svcAdvance").value = "";
   }
 
-  /* ---------------- COMPLETE JOB ---------------- */
+  /* ---------------- COMPLETE ---------------- */
   function markCompleted(id, mode) {
     const job = ensureServices().find(j => j.id === id);
     if (!job) return;
@@ -101,34 +110,32 @@
     const profit = full - invest;
     const adv    = Number(job.advance || 0);
 
-    /* ⭐ ALWAYS SAVE TRUE INVEST & TRUE PROFIT */
-    job.invest = invest;          // <- ONLY investment amount (fixed)
-    job.profit = profit;          // <- Profit = full - invest (fixed)
+    /* ⭐ ALWAYS SAVE TRUE INVEST & PROFIT */
+    job.invest = invest;
+    job.profit = profit;
     job.date_out = todayDateFn();
 
     /* ---------------- PAID MODE ---------------- */
     if (mode === "paid") {
-
       const collect = full - adv;
 
       if (!confirm(`Collect Now: ₹${collect}\nProfit: ₹${profit}`)) return;
 
-      /* ⭐ SAVE VALUES CORRECTLY */
-      job.paid      = full;       // total bill paid
+      job.paid      = full;
       job.remaining = 0;
       job.status    = "Completed";
 
-      /* collection event */
       if (collect > 0)
         window.addCollectionEntry("Service (Paid)", `Job ${job.jobId}`, collect);
 
     } else {
+
       /* ---------------- CREDIT MODE ---------------- */
       const due = full - adv;
 
       if (!confirm(`Pending Credit: ₹${due}\nProfit added later`)) return;
 
-      job.paid      = adv;        // only advance received
+      job.paid      = adv;
       job.remaining = due;
       job.status    = "Credit";
     }
@@ -156,6 +163,7 @@
     fullRefresh();
   }
 
+  /* ---------------- OPEN ACTION ---------------- */
   function openJob(id) {
     const j = ensureServices().find(x => x.id === id);
     if (!j) return;
@@ -172,13 +180,22 @@
     if (ch === "3") return markFailed(id);
   }
 
+  /* ---------------- CLEAR ALL JOBS ⭐ ---------------- */
   window.clearAllServiceJobs = function () {
     if (!confirm("Delete ALL Service Jobs?")) return;
+
+    /* Delete entire jobs history */
     window.services = [];
     persistServices();
+
+    /* ⭐ VERY IMPORTANT — reset service offset */
+    window.collectedServiceTotal = 0;
+    window.saveCollectedServiceTotal?.();
+
     fullRefresh();
   };
 
+  /* ---------------- TABLES + PIE ---------------- */
   function renderServiceTables() {
     const pendBody = qs("#svcTable tbody");
     const histBody = qs("#svcHistoryTable tbody");
