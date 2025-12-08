@@ -105,12 +105,11 @@ window.expenses    = toArray(safeParse(localStorage.getItem(KEY_EXPENSES)));
 window.services    = toArray(safeParse(localStorage.getItem(KEY_SERVICES)));
 window.collections = toArray(safeParse(localStorage.getItem(KEY_COLLECTIONS)));
 
-/* ⭐ NEW — LOAD OFFSETS (VERY IMPORTANT) */
+/* ⭐ NEW — LOAD OFFSETS */
 window.collectedNetTotal     = Number(localStorage.getItem(KEY_NET_COLLECTED)     || 0);
 window.collectedStockTotal   = Number(localStorage.getItem(KEY_STOCK_COLLECTED)   || 0);
 window.collectedServiceTotal = Number(localStorage.getItem(KEY_SERVICE_COLLECTED) || 0);
 
-/* Ensure arrays */
 function ensureArrays() {
   if (!Array.isArray(window.types))       window.types = [];
   if (!Array.isArray(window.stock))       window.stock = [];
@@ -140,15 +139,14 @@ function normalizeAllDates() {
 
   if (window.services)
     window.services = window.services.map(j => ({
-      ...j,
-      date_in:  toInternalIfNeeded(j.date_in),
-      date_out: toInternalIfNeeded(j.date_out)
+      ...j, date_in:  toInternalIfNeeded(j.date_in), date_out: toInternalIfNeeded(j.date_out)
     }));
 
   if (window.collections)
     window.collections = window.collections.map(c => ({...c, date: toInternalIfNeeded(c.date)}));
 }
 normalizeAllDates();
+
 /* ===========================================================
    SAVE HELPERS (LOCAL + CLOUD)
 =========================================================== */
@@ -156,7 +154,7 @@ function _localSave(k, v) {
   try { localStorage.setItem(k, JSON.stringify(v)); } catch {}
 }
 
-/* ⭐ SAVE OFFSETS (PERMANENT NUMBERS) */
+/* ⭐ SAVE OFFSETS (PERMANENT) */
 function saveCollectedNetTotal() {
   try { localStorage.setItem(KEY_NET_COLLECTED, String(window.collectedNetTotal || 0)); } catch {}
 }
@@ -173,34 +171,13 @@ function saveCollectedServiceTotal() {
 window.saveCollectedServiceTotal = saveCollectedServiceTotal;
 
 /* ---------- STANDARD SAVE WRAPPERS ---------- */
-function saveTypes() {
-  _localSave(KEY_TYPES, types);
-  cloudSync(KEY_TYPES, types);
-}
-function saveStock() {
-  _localSave(KEY_STOCK, stock);
-  cloudSync(KEY_STOCK, stock);
-}
-function saveSales() {
-  _localSave(KEY_SALES, sales);
-  cloudSync(KEY_SALES, sales);
-}
-function saveWanting() {
-  _localSave(KEY_WANTING, wanting);
-  cloudSync(KEY_WANTING, wanting);
-}
-function saveExpenses() {
-  _localSave(KEY_EXPENSES, expenses);
-  cloudSync(KEY_EXPENSES, expenses);
-}
-function saveServices() {
-  _localSave(KEY_SERVICES, services);
-  cloudSync(KEY_SERVICES, services);
-}
-function saveCollections() {
-  _localSave(KEY_COLLECTIONS, collections);
-  cloudSync(KEY_COLLECTIONS, collections);
-}
+function saveTypes()  { _localSave(KEY_TYPES, types); cloudSync(KEY_TYPES, types); }
+function saveStock()  { _localSave(KEY_STOCK, stock); cloudSync(KEY_STOCK, stock); }
+function saveSales()  { _localSave(KEY_SALES, sales); cloudSync(KEY_SALES, sales); }
+function saveWanting(){ _localSave(KEY_WANTING, wanting); cloudSync(KEY_WANTING, wanting); }
+function saveExpenses(){ _localSave(KEY_EXPENSES, expenses); cloudSync(KEY_EXPENSES, expenses); }
+function saveServices(){ _localSave(KEY_SERVICES, services); cloudSync(KEY_SERVICES, services); }
+function saveCollections(){ _localSave(KEY_COLLECTIONS, collections); cloudSync(KEY_COLLECTIONS, collections); }
 
 window.saveTypes       = saveTypes;
 window.saveStock       = saveStock;
@@ -209,34 +186,24 @@ window.saveWanting     = saveWanting;
 window.saveExpenses    = saveExpenses;
 window.saveServices    = saveServices;
 window.saveCollections = saveCollections;
-
 /* ===========================================================
-   PART C — BUSINESS LOGIC (Types / Stock / Wanting / Expenses)
+   PART C — BUSINESS LOGIC
 =========================================================== */
 
-/* ---------- TYPE MANAGEMENT ---------- */
 function addType(name) {
   name = (name || "").trim();
   if (!name) return;
-
   if (types.find(t => t.name.toLowerCase() === name.toLowerCase())) return;
 
-  types.push({
-    id: uid("type"),
-    name
-  });
-
+  types.push({ id: uid("type"), name });
   saveTypes();
   cloudSync(KEY_TYPES, types);
 }
 window.addType = addType;
 
-/* ---------- STOCK MANAGEMENT ---------- */
 function findProduct(type, name) {
   return (stock || []).find(
-    p =>
-      p.type === type &&
-      String(p.name || "").toLowerCase() === String(name || "").toLowerCase()
+    p => p.type === type && String(p.name || "").toLowerCase() === String(name || "").toLowerCase()
   );
 }
 window.findProduct = findProduct;
@@ -246,7 +213,6 @@ function getProductCost(type, name) {
   if (!p) return 0;
 
   if (p.cost) return Number(p.cost);
-
   if (p.history && p.history.length) {
     let t = 0, q = 0;
     p.history.forEach(h => {
@@ -263,22 +229,14 @@ function addStockEntry({ date, type, name, qty, cost }) {
   date = toInternalIfNeeded(date);
   qty  = Number(qty);
   cost = Number(cost);
-
   if (!type || !name || qty <= 0 || cost <= 0) return;
 
   let p = findProduct(type, name);
 
   if (!p) {
     p = {
-      id: uid("stk"),
-      date,
-      type,
-      name,
-      qty,
-      cost,
-      sold: 0,
-      limit: getGlobalLimit(),
-      history: [{ date, qty, cost }]
+      id: uid("stk"), date, type, name, qty, cost,
+      sold: 0, limit: getGlobalLimit(), history: [{ date, qty, cost }]
     };
     stock.push(p);
   } else {
@@ -293,7 +251,6 @@ function addStockEntry({ date, type, name, qty, cost }) {
 }
 window.addStockEntry = addStockEntry;
 
-/* ---------- LOW STOCK LIMIT ---------- */
 function setGlobalLimit(v) {
   localStorage.setItem(KEY_LIMIT, v);
 }
@@ -303,24 +260,15 @@ function getGlobalLimit() {
 window.setGlobalLimit = setGlobalLimit;
 window.getGlobalLimit = getGlobalLimit;
 
-/* ---------- WANTING LIST ---------- */
 function autoAddWanting(type, name, note = "Low Stock") {
   if (!wanting.find(w => w.type === type && w.name === name)) {
-    wanting.push({
-      id: uid("want"),
-      date: todayDate(),
-      type,
-      name,
-      note
-    });
-
+    wanting.push({ id: uid("want"), date: todayDate(), type, name, note });
     saveWanting();
     cloudSync(KEY_WANTING, wanting);
   }
 }
 window.autoAddWanting = autoAddWanting;
 
-/* ---------- EXPENSES ---------- */
 function addExpense({ date, category, amount, note }) {
   expenses.push({
     id: uid("exp"),
@@ -329,53 +277,46 @@ function addExpense({ date, category, amount, note }) {
     amount: Number(amount || 0),
     note: note || ""
   });
-
   saveExpenses();
   cloudSync(KEY_EXPENSES, expenses);
 }
 window.addExpense = addExpense;
+
 /* ===========================================================
-   NET PROFIT (Dynamic Calculator with Net Offset)
+   NET PROFIT (Dynamic + Offset)
 =========================================================== */
 window.getTotalNetProfit = function () {
-  let salesProfit = 0,
-      serviceProfit = 0,
-      exp = 0;
+  let salesProfit = 0, serviceProfit = 0, exp = 0;
 
-  // Sales profits (only non-credit)
   (sales || []).forEach(s => {
     if ((s.status || "").toLowerCase() !== "credit") {
       salesProfit += Number(s.profit || 0);
     }
   });
 
-  // Service profit (completed only)
   (services || []).forEach(j => {
     if ((j.status || "").toLowerCase() === "completed") {
       serviceProfit += Number(j.profit || 0);
     }
   });
 
-  // Expenses
   (expenses || []).forEach(e => {
     exp += Number(e.amount || 0);
   });
 
-  // ⭐ Minus already collected NET offset (PERMANENT)
   const collectedOffset = Number(window.collectedNetTotal || 0);
 
   return (salesProfit + serviceProfit - exp) - collectedOffset;
 };
 
 /* ===========================================================
-   TAB SUMMARY BAR (Top Green/Red Bar)
+   TAB SUMMARY BAR
 =========================================================== */
 window.updateTabSummaryBar = function () {
   const bar = document.getElementById("tabSummaryBar");
   if (!bar) return;
 
   const net = window.getTotalNetProfit();
-
   if (net >= 0) {
     bar.style.background = "#003300";
     bar.style.color = "#fff";
@@ -386,19 +327,13 @@ window.updateTabSummaryBar = function () {
     bar.textContent = `Loss: -₹${Math.abs(net)}`;
   }
 };
-
 /* ===========================================================
-   PART D — CLOUD PULL + STORAGE SYNC + EMAIL TAG
+   PART D — CLOUD + SYNC
 =========================================================== */
 
-/* ===========================================================
-   UNIVERSAL CLOUD SAVE WRAPPER  (REQUIRED)
-=========================================================== */
 window.cloudSync = function(key, data) {
-  // If firebase/cloud is unavailable → silently skip
   if (typeof cloudSaveDebounced !== "function") return;
 
-  // Firestore collection name mapping
   const map = {
     "item-types":      "types",
     "stock-data":      "stock",
@@ -415,9 +350,6 @@ window.cloudSync = function(key, data) {
   cloudSaveDebounced(col, data || []);
 };
 
-/* -----------------------------------------------------------
-   KEY → GLOBAL VAR NAME MAP
------------------------------------------------------------ */
 function keyToVarName(key) {
   switch (key) {
     case KEY_TYPES:       return "types";
@@ -431,17 +363,10 @@ function keyToVarName(key) {
   return key;
 }
 
-/* -----------------------------------------------------------
-   CLOUD PULL — FIXED VERSION
-   (Firestore → LocalStorage → Window Arrays)
-   ⭐ ALWAYS SYNC — EVEN IF REMOTE IS EMPTY
------------------------------------------------------------ */
 async function cloudPullAllIfAvailable() {
   if (typeof cloudLoad !== "function") return;
 
   let email = "";
-
-  // 1) Firebase auth
   try {
     if (window.getFirebaseUser) {
       const u = getFirebaseUser();
@@ -449,30 +374,22 @@ async function cloudPullAllIfAvailable() {
     }
   } catch {}
 
-  // 2) Local login
   if (!email && window.getUserEmail) {
     email = getUserEmail() || "";
   }
 
-  // 3) LocalStorage fallback
   if (!email) {
     email = localStorage.getItem(KEY_USER_EMAIL) || "";
   }
 
-  // No email = offline mode
   if (!email) {
     updateEmailTag();
     return;
   }
 
   const keys = [
-    KEY_TYPES,
-    KEY_STOCK,
-    KEY_SALES,
-    KEY_WANTING,
-    KEY_EXPENSES,
-    KEY_SERVICES,
-    KEY_COLLECTIONS
+    KEY_TYPES, KEY_STOCK, KEY_SALES, KEY_WANTING,
+    KEY_EXPENSES, KEY_SERVICES, KEY_COLLECTIONS
   ];
 
   for (const key of keys) {
@@ -487,8 +404,6 @@ async function cloudPullAllIfAvailable() {
       window[varName] = arr;
       localStorage.setItem(key, JSON.stringify(arr));
     } catch (e) {
-      console.warn("Cloud pull failed for", key, e);
-
       const localArr = toArray(safeParse(localStorage.getItem(key)));
       const varName = keyToVarName(key);
       window[varName] = localArr;
@@ -516,9 +431,6 @@ async function cloudPullAllIfAvailable() {
 
 window.cloudPullAllIfAvailable = cloudPullAllIfAvailable;
 
-/* -----------------------------------------------------------
-   AUTO CLOUD LOAD ON PAGE LOAD
------------------------------------------------------------ */
 window.addEventListener("load", () => {
   setTimeout(() => {
     try { cloudPullAllIfAvailable(); } catch {}
@@ -527,9 +439,10 @@ window.addEventListener("load", () => {
     try { updateUniversalBar?.(); }    catch {}
   }, 300);
 });
-/* -----------------------------------------------------------
-   STORAGE EVENTS (MULTI-TAB & LOCAL SYNC)
------------------------------------------------------------ */
+
+/* ===========================================================
+   STORAGE EVENTS (LOCAL SYNC + RELOAD OFFSETS)
+=========================================================== */
 window.addEventListener("storage", () => {
   window.types       = toArray(safeParse(localStorage.getItem(KEY_TYPES)));
   window.stock       = toArray(safeParse(localStorage.getItem(KEY_STOCK)));
@@ -539,9 +452,10 @@ window.addEventListener("storage", () => {
   window.services    = toArray(safeParse(localStorage.getItem(KEY_SERVICES)));
   window.collections = toArray(safeParse(localStorage.getItem(KEY_COLLECTIONS)));
 
-  /* ⭐ IMPORTANT — re-load collected NET offset also */
-  window.collectedNetTotal =
-    Number(localStorage.getItem(KEY_NET_COLLECTED) || 0);
+  /* ⭐ ALL OFFSETS RELOAD */
+  window.collectedNetTotal     = Number(localStorage.getItem(KEY_NET_COLLECTED)     || 0);
+  window.collectedStockTotal   = Number(localStorage.getItem(KEY_STOCK_COLLECTED)   || 0);
+  window.collectedServiceTotal = Number(localStorage.getItem(KEY_SERVICE_COLLECTED) || 0);
 
   ensureArrays();
   normalizeAllDates();
@@ -561,12 +475,10 @@ window.addEventListener("storage", () => {
   try { updateUniversalBar?.(); }      catch {}
   try { updateEmailTag?.(); }          catch {}
 });
-
 /* -----------------------------------------------------------
    UNIVERSAL INVESTMENT HELPERS
 ----------------------------------------------------------- */
 
-/* 1) TOTAL STOCK INVESTMENT (before sale) */
 window.getStockInvestmentCollected = function () {
   let total = 0;
   (stock || []).forEach(p => {
@@ -581,7 +493,6 @@ window.getStockInvestmentCollected = function () {
   return total;
 };
 
-/* 2) STOCK INVESTMENT (sold qty × cost only) */
 window.getStockInvestmentAfterSale = function () {
   let total = 0;
   (stock || []).forEach(p => {
@@ -592,7 +503,6 @@ window.getStockInvestmentAfterSale = function () {
   return total;
 };
 
-/* 3) SALES INVESTMENT (sold qty × cost) */
 window.getSalesInvestmentCollected = function () {
   return (sales || []).reduce(
     (t, s) => t + Number(s.qty || 0) * Number(s.cost || 0),
@@ -600,21 +510,18 @@ window.getSalesInvestmentCollected = function () {
   );
 };
 
-/* 4) SALES PROFIT (paid only) */
 window.getSalesProfitCollected = function () {
   return (sales || [])
     .filter(s => (String(s.status || "").toLowerCase() !== "credit"))
     .reduce((t, s) => t + Number(s.profit || 0), 0);
 };
 
-/* 5) SERVICE INVESTMENT (Completed only) */
 window.getServiceInvestmentCollected = function () {
   return (services || [])
     .filter(s => String(s.status || "").toLowerCase() === "completed")
     .reduce((t, s) => t + Number(s.invest || 0), 0);
 };
 
-/* 6) SERVICE PROFIT (Completed only) */
 window.getServiceProfitCollected = function () {
   return (services || [])
     .filter(s => String(s.status || "").toLowerCase() === "completed")
@@ -648,5 +555,4 @@ window.updateEmailTag = function () {
   el.textContent = email ? email : "Offline (Local mode)";
 };
 
-/* Run once */
 try { updateEmailTag(); } catch {}
