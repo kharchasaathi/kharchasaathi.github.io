@@ -74,7 +74,6 @@ function addSaleEntry({ date, type, product, qty, price, status, customer, phone
   window.saveSales?.();
 
   renderSales?.();
-  renderPendingCollections?.();
   renderCollection?.();
   window.renderAnalytics?.();
   window.updateSummaryCards?.();
@@ -121,7 +120,6 @@ function collectCreditSale(id) {
   window.addCollectionEntry("Sale (Credit cleared)", details, collected);
 
   renderSales?.();
-  renderPendingCollections?.();
   renderCollection?.();
   window.renderAnalytics?.();
   window.updateSummaryCards?.();
