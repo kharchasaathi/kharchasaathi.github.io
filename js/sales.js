@@ -247,7 +247,6 @@ document.getElementById("clearSalesBtn")?.addEventListener("click", () => {
   window.saveSales?.();
 
   renderSales();
-  renderPendingCollections?.();
   renderCollection?.();
   window.renderAnalytics?.();
   window.updateSummaryCards?.();
