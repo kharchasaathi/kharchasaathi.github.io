@@ -1,7 +1,8 @@
 /* ===========================================================
-   service.js — FIXED + CREDIT COLLECT
+   service.js — FIXED + CREDIT COLLECT + FULL FILTER SUPPORT
    - Safe investment / profit
    - Service credit → later collect
+   - Date + Type + Status filters (AND mode)
    =========================================================== */
 (function () {
   const qs = sel => document.querySelector(sel);
@@ -35,24 +36,12 @@
   }
 
   function fullRefresh() {
-    try {
-      renderServiceTables();
-    } catch (e) {}
-    try {
-      renderSvcPie();
-    } catch (e) {}
-    try {
-      window.renderAnalytics?.();
-    } catch (e) {}
-    try {
-      window.updateSummaryCards?.();
-    } catch (e) {}
-    try {
-      window.updateUniversalBar?.();
-    } catch (e) {}
-    try {
-      window.renderCollection?.();
-    } catch (e) {}
+    try { renderServiceTables(); } catch (e) {}
+    try { renderSvcPie(); } catch (e) {}
+    try { window.renderAnalytics?.(); } catch (e) {}
+    try { window.updateSummaryCards?.(); } catch (e) {}
+    try { window.updateUniversalBar?.(); } catch (e) {}
+    try { window.renderCollection?.(); } catch (e) {}
   }
 
   /* ---------------- NEW JOB ---------------- */
@@ -99,14 +88,13 @@
       profit: 0,
       returnedAdvance: 0,
       status: "Pending",
-      fromCredit: false // later credit→paid గుర్తు కోసం
+      fromCredit: false
     };
 
     ensureServices().push(job);
     persistServices();
     fullRefresh();
 
-    // ⭐ AUTO CLEAR
     qs("#svcCustomer").value = "";
     qs("#svcPhone").value = "";
     qs("#svcModel").value = "";
@@ -132,14 +120,12 @@
     const profit = full - invest;
     const adv = Number(job.advance || 0);
 
-    // ⭐ ALWAYS SAVE TRUE INVEST & PROFIT
     job.invest = invest;
     job.profit = profit;
     job.date_out = todayDateFn();
     job.fromCredit = false;
 
     if (mode === "paid") {
-      // -------- CASH SERVICE ----------
       const collect = full - adv;
       if (!confirm(`Collect Now: ₹${collect}\nProfit: ₹${profit}`)) return;
 
@@ -155,7 +141,6 @@
         );
       }
     } else {
-      // -------- CREDIT SERVICE ----------
       const due = full - adv;
       if (!confirm(`Pending Credit: ₹${due}\nProfit added after collect`)) {
         return;
@@ -171,7 +156,7 @@
     fullRefresh();
   }
 
-  /* ---------------- CREDIT → PAID (COLLECT) ---------------- */
+  /* ---------------- CREDIT → PAID ---------------- */
   function collectServiceCredit(id) {
     const job = ensureServices().find(j => j.id === id);
     if (!job) return;
@@ -200,13 +185,11 @@
 
     if (!confirm(msg + "\n\nMark as PAID & Collect?")) return;
 
-    // update job
     job.paid = Number(job.paid || 0) + due;
     job.remaining = 0;
     job.status = "Completed";
     job.fromCredit = true;
 
-    // collection history
     const details =
       `Job ${job.jobId} — ${job.item}` +
       (job.customer ? ` — ${job.customer}` : "") +
@@ -266,21 +249,22 @@
     if (ch === "3") return markFailed(id);
   }
 
-  /* ---------------- CLEAR ALL JOBS ⭐ ---------------- */
+  /* ---------------- CLEAR ALL JOBS ---------------- */
   window.clearAllServiceJobs = function () {
     if (!confirm("Delete ALL Service Jobs?")) return;
 
     window.services = [];
     persistServices();
 
-    // ⭐ reset service investment offset
     window.collectedServiceTotal = 0;
     window.saveCollectedServiceTotal?.();
 
     fullRefresh();
+     
   };
-
-  /* ---------------- TABLES + PIE ---------------- */
+   /* =======================================================
+     TABLES + FILTERS + PIE
+  ======================================================= */
   function renderServiceTables() {
     const pendBody = qs("#svcTable tbody");
     const histBody = qs("#svcHistoryTable tbody");
@@ -288,12 +272,49 @@
 
     const list = ensureServices();
 
-    // ---- Pending ----
-    const pending = list.filter(j => j.status === "Pending");
+    /* ⭐ READ FILTER INPUTS */
+    const filterType   = qs("#svcFilterType")?.value || "all";
+    const filterStatus = qs("#svcFilterStatus")?.value || "all";
+    const filterDate   = qs("#svcFilterDate")?.value || "";
+
+    let filtered = [...list];
+
+    /* ---------- TYPE FILTER ---------- */
+    if (filterType !== "all") {
+      filtered = filtered.filter(j => j.item === filterType);
+    }
+
+    /* ---------- STATUS FILTER ---------- */
+    if (filterStatus !== "all") {
+      const v = filterStatus.toLowerCase();
+      filtered = filtered.filter(j => {
+        const s = String(j.status || "").toLowerCase();
+        if (v === "pending")  return s === "pending";
+        if (v === "completed") return s === "completed";
+        if (v === "credit")   return s === "credit";
+        if (v === "failed")   return s === "failed/returned";
+        return true;
+      });
+    }
+
+    /* ---------- DATE FILTER (in/out) ---------- */
+    if (filterDate) {
+      filtered = filtered.filter(j =>
+        j.date_in === filterDate ||
+        j.date_out === filterDate
+      );
+    }
+
+    /* ---------- SPLIT TABLES ---------- */
+    const pending = filtered.filter(j => j.status === "Pending");
+    const history = filtered.filter(j => j.status !== "Pending");
+
+    /* ---------- RENDER PENDING ---------- */
     pendBody.innerHTML =
-      pending
-        .map(
-          j => `
+      pending.length
+        ? pending
+            .map(
+              j => `
         <tr>
           <td>${j.jobId}</td>
           <td>${toDisplay(j.date_in)}</td>
@@ -309,28 +330,27 @@
             </button>
           </td>
         </tr>`
-        )
-        .join("") ||
-      `<tr><td colspan="9">No pending jobs</td></tr>`;
+            )
+            .join("")
+        : `<tr><td colspan="9">No pending jobs</td></tr>`;
 
-    // ---- History (Completed / Credit / Failed) ----
-    const history = list.filter(j => j.status !== "Pending");
-
+    /* ---------- RENDER HISTORY ---------- */
     histBody.innerHTML =
-      history
-        .map(j => {
-          const status = String(j.status || "");
-          const statusLower = status.toLowerCase();
+      history.length
+        ? history
+            .map(j => {
+              const status = String(j.status || "");
+              const sLower = status.toLowerCase();
 
-          let statusHTML = escSafe(status);
+              let statusHTML = escSafe(status);
 
-          if (statusLower === "credit") {
-            statusHTML =
-              `Credit ` +
-              `<button class="btn btn-xs" onclick="collectServiceCredit('${j.id}')">Collect</button>`;
-          }
+              if (sLower === "credit") {
+                statusHTML =
+                  `Credit ` +
+                  `<button class="btn btn-xs" onclick="collectServiceCredit('${j.id}')">Collect</button>`;
+              }
 
-          return `
+              return `
         <tr>
           <td>${j.jobId}</td>
           <td>${toDisplay(j.date_in)}</td>
@@ -342,9 +362,9 @@
           <td>₹${j.profit}</td>
           <td>${statusHTML}</td>
         </tr>`;
-        })
-        .join("") ||
-      `<tr><td colspan="9">No history</td></tr>`;
+            })
+            .join("")
+        : `<tr><td colspan="9">No history</td></tr>`;
 
     renderSvcPie();
   }
@@ -366,16 +386,16 @@
         labels: ["Pending", "Completed", "Failed/Returned"],
         datasets: [
           {
-            data: [P, C, F],
-            backgroundColor: ["#facc15", "#22c55e", "#ef4444"]
+            data: [P, C, F]
           }
         ]
       }
     });
   }
 
-  /* ---------------- EVENTS ---------------- */
-  // Pending table - open job
+  /* =======================================================
+     EVENTS
+  ======================================================= */
   document.addEventListener("click", e => {
     if (e.target.classList.contains("svc-view")) {
       openJob(e.target.dataset.id);
@@ -384,6 +404,11 @@
 
   qs("#addServiceBtn")?.addEventListener("click", addServiceJob);
   qs("#clearServiceBtn")?.addEventListener("click", clearAllServiceJobs);
+
+  /* ⭐ FILTER EVENTS (AUTO REFRESH) */
+  qs("#svcFilterType")?.addEventListener("change", renderServiceTables);
+  qs("#svcFilterStatus")?.addEventListener("change", renderServiceTables);
+  qs("#svcFilterDate")?.addEventListener("change", renderServiceTables);
 
   window.addEventListener("load", () => {
     renderServiceTables();
