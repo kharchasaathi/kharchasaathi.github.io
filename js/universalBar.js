@@ -1,8 +1,9 @@
 /* ===========================================================
-   universal-bar.js — FINAL OFFSET VERSION v8.0
-   ⭐ NET OFFSET now also reduces sale + service visually
+   universal-bar.js — FINAL OFFSET VERSION v10.0
+   ⭐ When NET collected → Sale & Service UI reset to ZERO
    ⭐ Stock & Service investment offsets unchanged
-   ⭐ Real internal data SAFE — only UI display adjusted
+   ⭐ Internal accounting data SAFE
+   ⭐ All alerts/messages are now in ENGLISH
 =========================================================== */
 (function () {
 
@@ -70,12 +71,21 @@
     const serviceOffset = num(window.collectedServiceTotal || 0);
 
     /* =======================================================
-       ⭐ NEW FIX — NET OFFSET ALSO REDUCES SALE & SERVICE
-       ✔ ONLY DISPLAY VALUES CHANGED (data untouched)
+       ⭐ NEW FIX — If NET collected, Sale + Service UI = ZERO
+       ✔ Data untouched (only display changed)
     ======================================================== */
-    const saleProfitDisplay     = Math.max(0, saleProfitCollected     - netOffset);
-    const serviceProfitDisplay  = Math.max(0, serviceProfitCollected  - netOffset);
 
+    let saleProfitDisplay     = saleProfitCollected;
+    let serviceProfitDisplay  = serviceProfitCollected;
+
+    if (netOffset > 0) {
+      saleProfitDisplay = 0;
+      serviceProfitDisplay = 0;
+    }
+
+    /* =======================================================
+       NET PROFIT
+    ======================================================== */
     const netProfit =
       (saleProfitCollected + serviceProfitCollected - totalExpenses)
       - netOffset;
@@ -144,17 +154,19 @@
     if (!labels[kind]) return;
     const [label, approx] = labels[kind];
 
+    /* ===== ENGLISH VALIDATION ===== */
+
     if (kind === "net" && num(m.netProfit) <= 0)
-      return alert("Net profit collect చేయడానికి ఏమీ లేదు.");
+      return alert("No net profit available to collect.");
 
     if (kind === "stock" && num(m.stockInvestSold) <= 0)
-      return alert("Stock investment collect చేయడానికి ఏమీ లేదు.");
+      return alert("No stock investment available to collect.");
 
     if (kind === "service" && num(m.serviceInvestCompleted) <= 0)
-      return alert("Service investment collect చేయడానికి ఏమీ లేదు.");
+      return alert("No service investment available to collect.");
 
     const val = prompt(
-      `${label}\nApprox: ₹${Math.round(approx)}\n\nEnter amount:`
+      `${label}\nApprox: ₹${Math.round(approx)}\n\nEnter collection amount:`
     );
     if (!val) return;
 
@@ -192,10 +204,10 @@
     window.updateTabSummaryBar?.();
 
     alert(kind === "net"
-      ? "Net Profit collected!"
+      ? "Net profit collected!"
       : kind === "stock"
-        ? "Stock Investment collected!"
-        : "Service Investment collected!"
+        ? "Stock investment collected!"
+        : "Service investment collected!"
     );
   }
 
