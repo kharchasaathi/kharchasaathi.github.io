@@ -1,9 +1,11 @@
 /* ===========================================================
-   universal-bar.js — FINAL OFFSET VERSION v11.0
-   ⭐ Sale & Service now show REAL values always
-   ⭐ When NET is collected → Sale & Service UI reset to ZERO (only instant UI)
-   ⭐ NET OFFSET affects only netProfit (not sale/service)
-   ⭐ Internal accounting data SAFE
+   universal-bar.js — FINAL OFFSET VERSION v12.0
+   ⭐ After NET collect → Sale & Service reset permanently
+   ⭐ Next profits show freshly
+   ⭐ Full offset system:
+        collectedNetTotal
+        collectedSaleProfitTotal
+        collectedServiceProfitTotal
 =========================================================== */
 (function () {
 
@@ -11,7 +13,7 @@
   const money = v => "₹" + Math.round(num(v));
 
   /* ===========================================================
-     CENTRAL METRIC CALCULATOR (offset-aware)
+     CENTRAL METRIC CALCULATOR
   ============================================================ */
   function computeMetrics() {
 
@@ -27,11 +29,12 @@
     let stockInvestSold         = 0;
     let serviceInvestCompleted  = 0;
 
-    // -------- SALES PROFIT + CREDIT ----------
+    // SALES PROFIT + CREDIT
     sales.forEach(s => {
       const status = String(s.status || "").toLowerCase();
       const qty    = num(s.qty);
-      const total  = num(s.total || qty * num(s.price));
+      const price  = num(s.price);
+      const total  = num(s.total || qty * price);
       const profit = num(s.profit);
 
       if (status === "credit") {
@@ -41,7 +44,7 @@
       }
     });
 
-    // -------- SERVICE PROFIT + INVEST ----------
+    // SERVICE PROFIT + INVEST
     services.forEach(j => {
       const status = String(j.status || "").toLowerCase();
       if (status === "completed") {
@@ -50,12 +53,12 @@
       }
     });
 
-    // -------- EXPENSES ----------
+    // EXPENSES
     expenses.forEach(e => {
       totalExpenses += num(e.amount || e.value);
     });
 
-    // -------- SOLD STOCK INVEST ----------
+    // SOLD STOCK INVEST
     stock.forEach(p => {
       const soldQty = num(p.sold);
       const cost    = num(p.cost);
@@ -64,22 +67,17 @@
       }
     });
 
-    /* ⭐ OFFSETS (loaded from core.js) */
-    const netOffset     = num(window.collectedNetTotal     || 0);
-    const stockOffset   = num(window.collectedStockTotal   || 0);
-    const serviceOffset = num(window.collectedServiceTotal || 0);
+    /* ⭐ READ OFFSETS */
+    const netOffset        = num(window.collectedNetTotal        || 0);
+    const saleOffset       = num(window.collectedSaleProfitTotal || 0);
+    const serviceOffset    = num(window.collectedServiceProfitTotal || 0);
+    const stockOffset      = num(window.collectedStockTotal      || 0);
+    const servInvOffset    = num(window.collectedServiceTotal    || 0);
 
-    /* =======================================================
-       ⭐ DISPLAY VALUES
-       ✔ Sale & Service = REAL values always
-       ✔ DO NOT depend on netOffset
-    ======================================================== */
-    let saleProfitDisplay     = saleProfitCollected;
-    let serviceProfitDisplay  = serviceProfitCollected;
+    /* ⭐ DISPLAY VALUES (permanent offset) */
+    const saleProfitDisplay    = Math.max(0, saleProfitCollected    - saleOffset);
+    const serviceProfitDisplay = Math.max(0, serviceProfitCollected - serviceOffset);
 
-    /* =======================================================
-       ⭐ NET PROFIT (offset aware)
-    ======================================================== */
     const netProfit =
       (saleProfitCollected + serviceProfitCollected - totalExpenses)
       - netOffset;
@@ -91,7 +89,7 @@
       totalExpenses,
 
       stockInvestSold: Math.max(0, stockInvestSold - stockOffset),
-      serviceInvestCompleted: Math.max(0, serviceInvestCompleted - serviceOffset),
+      serviceInvestCompleted: Math.max(0, serviceInvestCompleted - servInvOffset),
 
       netProfit: Math.max(0, netProfit)
     };
@@ -148,8 +146,6 @@
     if (!labels[kind]) return;
     const [label, approx] = labels[kind];
 
-    /* ===== ENGLISH VALIDATION ===== */
-
     if (kind === "net" && num(m.netProfit) <= 0)
       return alert("No net profit available to collect.");
 
@@ -169,18 +165,26 @@
 
     const note = prompt("Optional note:", "") || "";
 
-    /* ================================ */
+    /* ⭐ NET COLLECT — VERY IMPORTANT ⭐ */
     if (kind === "net") {
+
+      // add collection entry
       window.addCollectionEntry("Net Profit", note, amt);
+
+      // net offset stored
       window.collectedNetTotal =
         num(window.collectedNetTotal || 0) + amt;
-      window.saveCollectedNetTotal?.();
 
-      /* ⭐ UI RESET ONLY FOR THIS MOMENT ⭐ */
-      const elSale = document.getElementById("unSaleProfit");
-      const elServ = document.getElementById("unServiceProfit");
-      if (elSale) elSale.textContent = money(0);
-      if (elServ) elServ.textContent = money(0);
+      // NEW: store sale & service offsets (base reset)
+      window.collectedSaleProfitTotal =
+        num(window.sales?.length ? window.sales.reduce((a,s)=>a+num(s.profit||0),0) : 0);
+
+      window.collectedServiceProfitTotal =
+        num(window.services?.length ? window.services.reduce((a,j)=>a+num(j.profit||0),0) : 0);
+
+      window.saveCollectedNetTotal?.();
+      window.saveCollectedSaleProfitTotal?.();
+      window.saveCollectedServiceProfitTotal?.();
     }
 
     if (kind === "stock") {
