@@ -1,91 +1,61 @@
 /* ===========================================================
-   style.css — CLEAN LIGHT THEME ENGINE (AURORA 2025)
-   -----------------------------------------------------------
-   Pure light theme (no dark mode)
-   Modern UI → JioMart-level neatness
-========================================================== */
+   style.css — AURORA LITE THEME ENGINE
+   Pure Light Mode Only — Corporate clean look
+=========================================================== */
 
-/* -----------------------------------------------------------
-   THEME VARIABLES
------------------------------------------------------------ */
 :root {
-  /* Backgrounds */
-  --bg-main:        #f6f7f9;      /* App background */
-  --bg-card:        #ffffff;      /* Cards / Tables / Forms */
-  --bg-soft:        #f1f3f4;      /* Hover / Soft blocks */
+  --ks-bg:            #f3f4fb;
+  --ks-bg-soft:       #eef1ff;
+  --ks-bg-card:       #ffffff;
 
-  /* Borders */
-  --border-soft:    #e1e4e8;
-  --border-strong:  #c9ccd1;
+  --ks-border-soft:   #e2e8f0;
+  --ks-border-strong: #cbd5e1;
 
-  /* Text */
-  --text-main:      #1a1a1a;
-  --text-soft:      #6f7276;
+  --ks-text-main:     #0f172a;
+  --ks-text-soft:     #6b7280;
 
-  /* Accents (red, clean, professional look) */
-  --accent:         #e60023;
-  --accent-hover:   #cc001e;
+  --ks-accent:        #2563eb;
+  --ks-accent-soft:   #3b82f6;
+  --ks-accent-green:  #16a34a;
+  --ks-accent-orange: #ea580c;
 
-  /* Shadows */
-  --shadow-soft:    0 4px 12px rgba(0,0,0,.06);
-  --shadow-card:    0 6px 18px rgba(0,0,0,.08);
+  --ks-shadow-soft:   0 14px 32px rgba(15,23,42,.06);
 
-  /* Radiuses */
-  --radius-card:    14px;
-  --radius-pill:    22px;
+  --ks-radius-card:   16px;
+  --ks-radius-pill:   999px;
+
+  --ks-gradient-bg:   radial-gradient(circle at top, #eef2ff 0, #e5e7eb 40%, #e2e8f0 100%);
 }
 
-/* -----------------------------------------------------------
-   BASE BODY
------------------------------------------------------------ */
+/* Body */
 body {
-  background: var(--bg-main);
-  color: var(--text-main);
-  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  background: var(--ks-gradient-bg);
+  color: var(--ks-text-main);
   margin: 0;
   padding: 0;
   min-height: 100vh;
-  transition: background .25s, color .25s;
 }
 
-/* -----------------------------------------------------------
-   HEADINGS
------------------------------------------------------------ */
+/* Headings */
 h1, h2, h3, h4 {
-  color: var(--text-main);
-  margin-bottom: 10px;
+  color: var(--ks-text-main);
+  margin: 0 0 8px;
   font-weight: 700;
 }
 
-/* -----------------------------------------------------------
-   SIMPLE UTIL CLASSES
------------------------------------------------------------ */
-
-/* Row inline layout */
+/* Utilities */
 .row-inline {
   display: flex;
-  gap: 10px;
+  gap: 8px;
   flex-wrap: wrap;
   align-items: center;
 }
 
-/* Generic flex row for forms, tables, card headers */
 .flex-row {
   display: flex;
   flex-wrap: wrap;
-  gap: 12px;
+  gap: 10px;
 }
 
-.center {
-  text-align: center;
-}
-
-.hidden {
-  display: none !important;
-}
-
-/* Prevent ugly selection colors */
-::selection {
-  background: #ffd6df;
-  color: #000;
-}
+.center { text-align: center; }
+.hidden { display: none !important; }
