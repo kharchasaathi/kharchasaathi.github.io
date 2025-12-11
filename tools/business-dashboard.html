@@ -470,188 +470,204 @@ body{
     <tbody></tbody>
   </table>
 </section>
-<!-- =============== SERVICE =============== -->
+
+
+  <!-- =============== SERVICE =============== -->
 <section id="service" class="section">
+
   <h3>🛠 Service / Repair Manager</h3>
 
-  <!-- ADD JOB FORM -->
-  <div class="row-inline"
-    style="margin:10px 0;align-items:center;gap:8px;display:flex;flex-wrap:wrap;">
-
-    <input id="svcReceivedDate" type="date"
-      style="width:160px;padding:6px 8px;border-radius:10px;
-      border:1px solid var(--ks-border-soft);background:var(--ks-bg-card);
-      color:var(--ks-text-main);">
-
-    <input id="svcCustomer" type="text" placeholder="Customer name"
-      style="min-width:160px;padding:6px 8px;border-radius:10px;
-      border:1px solid var(--ks-border-soft);background:var(--ks-bg-card);
-      color:var(--ks-text-main);">
-
-    <input id="svcPhone" type="text" placeholder="Phone Number"
-      style="width:140px;padding:6px 8px;border-radius:10px;
-      border:1px solid var(--ks-border-soft);background:var(--ks-bg-card);
-      color:var(--ks-text-main);">
-
-    <select id="svcItemType"
-      style="width:120px;padding:6px 8px;border-radius:10px;
-      border:1px solid var(--ks-border-soft);background:var(--ks-bg-card);
-      color:var(--ks-text-main);">
-      <option value="Mobile">Mobile</option>
-      <option value="Laptop">Laptop</option>
-      <option value="Other">Other</option>
-    </select>
-
-    <input id="svcModel" type="text" placeholder="Model"
-      style="min-width:130px;padding:6px 8px;border-radius:10px;
-      border:1px solid var(--ks-border-soft);background:var(--ks-bg-card);
-      color:var(--ks-text-main);">
-
-    <input id="svcProblem" type="text" placeholder="Problem / Complaint"
-      style="min-width:220px;padding:6px 8px;border-radius:10px;
-      border:1px solid var(--ks-border-soft);background:var(--ks-bg-card);
-      color:var(--ks-text-main);">
-
-    <input id="svcAdvance" type="number" placeholder="Advance ₹ (0)"
-      style="width:120px;padding:6px 8px;border-radius:10px;
-      border:1px solid var(--ks-border-soft);background:var(--ks-bg-card);
-      color:var(--ks-text-main);">
-
-    <button id="addServiceBtn" class="small-btn">Add Job</button>
+  <!-- INTERNAL SUB-TABS -->
+  <div class="tabs" style="margin:10px 0 16px 0; border-radius:14px; background:#f7f9ff;">
+    <div class="tab active" data-subtab="svc-active">Active Jobs</div>
+    <div class="tab" data-subtab="svc-history">History</div>
   </div>
 
-  <!-- CARDS -->
-  <div class="flex-row"
-    style="margin:8px 0;display:flex;gap:10px;flex-wrap:wrap;">
+  <!-- ================= ACTIVE JOBS ================= -->
+  <div id="svc-active" class="svc-subtab active">
 
-    <div class="card" style="flex:1;min-width:120px;padding:8px 10px;">
-      <small>Pending</small>
-      <div id="svcPendingCount" style="font-size:18px;font-weight:700;">0</div>
+    <!-- ADD JOB FORM -->
+    <details class="card" style="padding:14px; margin-bottom:14px;">
+      <summary style="cursor:pointer; font-weight:600; padding:6px 0;">➕ Add New Repair Job</summary>
+
+      <div class="row-inline" style="margin-top:12px; gap:8px; flex-wrap:wrap;">
+
+        <input id="svcReceivedDate" type="date"
+          style="width:160px;padding:6px 8px;border-radius:10px;
+          border:1px solid var(--ks-border-soft);background:var(--ks-bg-card);">
+
+        <input id="svcCustomer" type="text" placeholder="Customer name"
+          style="min-width:160px;padding:6px 8px;border-radius:10px;
+          border:1px solid var(--ks-border-soft);background:var(--ks-bg-card);">
+
+        <input id="svcPhone" type="text" placeholder="Phone Number"
+          style="width:140px;padding:6px 8px;border-radius:10px;
+          border:1px solid var(--ks-border-soft);background:var(--ks-bg-card);">
+
+        <select id="svcItemType"
+          style="width:120px;padding:6px 8px;border-radius:10px;
+          border:1px solid var(--ks-border-soft);background:var(--ks-bg-card);">
+          <option value="Mobile">Mobile</option>
+          <option value="Laptop">Laptop</option>
+          <option value="Other">Other</option>
+        </select>
+
+        <input id="svcModel" type="text" placeholder="Model"
+          style="min-width:130px;padding:6px 8px;border-radius:10px;
+          border:1px solid var(--ks-border-soft);background:var(--ks-bg-card);">
+
+        <input id="svcProblem" type="text" placeholder="Problem / Complaint"
+          style="min-width:220px;padding:6px 8px;border-radius:10px;
+          border:1px solid var(--ks-border-soft);background:var(--ks-bg-card);">
+
+        <input id="svcAdvance" type="number" placeholder="Advance ₹ (0)"
+          style="width:120px;padding:6px 8px;border-radius:10px;
+          border:1px solid var(--ks-border-soft);background:var(--ks-bg-card);">
+
+        <button id="addServiceBtn" class="small-btn">Add Job</button>
+      </div>
+    </details>
+
+    <!-- SUMMARY CARDS -->
+    <div class="flex-row" style="margin:10px 0; gap:10px; flex-wrap:wrap;">
+
+      <div class="card" style="flex:1; min-width:120px; padding:10px;">
+        <small>Pending</small>
+        <div id="svcPendingCount" style="font-size:20px;font-weight:700;">0</div>
+      </div>
+
+      <div class="card" style="flex:1; min-width:120px; padding:10px; background:#ecfdf5;">
+        <small>Completed</small>
+        <div id="svcCompletedCount" style="font-size:20px;font-weight:700;color:#16a34a;">0</div>
+      </div>
+
+      <div class="card" style="flex:1; min-width:150px; padding:10px; background:#fff7ed;">
+        <small>Total Repair Profit</small>
+        <div id="svcTotalProfit" style="font-size:20px;font-weight:700;color:#c2410c;">₹0</div>
+      </div>
     </div>
 
-    <div class="card"
-      style="flex:1;min-width:120px;padding:8px 10px;border-color:#bbf7d0;
-      background:#ecfdf5;">
-      <small>Completed</small>
-      <div id="svcCompletedCount"
-        style="font-size:18px;font-weight:700;color:#16a34a;">0</div>
-    </div>
+    <!-- ACTIVE JOBS TABLE -->
+    <h4 style="margin-top:14px;">Active Jobs</h4>
 
-    <div class="card"
-      style="flex:1;min-width:160px;padding:8px 10px;border-color:#fed7aa;
-      background:#fff7ed;">
-      <small>Total Repair Profit</small>
-      <div id="svcTotalProfit"
-        style="font-size:18px;font-weight:700;color:#c2410c;">₹0</div>
-    </div>
+    <table id="svcTable">
+      <thead>
+        <tr>
+          <th>Job ID</th>
+          <th>Received</th>
+          <th>Customer</th>
+          <th>Phone</th>
+          <th>Item</th>
+          <th>Model</th>
+          <th>Problem</th>
+          <th>Status</th>
+          <th>Action</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+
+    <button id="clearServiceBtn" class="small-btn"
+      style="background:#fee2e2;color:#b91c1c;margin:14px 0;border-color:#fecaca;">
+      🗑️ Clear All
+    </button>
   </div>
 
-  <!-- PENDING TABLE -->
-  <h4>Pending / Active Jobs</h4>
 
-  <table id="svcTable">
-    <thead>
-      <tr>
-        <th>Job ID</th>
-        <th>Received</th>
-        <th>Customer</th>
-        <th>Phone</th>
-        <th>Item</th>
-        <th>Model</th>
-        <th>Problem</th>
-        <th>Status</th>
-        <th>Action</th>
-      </tr>
-    </thead>
-    <tbody></tbody>
-  </table>
 
-  <button id="clearServiceBtn"
-    class="small-btn"
-    style="background:#fee2e2;color:#b91c1c;margin:10px 0;border-color:#fecaca;">
-    🗑️ Clear All Jobs
-  </button>
+  <!-- ================= HISTORY ================= -->
+  <div id="svc-history" class="svc-subtab">
 
-  <h4 style="margin-top:14px">Completed / History</h4>
+    <h4>Completed / History</h4>
 
-  <!-- FILTER BLOCK -->
-  <div style="margin:6px 0 8px;display:flex;gap:10px;flex-wrap:wrap;align-items:center;">
+    <!-- FILTERS -->
+    <div class="row-inline" style="gap:10px; margin:8px 0; flex-wrap:wrap;">
 
-    <!-- STATUS -->
-    <label>Status:</label>
-    <select id="svcFilterStatus"
-      style="width:130px;padding:6px 8px;border-radius:10px;
-      border:1px solid var(--ks-border-soft);background:var(--ks-bg-card);">
-      <option value="all">All</option>
-      <option value="pending">Pending</option>
-      <option value="completed">Cash service</option>
-      <option value="credit">Credit (pending)</option>
-      <option value="credit-paid">Credit paid</option>
-      <option value="failed">Failed/Returned</option>
-    </select>
+      <select id="svcFilterStatus"
+        style="padding:6px 8px;border-radius:10px;border:1px solid var(--ks-border-soft);">
+        <option value="all">All Status</option>
+        <option value="pending">Pending</option>
+        <option value="completed">Cash Completed</option>
+        <option value="credit">Credit Pending</option>
+        <option value="credit-paid">Credit Paid</option>
+        <option value="failed">Failed / Returned</option>
+      </select>
 
-    <!-- TYPE -->
-    <label>Type:</label>
-    <select id="svcFilterType"
-      style="width:140px;padding:6px 8px;border-radius:10px;
-      border:1px solid var(--ks-border-soft);background:var(--ks-bg-card);">
-      <option value="all">All</option>
-      <option value="Mobile">Mobile</option>
-      <option value="Laptop">Laptop</option>
-      <option value="Other">Other</option>
-    </select>
+      <select id="svcFilterType"
+        style="padding:6px 8px;border-radius:10px;border:1px solid var(--ks-border-soft);">
+        <option value="all">All Types</option>
+        <option value="Mobile">Mobile</option>
+        <option value="Laptop">Laptop</option>
+        <option value="Other">Other</option>
+      </select>
 
-  <!-- DATE -->
-<label>Date:</label>
+      <select id="svcFilterDate"
+        style="padding:6px 8px;border-radius:10px;border:1px solid var(--ks-border-soft);">
+        <option value="">All Dates</option>
+      </select>
 
-<!-- All Dates + Auto list -->
-<select id="svcFilterDate"
-  style="width:150px;padding:6px 8px;border-radius:10px;
-  border:1px solid var(--ks-border-soft);background:var(--ks-bg-card);">
-  <option value="">All Dates</option>
-</select>
-
-<!-- Calendar date picker -->
-<input id="svcFilterCalendar" type="date"
-  style="width:155px;padding:6px 8px;border-radius:10px;
-  border:1px solid var(--ks-border-soft);background:var(--ks-bg-card);
-  color:var(--ks-text-main);">
-
-  <!-- HISTORY TABLE -->
-  <table id="svcHistoryTable">
-    <thead>
-      <tr>
-        <th>Job ID</th>
-        <th>Received</th>
-        <th>Completed</th>
-        <th>Customer</th>
-        <th>Item</th>
-        <th>Invest</th>
-        <th>Paid</th>
-        <th>Profit</th>
-        <th>Status</th>
-      </tr>
-    </thead>
-    <tbody></tbody>
-  </table>
-
-  <!-- PIE CHARTS -->
-  <div style="display:flex;gap:25px;justify-content:center;align-items:flex-start;
-      flex-wrap:wrap;margin-top:20px;">
-
-    <div style="width:260px;height:260px;background:white;border-radius:14px;
-        padding:10px;box-shadow:0 2px 6px rgba(0,0,0,.08);">
-      <canvas id="svcPieStatus"></canvas>
+      <input id="svcFilterCalendar" type="date"
+        style="padding:6px 8px;border-radius:10px;border:1px solid var(--ks-border-soft);">
     </div>
 
-    <div style="width:260px;height:260px;background:white;border-radius:14px;
-        padding:10px;box-shadow:0 2px 6px rgba(0,0,0,.08);">
-      <canvas id="svcPieMoney"></canvas>
+    <!-- HISTORY TABLE -->
+    <table id="svcHistoryTable">
+      <thead>
+        <tr>
+          <th>Job ID</th>
+          <th>Received</th>
+          <th>Completed</th>
+          <th>Customer</th>
+          <th>Item</th>
+          <th>Invest</th>
+          <th>Paid</th>
+          <th>Profit</th>
+          <th>Status</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+
+
+    <!-- PIE CARDS -->
+    <div style="display:flex; gap:20px; justify-content:center; flex-wrap:wrap; margin-top:20px;">
+
+      <div class="card" style="width:260px; padding:10px;">
+        <h4 style="text-align:center;margin-bottom:6px;font-size:14px;">Status Summary</h4>
+        <canvas id="svcPieStatus"></canvas>
+      </div>
+
+      <div class="card" style="width:260px; padding:10px;">
+        <h4 style="text-align:center;margin-bottom:6px;font-size:14px;">Money Breakdown</h4>
+        <canvas id="svcPieMoney"></canvas>
+      </div>
+
     </div>
 
   </div>
 
 </section>
+
+<!-- INTERNAL SUBTAB SCRIPT -->
+<script>
+document.addEventListener("click", e => {
+  if (!e.target.classList.contains("tab")) return;
+
+  const sub = e.target.dataset.subtab;
+  if (!sub) return;
+
+  document.querySelectorAll(".svc-subtab").forEach(s => s.classList.remove("active"));
+  document.getElementById(sub)?.classList.add("active");
+
+  e.target.parentElement.querySelectorAll(".tab").forEach(t => t.classList.remove("active"));
+  e.target.classList.add("active");
+
+  try { renderServiceTables?.(); } catch {}
+  try { renderSvcPieStatus?.(); } catch {}
+  try { renderSvcPieMoney?.(); } catch {}
+});
+</script>
+
 
 
 
