@@ -871,15 +871,21 @@
       <option value="Other">Other</option>
     </select>
 
-    <!-- DATE -->
-    <label>Date:</label>
-    <select id="svcFilterDate"
-      style="width:150px;padding:6px 8px;border-radius:10px;
-      border:1px solid var(--ks-border-soft);background:var(--ks-bg-card);">
-      <option value="">All Dates</option>
-      <!-- JS auto-inserts actual job dates -->
-    </select>
-  </div>
+  <!-- DATE -->
+<label>Date:</label>
+
+<!-- All Dates + Auto list -->
+<select id="svcFilterDate"
+  style="width:150px;padding:6px 8px;border-radius:10px;
+  border:1px solid var(--ks-border-soft);background:var(--ks-bg-card);">
+  <option value="">All Dates</option>
+</select>
+
+<!-- Calendar date picker -->
+<input id="svcFilterCalendar" type="date"
+  style="width:155px;padding:6px 8px;border-radius:10px;
+  border:1px solid var(--ks-border-soft);background:var(--ks-bg-card);
+  color:var(--ks-text-main);">
 
   <!-- HISTORY TABLE -->
   <table id="svcHistoryTable">
