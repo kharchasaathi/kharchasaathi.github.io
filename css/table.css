@@ -1,108 +1,85 @@
-/* ============================================================
-   table.css — CLEAN CORPORATE TABLES (AURORA LIGHT 2025)
-   Pure professional look: white + soft grey + smooth borders
-=========================================================== */
+/* ======================================================
+   TABLE.CSS — CORPORATE EXCEL STYLE TABLES (AURORA UI)
+   Clean, premium, mobile-responsive table engine.
+   Colors come from style.css variables.
+====================================================== */
 
-/* BASE TABLE */
+/* ----- BASE TABLE STYLE ----- */
 table {
   width: 100%;
-  border-collapse: collapse;
-  font-size: 14px;
-  background: #ffffff;
+  border-collapse: separate;
+  border-spacing: 0;
+  font-size: 13px;
+  background: var(--ks-bg-card);
   border-radius: 14px;
   overflow: hidden;
-  box-shadow: 0 4px 14px rgba(0,0,0,.06);
+  box-shadow: var(--ks-shadow-soft);
+  margin-top: 10px;
 }
 
-/* Table spacing inside sections */
-.section table {
-  margin-top: 12px;
-}
-
-/* --------------------------------------------
-   TABLE HEADER
--------------------------------------------- */
+/* ----- HEADER ----- */
 table thead {
-  background: #f1f3f4;
-  border-bottom: 2px solid #e1e4e8;
+  background: linear-gradient(to right, #e5edff, #dbeafe);
+  color: var(--ks-text-soft);
 }
 
 table thead th {
-  padding: 10px 12px;
-  font-weight: 700;
-  color: #444;
+  padding: 8px 10px;
+  font-weight: 600;
   text-align: left;
-  border-right: 1px solid #e5e7eb;
-  font-size: 13px;
+  border-bottom: 1px solid var(--ks-border-soft);
+  border-right: 1px solid var(--ks-border-soft);
 }
+
 table thead th:last-child {
   border-right: none;
 }
 
-/* --------------------------------------------
-   TABLE BODY
--------------------------------------------- */
+/* ----- BODY ----- */
 table tbody tr {
   background: #ffffff;
-  transition: background .15s;
 }
 
 table tbody td {
-  padding: 10px 12px;
-  border-bottom: 1px solid #f0f2f5;
-  border-right: 1px solid #f0f2f5;
+  padding: 7px 10px;
+  border-bottom: 1px solid var(--ks-border-soft);
+  border-right: 1px solid var(--ks-border-soft);
   vertical-align: middle;
-  font-size: 13px;
 }
 
 table tbody td:last-child {
   border-right: none;
 }
 
+table tbody tr:nth-child(even) {
+  background: #f9fafb;
+}
+
 table tbody tr:last-child td {
   border-bottom: none;
 }
 
-/* Soft zebra */
-table tbody tr:nth-child(even) {
-  background: #fafafa;
-}
-
-/* Hover highlight */
-table tbody tr:hover {
-  background: #f1f3f4;
-}
-
-/* --------------------------------------------
-   TABLE FOOTER
--------------------------------------------- */
+/* ----- FOOTER ----- */
 table tfoot td {
-  padding: 10px 12px;
-  font-weight: 700;
-  background: #f6f7f9;
-  border-top: 1px solid #e1e4e8;
+  padding: 8px 10px;
+  background: #f1f5ff;
+  font-weight: 600;
+  border-top: 1px solid var(--ks-border-soft);
 }
 
-/* --------------------------------------------
-   ACTION BUTTONS INSIDE TABLES
--------------------------------------------- */
+/* ----- BUTTONS INSIDE TABLE ----- */
 table .small-btn {
-  border-radius: 20px;
-  font-size: 12px;
-  padding: 5px 12px !important;
-  background: #ffffff;
-  border: 1px solid #dadce0;
-  box-shadow: 0 2px 8px rgba(0,0,0,.05);
+  border-radius: var(--ks-radius-pill);
+  padding: 4px 10px !important;
+  font-size: 11px !important;
+  white-space: nowrap;
 }
 
-table .small-btn:hover {
-  background: #f1f3f4;
-}
+/* ======================================================
+   RESPONSIVE DESIGN — MOBILE CARD MODE (<600px)
+====================================================== */
 
-/* --------------------------------------------
-   MOBILE VIEW — CARD ROWS
--------------------------------------------- */
-@media (max-width: 650px) {
+@media (max-width: 600px) {
 
   table {
     border-radius: 16px;
@@ -112,37 +89,45 @@ table .small-btn:hover {
     display: none;
   }
 
-  table tbody {
+  table tbody,
+  table tfoot {
     display: block;
   }
 
   table tbody tr {
     display: block;
-    background: white;
     margin: 10px 0;
-    padding: 12px;
     border-radius: 14px;
-    border: 1px solid #e5e7eb;
-    box-shadow: 0 4px 16px rgba(0,0,0,.06);
+    border: 1px solid var(--ks-border-soft);
+    box-shadow: 0 6px 16px rgba(15,23,42,0.05);
+    padding: 6px;
   }
 
   table tbody td {
     display: flex;
     justify-content: space-between;
-    padding: 10px 6px;
-    border: none;
-    border-bottom: 1px dashed #e5e7eb;
+    border: none !important;
+    border-bottom: 1px dashed var(--ks-border-soft) !important;
+    padding: 8px 6px;
   }
 
-  table tbody tr td:last-child {
-    border-bottom: none;
+  table tbody td:last-child {
+    border-bottom: none !important;
   }
 
-  /* Left label */
+  /* label for mobile rows */
   table tbody td::before {
     content: attr(data-label);
     font-weight: 600;
-    color: #777;
+    color: var(--ks-text-soft);
     margin-right: 10px;
+  }
+
+  /* footer also becomes card */
+  table tfoot td {
+    display: flex;
+    justify-content: space-between;
+    padding: 10px;
+    border-top: none;
   }
 }
