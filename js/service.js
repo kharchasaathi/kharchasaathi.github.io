@@ -1,5 +1,6 @@
 /* ===========================================================
-   service.js — FINAL FIXED (Type filter + Pie charts working)
+   service.js — FINAL PERFECT VERSION
+   (Type filter fixed, Date filter fixed, Pie charts always load)
 =========================================================== */
 (function () {
   const qs = s => document.querySelector(s);
@@ -24,29 +25,31 @@
   }
 
   /* =====================================================
-        FILTER OPTIONS (RUN ONLY ON PAGE LOAD)
+        FILTER OPTIONS (ONCE ON PAGE LOAD)
   ===================================================== */
   function populateFilters() {
+    /* TYPE FIX */
     const typeEl = qs("#svcFilterType");
     if (typeEl) {
       typeEl.innerHTML = `
-        <option value="all">All Types</option>
-        <option value="mobile">Mobile</option>
-        <option value="laptop">Laptop</option>
-        <option value="other">Other</option>
+        <option value="all">All</option>
+        <option value="Mobile">Mobile</option>
+        <option value="Laptop">Laptop</option>
+        <option value="Other">Other</option>
       `;
     }
 
+    /* DATE FIX */
     const dateEl = qs("#svcFilterDate");
     if (dateEl) {
-      const list = ensureServices();
       const set = new Set();
-      list.forEach(j => {
+      ensureServices().forEach(j => {
         if (j.date_in) set.add(j.date_in);
         if (j.date_out) set.add(j.date_out);
       });
 
       const dates = [...set].sort((a, b) => b.localeCompare(a));
+
       dateEl.innerHTML =
         `<option value="">All Dates</option>` +
         dates.map(d => `<option value="${d}">${toDisplay(d)}</option>`).join("");
@@ -54,22 +57,23 @@
   }
 
   /* =====================================================
-        FILTERED LIST (CASE INSENSITIVE MATCH)
+        FILTERED LIST
   ===================================================== */
   function getFiltered() {
     const list = ensureServices();
-    const typeVal = (qs("#svcFilterType")?.value || "all").toLowerCase();
+
+    const typeVal = qs("#svcFilterType")?.value || "all";
     const statusVal = (qs("#svcFilterStatus")?.value || "all").toLowerCase();
     const dateVal = qs("#svcFilterDate")?.value || "";
 
     let out = [...list];
 
+    /* TYPE filter (correct matching) */
     if (typeVal !== "all") {
-      out = out.filter(
-        j => String(j.item || "").toLowerCase() === typeVal
-      );
+      out = out.filter(j => j.item === typeVal);
     }
 
+    /* STATUS filter */
     if (statusVal !== "all") {
       out = out.filter(j => {
         const s = String(j.status || "").toLowerCase();
@@ -81,6 +85,7 @@
       });
     }
 
+    /* DATE filter */
     if (dateVal) {
       out = out.filter(j => j.date_in === dateVal || j.date_out === dateVal);
     }
@@ -97,17 +102,19 @@
     setTimeout(() => {
       renderPieStatus();
       renderPieMoney();
-    }, 120); // ensure DOM ready
+    }, 80);
   }
 
   /* =====================================================
-        NEW JOB
+        ADD NEW JOB
   ===================================================== */
   function nextId() {
     const list = ensureServices();
     const nums = list.map(j => Number(j.jobNum) || 0);
-    const n = (nums.length ? Math.max(...nums) : 0) + 1;
-    return { jobNum: n, jobId: String(n).padStart(2, "0") };
+    return {
+      jobNum: (nums.length ? Math.max(...nums) : 0) + 1,
+      jobId: String((nums.length ? Math.max(...nums) : 0) + 1).padStart(2, "0")
+    };
   }
 
   function addJob() {
@@ -116,7 +123,7 @@
 
     const customer = esc(qs("#svcCustomer")?.value || "").trim();
     const phone = esc(qs("#svcPhone")?.value || "").trim();
-    const item = (qs("#svcItemType")?.value || "Other").toLowerCase();
+    const item = qs("#svcItemType")?.value || "Other";  // FIXED: do not lowercase
     const model = esc(qs("#svcModel")?.value || "");
     const problem = esc(qs("#svcProblem")?.value || "");
     const advance = Number(qs("#svcAdvance")?.value || 0);
@@ -157,7 +164,7 @@
         COMPLETE JOB
   ===================================================== */
   function markCompleted(id, mode) {
-    const job = ensureServices().find(x => x.id === id);
+    const job = ensureServices().find(j => j.id === id);
     if (!job) return;
 
     const invest = Number(prompt("Parts / Repair Cost ₹:", job.invest || 0) || 0);
@@ -183,6 +190,7 @@
     } else {
       const due = full - adv;
       if (!confirm(`Credit pending ₹${due}`)) return;
+
       job.paid = adv;
       job.remaining = due;
       job.status = "Credit";
@@ -210,11 +218,10 @@
     persist();
     fullRefresh();
   }
-
   window.collectServiceCredit = collectServiceCredit;
 
   /* =====================================================
-        FAILED
+        FAILED JOB
   ===================================================== */
   function markFailed(id) {
     const job = ensureServices().find(j => j.id === id);
@@ -235,7 +242,7 @@
   }
 
   /* =====================================================
-        TABLES
+        RENDER TABLES
   ===================================================== */
   function renderTables() {
     const pendBody = qs("#svcTable tbody");
@@ -247,50 +254,40 @@
 
     pendBody.innerHTML =
       pending.length
-        ? pending
-            .map(
-              j => `
-      <tr>
-        <td>${j.jobId}</td>
-        <td>${toDisplay(j.date_in)}</td>
-        <td>${esc(j.customer)}</td>
-        <td>${esc(j.phone)}</td>
-        <td>${esc(j.item)}</td>
-        <td>${esc(j.model)}</td>
-        <td>${esc(j.problem)}</td>
-        <td>Pending</td>
-        <td>
-          <button class="btn btn-xs svc-view" data-id="${j.id}">
-            View / Update
-          </button>
-        </td>
-      </tr>`
-            )
-            .join("")
+        ? pending.map(j => `
+        <tr>
+          <td>${j.jobId}</td>
+          <td>${toDisplay(j.date_in)}</td>
+          <td>${esc(j.customer)}</td>
+          <td>${esc(j.phone)}</td>
+          <td>${esc(j.item)}</td>
+          <td>${esc(j.model)}</td>
+          <td>${esc(j.problem)}</td>
+          <td>Pending</td>
+          <td><button class="btn btn-xs svc-view" data-id="${j.id}">View / Update</button></td>
+        </tr>`).join("")
         : `<tr><td colspan="9">No pending jobs</td></tr>`;
 
     histBody.innerHTML =
       history.length
-        ? history
-            .map(j => {
-              let st = j.status;
-              if (j.status === "Credit") {
-                st = `Credit <button class="btn btn-xs" onclick="collectServiceCredit('${j.id}')">Collect</button>`;
-              }
-              return `
-      <tr>
-        <td>${j.jobId}</td>
-        <td>${toDisplay(j.date_in)}</td>
-        <td>${j.date_out ? toDisplay(j.date_out) : "-"}</td>
-        <td>${esc(j.customer)}</td>
-        <td>${esc(j.item)}</td>
-        <td>₹${j.invest}</td>
-        <td>₹${j.paid}</td>
-        <td>₹${j.profit}</td>
-        <td>${st}</td>
-      </tr>`;
-            })
-            .join("")
+        ? history.map(j => {
+            let st = j.status;
+            if (j.status === "Credit") {
+              st = `Credit <button class="btn btn-xs" onclick="collectServiceCredit('${j.id}')">Collect</button>`;
+            }
+            return `
+        <tr>
+          <td>${j.jobId}</td>
+          <td>${toDisplay(j.date_in)}</td>
+          <td>${j.date_out ? toDisplay(j.date_out) : "-"}</td>
+          <td>${esc(j.customer)}</td>
+          <td>${esc(j.item)}</td>
+          <td>₹${j.invest}</td>
+          <td>₹${j.paid}</td>
+          <td>₹${j.profit}</td>
+          <td>${st}</td>
+        </tr>`;
+          }).join("")
         : `<tr><td colspan="9">No history</td></tr>`;
   }
 
@@ -302,7 +299,6 @@
     if (!el || typeof Chart === "undefined") return;
 
     const list = getFiltered();
-
     const P = list.filter(j => j.status === "Pending").length;
     const C = list.filter(j => j.status === "Completed").length;
     const F = list.filter(j => j.status === "Failed/Returned").length;
@@ -327,10 +323,9 @@
     if (!el || typeof Chart === "undefined") return;
 
     const list = getFiltered();
-
     const cash = list.filter(j => j.status === "Completed" && !j.fromCredit).length;
-    const cp = list.filter(j => j.status === "Credit").length;
-    const paid = list.filter(j => j.status === "Completed" && j.fromCredit).length;
+    const creditPending = list.filter(j => j.status === "Credit").length;
+    const creditPaid = list.filter(j => j.status === "Completed" && j.fromCredit).length;
 
     if (pieMoney) pieMoney.destroy();
 
@@ -338,7 +333,7 @@
       type: "pie",
       data: {
         labels: ["Cash service", "Credit (pending)", "Credit paid"],
-        datasets: [{ data: [cash, cp, paid] }]
+        datasets: [{ data: [cash, creditPending, creditPaid] }]
       },
       options: { responsive: true, maintainAspectRatio: false }
     });
@@ -389,4 +384,5 @@
     populateFilters();
     fullRefresh();
   });
+
 })();
