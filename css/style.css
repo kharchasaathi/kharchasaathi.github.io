@@ -1,62 +1,46 @@
 /* ===========================================================
-   style.css — AURORA THEME ENGINE
-   World-class UI design (Apple-level smoothness)
+   style.css — CLEAN LIGHT THEME ENGINE (AURORA 2025)
    -----------------------------------------------------------
-   All colors, shadows, gradients, radiuses come from here.
-   Layout.css + Components.css use ONLY these variables.
-=========================================================== */
+   Pure light theme (no dark mode)
+   Modern UI → JioMart-level neatness
+========================================================== */
 
-/* ========== LIGHT THEME DEFAULT ========== */
+/* -----------------------------------------------------------
+   THEME VARIABLES
+----------------------------------------------------------- */
 :root {
-  --ks-bg:            #f3f4fb;
-  --ks-bg-soft:       #eef1ff;
-  --ks-bg-card:       #ffffff;
+  /* Backgrounds */
+  --bg-main:        #f6f7f9;      /* App background */
+  --bg-card:        #ffffff;      /* Cards / Tables / Forms */
+  --bg-soft:        #f1f3f4;      /* Hover / Soft blocks */
 
-  --ks-border-soft:   #e2e8f0;
-  --ks-border-strong: #cbd5e1;
+  /* Borders */
+  --border-soft:    #e1e4e8;
+  --border-strong:  #c9ccd1;
 
-  --ks-text-main:     #0f172a;
-  --ks-text-soft:     #6b7280;
+  /* Text */
+  --text-main:      #1a1a1a;
+  --text-soft:      #6f7276;
 
-  --ks-accent:        #2563eb;
-  --ks-accent-soft:   #3b82f6;
-  --ks-accent-green:  #16a34a;
-  --ks-accent-orange: #ea580c;
+  /* Accents (red, clean, professional look) */
+  --accent:         #e60023;
+  --accent-hover:   #cc001e;
 
-  --ks-shadow-soft:   0 14px 40px rgba(15, 23, 42, .08);
+  /* Shadows */
+  --shadow-soft:    0 4px 12px rgba(0,0,0,.06);
+  --shadow-card:    0 6px 18px rgba(0,0,0,.08);
 
-  --ks-radius-card:   16px;
-  --ks-radius-pill:   999px;
-
-  --ks-gradient-bg:   radial-gradient(circle at top, #eef2ff 0, #e5e7eb 40%, #e2e8f0 100%);
+  /* Radiuses */
+  --radius-card:    14px;
+  --radius-pill:    22px;
 }
 
-/* ========== DARK THEME (body.dark) ========== */
-body.dark {
-  --ks-bg:            #0d1117;
-  --ks-bg-soft:       #0f1620;
-  --ks-bg-card:       #111827;
-
-  --ks-border-soft:   #1f2937;
-  --ks-border-strong: #111827;
-
-  --ks-text-main:     #e5e7eb;
-  --ks-text-soft:     #9ca3af;
-
-  --ks-accent:        #38bdf8;
-  --ks-accent-soft:   #0ea5e9;
-  --ks-accent-green:  #22c55e;
-  --ks-accent-orange: #fb923c;
-
-  --ks-shadow-soft:   0 18px 55px rgba(0, 0, 0, .7);
-
-  --ks-gradient-bg:   radial-gradient(circle at top, #0d1117 0, #0f1620 40%, #0b0f14 100%);
-}
-
-/* ========== BASE BODY STYLE ========== */
+/* -----------------------------------------------------------
+   BASE BODY
+----------------------------------------------------------- */
 body {
-  background: var(--ks-gradient-bg);
-  color: var(--ks-text-main);
+  background: var(--bg-main);
+  color: var(--text-main);
   font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   margin: 0;
   padding: 0;
@@ -64,32 +48,32 @@ body {
   transition: background .25s, color .25s;
 }
 
-body.dark {
-  background: var(--ks-gradient-bg);
-}
-
-/* ========== HEADINGS ========== */
+/* -----------------------------------------------------------
+   HEADINGS
+----------------------------------------------------------- */
 h1, h2, h3, h4 {
-  color: var(--ks-text-main);
-  margin: 0 0 8px;
+  color: var(--text-main);
+  margin-bottom: 10px;
   font-weight: 700;
 }
-body.dark h1, body.dark h2, body.dark h3, body.dark h4 {
-  color: #f8fafc;
-}
 
-/* ========== UTILITY ========== */
+/* -----------------------------------------------------------
+   SIMPLE UTIL CLASSES
+----------------------------------------------------------- */
+
+/* Row inline layout */
 .row-inline {
   display: flex;
-  gap: 8px;
+  gap: 10px;
   flex-wrap: wrap;
   align-items: center;
 }
 
+/* Generic flex row for forms, tables, card headers */
 .flex-row {
   display: flex;
   flex-wrap: wrap;
-  gap: 10px;
+  gap: 12px;
 }
 
 .center {
@@ -98,4 +82,10 @@ body.dark h1, body.dark h2, body.dark h3, body.dark h4 {
 
 .hidden {
   display: none !important;
+}
+
+/* Prevent ugly selection colors */
+::selection {
+  background: #ffd6df;
+  color: #000;
 }
