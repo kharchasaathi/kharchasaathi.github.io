@@ -38,14 +38,93 @@
     } catch (e) {}
   }
 
+  /* =======================================================
+     FILTER HELPERS
+  ======================================================= */
+  function populateSvcFilters() {
+    // Populate Type dropdown with "All Types" + window.types
+    const typeEl = qs("#svcFilterType");
+    if (typeEl) {
+      const types = Array.isArray(window.types) ? window.types : [];
+      typeEl.innerHTML =
+        `<option value="all">All Types</option>` +
+        types.map(t => `<option value="${escSafe(t.name)}">${escSafe(t.name)}</option>`).join("");
+    }
+
+    // Populate Date dropdown with "All Dates" + unique dates from services (date_in/date_out)
+    const dateEl = qs("#svcFilterDate");
+    if (dateEl) {
+      const list = ensureServices();
+      const set = new Set();
+      list.forEach(j => {
+        if (j.date_in) set.add(j.date_in);
+        if (j.date_out) set.add(j.date_out);
+      });
+
+      // sort dates descending (newest first)
+      const dates = Array.from(set).filter(Boolean).sort((a,b) => b.localeCompare(a));
+      dateEl.innerHTML = `<option value="">All Dates</option>` +
+        dates.map(d => `<option value="${d}">${toDisplay(d)}</option>`).join("");
+    }
+  }
+
+  function getCurrentFilters() {
+    const filterType = qs("#svcFilterType")?.value || "all";
+    const filterStatus = qs("#svcFilterStatus")?.value || "all";
+    const filterDate = qs("#svcFilterDate")?.value || "";
+    return { filterType, filterStatus, filterDate };
+  }
+
+  function getFilteredServices() {
+    const list = ensureServices();
+    const { filterType, filterStatus, filterDate } = getCurrentFilters();
+
+    let filtered = [...list];
+
+    if (filterType !== "all") {
+      filtered = filtered.filter(j => j.item === filterType);
+    }
+
+    if (filterStatus !== "all") {
+      const v = String(filterStatus || "").toLowerCase();
+      filtered = filtered.filter(j => {
+        const s = String(j.status || "").toLowerCase();
+        if (v === "pending") return s === "pending";
+        if (v === "completed") return s === "completed";
+        if (v === "credit") return s === "credit";
+        if (v === "credit-paid") return s === "completed" && j.fromCredit;
+        if (v === "failed") return s === "failed/returned";
+        return true;
+      });
+    }
+
+    if (filterDate) {
+      filtered = filtered.filter(
+        j => j.date_in === filterDate || j.date_out === filterDate
+      );
+    }
+
+    return filtered;
+  }
+
+  /* =======================================================
+     FULL REFRESH (tables, filters, charts, summary)
+     Ensures filters are re-populated before rendering tables/charts
+  ======================================================= */
   function fullRefresh() {
+    try { populateSvcFilters(); } catch (e) {}
     try { renderServiceTables(); } catch (e) {}
-    try { renderSvcPieStatus(); } catch (e) {}
-    try { renderSvcPieMoney(); } catch (e) {}
-    try { window.renderAnalytics?.(); } catch (e) {}
-    try { window.updateSummaryCards?.(); } catch (e) {}
-    try { window.updateUniversalBar?.(); } catch (e) {}
-    try { window.renderCollection?.(); } catch (e) {}
+    // charts sometimes need a tiny delay to avoid race with DOM/Chart libs
+    try {
+      setTimeout(() => {
+        try { renderSvcPieStatus(); } catch (e) {}
+        try { renderSvcPieMoney(); } catch (e) {}
+        try { window.renderAnalytics?.(); } catch (e) {}
+        try { window.updateSummaryCards?.(); } catch (e) {}
+        try { window.updateUniversalBar?.(); } catch (e) {}
+        try { window.renderCollection?.(); } catch (e) {}
+      }, 60);
+    } catch (e) {}
   }
 
   /* ---------------- NEW JOB ---------------- */
@@ -228,42 +307,10 @@
     const histBody = qs("#svcHistoryTable tbody");
     if (!pendBody || !histBody) return;
 
-    const list = ensureServices();
+    const filtered = getFilteredServices();
 
-    const filterType   = qs("#svcFilterType")?.value || "all";
-    const filterStatus = qs("#svcFilterStatus")?.value || "all";
-    const filterDate   = qs("#svcFilterDate")?.value || "";
-
-    let filtered = [...list];
-
-    /* ---------- TYPE FILTER ---------- */
-    if (filterType !== "all") {
-      filtered = filtered.filter(j => j.item === filterType);
-    }
-
-    /* ---------- STATUS FILTER ---------- */
-    if (filterStatus !== "all") {
-      const v = filterStatus.toLowerCase();
-      filtered = filtered.filter(j => {
-        const s = String(j.status || "").toLowerCase();
-        if (v === "pending") return s === "pending";
-        if (v === "completed") return s === "completed";
-        if (v === "credit") return s === "credit";
-        if (v === "credit-paid") return s === "completed" && j.fromCredit;
-        if (v === "failed") return s === "failed/returned";
-        return true;
-      });
-    }
-
-    /* ---------- DATE FILTER ---------- */
-    if (filterDate) {
-      filtered = filtered.filter(
-        j => j.date_in === filterDate || j.date_out === filterDate
-      );
-    }
-
-    const pending = filtered.filter(j => j.status === "Pending");
-    const history = filtered.filter(j => j.status !== "Pending");
+    const pending = filtered.filter(j => String(j.status || "").toLowerCase() === "pending");
+    const history = filtered.filter(j => String(j.status || "").toLowerCase() !== "pending");
 
     /* ---------- PENDING TABLE ---------- */
     pendBody.innerHTML =
@@ -320,56 +367,65 @@
   }
 
   /* =======================================================
-     PIE — STATUS
+     PIE — STATUS (uses current filters)
   ======================================================= */
   function renderSvcPieStatus() {
     const canvas = qs("#svcPieStatus");
     if (!canvas || typeof Chart === "undefined") return;
 
-    const list = ensureServices();
-    const P = list.filter(j => j.status === "Pending").length;
-    const C = list.filter(j => j.status === "Completed").length;
-    const F = list.filter(j => j.status === "Failed/Returned").length;
+    const list = getFilteredServices();
 
-    if (pieStatus) pieStatus.destroy();
+    const P = list.filter(j => String(j.status || "").toLowerCase() === "pending").length;
+    const C = list.filter(j => String(j.status || "").toLowerCase() === "completed").length;
+    const F = list.filter(j => String(j.status || "").toLowerCase() === "failed/returned").length;
+
+    if (pieStatus) try { pieStatus.destroy(); } catch (e) {}
 
     pieStatus = new Chart(canvas, {
       type: "pie",
       data: {
         labels: ["Pending", "Completed", "Failed/Returned"],
         datasets: [{ data: [P, C, F] }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false
       }
     });
   }
 
   /* =======================================================
-     PIE — MONEY STATUS
+     PIE — MONEY STATUS (uses current filters)
   ======================================================= */
   function renderSvcPieMoney() {
     const canvas = qs("#svcPieMoney");
     if (!canvas || typeof Chart === "undefined") return;
 
-    const list = ensureServices();
+    const list = getFilteredServices();
 
     const cash = list.filter(
-      j => j.status === "Completed" && !j.fromCredit
+      j => String(j.status || "").toLowerCase() === "completed" && !j.fromCredit
     ).length;
 
     const creditPending = list.filter(
-      j => j.status === "Credit"
+      j => String(j.status || "").toLowerCase() === "credit"
     ).length;
 
     const creditPaid = list.filter(
-      j => j.status === "Completed" && j.fromCredit
+      j => String(j.status || "").toLowerCase() === "completed" && j.fromCredit
     ).length;
 
-    if (pieMoney) pieMoney.destroy();
+    if (pieMoney) try { pieMoney.destroy(); } catch (e) {}
 
     pieMoney = new Chart(canvas, {
       type: "pie",
       data: {
         labels: ["Cash service", "Credit (pending)", "Credit paid"],
         datasets: [{ data: [cash, creditPending, creditPaid] }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false
       }
     });
   }
@@ -415,5 +471,8 @@
 
   window.addEventListener("load", fullRefresh);
 
+  /* Expose renderers for external use / debugging */
   window.renderServiceTables = renderServiceTables;
+  window.renderSvcPieStatus = renderSvcPieStatus;
+  window.renderSvcPieMoney = renderSvcPieMoney;
 })();
