@@ -746,7 +746,7 @@
 
   <div class="row-inline"
     style="margin:10px 0;align-items:center;gap:8px;display:flex;flex-wrap:wrap;">
-    
+
     <input id="svcReceivedDate" type="date"
       style="width:160px;padding:6px 8px;border-radius:10px;
       border:1px solid var(--ks-border-soft);background:var(--ks-bg-card);
@@ -789,10 +789,9 @@
     <button id="addServiceBtn" class="small-btn">Add Job</button>
   </div>
 
-
   <div class="flex-row"
     style="margin:8px 0;display:flex;gap:10px;flex-wrap:wrap;">
-    
+
     <div class="card"
       style="flex:1;min-width:120px;padding:8px 10px;">
       <small>Pending</small>
@@ -815,7 +814,6 @@
         style="font-size:18px;font-weight:700;color:#c2410c;">₹0</div>
     </div>
   </div>
-
 
   <h4>Pending / Active Jobs</h4>
 
@@ -843,12 +841,11 @@
     🗑️ Clear All Jobs
   </button>
 
-
   <h4 style="margin-top:14px">Completed / History</h4>
 
   <!-- FILTER BLOCK -->
   <div style="margin:6px 0 8px;display:flex;gap:10px;flex-wrap:wrap;align-items:center;">
-    
+
     <!-- STATUS FILTER -->
     <label>Status:</label>
     <select id="svcFilterStatus"
@@ -862,21 +859,26 @@
       <option value="failed">Failed/Returned</option>
     </select>
 
-    <!-- TYPE FILTER (FIXED WIDTH) -->
+    <!-- TYPE FILTER (STATIC TO AVOID EXTERNAL TYPE INJECTION) -->
     <label>Type:</label>
     <select id="svcFilterType"
       style="width:140px;padding:6px 8px;border-radius:10px;
       border:1px solid var(--ks-border-soft);background:var(--ks-bg-card);">
       <option value="all">All</option>
+      <option value="Mobile">Mobile</option>
+      <option value="Laptop">Laptop</option>
+      <option value="Other">Other</option>
     </select>
 
-    <!-- DATE FILTER (FIXED WIDTH) -->
+    <!-- DATE FILTER: SELECT so 'All Dates' is an option -->
     <label>Date:</label>
-    <input id="svcFilterDate" type="date"
+    <select id="svcFilterDate"
       style="width:150px;padding:6px 8px;border-radius:10px;
       border:1px solid var(--ks-border-soft);background:var(--ks-bg-card);">
+      <option value="">All Dates</option>
+      <!-- JS will append available dates here on load -->
+    </select>
   </div>
-
 
   <!-- HISTORY TABLE -->
   <table id="svcHistoryTable">
@@ -896,8 +898,7 @@
     <tbody></tbody>
   </table>
 
-
-  <!-- PIE CHARTS (width/height removed → instant load fix) -->
+  <!-- PIE CHARTS (responsive canvases — no fixed width/height) -->
   <div style="display:flex;gap:25px;justify-content:center;align-items:flex-start;
       flex-wrap:wrap;margin-top:20px;">
 
@@ -914,6 +915,7 @@
   </div>
 
 </section>
+
 
 <!-- =============== EXPENSES =============== -->
 <section id="expenses" class="section">
