@@ -18,7 +18,7 @@ function cNum(v) {
   return isNaN(n) ? 0 : n;
 }
 
-const qs = s => document.querySelector(s);
+
 
 /* ----------------------------------------------------------
    LOCAL LOAD (fallback) — window.collections exists after core pull
