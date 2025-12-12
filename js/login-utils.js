@@ -1,15 +1,11 @@
 /* ==========================================================
    login-utils.js — ONLINE MODE (Firebase v9 COMPAT API)
-   FINAL VERSION v8 — NO IMPORTS, NO EXPORTS
-   ----------------------------------------------------------
-   ✔ Works with firebase-app-compat.js + firebase-auth-compat.js
-   ✔ Login / Signup / Logout
-   ✔ Password Reset
-   ✔ Auth Listener
+   FINAL FIXED VERSION v9 — NO DUPLICATE AUTH DECLARATION
 ========================================================== */
 
-/* Firebase Auth reference (compat mode) */
-const auth = firebase.auth();
+/* Firebase Auth reference (compat mode)
+   Fix: use global auth from firebase.js */
+const auth = window.auth;
 
 /* ----------------------------------------------------------
    CURRENT USER
