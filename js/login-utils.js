@@ -1,16 +1,16 @@
 /* ===========================================================
-   login-utils.js — CLEAN V12 (NO DUPLICATE AUTH, FULLY COMPAT)
+   login-utils.js — CLEAN V13 (NO DUPLICATE AUTH, FULLY COMPAT)
    Works with firebase.js (compat mode)
 =========================================================== */
 
-// auth already exists in firebase.js → use it directly
-var auth = window.auth;
+// use firebase.js auth (global)
+const auth = window.auth;
 
 /* -----------------------------------------------------------
    Get Current User
 ----------------------------------------------------------- */
 function getFirebaseUser() {
-  return auth.currentUser || null;
+  return auth?.currentUser || null;
 }
 window.getFirebaseUser = getFirebaseUser;
 
