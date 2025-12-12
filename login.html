@@ -10,92 +10,59 @@
 
 <style>
 :root{
-  --bg-light:#eef2ff;
-  --bg-dark:#0d1117;
-
-  --card-light:#ffffff;
-  --card-dark:#111827;
-
-  --border-light:#d4d7e6;
-  --border-dark:#1f2937;
-
-  --accent:#2563eb;
-  --accent-soft:#3b82f6;
-
-  --text-main:#0f172a;
-  --text-muted:#6b7280;
-
-  --text-dark-main:#e5e7eb;
-
+  --blue:#0A66C2;
+  --bg:#f4f6f9;
+  --card:#ffffff;
+  --text:#111;
+  --text-soft:#666;
   --radius:14px;
-  --shadow:0 10px 35px rgba(0,0,0,0.12);
-  --shadow-dark:0 10px 35px rgba(0,0,0,0.45);
+  --shadow:0 6px 18px rgba(0,0,0,0.08);
 }
 
 /* BODY */
 body{
   margin:0;
   padding:0;
+  background:var(--bg);
   font-family:'Poppins',sans-serif;
-  background:radial-gradient(circle at top,#eef2ff 0,#e5e7eb 40%,#e2e8f0 100%);
   min-height:100vh;
   display:flex;
   align-items:center;
   justify-content:center;
-  transition:.3s;
-}
-
-/* DARK MODE */
-body.dark{
-  background:var(--bg-dark);
 }
 
 /* CARD */
 .card{
   width:92%;
   max-width:420px;
-  background:var(--card-light);
-  padding:28px;
+  background:var(--card);
+  padding:30px 28px;
   border-radius:var(--radius);
   box-shadow:var(--shadow);
-  border:1px solid var(--border-light);
-  transition:.3s;
-}
-
-body.dark .card{
-  background:var(--card-dark);
-  border-color:var(--border-dark);
-  box-shadow:var(--shadow-dark);
-  color:var(--text-dark-main);
+  border:1px solid #e5e7eb;
 }
 
 h2{
-  margin:0 0 10px;
+  margin:0 0 14px;
   font-weight:700;
-  font-size:28px;
+  font-size:26px;
   text-align:center;
+  color:var(--blue);
 }
 
-/* INPUTS */
+/* INPUT */
 input{
   width:100%;
   padding:12px 14px;
   margin:10px 0;
   border-radius:var(--radius);
-  border:1px solid var(--border-light);
+  border:1px solid #d1d5db;
   font-size:15px;
-  transition:.2s;
 }
 
 input:focus{
-  border-color:var(--accent);
+  border-color:var(--blue);
   outline:none;
-}
-
-body.dark input{
-  background:#0f1620;
-  border-color:#1f2937;
-  color:#fff;
 }
 
 /* Password wrapper */
@@ -112,79 +79,52 @@ body.dark input{
   cursor:pointer;
   color:#777;
 }
-body.dark .pw-eye{ color:#ccc; }
 
 /* BUTTON */
 button{
   padding:14px;
   width:100%;
   border:none;
-  font-size:16px;
-  background:linear-gradient(135deg,var(--accent-soft),var(--accent));
-  color:#fff;
   border-radius:var(--radius);
-  cursor:pointer;
+  background:var(--blue);
+  color:#fff;
+  font-size:16px;
   margin-top:10px;
-  font-weight:600;
-  transition:.2s;
+  cursor:pointer;
+  transition:.25s;
 }
 
 button:hover{
+  opacity:.95;
   transform:translateY(-2px);
-  opacity:.92;
 }
 
 /* FOOTER TEXT */
 .muted{
   margin-top:12px;
   font-size:13px;
-  color:var(--text-muted);
+  color:var(--text-soft);
   text-align:center;
 }
 
-body.dark .muted{
-  color:#9ca3af;
-}
-
 a{
-  color:var(--accent);
+  color:var(--blue);
   text-decoration:none;
   font-weight:600;
 }
-body.dark a{ color:#38bdf8; }
 
 /* ERROR MESSAGE */
 #msg{
   font-size:13px;
-  margin-top:5px;
-  min-height:18px;
-}
-
-/* TOGGLE THEME BUTTON (TOP RIGHT CORNER) */
-.themeToggle{
-  position:fixed;
-  top:16px;
-  right:16px;
-  background:#fff;
-  padding:10px 12px;
-  border-radius:12px;
-  font-size:20px;
-  cursor:pointer;
-  box-shadow:var(--shadow);
-  border:1px solid #ddd;
-}
-
-body.dark .themeToggle{
-  background:#1a1a1a;
-  border-color:#333;
-  color:#fff;
+  margin-top:6px;
+  text-align:center;
+  color:#d32f2f;
+  min-height:20px;
 }
 </style>
 </head>
 
 <body>
-
-<button class="themeToggle" id="themeBtn">🌙</button>
 
 <div class="card">
   <h2>Login</h2>
@@ -198,7 +138,7 @@ body.dark .themeToggle{
 
   <button id="loginBtn">Login</button>
 
-  <div id="msg" class="muted"></div>
+  <div id="msg"></div>
 
   <div class="muted">
     Don't have an account? <a href="/signup.html">Sign Up</a>
@@ -222,7 +162,7 @@ qs("#togglePw").addEventListener("click", () => {
   pw.type = pw.type === "password" ? "text" : "password";
 });
 
-// Login
+// Login action
 qs("#loginBtn").addEventListener("click", async () => {
   const email = qs("#email").value.trim();
   const pw = qs("#password").value.trim();
@@ -241,18 +181,6 @@ qs("#loginBtn").addEventListener("click", async () => {
   } else {
     qs("#msg").textContent = "Login failed: " + res.error;
   }
-});
-
-// Theme toggle
-const btn = document.getElementById("themeBtn");
-if(localStorage.getItem("ks-theme") === "dark"){
-  document.body.classList.add("dark");
-  btn.textContent = "☀️";
-}
-btn.addEventListener("click", ()=>{
-  const mode = document.body.classList.toggle("dark");
-  localStorage.setItem("ks-theme", mode ? "dark" : "light");
-  btn.textContent = mode ? "☀️" : "🌙";
 });
 </script>
 
