@@ -1,61 +1,53 @@
 /* ===========================================================
-   login-utils.js — CLEAN V13 (NO DUPLICATE AUTH, FULLY COMPAT)
-   Works with firebase.js (compat mode)
+   login-utils.js — FINAL CLEAN VERSION (FULL COMPAT)
+   Uses ONLY window.auth from firebase.js
 =========================================================== */
 
-// use firebase.js auth (global)
+// get firebase auth instance (DO NOT redeclare auth again)
 const auth = window.auth;
 
-/* -----------------------------------------------------------
-   Get Current User
------------------------------------------------------------ */
+/* --------------- CURRENT USER ---------------- */
 function getFirebaseUser() {
   return auth?.currentUser || null;
 }
 window.getFirebaseUser = getFirebaseUser;
 
-/* -----------------------------------------------------------
-   LOGIN
------------------------------------------------------------ */
+/* ---------------- LOGIN ---------------- */
 async function loginUser(email, password) {
   try {
-    if (!email || !password) throw new Error("Missing email or password.");
+    if (!email || !password) throw new Error("Missing email or password");
 
-    const res = await auth.signInWithEmailAndPassword(email, password);
+    const r = await auth.signInWithEmailAndPassword(email, password);
 
-    localStorage.setItem("ks-user-email", email);
+    localStorage.setItem("ks-user-email", r.user.email);
 
-    return { success: true, user: res.user };
+    return { success: true };
   } catch (err) {
     return { success: false, error: err.message };
   }
 }
 window.loginUser = loginUser;
 
-/* -----------------------------------------------------------
-   SIGNUP
------------------------------------------------------------ */
+/* ---------------- SIGNUP ---------------- */
 async function signupUser(email, password) {
   try {
-    if (!email || !password) throw new Error("Missing email or password.");
+    if (!email || !password) throw new Error("Missing email or password");
 
-    const res = await auth.createUserWithEmailAndPassword(email, password);
+    const r = await auth.createUserWithEmailAndPassword(email, password);
 
-    localStorage.setItem("ks-user-email", email);
+    localStorage.setItem("ks-user-email", r.user.email);
 
-    return { success: true, user: res.user };
+    return { success: true };
   } catch (err) {
     return { success: false, error: err.message };
   }
 }
 window.signupUser = signupUser;
 
-/* -----------------------------------------------------------
-   RESET PASSWORD
------------------------------------------------------------ */
+/* ---------------- RESET PASSWORD ---------------- */
 async function resetPassword(email) {
   try {
-    if (!email) throw new Error("Email required.");
+    if (!email) throw new Error("Email required");
 
     await auth.sendPasswordResetEmail(email);
 
@@ -66,14 +58,11 @@ async function resetPassword(email) {
 }
 window.resetPassword = resetPassword;
 
-/* -----------------------------------------------------------
-   LOGOUT
------------------------------------------------------------ */
+/* ---------------- LOGOUT ---------------- */
 async function logoutUser() {
   try {
     await auth.signOut();
     localStorage.removeItem("ks-user-email");
-
     return { success: true };
   } catch (err) {
     return { success: false, error: err.message };
@@ -81,17 +70,7 @@ async function logoutUser() {
 }
 window.logoutUser = logoutUser;
 
-/* -----------------------------------------------------------
-   Logged-in Check
------------------------------------------------------------ */
-function isLoggedIn() {
-  return !!auth.currentUser;
-}
-window.isLoggedIn = isLoggedIn;
-
-/* -----------------------------------------------------------
-   AUTH STATE LISTENER
------------------------------------------------------------ */
+/* --------------- AUTH STATE LISTENER ---------------- */
 auth.onAuthStateChanged(user => {
   try {
     if (user) {
