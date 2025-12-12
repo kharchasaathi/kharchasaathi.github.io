@@ -1,11 +1,10 @@
 /* ===========================================================
-   collection.js — FIXED COLLECT LOGIC (V13 FINAL)
+   collection.js — ONLINE-FIRST COLLECT LOGIC (V14)
+   ✔ Cloud master (Firestore) — Local = cache only
    ✔ One-click collect (no duplicates)
-   ✔ Resets universal bar source to ZERO immediately
-   ✔ Updates analytics, dashboard & universal bar
-   ✔ Saves clean history
+   ✔ Updates universal bar, analytics, summary
+   ✔ Net-collected offset updated locally when Net is collected
 =========================================================== */
-
 
 /* ----------------------------------------------------------
    HELPERS
@@ -19,8 +18,10 @@ function cNum(v) {
   return isNaN(n) ? 0 : n;
 }
 
+const qs = s => document.querySelector(s);
+
 /* ----------------------------------------------------------
-   LOCAL LOAD
+   LOCAL LOAD (fallback) — window.collections exists after core pull
 ---------------------------------------------------------- */
 try {
   window.collections = JSON.parse(localStorage.getItem("ks-collections") || "[]");
@@ -29,23 +30,33 @@ try {
   window.collections = [];
 }
 
-/* ----------------------------------------------------------
-   SAVE (LOCAL + CLOUD)
----------------------------------------------------------- */
-function saveCollections() {
+/* ===========================================================
+   CLOUD-FIRST SAVE (Local = cache only)
+=========================================================== */
+function saveCollectionsOnline() {
+  // 1) Local cache for fast UI
   try {
     localStorage.setItem("ks-collections", JSON.stringify(window.collections || []));
-  } catch {}
+  } catch (e) {
+    console.warn("Local cache save failed:", e);
+  }
 
+  // 2) Cloud save (master)
   if (typeof cloudSaveDebounced === "function") {
     cloudSaveDebounced("collections", window.collections || []);
   }
-}
-window.saveCollections = saveCollections;
 
+  // 3) Trigger pull shortly after to ensure UI across devices updates
+  if (typeof cloudPullAllIfAvailable === "function") {
+    setTimeout(() => {
+      try { cloudPullAllIfAvailable(); } catch {}
+    }, 250);
+  }
+}
+window.saveCollections = saveCollectionsOnline;
 
 /* ===========================================================
-   ADD COLLECTION ENTRY — HISTORY
+   ADD COLLECTION ENTRY — HISTORY (CLOUD MASTER)
 =========================================================== */
 window.addCollectionEntry = function (source, details, amount) {
   const entry = {
@@ -56,15 +67,22 @@ window.addCollectionEntry = function (source, details, amount) {
     amount: cNum(amount)
   };
 
+  window.collections = window.collections || [];
   window.collections.push(entry);
-  saveCollections();
+
+  // save (cloud + local cache)
+  saveCollectionsOnline();
+
+  // UI updates
   renderCollection();
   window.updateUniversalBar?.();
+  window.renderAnalytics?.();
+  window.updateSummaryCards?.();
 };
 
-
 /* ===========================================================
-   MAIN FIX — HANDLE COLLECT BUTTON (ONE CLICK ONLY)
+   MAIN — HANDLE COLLECT BUTTON (ONE CLICK ONLY)
+   Also updates collectedNetTotal when collecting 'net'
 =========================================================== */
 window.handleCollect = function (type) {
 
@@ -86,6 +104,14 @@ window.handleCollect = function (type) {
       amt = cNum(m.netProfit);
       label = "Net Profit";
       details = "Sale + Service - Expenses";
+
+      // Increase local collected offset so net is not counted again
+      if (amt > 0) {
+        window.collectedNetTotal = Number(window.collectedNetTotal || 0) + amt;
+        if (typeof saveCollectedNetTotal === "function") saveCollectedNetTotal();
+      }
+
+      // reset value in metrics (UI)
       window.__unMetrics.netProfit = 0;
       break;
 
@@ -114,19 +140,18 @@ window.handleCollect = function (type) {
     return;
   }
 
-  // ---- SAVE HISTORY ----
+  // ---- SAVE HISTORY (cloud master)
   window.addCollectionEntry(label, details, amt);
 
-  // ---- UPDATE METRICS (RESET JUST DONE VALUE) ----
+  // ---- UPDATE METRICS & UI ----
   window.updateUniversalBar?.();
   window.renderAnalytics?.();
   window.updateSummaryCards?.();
   window.renderCollection?.();
 };
 
-
 /* ===========================================================
-   SUMMARY
+   SUMMARY HELP
 =========================================================== */
 function computeCollectionSummary() {
   const m = window.__unMetrics || {};
@@ -139,9 +164,8 @@ function computeCollectionSummary() {
   };
 }
 
-
 /* ===========================================================
-   RENDER COLLECTION HISTORY
+   RENDER COLLECTION HISTORY (ONLINE-SAFE)
 =========================================================== */
 window.renderCollection = function () {
   const tbody = qs("#collectionHistory tbody");
@@ -160,14 +184,13 @@ window.renderCollection = function () {
 
   tbody.innerHTML = list.map(e => `
     <tr>
-      <td>${e.date}</td>
+      <td>${toDisplay ? toDisplay(e.date) : e.date}</td>
       <td>${escLocal(e.source)}</td>
       <td>${escLocal(e.details)}</td>
       <td>₹${cNum(e.amount)}</td>
     </tr>
   `).join("");
 };
-
 
 /* ===========================================================
    CLEAR COLLECTION HISTORY
@@ -177,7 +200,7 @@ document.addEventListener("click", e => {
     if (!confirm("Clear entire collection history?")) return;
 
     window.collections = [];
-    saveCollections();
+    saveCollectionsOnline();
 
     renderCollection();
     window.updateUniversalBar?.();
@@ -186,9 +209,9 @@ document.addEventListener("click", e => {
   }
 });
 
-
 /* ===========================================================
    INIT
+   — try to keep local cache but cloudPullAllIfAvailable (core) will overwrite with server data
 =========================================================== */
 window.addEventListener("load", () => {
   renderCollection();
