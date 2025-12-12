@@ -1,12 +1,22 @@
 /* ===========================================================
-   firebase.js — FINAL V14 (ONLINE ONLY + LOGIN GUARD)
-   ✔ COMPAT MODE (NO IMPORT / NO EXPORT)
-   ✔ Works with firebase-app-compat.js
-   ✔ Auth + Firestore working
+   firebase.js — FINAL V15 (ONLINE ONLY + LOGIN GUARD + STABLE)
+   ✔ FULL COMPAT MODE (NO IMPORTS)
+   ✔ Safe initialization (prevents double loading)
+   ✔ Auth + Firestore (error protected)
    ✔ Protects dashboard pages
+   ✔ Global methods exposed safely
 =========================================================== */
 
 console.log("%c🔥 firebase.js loaded", "color:#ff9800;font-weight:bold;");
+
+/* -----------------------------------------------------------
+   PREVENT DOUBLE LOAD
+----------------------------------------------------------- */
+if (window.__firebase_loaded) {
+  console.warn("firebase.js already loaded → skipped");
+  return;
+}
+window.__firebase_loaded = true;
 
 /* -----------------------------------------------------------
    FIREBASE CONFIG
@@ -22,27 +32,34 @@ const firebaseConfig = {
 };
 
 /* -----------------------------------------------------------
-   INITIALIZE (COMPAT)
+   INITIALIZE (SAFE MODE)
 ----------------------------------------------------------- */
-firebase.initializeApp(firebaseConfig);
+let auth = null;
+let db = null;
 
-const auth = firebase.auth();
-const db   = firebase.firestore();
+try {
+  firebase.initializeApp(firebaseConfig);
+
+  auth = firebase.auth();
+  db   = firebase.firestore();
+
+  console.log("%c☁️ Firebase connected (COMPAT MODE)", "color:#4caf50;font-weight:bold;");
+} catch (e) {
+  console.error("❌ Firebase init failed:", e);
+}
 
 window.auth = auth;
 window.db   = db;
-
-console.log("%c☁️ Firebase connected! (COMPAT MODE)", "color:#4caf50;font-weight:bold;");
 
 /* -----------------------------------------------------------
    PATH HELPERS
 ----------------------------------------------------------- */
 function currentPath() {
-  return window.location.pathname || "";
+  return location.pathname.replace(/\/+$/, "");
 }
 
-const PROTECTED = [ "/tools/business-dashboard.html" ];
-const AUTH_PAGES = [ "/login.html", "/signup.html", "/reset.html" ];
+const PROTECTED = ["/tools/business-dashboard.html"];
+const AUTH_PAGES = ["/login.html", "/signup.html", "/reset.html"];
 
 /* -----------------------------------------------------------
    LOCAL EMAIL HELPERS
@@ -56,47 +73,44 @@ function clearLocalEmail() {
 }
 
 /* ===========================================================
-   AUTH FUNCTIONS (COMPAT API)
+   AUTH FUNCTIONS
 =========================================================== */
 
-window.fsLogin = async function(email, password) {
+window.fsLogin = async function (email, password) {
   const cred = await auth.signInWithEmailAndPassword(email, password);
-  if (cred.user?.email) setLocalEmail(cred.user.email);
+  setLocalEmail(cred?.user?.email || "");
   return cred;
 };
 
-window.fsSignUp = async function(email, password) {
+window.fsSignUp = async function (email, password) {
   const cred = await auth.createUserWithEmailAndPassword(email, password);
-  if (cred.user?.email) setLocalEmail(cred.user.email);
+  setLocalEmail(cred?.user?.email || "");
   return cred;
 };
 
-window.fsSendPasswordReset = function(email) {
+window.fsSendPasswordReset = function (email) {
   return auth.sendPasswordResetEmail(email);
 };
 
-/* LOGOUT — ALWAYS redirect to login */
-window.fsLogout = async function() {
-  try { await auth.signOut(); } catch(e) {}
+window.fsLogout = async function () {
+  try { await auth.signOut(); } catch (e) {}
   clearLocalEmail();
-  window.location.href = "/login.html";
+  location.href = "/login.html";
 };
 
-/* Check auth once */
 window.fsCheckAuth = function () {
-  return new Promise(resolve => {
+  return new Promise(res => {
     const off = auth.onAuthStateChanged(u => {
       off();
-      resolve(u);
+      res(u);
     });
   });
 };
 
-/* Get current user */
 window.getFirebaseUser = () => auth.currentUser || null;
 
 /* ===========================================================
-   AUTH STATE LISTENER (GUARD)
+   AUTH STATE LISTENER (PAGE GUARD)
 =========================================================== */
 auth.onAuthStateChanged(async user => {
   const path = currentPath();
@@ -105,24 +119,25 @@ auth.onAuthStateChanged(async user => {
     const email = user.email || "";
     setLocalEmail(email);
 
-    console.log("%c🔐 Authenticated:", "color:#03a9f4;font-weight:bold;", email);
+    console.log("%c🔐 Logged in:", "color:#03a9f4;font-weight:bold;", email);
 
+    // auto sync
     if (typeof cloudPullAllIfAvailable === "function") {
       try { await cloudPullAllIfAvailable(); } catch {}
     }
 
-    // If on login page → move to dashboard
+    // login/signup page → redirect to dashboard
     if (AUTH_PAGES.some(p => path.endsWith(p))) {
-      window.location.replace("/tools/business-dashboard.html");
+      location.replace("/tools/business-dashboard.html");
     }
 
   } else {
     console.log("%c🔓 Logged out", "color:#f44336;font-weight:bold;");
     clearLocalEmail();
 
-    // Prevent access to protected pages
+    // protected page → redirect to login
     if (PROTECTED.some(p => path.endsWith(p))) {
-      window.location.replace("/login.html");
+      location.replace("/login.html");
     }
   }
 });
@@ -136,24 +151,23 @@ function getCloudUser() {
          null;
 }
 
-window.cloudSave = async function(collection, data) {
+window.cloudSave = async function (collection, data) {
   const user = getCloudUser();
   if (!user) return;
 
   try {
     await db.collection(collection).doc(user).set({ items: data }, { merge: true });
-    console.log("☁️ Saved:", collection);
+    console.log("☁️ Saved to cloud:", collection);
 
     if (typeof cloudPullAllIfAvailable === "function") {
       setTimeout(() => cloudPullAllIfAvailable(), 300);
     }
-
   } catch (e) {
-    console.error("❌ Cloud save error:", e);
+    console.error("❌ Cloud Save error:", e);
   }
 };
 
-window.cloudLoad = async function(collection) {
+window.cloudLoad = async function (collection) {
   const user = getCloudUser();
   if (!user) return [];
 
@@ -163,17 +177,20 @@ window.cloudLoad = async function(collection) {
     const data = snap.data() || {};
     return Array.isArray(data.items) ? data.items : [];
   } catch (e) {
-    console.error("❌ Cloud load error:", e);
+    console.error("❌ Cloud Load error:", e);
     return [];
   }
 };
 
 let timers = {};
-window.cloudSaveDebounced = function(collection, data) {
+window.cloudSaveDebounced = function (collection, data) {
   clearTimeout(timers[collection]);
   timers[collection] = setTimeout(() => {
     window.cloudSave(collection, data);
   }, 400);
 };
 
+/* ===========================================================
+   READY
+=========================================================== */
 console.log("%c⚙️ firebase.js READY ✔", "color:#03a9f4;font-weight:bold;");
