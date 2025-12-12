@@ -1,10 +1,10 @@
 /* ===========================================================
-   login-utils.js — FINAL FIXED VERSION (FULL COMPAT)
-   Uses ONLY window.auth from firebase.js (NO REDECLARATION ERROR)
+   login-utils.js — CLEAN FINAL VERSION (NO ERRORS)
+   Uses ONLY window.auth from firebase.js
 =========================================================== */
 
-/* Use firebase.js auth instance — IMPORTANT → var, not const */
-var auth = window.auth;
+// ALWAYS use auth from firebase.js — do NOT redeclare
+const auth = window.auth;
 
 /* ---------------- CURRENT USER ---------------- */
 function getFirebaseUser() {
@@ -15,7 +15,7 @@ window.getFirebaseUser = getFirebaseUser;
 /* ---------------- LOGIN ---------------- */
 async function loginUser(email, password) {
   try {
-    if (!email || !password) throw new Error("Missing email or password");
+    if (!email || !password) throw new Error("Missing email or password.");
 
     const r = await auth.signInWithEmailAndPassword(email, password);
 
@@ -31,7 +31,7 @@ window.loginUser = loginUser;
 /* ---------------- SIGNUP ---------------- */
 async function signupUser(email, password) {
   try {
-    if (!email || !password) throw new Error("Missing email or password");
+    if (!email || !password) throw new Error("Missing email or password.");
 
     const r = await auth.createUserWithEmailAndPassword(email, password);
 
@@ -47,7 +47,7 @@ window.signupUser = signupUser;
 /* ---------------- RESET PASSWORD ---------------- */
 async function resetPassword(email) {
   try {
-    if (!email) throw new Error("Email required");
+    if (!email) throw new Error("Email required.");
 
     await auth.sendPasswordResetEmail(email);
 
@@ -70,22 +70,16 @@ async function logoutUser() {
 }
 window.logoutUser = logoutUser;
 
-/* ---------------- AUTH STATE LISTENER ---------------- */
+/* ---------------- AUTH LISTENER ---------------- */
 auth.onAuthStateChanged(user => {
   try {
     if (user) {
       localStorage.setItem("ks-user-email", user.email);
-
       if (typeof cloudPullAllIfAvailable === "function") {
         cloudPullAllIfAvailable();
       }
-
     } else {
       localStorage.removeItem("ks-user-email");
-
-      if (typeof clearLocalUI === "function") {
-        clearLocalUI();
-      }
     }
 
     if (typeof updateEmailTag === "function") {
