@@ -1,13 +1,17 @@
 {
   "name": "KharchaSaathi",
   "short_name": "KharchaSaathi",
-  "start_url": "/index.html",
+  "start_url": "/index.html?source=pwa",
   "scope": "/",
   "display": "standalone",
   "orientation": "portrait",
-  "background_color": "#eef2ff",
-  "theme_color": "#2563eb",
-  "description": "Business Dashboard • Stock • Sales • Service • Credit • Cloud Backup",
+  "background_color": "#ffffff",
+  "theme_color": "#0A66C2",
+  "description": "Business Dashboard • Stock • Sales • Service • Credit • Cloud Sync",
+  "categories": ["business", "productivity", "finance"],
+  "dir": "ltr",
+  "lang": "en-IN",
+  "prefer_related_applications": false,
   "icons": [
     {
       "src": "/icons/icon-192.png",
