@@ -479,16 +479,18 @@ body{
 
   <!-- INTERNAL SUB-TABS -->
   <div class="tabs" style="margin:10px 0 16px 0; border-radius:14px; background:#f7f9ff;">
-  <div class="tab svc-tab active" data-subtab="svc-active">Active Jobs</div>
-  <div class="tab svc-tab" data-subtab="svc-history">History</div>
-</div>
+    <div class="tab svc-tab active" data-subtab="svc-active">Active Jobs</div>
+    <div class="tab svc-tab" data-subtab="svc-history">History</div>
+  </div>
 
   <!-- ================= ACTIVE JOBS ================= -->
   <div id="svc-active" class="svc-subtab active">
 
     <!-- ADD JOB FORM -->
     <details class="card" style="padding:14px; margin-bottom:14px;">
-      <summary style="cursor:pointer; font-weight:600; padding:6px 0;">➕ Add New Repair Job</summary>
+      <summary style="cursor:pointer; font-weight:600; padding:6px 0;">
+        ➕ Add New Repair Job
+      </summary>
 
       <div class="row-inline" style="margin-top:12px; gap:8px; flex-wrap:wrap;">
 
@@ -525,7 +527,9 @@ body{
           border:1px solid var(--ks-border-soft);background:var(--ks-bg-card);">
 
         <button id="addServiceBtn" class="small-btn">Add Job</button>
-        <button id="syncServiceBtn" class="small-btn" title="Save service jobs to cloud">☁️ Sync</button>
+        <button id="syncServiceBtn" class="small-btn" title="Save service jobs to cloud">
+          ☁️ Sync
+        </button>
       </div>
     </details>
 
@@ -539,12 +543,14 @@ body{
 
       <div class="card" style="flex:1; min-width:120px; padding:10px; background:#ecfdf5;">
         <small>Completed</small>
-        <div id="svcCompletedCount" style="font-size:20px;font-weight:700;color:#16a34a;">0</div>
+        <div id="svcCompletedCount"
+             style="font-size:20px;font-weight:700;color:#16a34a;">0</div>
       </div>
 
       <div class="card" style="flex:1; min-width:150px; padding:10px; background:#fff7ed;">
         <small>Total Repair Profit</small>
-        <div id="svcTotalProfit" style="font-size:20px;font-weight:700;color:#c2410c;">₹0</div>
+        <div id="svcTotalProfit"
+             style="font-size:20px;font-weight:700;color:#c2410c;">₹0</div>
       </div>
     </div>
 
@@ -573,8 +579,6 @@ body{
       🗑️ Clear All
     </button>
   </div>
-
-
 
   <!-- ================= HISTORY ================= -->
   <div id="svc-history" class="svc-subtab">
@@ -629,18 +633,25 @@ body{
       <tbody></tbody>
     </table>
 
+    <!-- SPLIT VIEW : SERVICE (LEFT) | MONEY (RIGHT) -->
+    <div id="svcSplitView"
+         style="display:flex; gap:20px; align-items:flex-start; margin-top:20px;">
 
-    <!-- PIE CARDS -->
-    <div style="display:flex; gap:20px; justify-content:center; flex-wrap:wrap; margin-top:20px;">
-
-      <div class="card" style="width:260px; padding:10px;">
-        <h4 style="text-align:center;margin-bottom:6px;font-size:14px;">Status Summary</h4>
-        <canvas id="svcPieStatus"></canvas>
+      <!-- SERVICE PIE -->
+      <div class="card" style="flex:1; max-width:360px; padding:14px;">
+        <h4 style="text-align:center;margin-bottom:8px;font-size:14px;">
+          Service Status Summary
+        </h4>
+        <div style="height:260px;">
+          <canvas id="svcPieStatus"></canvas>
+        </div>
       </div>
 
-      <div class="card" style="width:260px; padding:10px;">
-        <h4 style="text-align:center;margin-bottom:6px;font-size:14px;">Money Breakdown</h4>
-        <canvas id="svcPieMoney"></canvas>
+      <!-- MONEY LIST (JS FILLS THIS) -->
+      <div id="svcMoneyBox"
+           class="card"
+           style="flex:1; padding:14px; border-left:1px dashed var(--ks-border-strong);">
+        <!-- content injected by service.js -->
       </div>
 
     </div>
@@ -649,23 +660,26 @@ body{
 
 </section>
 
-<!-- INTERNAL SUBTAB SCRIPT -->
+<!-- INTERNAL SUBTAB SCRIPT (CLEANED) -->
 <script>
 document.addEventListener("click", e => {
-if (!e.target.classList.contains("svc-tab")) return;
+  if (!e.target.classList.contains("svc-tab")) return;
 
   const sub = e.target.dataset.subtab;
   if (!sub) return;
 
-  document.querySelectorAll(".svc-subtab").forEach(s => s.classList.remove("active"));
+  document.querySelectorAll(".svc-subtab").forEach(s =>
+    s.classList.remove("active")
+  );
   document.getElementById(sub)?.classList.add("active");
 
-  e.target.parentElement.querySelectorAll(".tab").forEach(t => t.classList.remove("active"));
+  e.target.parentElement.querySelectorAll(".tab").forEach(t =>
+    t.classList.remove("active")
+  );
   e.target.classList.add("active");
 
-  try { renderServiceTables?.(); } catch {}
-  try { renderSvcPieStatus?.(); } catch {}
-  try { renderSvcPieMoney?.(); } catch {}
+  // single refresh hook (new service.js)
+  try { window.__svcRefresh?.(); } catch {}
 });
 </script>
 
