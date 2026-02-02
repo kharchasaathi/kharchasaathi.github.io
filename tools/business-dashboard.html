@@ -845,9 +845,8 @@ const files = [
       s.src = `${file}?v=${v}`;
       s.onload = () => res();
       s.onerror = () => {
-        console.warn("Failed to load", file);
-        res();
-      };
+  alert("Script load failed: " + file);
+};
       document.body.appendChild(s);
     }));
   }, Promise.resolve()).then(() => {
