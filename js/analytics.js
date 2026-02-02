@@ -1,11 +1,11 @@
 /* ======================================================
-   analytics.js — BUSINESS v23 (READ-ONLY + SAFE)
+   analytics.js — BUSINESS v24 (CREDIT SAFE)
    ------------------------------------------------------
-   ✅ Dashboard analytics only
-   ✅ NO global clear
+   ✅ Dashboard analytics only (READ ONLY)
+   ✅ Credit-safe (matches sales.js v21 & service.js v23)
    ✅ NO offset reset
    ✅ UniversalBar = single source of truth
-   ✅ Credit pending visible
+   ✅ Credit pending visible correctly
 ====================================================== */
 
 (function () {
@@ -17,6 +17,8 @@
 
   /* ======================================================
         TODAY ANALYTICS (READ ONLY)
+        ✔ Profit ONLY if money received
+        ✔ Credit shown separately
   ====================================================== */
   window.getAnalyticsData = function () {
 
@@ -34,29 +36,38 @@
     let todayExpenses = 0;
     let todayProfit   = 0;
 
-    /* SALES */
+    /* ---------- SALES ---------- */
     sales.forEach(s => {
       if (s.date !== today) return;
 
-      if ((s.status || "").toLowerCase() === "credit") {
+      const st = String(s.status || "").toLowerCase();
+
+      if (st === "credit") {
         todayCredit += num(s.total);
-      } else {
+      }
+
+      if (st === "paid") {
         todaySales  += num(s.total);
         todayProfit += num(s.profit);
       }
     });
 
-    /* SERVICES */
+    /* ---------- SERVICES ---------- */
     services.forEach(j => {
-      if (
-        j.date_out === today &&
-        (j.status || "").toLowerCase() === "completed"
-      ) {
+      const st = String(j.status || "").toLowerCase();
+
+      if (j.date_out !== today) return;
+
+      if (st === "paid") {
         todayProfit += num(j.profit);
+      }
+
+      if (st === "credit") {
+        todayCredit += num(j.remaining);
       }
     });
 
-    /* EXPENSES */
+    /* ---------- EXPENSES ---------- */
     expenses.forEach(e => {
       if (e.date === today) {
         todayExpenses += num(e.amount);
@@ -74,13 +85,14 @@
 
   /* ======================================================
         TOTAL SUMMARY (READ ONLY)
+        ✔ Investment ONLY after collection
+        ✔ Credit pending separated
   ====================================================== */
   window.getSummaryTotals = function () {
 
     const sales    = window.sales    || [];
     const services = window.services || [];
     const expenses = window.expenses || [];
-    const stock    = window.stock    || [];
 
     let salesProfit   = 0;
     let serviceProfit = 0;
@@ -88,21 +100,27 @@
     let stockInvest   = 0;
     let serviceInvest = 0;
 
-    /* SALES */
+    /* ---------- SALES ---------- */
     sales.forEach(s => {
-      if ((s.status || "").toLowerCase() === "credit") {
+      const st = String(s.status || "").toLowerCase();
+
+      if (st === "credit") {
         creditTotal += num(s.total);
-      } else {
+      }
+
+      if (st === "paid") {
         salesProfit += num(s.profit);
+
+        // 🔥 Stock investment ONLY when money received
         stockInvest += num(s.qty) * num(s.cost);
       }
     });
 
-    /* SERVICES */
+    /* ---------- SERVICES ---------- */
     services.forEach(j => {
-      const st = (j.status || "").toLowerCase();
+      const st = String(j.status || "").toLowerCase();
 
-      if (st === "completed") {
+      if (st === "paid") {
         serviceProfit += num(j.profit);
         serviceInvest += num(j.invest);
       }
@@ -112,7 +130,7 @@
       }
     });
 
-    /* EXPENSES */
+    /* ---------- EXPENSES ---------- */
     const totalExpenses =
       expenses.reduce((a, e) => a + num(e.amount), 0);
 
@@ -151,13 +169,11 @@
     if (qs("#dashInv"))
       qs("#dashInv").textContent = "₹" + Math.round(totalInvestment);
 
-    /* PIE CHART */
+    /* ---------- PIE CHART ---------- */
     const ctx = qs("#cleanPie");
     if (!ctx || typeof Chart === "undefined") return;
 
-    try {
-      cleanPieChart?.destroy();
-    } catch {}
+    try { cleanPieChart?.destroy(); } catch {}
 
     cleanPieChart = new Chart(ctx, {
       type: "pie",
@@ -186,7 +202,7 @@
   };
 
   /* ======================================================
-        TODAY CARDS
+        TODAY SUMMARY CARDS
   ====================================================== */
   window.updateSummaryCards = function () {
 
