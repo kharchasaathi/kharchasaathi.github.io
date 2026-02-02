@@ -108,8 +108,8 @@
     text-decoration:none;
   }
 </style>
-
 </head>
+
 <body>
 
 <div class="card">
@@ -138,8 +138,25 @@
 <!-- Firebase Init -->
 <script src="/js/firebase.js"></script>
 
-<!-- Auth Utils (compat) -->
+<!-- Auth Utils -->
 <script src="/js/login-utils.js?v=20"></script>
+
+<script>
+/* =====================================================
+   🔐 LOGIN GUARD — BLOCK SIGNUP WHEN LOGGED IN
+===================================================== */
+document.addEventListener("DOMContentLoaded", () => {
+  setTimeout(() => {
+    try {
+      if (window.auth && window.auth.currentUser) {
+        window.location.replace("/tools/business-dashboard.html");
+      }
+    } catch (e) {
+      console.warn("Signup guard error:", e);
+    }
+  }, 200);
+});
+</script>
 
 <script>
 const qs = s => document.querySelector(s);
@@ -180,8 +197,6 @@ qs("#signupBtn").addEventListener("click", async () => {
   if (res.success){
     msg.style.color = "green";
     msg.textContent = "Account created! Redirecting…";
-
-    localStorage.setItem("ks-user-email", email);
 
     setTimeout(() => {
       window.location.href = "/tools/business-dashboard.html";
