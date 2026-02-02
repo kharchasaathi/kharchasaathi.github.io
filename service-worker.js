@@ -1,112 +1,110 @@
 // =======================================================
-// KharchaSaathi — Service Worker v6 (ONLINE MODE FINAL)
+// KharchaSaathi — Service Worker v7 (LOGIN SAFE ONLINE MODE)
 // -------------------------------------------------------
-// ⭐ ONLINE-FIRST mode (Network → Cache fallback)
-// ⭐ Business dashboard always loads latest version
-// ⭐ Firebase, Firestore, Auth, API, Sync files NEVER cached
-// ⭐ Auto-update + small safe cache only
-// ⭐ Zero bugs, works on all devices
+// ⭐ ONLINE-FIRST
+// ⭐ Dashboard = NETWORK ONLY (no cache, no offline serve)
+// ⭐ Login / Reset / Signup cached
+// ⭐ Firebase & APIs NEVER cached
+// ⭐ Safe for SaaS + Payments (Razorpay ready)
 // =======================================================
 
-const CACHE_NAME = "ks-cache-v6";
+const CACHE_NAME = "ks-cache-v7";
 
-// -------------------------------------------------------
-// STATIC FILES ONLY — SAFE OFFLINE ASSETS
-// (Business files dynamically load cloud data → must stay online)
-// -------------------------------------------------------
+/* -------------------------------------------------------
+   STATIC FILES — SAFE BEFORE LOGIN
+------------------------------------------------------- */
 const CORE_ASSETS = [
-  "/",                     // home
+  "/",
   "/index.html",
 
-  // UI Screens
+  // Auth pages (allowed offline UI only)
   "/login.html",
   "/reset-password.html",
   "/signup.html",
 
-  // PWA Manifest + App Icons
+  // PWA
   "/manifest.json",
   "/favicon.png",
   "/icons/icon-192.png",
   "/icons/icon-512.png",
 
-  // Generic base JS/CSS used before login
+  // Base auth utilities
   "/css/base.css",
-  "/js/login-utils.js",
-  "/js/firebase.js"
+  "/js/firebase.js",
+  "/js/login-utils.js"
 ];
 
-// -------------------------------------------------------
-// INSTALL — Cache only essential static assets
-// -------------------------------------------------------
+/* -------------------------------------------------------
+   INSTALL
+------------------------------------------------------- */
 self.addEventListener("install", event => {
   event.waitUntil(
     caches.open(CACHE_NAME).then(async cache => {
-      console.log("[SW] Installing…");
+      console.log("[SW] Installing v7…");
 
       for (const asset of CORE_ASSETS) {
         try {
           const res = await fetch(asset, { cache: "no-store" });
-          if (res && res.ok) cache.put(asset, res.clone());
+          if (res.ok) cache.put(asset, res.clone());
         } catch {
-          console.warn("[SW] Skipped (optional):", asset);
+          console.warn("[SW] Skipped:", asset);
         }
       }
     })
   );
-
   self.skipWaiting();
 });
 
-// -------------------------------------------------------
-// ACTIVATE — Remove old caches
-// -------------------------------------------------------
+/* -------------------------------------------------------
+   ACTIVATE
+------------------------------------------------------- */
 self.addEventListener("activate", event => {
   event.waitUntil(
     caches.keys().then(keys =>
       Promise.all(
-        keys
-          .filter(k => k !== CACHE_NAME)
-          .map(k => {
-            console.log("[SW] Deleting old cache:", k);
-            return caches.delete(k);
-          })
+        keys.filter(k => k !== CACHE_NAME).map(k => caches.delete(k))
       )
     )
   );
-  console.log("[SW] Active and ready.");
   self.clients.claim();
+  console.log("[SW] Active v7");
 });
 
-// -------------------------------------------------------
-// FETCH MODE — ONLINE FIRST (BEST for cloud sync apps)
-// -------------------------------------------------------
-// Priority:
-// 1) Try Network (latest version always)
-// 2) If network fails → return Cache
-// -------------------------------------------------------
+/* -------------------------------------------------------
+   FETCH — LOGIN SAFE ONLINE FIRST
+------------------------------------------------------- */
 self.addEventListener("fetch", event => {
   const req = event.request;
   const url = req.url;
 
-  // Only GET handled
   if (req.method !== "GET") return;
 
-  // BLOCK Cloud APIs from cache
+  /* 🔥 HARD BLOCK — NEVER CACHE / SERVE DASHBOARD */
   if (
-    url.includes("firestore") ||
-    url.includes("firebase") ||
-    url.includes("googleapis") ||
-    url.includes("/cloudSync") ||
-    url.includes("/sync") ||
-    url.includes("auth")
+    url.includes("/tools/business-dashboard.html") ||
+    url.includes("/tools/")
   ) {
-    return; // Always network-only
+    event.respondWith(fetch(req)); // network only
+    return;
   }
 
+  /* 🔥 BLOCK ALL CLOUD / AUTH / PAYMENT APIs */
+  if (
+    url.includes("firebase") ||
+    url.includes("firestore") ||
+    url.includes("googleapis") ||
+    url.includes("auth") ||
+    url.includes("razorpay")
+  ) {
+    return; // browser handles network
+  }
+
+  /* ---------------------------------------------------
+     ONLINE FIRST FOR SAFE STATIC FILES
+  --------------------------------------------------- */
   event.respondWith(
     fetch(req)
       .then(res => {
-        // Update cache only when response is OK
         if (res && res.ok) {
           caches.open(CACHE_NAME).then(cache => {
             cache.put(req, res.clone());
@@ -118,8 +116,7 @@ self.addEventListener("fetch", event => {
         caches.match(req).then(cached => {
           if (cached) return cached;
 
-          // Offline fallback basic text
-          return new Response("Offline — cached copy unavailable", {
+          return new Response("Offline", {
             status: 503,
             headers: { "Content-Type": "text/plain" }
           });
