@@ -652,7 +652,7 @@ body{
 <!-- INTERNAL SUBTAB SCRIPT -->
 <script>
 document.addEventListener("click", e => {
-  if (!e.target.classList.contains("tab")) return;
+if (!e.target.classList.contains("svc-tab")) return;
 
   const sub = e.target.dataset.subtab;
   if (!sub) return;
