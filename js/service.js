@@ -286,7 +286,7 @@
     const j = ensureServices().find(x => x.id === id);
     if (!j) return;
 
-    const invest = Number(prompt("Repair Cost ₹:", j.invest) || 0);
+    const invest = Number(prompt("Investment Repair Cost ₹:", j.invest) || 0);
     const full = Number(prompt("Total Bill ₹:", j.paid) || 0);
     if (!full) return alert("Invalid amount");
 
