@@ -850,7 +850,7 @@ function switchTab(id) {
   try { renderSales?.(); } catch {}
   try { renderWanting?.(); } catch {}
   try { renderExpenses?.(); } catch {}
-  try { renderServiceTables?.(); } catch {}
+  try { window.__svcRefresh?.(); } catch {}
   try { renderCollection?.(); } catch {}
   try { updateSummaryCards?.(); } catch {}
 }
