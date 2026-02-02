@@ -118,38 +118,71 @@ a{
 <div class="card" role="main" aria-labelledby="loginTitle">
   <h2 id="loginTitle">Login</h2>
 
-  <!-- put inputs inside a real form to avoid browser warning -->
   <form id="loginForm" autocomplete="on" novalidate>
-    <label for="email" style="display:none">Email</label>
-    <input id="email" name="email" type="email" placeholder="Email" required autocomplete="email">
+    <input id="email" type="email" placeholder="Email" required autocomplete="email">
 
-    <div class="pw-wrapper" style="margin-top:6px">
-      <label for="password" style="display:none">Password</label>
-      <input id="password" name="password" type="password" placeholder="Password" required autocomplete="current-password">
-      <span class="pw-eye" id="togglePw" aria-hidden="true">👁️</span>
+    <div class="pw-wrapper">
+      <input id="password" type="password" placeholder="Password" required autocomplete="current-password">
+      <span class="pw-eye" id="togglePw">👁️</span>
     </div>
 
-    <button id="loginBtn" type="submit">Login</button>
+    <button type="submit">Login</button>
   </form>
 
-  <div id="msg" role="status" aria-live="polite"></div>
+  <div id="msg"></div>
 
   <div class="muted">
     Don't have an account? <a href="/signup.html">Sign Up</a>
   </div>
 </div>
 
-<!-- Firebase COMPAT scripts (compat mode) -->
+<!-- Firebase compat -->
 <script src="https://www.gstatic.com/firebasejs/9.6.11/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.6.11/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.6.11/firebase-firestore-compat.js"></script>
 
-<!-- Your firebase.js (compat) — must define window.auth and window.db -->
 <script src="/js/firebase.js"></script>
+<script src="/js/login-utils.js"></script>
 
-<!-- Your fixed compat login-utils.js (the one I gave you that uses var auth = window.auth) -->
-<script src="/js/login-utils.js?v=21"></script>
+<!-- ======================================================
+     🔐 LOGIN PAGE GUARD
+     - Already logged in → dashboard
+====================================================== -->
+<script>
+(function () {
+  const DASHBOARD = "/tools/business-dashboard.html";
+  const KEY = "ks-user-email";
 
+  function localLoggedIn() {
+    const e = localStorage.getItem(KEY);
+    return e && e.includes("@");
+  }
+
+  // Fast redirect (local hint)
+  if (localLoggedIn()) {
+    window.location.replace(DASHBOARD);
+    return;
+  }
+
+  // Firebase authoritative check
+  function waitForAuth() {
+    if (!window.auth) return setTimeout(waitForAuth, 100);
+
+    window.auth.onAuthStateChanged(user => {
+      if (user) {
+        localStorage.setItem(KEY, user.email);
+        window.location.replace(DASHBOARD);
+      }
+    });
+  }
+
+  waitForAuth();
+})();
+</script>
+
+<!-- ======================================================
+     LOGIN LOGIC
+====================================================== -->
 <script>
 document.addEventListener("DOMContentLoaded", () => {
   const qs = s => document.querySelector(s);
@@ -159,56 +192,33 @@ document.addEventListener("DOMContentLoaded", () => {
   const msgEl = qs("#msg");
   const toggle = qs("#togglePw");
 
-  // Toggle password visibility
-  toggle.addEventListener("click", () => {
+  toggle.onclick = () => {
     pwEl.type = pwEl.type === "password" ? "text" : "password";
-  });
+  };
 
-  // Form submit (safe: checks loginUser exists)
-  form.addEventListener("submit", async (ev) => {
-    ev.preventDefault();
-    msgEl.style.color = "#d32f2f";
-    msgEl.textContent = "";
-
-    const email = (emailEl.value || "").trim();
-    const pw = (pwEl.value || "").trim();
-
-    if (!email || !pw) {
-      msgEl.textContent = "Enter both email and password.";
-      return;
-    }
-
-    // ensure loginUser is available
-    if (typeof window.loginUser !== "function") {
-      msgEl.textContent = "Auth not ready. Try reloading the page.";
-      console.warn("loginUser is not defined — login-utils.js may not be loaded or has an error.");
-      return;
-    }
-
-    msgEl.style.color = "#b71c1c";
-    msgEl.textContent = "Please wait...";
+  form.addEventListener("submit", async e => {
+    e.preventDefault();
+    msgEl.textContent = "Please wait…";
 
     try {
-      const res = await window.loginUser(email, pw);
+      const res = await loginUser(
+        emailEl.value.trim(),
+        pwEl.value.trim()
+      );
 
-      if (res && res.success) {
-        // clear message and redirect
+      if (res.success) {
         msgEl.style.color = "#1b5e20";
-        msgEl.textContent = "Login successful — redirecting…";
-        // small delay to let auth state settle
+        msgEl.textContent = "Login successful…";
         setTimeout(() => {
           window.location.href = "/tools/business-dashboard.html";
-        }, 250);
+        }, 200);
       } else {
-        // show error (friendly)
-        const errMsg = res && res.error ? res.error : "Login failed";
         msgEl.style.color = "#d32f2f";
-        msgEl.textContent = errMsg;
+        msgEl.textContent = res.error || "Login failed";
       }
-    } catch (e) {
-      console.error("Login error:", e);
+    } catch (err) {
       msgEl.style.color = "#d32f2f";
-      msgEl.textContent = e?.message || String(e) || "Login error";
+      msgEl.textContent = err.message || "Login error";
     }
   });
 });
