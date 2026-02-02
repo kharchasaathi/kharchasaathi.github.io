@@ -1,8 +1,9 @@
 /* ===========================================================
-   service.js — ONLINE MODE — FINAL v23 (CREDIT SAFE)
+   service.js — ONLINE MODE — FINAL v23.1 (CREDIT SAFE)
    ✔ Matches sales.js v21 logic
    ✔ Profit & investment ONLY after collection
    ✔ UniversalBar compatible
+   ✔ cloudSaveDebounced ReferenceError FIXED
 =========================================================== */
 
 (function () {
@@ -28,13 +29,26 @@
     }
   })();
 
+  /* --------------------------------------------------
+        SAVE (LOCAL + CLOUD) — SAFE
+  -------------------------------------------------- */
   function saveServices() {
     try {
-      localStorage.setItem("service-data", JSON.stringify(window.services));
+      localStorage.setItem(
+        "service-data",
+        JSON.stringify(window.services)
+      );
     } catch {}
 
-    cloudSaveDebounced?.("services", window.services);
-    setTimeout(() => cloudPullAllIfAvailable?.(), 200);
+    // ✅ SAFE cloud save (FIX)
+    if (typeof cloudSaveDebounced === "function") {
+      cloudSaveDebounced("services", window.services);
+    }
+
+    // ✅ SAFE cloud pull
+    if (typeof cloudPullAllIfAvailable === "function") {
+      setTimeout(() => cloudPullAllIfAvailable(), 200);
+    }
   }
 
   const list = () => window.services || [];
@@ -101,7 +115,7 @@
       j.fromCredit = false;
       j.paid = j.advance;
       j.remaining = total - j.advance;
-      j.profit = 0; // 🔥 IMPORTANT
+      j.profit = 0; // 🔥 CREDIT SAFE
     }
 
     saveServices();
@@ -125,7 +139,7 @@
 
     saveServices();
 
-    // 🔥 Collection history
+    // 🔥 Collection history (only on real money)
     window.addCollectionEntry?.(
       "Service (Credit cleared)",
       `${j.item} ${j.model || ""} — ${j.customer}`,
@@ -135,6 +149,9 @@
     refresh();
   };
 
+  /* --------------------------------------------------
+        FAIL JOB
+  -------------------------------------------------- */
   function failJob(id) {
     const j = list().find(x => x.id === id);
     if (!j) return;
@@ -157,37 +174,41 @@
     const pending = list().filter(j => j.status === "pending");
     const history = list().filter(j => j.status !== "pending");
 
-    pBody.innerHTML = pending.length ? pending.map(j => `
-      <tr>
-        <td>${j.jobId}</td>
-        <td>${toDisplay(j.date_in)}</td>
-        <td>${j.customer}</td>
-        <td>${j.phone}</td>
-        <td>${j.item}</td>
-        <td>${j.problem}</td>
-        <td>Pending</td>
-        <td>
-          <button class="small-btn svc-view" data-id="${j.id}">Update</button>
-        </td>
-      </tr>
-    `).join("") : `<tr><td colspan="8">No pending jobs</td></tr>`;
+    pBody.innerHTML = pending.length
+      ? pending.map(j => `
+        <tr>
+          <td>${j.jobId}</td>
+          <td>${toDisplay(j.date_in)}</td>
+          <td>${j.customer}</td>
+          <td>${j.phone}</td>
+          <td>${j.item}</td>
+          <td>${j.problem}</td>
+          <td>Pending</td>
+          <td>
+            <button class="small-btn svc-view" data-id="${j.id}">Update</button>
+          </td>
+        </tr>
+      `).join("")
+      : `<tr><td colspan="8">No pending jobs</td></tr>`;
 
-    hBody.innerHTML = history.length ? history.map(j => `
-      <tr>
-        <td>${j.jobId}</td>
-        <td>${toDisplay(j.date_in)}</td>
-        <td>${j.date_out ? toDisplay(j.date_out) : "-"}</td>
-        <td>${j.customer}</td>
-        <td>₹${j.invest}</td>
-        <td>₹${j.paid}</td>
-        <td>₹${j.profit}</td>
-        <td>
-          ${j.status === "credit"
-            ? `Credit <button class="small-btn" onclick="collectServiceCredit('${j.id}')">Collect</button>`
-            : j.status}
-        </td>
-      </tr>
-    `).join("") : `<tr><td colspan="8">No history</td></tr>`;
+    hBody.innerHTML = history.length
+      ? history.map(j => `
+        <tr>
+          <td>${j.jobId}</td>
+          <td>${toDisplay(j.date_in)}</td>
+          <td>${j.date_out ? toDisplay(j.date_out) : "-"}</td>
+          <td>${j.customer}</td>
+          <td>₹${j.invest}</td>
+          <td>₹${j.paid}</td>
+          <td>₹${j.profit}</td>
+          <td>
+            ${j.status === "credit"
+              ? `Credit <button class="small-btn" onclick="collectServiceCredit('${j.id}')">Collect</button>`
+              : j.status}
+          </td>
+        </tr>
+      `).join("")
+      : `<tr><td colspan="8">No history</td></tr>`;
   }
 
   function refresh() {
@@ -204,7 +225,7 @@
     if (!btn) return;
 
     const id = btn.dataset.id;
-    const ch = prompt("1-Paid\n2-Credit\n3-Failed");
+    const ch = prompt("1 - Paid\n2 - Credit\n3 - Failed");
 
     if (ch === "1") completeJob(id, "paid");
     else if (ch === "2") completeJob(id, "credit");
