@@ -1,8 +1,8 @@
 /* ===========================================================
-   sales.js — ONLINE MODE (Option-B Cloud Master) — FINAL v20
-   ✔ Cloud is the master database
-   ✔ LocalStorage = only temporary UI cache
-   ✔ All save operations go through cloudSync() via saveSales()
+   sales.js — ONLINE MODE (Option-B Cloud Master) — FINAL v21
+   ✔ Credit-safe accounting
+   ✔ Stock reduces immediately
+   ✔ Profit & investment ONLY after collection
 =========================================================== */
 
 /* -----------------------------------------------------------
@@ -16,48 +16,43 @@ function getCurrentTime12hr() {
 }
 
 /* -----------------------------------------------------------
-   REFRESH TYPE SELECTOR (from window.types)
+   REFRESH TYPE SELECTOR
 ----------------------------------------------------------- */
 function refreshSaleTypeSelector() {
   const sel = document.getElementById("saleType");
   if (!sel) return;
 
   sel.innerHTML = `<option value="all">All Types</option>`;
-
   (window.types || []).forEach(t => {
     sel.innerHTML += `<option value="${t.name}">${t.name}</option>`;
   });
 }
 
 /* ===========================================================
-   SAVE SALES (Cloud Master + Local UI Cache)
+   SAVE SALES (Cloud Master)
 =========================================================== */
 window.saveSales = function () {
-
-  // 1️⃣ TEMPORARY LOCAL CACHE (for immediate UI refresh)
   try {
     localStorage.setItem("sales-data", JSON.stringify(window.sales));
   } catch {}
 
-  // 2️⃣ CLOUD MASTER SAVE
   if (typeof cloudSaveDebounced === "function") {
     cloudSaveDebounced("sales", window.sales);
   }
 
-  // 3️⃣ GLOBAL CLOUD RESYNC (ALL DEVICES)
   if (typeof cloudPullAllIfAvailable === "function") {
     setTimeout(() => cloudPullAllIfAvailable(), 200);
   }
 };
 
 /* ===========================================================
-   ADD SALE ENTRY (ONLINE MODE)
+   ADD SALE ENTRY
 =========================================================== */
 function addSaleEntry({ date, type, product, qty, price, status, customer, phone }) {
 
   qty    = Number(qty);
   price  = Number(price);
-  status = status || "Paid";
+  status = (status || "Paid").toLowerCase();
 
   if (!type || !product || qty <= 0 || price <= 0) return;
 
@@ -67,19 +62,16 @@ function addSaleEntry({ date, type, product, qty, price, status, customer, phone
   const remain = Number(p.qty) - Number(p.sold);
   if (remain < qty) return alert("Not enough stock!");
 
-  const cost   = Number(p.cost);
-  const total  = qty * price;
-  let   profit = 0;
+  const cost  = Number(p.cost);
+  const total = qty * price;
 
-  if (status.toLowerCase() === "paid") {
-    profit = total - qty * cost;
-  }
-
-  /* ---------- UPDATE STOCK ---------- */
+  /* ---------- STOCK ALWAYS REDUCES ---------- */
   p.sold = Number(p.sold) + qty;
   window.saveStock?.();
 
-  /* ---------- RECORD SALE ---------- */
+  /* ---------- PROFIT LOGIC ---------- */
+  const isPaid = status === "paid";
+
   window.sales.push({
     id: uid("sale"),
     date: date || todayDate(),
@@ -89,12 +81,16 @@ function addSaleEntry({ date, type, product, qty, price, status, customer, phone
     qty,
     price,
     total,
-    profit,
+
+    // 🔥 CORE FIX
+    profit: isPaid ? (total - qty * cost) : 0,
     cost,
-    status,
+
+    status: isPaid ? "Paid" : "Credit",
+    fromCredit: !isPaid,
+
     customer: customer || "",
-    phone:    phone    || "",
-    fromCredit: false
+    phone: phone || ""
   });
 
   window.saveSales();
@@ -113,7 +109,7 @@ function collectCreditSale(id) {
   const s = window.sales.find(x => x.id === id);
   if (!s) return;
 
-  if ((s.status || "").toLowerCase() !== "credit") {
+  if (String(s.status).toLowerCase() !== "credit") {
     return alert("Already Paid.");
   }
 
@@ -123,34 +119,35 @@ function collectCreditSale(id) {
     `Rate: ₹${s.price}`,
     `Total: ₹${s.total}`,
     s.customer ? `Customer: ${s.customer}` : "",
-    s.phone    ? `Phone: ${s.phone}`       : ""
+    s.phone ? `Phone: ${s.phone}` : ""
   ].filter(Boolean);
 
   if (!confirm(msg.join("\n") + "\n\nMark as PAID & Collect?")) return;
 
+  // 🔥 NOW profit becomes real
   s.status = "Paid";
   s.fromCredit = true;
-
   s.profit = Number(s.total) - Number(s.qty * s.cost);
 
   window.saveSales();
 
-  /* Add Collection Log */
-  const collected = s.total;
-
+  /* ---------- COLLECTION LOG ---------- */
   const details =
     `${s.product} — Qty ${s.qty} × ₹${s.price} = ₹${s.total}` +
     ` (Credit Cleared)` +
     (s.customer ? ` — ${s.customer}` : "") +
-    (s.phone    ? ` — ${s.phone}`    : "");
+    (s.phone ? ` — ${s.phone}` : "");
 
-  window.addCollectionEntry("Sale (Credit cleared)", details, collected);
+  window.addCollectionEntry(
+    "Sale (Credit cleared)",
+    details,
+    s.total
+  );
 
   renderSales();
   renderCollection?.();
   window.renderAnalytics?.();
   window.updateSummaryCards?.();
-
   setTimeout(() => window.updateUniversalBar?.(), 50);
 
   alert("Credit Collected Successfully!");
@@ -158,7 +155,7 @@ function collectCreditSale(id) {
 window.collectCreditSale = collectCreditSale;
 
 /* ===========================================================
-   RENDER SALES TABLE (Full Filter Logic)
+   RENDER SALES TABLE
 =========================================================== */
 function renderSales() {
   const tbody = document.querySelector("#salesTable tbody");
@@ -170,22 +167,17 @@ function renderSales() {
 
   let list = [...(window.sales || [])];
 
-  /* TYPE */
   if (filterType !== "all") list = list.filter(s => s.type === filterType);
-
-  /* DATE */
   if (filterDate) list = list.filter(s => s.date === filterDate);
 
-  /* VIEW (always applies) */
   if (view !== "all") {
     list = list.filter(s => {
-      const status = String(s.status || "").toLowerCase();
-      const fromCredit = Boolean(s.fromCredit);
+      const st = String(s.status).toLowerCase();
+      const fc = Boolean(s.fromCredit);
 
-      if (view === "cash")           return status === "paid" && !fromCredit;
-      if (view === "credit-pending") return status === "credit";
-      if (view === "credit-paid")    return status === "paid" && fromCredit;
-
+      if (view === "cash") return st === "paid" && !fc;
+      if (view === "credit-pending") return st === "credit";
+      if (view === "credit-paid") return st === "paid" && fc;
       return true;
     });
   }
@@ -194,22 +186,17 @@ function renderSales() {
   let profitSum = 0;
 
   tbody.innerHTML = list.map(s => {
-    const t = Number(s.total || 0);
-    totalSum += t;
-
-    if ((s.status || "").toLowerCase() === "paid") {
+    totalSum += Number(s.total || 0);
+    if (String(s.status).toLowerCase() === "paid") {
       profitSum += Number(s.profit || 0);
     }
 
     const statusHTML =
-      (s.status || "").toLowerCase() === "credit"
-        ? `
-        <span class="status-credit">Credit</span>
-        <button class="small-btn"
-          style="background:#16a34a;color:white;padding:3px 8px;font-size:11px"
-          onclick="collectCreditSale('${s.id}')">
-          Collect
-        </button>`
+      String(s.status).toLowerCase() === "credit"
+        ? `<span class="status-credit">Credit</span>
+           <button class="small-btn"
+             style="background:#16a34a;color:white;padding:3px 8px;font-size:11px"
+             onclick="collectCreditSale('${s.id}')">Collect</button>`
         : `<span class="status-paid">Paid</span>`;
 
     return `
@@ -219,7 +206,7 @@ function renderSales() {
         <td>${s.product}</td>
         <td>${s.qty}</td>
         <td>₹${s.price}</td>
-        <td>₹${t}</td>
+        <td>₹${s.total}</td>
         <td>₹${s.profit}</td>
         <td>${statusHTML}</td>
       </tr>
@@ -229,7 +216,6 @@ function renderSales() {
   document.getElementById("salesTotal").textContent  = totalSum;
   document.getElementById("profitTotal").textContent = profitSum;
 
-  /* Clear button show/hide */
   const btn = document.getElementById("clearSalesBtn");
   if (btn) {
     btn.style.display = (view === "cash" || view === "credit-paid") ? "" : "none";
@@ -248,7 +234,7 @@ document.getElementById("saleView")?.addEventListener("change", renderSales);
 document.getElementById("filterSalesBtn")?.addEventListener("click", renderSales);
 
 /* ===========================================================
-   CLEAR SALES (Only cash or credit-paid)
+   CLEAR SALES
 =========================================================== */
 document.getElementById("clearSalesBtn")?.addEventListener("click", () => {
   const view = document.getElementById("saleView")?.value || "all";
@@ -259,12 +245,11 @@ document.getElementById("clearSalesBtn")?.addEventListener("click", () => {
   if (!confirm("Clear ALL records in this view?")) return;
 
   window.sales = window.sales.filter(s => {
-    const status = String(s.status || "").toLowerCase();
-    const fromCredit = Boolean(s.fromCredit);
+    const st = String(s.status).toLowerCase();
+    const fc = Boolean(s.fromCredit);
 
-    if (view === "cash") return !(status === "paid" && !fromCredit);
-    if (view === "credit-paid") return !(status === "paid" && fromCredit);
-
+    if (view === "cash") return !(st === "paid" && !fc);
+    if (view === "credit-paid") return !(st === "paid" && fc);
     return true;
   });
 
