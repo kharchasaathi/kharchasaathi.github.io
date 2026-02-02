@@ -1,8 +1,10 @@
 /* ===========================================================
-   service.js — ONLINE MODE (Cloud Master) — FINAL v22
+   service.js — ONLINE MODE (Cloud Master) — FINAL v22.1
    ✔ Cloud-first (Firestore master)
-   ✔ Local cache only for fast UI
-   ✔ Service (left) + Money (right) single view
+   ✔ Local cache load on refresh (FIXED)
+   ✔ Tabs empty issue fixed
+   ✔ Stale cache refresh fixed
+   ✔ Phone shown in history
 =========================================================== */
 
 (function () {
@@ -12,6 +14,18 @@
   const toDisplay = window.toDisplay || (d => d);
   const toInternal = window.toInternalIfNeeded || (d => d);
   const today = () => new Date().toISOString().slice(0, 10);
+
+  /* --------------------------------------------------
+        LOAD LOCAL CACHE ON PAGE LOAD  ✅ FIX–1
+  -------------------------------------------------- */
+  (function loadServiceCache() {
+    try {
+      const cached = localStorage.getItem("service-data");
+      if (cached) window.services = JSON.parse(cached);
+    } catch {
+      window.services = [];
+    }
+  })();
 
   /* --------------------------------------------------
         SAVE (LOCAL + CLOUD)
@@ -97,7 +111,7 @@
   }
 
   /* --------------------------------------------------
-        COUNTS (LEFT)
+        COUNTS
   -------------------------------------------------- */
   function renderCounts() {
     const list = ensureServices();
@@ -115,7 +129,7 @@
   }
 
   /* --------------------------------------------------
-        TABLES (LEFT SIDE)
+        TABLES (FIXED PHONE IN HISTORY) ✅ FIX–4
   -------------------------------------------------- */
   function renderTables() {
     const pendBody = qs("#svcTable tbody");
@@ -147,6 +161,7 @@
           <td>${toDisplay(j.date_in)}</td>
           <td>${j.date_out ? toDisplay(j.date_out) : "-"}</td>
           <td>${esc(j.customer)}</td>
+          <td>${esc(j.phone)}</td>
           <td>${esc(j.item)}</td>
           <td>₹${j.invest}</td>
           <td>₹${j.paid}</td>
@@ -157,11 +172,11 @@
               : j.status}
           </td>
         </tr>`).join("")
-      : `<tr><td colspan="9">No history</td></tr>`;
+      : `<tr><td colspan="10">No history</td></tr>`;
   }
 
   /* --------------------------------------------------
-        SERVICE PIE (RIGHT SIDE) — BIGGER SIZE
+        SERVICE PIE
   -------------------------------------------------- */
   let pieStatus = null;
 
@@ -184,31 +199,22 @@
       type: "pie",
       data: {
         labels: ["Pending", "Credit", "Completed", "Failed"],
-        datasets: [{
-          data: values.some(v => v > 0) ? values : [1, 0, 0, 0]
-        }]
+        datasets: [{ data: values.some(v => v > 0) ? values : [1, 0, 0, 0] }]
       },
       options: {
         responsive: true,
         maintainAspectRatio: false,
-        layout: { padding: 20 },
-        radius: "85%"   // 👈 SIZE BOOST
+        radius: "85%"
       }
     });
   }
 
   /* --------------------------------------------------
-        MONEY LIST (RIGHT SIDE)
+        MONEY LIST
   -------------------------------------------------- */
   function renderMoneyList() {
-    let box = qs("#svcMoneyBox");
-    if (!box) {
-      box = document.createElement("div");
-      box.id = "svcMoneyBox";
-      box.style.borderLeft = "1px dashed #cbd5e1";   // 👈 MIDDLE LINE
-      box.style.paddingLeft = "14px";
-      qs("#service")?.appendChild(box);
-    }
+    const box = qs("#svcMoneyBox");
+    if (!box) return;
 
     let cash = 0, credit = 0, collected = 0, profit = 0;
 
@@ -222,7 +228,7 @@
     });
 
     box.innerHTML = `
-      <h4>💰 Service Money</h4>
+      <h4>💰 Service Financial Summary</h4>
       <ul style="line-height:1.8;font-size:14px">
         <li>💵 Cash Collected: <b>₹${cash}</b></li>
         <li>🕒 Credit Pending: <b>₹${credit}</b></li>
@@ -233,7 +239,7 @@
   }
 
   /* --------------------------------------------------
-        REFRESH
+        REFRESH (USED EVERYWHERE)
   -------------------------------------------------- */
   function refresh() {
     renderCounts();
@@ -278,6 +284,10 @@
 
     ensureServices().push(job);
     saveServicesOnline();
+
+    // ✅ FIX–3 : clear stale filters
+    clearDropdown();
+    clearCalendar();
     buildDateFilter();
     refresh();
   }
@@ -286,7 +296,9 @@
     const j = ensureServices().find(x => x.id === id);
     if (!j) return;
 
-    const invest = Number(prompt("Investment Repair Cost ₹:", j.invest) || 0);
+    const invest = Number(
+      prompt("Repair Investment Cost ₹:", j.invest) || 0
+    );
     const full = Number(prompt("Total Bill ₹:", j.paid) || 0);
     if (!full) return alert("Invalid amount");
 
@@ -370,6 +382,9 @@
   qs("#svcFilterDate")?.addEventListener("change", () => { clearCalendar(); refresh(); });
   qs("#svcFilterCalendar")?.addEventListener("change", () => { clearDropdown(); refresh(); });
 
+  /* --------------------------------------------------
+        INITIAL LOAD  ✅ FIX–2
+  -------------------------------------------------- */
   window.addEventListener("load", () => {
     buildDateFilter();
     refresh();
