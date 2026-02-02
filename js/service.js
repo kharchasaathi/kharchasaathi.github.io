@@ -18,14 +18,16 @@
   /* --------------------------------------------------
         LOAD LOCAL CACHE ON PAGE LOAD  ✅ FIX–1
   -------------------------------------------------- */
-  (function loadServiceCache() {
+  (function initServiceStore() {
+  if (!Array.isArray(window.services)) {
     try {
       const cached = localStorage.getItem("service-data");
-      if (cached) window.services = JSON.parse(cached);
+      window.services = cached ? JSON.parse(cached) : [];
     } catch {
       window.services = [];
     }
-  })();
+  }
+})();
 
   /* --------------------------------------------------
         SAVE (LOCAL + CLOUD)
