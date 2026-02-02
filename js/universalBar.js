@@ -1,10 +1,9 @@
 /* ===========================================================
-   universal-bar.js — LOCKED COLLECT-ONLY VERSION (v16)
+   universal-bar.js — CREDIT SAFE VERSION (v17)
    -----------------------------------------------------------
-   ✅ Universal Bar = READ ONLY (except Collect)
-   ✅ Clear buttons NEVER affect this bar
-   ✅ Only Collect button updates offsets
-   ✅ Cloud offsets = single source of truth
+   ✔ Matches sales.js v21
+   ✔ Matches service.js v23
+   ✔ Collect-only mutations
 =========================================================== */
 
 (function () {
@@ -12,220 +11,179 @@
   const num = v => (isNaN(v = Number(v))) ? 0 : Number(v);
   const money = v => "₹" + Math.round(num(v));
 
-  /* -----------------------------------------------------------
-     CLOUD OFFSET LOAD & SAVE
-  ----------------------------------------------------------- */
-  const OFFSET_KEY = "offsets"; // Firestore doc / collection key
+  const OFFSET_KEY = "offsets";
 
   async function loadOffsets() {
     if (typeof cloudLoad !== "function") return {};
     try {
-      const data = await cloudLoad(OFFSET_KEY);
-      return typeof data === "object" && data !== null ? data : {};
+      const d = await cloudLoad(OFFSET_KEY);
+      return typeof d === "object" && d ? d : {};
     } catch {
       return {};
     }
   }
 
   async function saveOffsets(obj) {
-    if (typeof cloudSaveDebounced !== "function") return;
-    cloudSaveDebounced(OFFSET_KEY, obj);
+    cloudSaveDebounced?.(OFFSET_KEY, obj);
   }
 
-  /* -----------------------------------------------------------
-     GLOBAL OFFSET STORE (COLLECTED AMOUNTS)
-     ❗ NEVER reset automatically
-  ----------------------------------------------------------- */
+  /* -------------------------------------------------- */
   window.__offsets = {
-    net: 0,     // collected net profit
-    sale: 0,    // collected sale profit
-    service: 0, // collected service profit
-    stock: 0,   // collected stock investment (sold)
-    servInv: 0  // collected service investment
+    net: 0,
+    sale: 0,
+    service: 0,
+    stock: 0,
+    servInv: 0
   };
 
   async function initOffsets() {
-    const loaded = await loadOffsets();
-
-    window.__offsets = {
-      net:     num(loaded.net),
-      sale:    num(loaded.sale),
-      service: num(loaded.service),
-      stock:   num(loaded.stock),
-      servInv: num(loaded.servInv)
-    };
-
+    const o = await loadOffsets();
+    Object.assign(window.__offsets, {
+      net:     num(o.net),
+      sale:    num(o.sale),
+      service: num(o.service),
+      stock:   num(o.stock),
+      servInv: num(o.servInv)
+    });
     updateUniversalBar();
   }
 
-  /* -----------------------------------------------------------
-     CENTRAL METRIC CALCULATOR (LIVE DATA)
-     ⚠️ Pure calculation — NO SIDE EFFECTS
-  ----------------------------------------------------------- */
+  /* --------------------------------------------------
+        CORE METRICS (PURE)
+  -------------------------------------------------- */
   function computeMetrics() {
 
-    const sales    = Array.isArray(window.sales)    ? window.sales    : [];
-    const services = Array.isArray(window.services) ? window.services : [];
-    const expenses = Array.isArray(window.expenses) ? window.expenses : [];
-    const stock    = Array.isArray(window.stock)    ? window.stock    : [];
+    const sales    = window.sales    || [];
+    const services = window.services || [];
+    const expenses = window.expenses || [];
 
-    let saleProfit    = 0;
+    let saleProfit = 0;
     let serviceProfit = 0;
     let pendingCredit = 0;
-    let totalExpenses = 0;
+    let expensesTotal = 0;
 
-    let stockInvestSold = 0;
-    let serviceInvest  = 0;
+    let stockInvest = 0;
+    let serviceInvest = 0;
 
     /* ---------- SALES ---------- */
     sales.forEach(s => {
-      const st = (s.status || "").toLowerCase();
+      const st = String(s.status).toLowerCase();
       if (st === "credit") {
         pendingCredit += num(s.total);
-      } else {
+      }
+      if (st === "paid") {
         saleProfit += num(s.profit);
+        stockInvest += num(s.qty) * num(s.cost);
       }
     });
 
     /* ---------- SERVICES ---------- */
     services.forEach(j => {
-      if ((j.status || "").toLowerCase() === "completed") {
+      const st = String(j.status).toLowerCase();
+
+      if (st === "paid") {
         serviceProfit += num(j.profit);
         serviceInvest += num(j.invest);
+      }
+
+      if (st === "credit") {
+        pendingCredit += num(j.remaining);
       }
     });
 
     /* ---------- EXPENSES ---------- */
     expenses.forEach(e => {
-      totalExpenses += num(e.amount);
-    });
-
-    /* ---------- STOCK (SOLD INVESTMENT) ---------- */
-    stock.forEach(p => {
-      const sold = num(p.sold);
-      if (sold > 0) stockInvestSold += sold * num(p.cost);
+      expensesTotal += num(e.amount);
     });
 
     const offs = window.__offsets;
 
-    const netLive =
-      saleProfit + serviceProfit - totalExpenses;
-
     return {
-      // 🔹 Raw live values (for UI breakdown)
-      saleProfitLive:    saleProfit,
-      serviceProfitLive: serviceProfit,
-      expensesLive:      totalExpenses,
-
-      // 🔹 Display values (after collection offsets)
-      saleProfitCollected:    Math.max(0, saleProfit    - offs.sale),
+      saleProfitCollected:    Math.max(0, saleProfit - offs.sale),
       serviceProfitCollected: Math.max(0, serviceProfit - offs.service),
-
-      stockInvestSold:        Math.max(0, stockInvestSold - offs.stock),
-      serviceInvestCompleted: Math.max(0, serviceInvest  - offs.servInv),
-
-      pendingCreditTotal: pendingCredit,
-
-      netProfit: Math.max(0, netLive - offs.net)
+      stockInvestSold:        Math.max(0, stockInvest - offs.stock),
+      serviceInvestCompleted: Math.max(0, serviceInvest - offs.servInv),
+      pendingCreditTotal:     pendingCredit,
+      expensesLive:           expensesTotal,
+      netProfit: Math.max(
+        0,
+        (saleProfit + serviceProfit - expensesTotal) - offs.net
+      )
     };
   }
 
-  /* -----------------------------------------------------------
-     UPDATE UI (READ ONLY)
-  ----------------------------------------------------------- */
+  /* -------------------------------------------------- */
   function updateUniversalBar() {
     const m = computeMetrics();
+    window.__unMetrics = m;
 
-    const el = {
-      net:     document.getElementById("unNetProfit"),
-      sale:    document.getElementById("unSaleProfit"),
-      serv:    document.getElementById("unServiceProfit"),
-      exp:     document.getElementById("unExpenses"),
-      stock:   document.getElementById("unStockInv"),
-      servInv: document.getElementById("unServiceInv"),
-      credit:  document.getElementById("unCreditSales")
+    const set = (id, v) => {
+      const el = document.getElementById(id);
+      if (el) el.textContent = money(v);
     };
 
-    if (el.sale)    el.sale.textContent    = money(m.saleProfitCollected);
-    if (el.serv)    el.serv.textContent    = money(m.serviceProfitCollected);
-    if (el.exp)     el.exp.textContent     = money(m.expensesLive);
-    if (el.stock)   el.stock.textContent   = money(m.stockInvestSold);
-    if (el.servInv) el.servInv.textContent = money(m.serviceInvestCompleted);
-    if (el.credit)  el.credit.textContent  = money(m.pendingCreditTotal);
-    if (el.net)     el.net.textContent     = money(m.netProfit);
-
-    // expose for other modules (analytics / UI)
-    window.__unMetrics = m;
+    set("unSaleProfit",   m.saleProfitCollected);
+    set("unServiceProfit",m.serviceProfitCollected);
+    set("unStockInv",     m.stockInvestSold);
+    set("unServiceInv",   m.serviceInvestCompleted);
+    set("unExpenses",     m.expensesLive);
+    set("unCreditSales",  m.pendingCreditTotal);
+    set("unNetProfit",    m.netProfit);
   }
 
   window.updateUniversalBar = updateUniversalBar;
 
-  /* -----------------------------------------------------------
-     COLLECT HANDLER (ONLY MUTATION POINT)
-  ----------------------------------------------------------- */
+  /* --------------------------------------------------
+        COLLECT (ONLY MUTATION)
+  -------------------------------------------------- */
   async function collect(kind) {
 
-    const m    = window.__unMetrics || {};
+    const m = window.__unMetrics || {};
     const offs = window.__offsets;
 
     const map = {
-      net:    ["Net Profit",                    m.netProfit,              "net"],
-      stock:  ["Stock Investment (Sold Items)", m.stockInvestSold,        "stock"],
-      service:["Service Investment",            m.serviceInvestCompleted, "servInv"]
+      net:    ["Net Profit", m.netProfit, "net"],
+      stock:  ["Stock Investment", m.stockInvestSold, "stock"],
+      service:["Service Investment", m.serviceInvestCompleted, "servInv"]
     };
 
     if (!map[kind]) return;
 
     const [label, available, key] = map[kind];
 
-    if (num(available) <= 0)
+    if (available <= 0)
       return alert("Nothing available to collect.");
 
-    const amount = num(
-      prompt(`${label}\nAvailable: ₹${available}\nEnter amount to collect:`)
-    );
+    const amount = num(prompt(
+      `${label}\nAvailable ₹${available}\nEnter amount:`));
 
     if (amount <= 0 || amount > available)
-      return alert("Invalid amount.");
+      return alert("Invalid amount");
 
-    const note = prompt("Optional note:", "") || "";
+    window.addCollectionEntry?.(label, "", amount);
 
-    // ✅ Collection history ONLY from Collect button
-    window.addCollectionEntry?.(label, note, amount);
+    offs[key] += amount;
 
-    offs[key] = num(offs[key]) + amount;
-
-    // Special handling: Net collect locks sale & service baseline
     if (kind === "net") {
       offs.sale =
-        num(window.sales?.reduce((a, s) => a + num(s.profit), 0) || 0);
+        sales.reduce((a, s) => a + (s.status === "Paid" ? num(s.profit) : 0), 0);
       offs.service =
-        num(window.services?.reduce((a, j) => a + num(j.profit), 0) || 0);
+        services.reduce((a, j) => a + (j.status === "paid" ? num(j.profit) : 0), 0);
     }
 
     await saveOffsets(offs);
-
     updateUniversalBar();
-    window.renderCollection?.();
-    window.renderAnalytics?.();
-
-    alert("Amount collected successfully.");
+    renderCollection?.();
+    renderAnalytics?.();
   }
 
   window.handleCollect = collect;
 
-  /* -----------------------------------------------------------
-     AUTO COLLECT BUTTON HANDLER
-  ----------------------------------------------------------- */
   document.addEventListener("click", e => {
-    const btn = e.target.closest(".collect-btn");
-    if (!btn) return;
-    collect(btn.dataset.collect);
+    const b = e.target.closest(".collect-btn");
+    if (b) collect(b.dataset.collect);
   });
 
-  /* -----------------------------------------------------------
-     INIT
-  ----------------------------------------------------------- */
   window.addEventListener("load", () => {
     setTimeout(initOffsets, 300);
   });
