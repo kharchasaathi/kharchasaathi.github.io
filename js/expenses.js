@@ -1,44 +1,37 @@
 /* ===========================================================
-   expenses.js — ONLINE MODE (Cloud Master) — FINAL v12
+   expenses.js — ONLINE MODE (Cloud Master) — FINAL v13
    ✔ Cloud-first save (Firestore)
-   ✔ Local = cache only for fast UI
-   ✔ Auto-create table & total box if missing
+   ✔ Local = cache only
+   ✔ Expense delete / clear = user-confirmed profit handling
+   ✔ Universal Bar logic respected (offset-based)
 =========================================================== */
-
-
 
 /* ===========================================================
-   CLOUD + LOCAL SAVE WRAPPER (MASTER = CLOUD)
+   CLOUD + LOCAL SAVE WRAPPER
 =========================================================== */
 function saveExpensesOnline() {
-
-  // 1️⃣ LOCAL CACHE (fast UI)
   try {
     localStorage.setItem("expenses-data", JSON.stringify(window.expenses));
   } catch {}
 
-  // 2️⃣ CLOUD SAVE (MASTER)
   if (typeof cloudSaveDebounced === "function") {
     cloudSaveDebounced("expenses", window.expenses);
   }
 
-  // 3️⃣ CLOUD → LOCAL auto-sync update
   if (typeof cloudPullAllIfAvailable === "function") {
     setTimeout(() => cloudPullAllIfAvailable(), 200);
   }
 }
 
 /* ===========================================================
-   ENSURE REQUIRED DOM EXISTS (AUTO CREATE)
+   ENSURE REQUIRED DOM EXISTS
 =========================================================== */
 function ensureExpenseDOM() {
-  let section = qs("#expenses");
+  const section = qs("#expenses");
   if (!section) return;
 
-  /* ---------- Expense Table ---------- */
-  let table = qs("#expensesTable");
-  if (!table) {
-    table = document.createElement("table");
+  if (!qs("#expensesTable")) {
+    const table = document.createElement("table");
     table.id = "expensesTable";
     table.innerHTML = `
       <thead>
@@ -55,9 +48,7 @@ function ensureExpenseDOM() {
     section.appendChild(table);
   }
 
-  /* ---------- Total Section ---------- */
-  let totalBox = qs("#expTotal");
-  if (!totalBox) {
+  if (!qs("#expTotal")) {
     const box = document.createElement("div");
     box.style.marginTop = "8px";
     box.innerHTML = `<b>Total: ₹<span id="expTotal">0</span></b>`;
@@ -66,7 +57,7 @@ function ensureExpenseDOM() {
 }
 
 /* ===========================================================
-   ➕ ADD EXPENSE ENTRY (CLOUD MODE)
+   ➕ ADD EXPENSE
 =========================================================== */
 function addExpenseEntry() {
   let date = qs("#expDate")?.value || todayDate();
@@ -89,13 +80,11 @@ function addExpenseEntry() {
     note
   });
 
-  // CLOUD + LOCAL
   saveExpensesOnline();
 
   renderExpenses();
   renderAnalytics?.();
   updateSummaryCards?.();
-  updateTabSummaryBar?.();
   updateUniversalBar?.();
 
   qs("#expAmount").value = "";
@@ -103,39 +92,89 @@ function addExpenseEntry() {
 }
 
 /* ===========================================================
-   ❌ DELETE EXPENSE ENTRY (CLOUD MODE)
+   ❌ DELETE SINGLE EXPENSE (USER CONFIRM PROFIT)
 =========================================================== */
 function deleteExpense(id) {
-  window.expenses = (window.expenses || []).filter(e => e.id !== id);
+  const exp = (window.expenses || []).find(e => e.id === id);
+  if (!exp) return;
+
+  const addBack = confirm(
+    `Expense Amount: ₹${exp.amount}\n\nDo you want to add this amount back to Net Profit?`
+  );
+
+  window.expenses = window.expenses.filter(e => e.id !== id);
+
+  if (addBack && window.__offsets) {
+    // reduce collected net offset so profit increases back
+    window.__offsets.net = Math.max(
+      0,
+      Number(window.__offsets.net || 0) - Number(exp.amount || 0)
+    );
+
+    if (typeof cloudSaveDebounced === "function") {
+      cloudSaveDebounced("offsets", window.__offsets);
+    }
+  }
 
   saveExpensesOnline();
 
   renderExpenses();
   renderAnalytics?.();
   updateSummaryCards?.();
-  updateTabSummaryBar?.();
   updateUniversalBar?.();
 }
 window.deleteExpense = deleteExpense;
 
 /* ===========================================================
-   📊 RENDER EXPENSE TABLE
+   🗑 CLEAR ALL EXPENSES (USER CONFIRM)
+=========================================================== */
+qs("#clearExpensesBtn")?.addEventListener("click", () => {
+  if (!(window.expenses || []).length) return;
+
+  const total = window.expenses.reduce(
+    (a, e) => a + Number(e.amount || 0), 0
+  );
+
+  const addBack = confirm(
+    `Total Expenses: ₹${total}\n\nDo you want to add this amount back to Net Profit?`
+  );
+
+  window.expenses = [];
+
+  if (addBack && window.__offsets) {
+    window.__offsets.net = Math.max(
+      0,
+      Number(window.__offsets.net || 0) - total
+    );
+
+    if (typeof cloudSaveDebounced === "function") {
+      cloudSaveDebounced("offsets", window.__offsets);
+    }
+  }
+
+  saveExpensesOnline();
+
+  renderExpenses();
+  renderAnalytics?.();
+  updateSummaryCards?.();
+  updateUniversalBar?.();
+});
+
+/* ===========================================================
+   📊 RENDER
 =========================================================== */
 function renderExpenses() {
   ensureExpenseDOM();
 
   const tbody = qs("#expensesTable tbody");
   const totalBox = qs("#expTotal");
-
   if (!tbody) return;
 
-  const list = window.expenses || [];
   let total = 0;
 
-  tbody.innerHTML = list
+  tbody.innerHTML = (window.expenses || [])
     .map(e => {
       total += Number(e.amount || 0);
-
       return `
         <tr>
           <td data-label="Date">${toDisplay(e.date)}</td>
@@ -157,30 +196,8 @@ function renderExpenses() {
   if (totalBox) totalBox.textContent = total || 0;
 }
 
-/* ===========================================================
-   🗑 CLEAR ALL EXPENSES
-=========================================================== */
-qs("#clearExpensesBtn")?.addEventListener("click", () => {
-  if (!confirm("Delete ALL expenses?")) return;
-
-  window.expenses = [];
-  saveExpensesOnline();
-
-  renderExpenses();
-  renderAnalytics?.();
-  updateSummaryCards?.();
-  updateTabSummaryBar?.();
-  updateUniversalBar?.();
-});
-
-/* ===========================================================
-   ➕ ADD BUTTON
-=========================================================== */
 qs("#addExpenseBtn")?.addEventListener("click", addExpenseEntry);
 
-/* ===========================================================
-   🚀 ON PAGE LOAD
-=========================================================== */
 window.addEventListener("load", () => {
   renderExpenses();
   updateUniversalBar?.();
