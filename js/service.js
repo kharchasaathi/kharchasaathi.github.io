@@ -1,11 +1,10 @@
 /* ===========================================================
-   service.js — ONLINE MODE — FINAL v23.4 (CREDIT SAFE)
-   ✔ Status filter mapping FIXED
-   ✔ Page refresh data load FIXED
-   ✔ Service pie size FORCE FIXED (Dashboard size)
-   ✔ All Dates filter REMOVED
-   ✔ Add Job form auto-clear
-   ✔ UniversalBar + Analytics compatible
+   service.js â€” ONLINE MODE (Cloud Master) â€” FINAL v22.1
+   âœ” Cloud-first (Firestore master)
+   âœ” Local cache load on refresh (FIXED)
+   âœ” Tabs empty issue fixed
+   âœ” Stale cache refresh fixed
+   âœ” Phone shown in history
 =========================================================== */
 
 (function () {
@@ -17,24 +16,23 @@
   const today = () => new Date().toISOString().slice(0, 10);
 
   /* --------------------------------------------------
-        LOAD CACHE (SYNC)
+        LOAD LOCAL CACHE ON PAGE LOAD  âœ… FIXâ€“1
   -------------------------------------------------- */
-  (function init() {
+  (function initServiceStore() {
+  if (!Array.isArray(window.services)) {
     try {
-      const raw = localStorage.getItem("service-data");
-      window.services = raw ? JSON.parse(raw) : [];
-      if (!Array.isArray(window.services)) window.services = [];
+      const cached = localStorage.getItem("service-data");
+      window.services = cached ? JSON.parse(cached) : [];
     } catch {
       window.services = [];
     }
-  })();
-
-  const list = () => window.services || [];
+  }
+})();
 
   /* --------------------------------------------------
         SAVE (LOCAL + CLOUD)
   -------------------------------------------------- */
-  function saveServices() {
+  function saveServicesOnline() {
     try {
       localStorage.setItem("service-data", JSON.stringify(window.services));
     } catch {}
@@ -44,223 +42,314 @@
     }
 
     if (typeof cloudPullAllIfAvailable === "function") {
-      setTimeout(() => {
-        cloudPullAllIfAvailable();
-        refresh();
-      }, 200);
+      setTimeout(() => cloudPullAllIfAvailable(), 200);
     }
   }
 
-  /* --------------------------------------------------
-        🔥 PIE SIZE FORCE FIX (MAIN FIX)
-  -------------------------------------------------- */
-  function ensureServicePieSize() {
-    const canvas = document.getElementById("cleanPie");
-    if (!canvas) return;
-
-    // Dashboard-equivalent size
-    canvas.style.width  = "320px";
-    canvas.style.height = "320px";
-    canvas.width  = 320;
-    canvas.height = 320;
-
-    const parent = canvas.parentElement;
-    if (parent) {
-      parent.style.minHeight = "340px";
-      parent.style.display = "flex";
-      parent.style.alignItems = "center";
-      parent.style.justifyContent = "center";
-    }
+  function ensureServices() {
+    if (!Array.isArray(window.services)) window.services = [];
+    return window.services;
   }
 
   /* --------------------------------------------------
-        ADD JOB
+        DATE FILTER
   -------------------------------------------------- */
+  function buildDateFilter() {
+    const sel = qs("#svcFilterDate");
+    if (!sel) return;
+
+    const set = new Set();
+    ensureServices().forEach(j => {
+      if (j.date_in) set.add(j.date_in);
+      if (j.date_out) set.add(j.date_out);
+    });
+
+    const list = [...set].sort((a, b) => b.localeCompare(a));
+
+    sel.innerHTML =
+      `<option value="">All Dates</option>` +
+      list.map(d => `<option value="${d}">${toDisplay(d)}</option>`).join("");
+  }
+
+  function clearCalendar() {
+    const c = qs("#svcFilterCalendar");
+    if (c) c.value = "";
+  }
+  function clearDropdown() {
+    const d = qs("#svcFilterDate");
+    if (d) d.value = "";
+  }
+
+  /* --------------------------------------------------
+        FILTER
+  -------------------------------------------------- */
+  function getFiltered() {
+    const list = ensureServices();
+
+    const typeVal = qs("#svcFilterType")?.value || "all";
+    const statusVal = (qs("#svcFilterStatus")?.value || "all").toLowerCase();
+    const dropDate = qs("#svcFilterDate")?.value || "";
+    const calendarDate = qs("#svcFilterCalendar")?.value || "";
+    const dateVal = calendarDate || dropDate;
+
+    let out = [...list];
+
+    if (typeVal !== "all") out = out.filter(j => j.item === typeVal);
+
+    out = out.filter(j => {
+      const s = j.status;
+      if (statusVal === "all") return true;
+      if (statusVal === "pending") return s === "pending";
+      if (statusVal === "completed") return s === "completed" && !j.fromCredit;
+      if (statusVal === "credit") return s === "credit";
+      if (statusVal === "credit-paid") return s === "completed" && j.fromCredit;
+      if (statusVal === "failed") return s === "failed";
+      return true;
+    });
+
+    if (dateVal) out = out.filter(j => j.date_in === dateVal || j.date_out === dateVal);
+
+    return out;
+  }
+
+  /* --------------------------------------------------
+        COUNTS
+  -------------------------------------------------- */
+  function renderCounts() {
+    const list = ensureServices();
+
+    const pending = list.filter(j => j.status === "pending").length;
+    const completed = list.filter(j => j.status === "completed").length;
+
+    const profit = list
+      .filter(j => j.status === "completed")
+      .reduce((a, b) => a + Number(b.profit || 0), 0);
+
+    qs("#svcPendingCount").textContent = pending;
+    qs("#svcCompletedCount").textContent = completed;
+    qs("#svcTotalProfit").textContent = "â‚¹" + profit;
+  }
+
+  /* --------------------------------------------------
+        TABLES (FIXED PHONE IN HISTORY) âœ… FIXâ€“4
+  -------------------------------------------------- */
+  function renderTables() {
+    const pendBody = qs("#svcTable tbody");
+    const histBody = qs("#svcHistoryTable tbody");
+
+    const f = getFiltered();
+    const pending = f.filter(j => j.status === "pending");
+    const history = f.filter(j => j.status !== "pending");
+
+    pendBody.innerHTML = pending.length
+      ? pending.map(j => `
+        <tr>
+          <td>${j.jobId}</td>
+          <td>${toDisplay(j.date_in)}</td>
+          <td>${esc(j.customer)}</td>
+          <td>${esc(j.phone)}</td>
+          <td>${esc(j.item)}</td>
+          <td>${esc(j.model)}</td>
+          <td>${esc(j.problem)}</td>
+          <td>Pending</td>
+          <td><button class="small-btn svc-view" data-id="${j.id}">View / Update</button></td>
+        </tr>`).join("")
+      : `<tr><td colspan="9">No pending jobs</td></tr>`;
+
+    histBody.innerHTML = history.length
+      ? history.map(j => `
+        <tr>
+          <td>${j.jobId}</td>
+          <td>${toDisplay(j.date_in)}</td>
+          <td>${j.date_out ? toDisplay(j.date_out) : "-"}</td>
+          <td>${esc(j.customer)}</td>
+          <td>${esc(j.phone)}</td>
+          <td>${esc(j.item)}</td>
+          <td>â‚¹${j.invest}</td>
+          <td>â‚¹${j.paid}</td>
+          <td>â‚¹${j.profit}</td>
+          <td>
+            ${j.status === "credit"
+              ? `Credit <button class="small-btn" onclick="collectServiceCredit('${j.id}')">Collect</button>`
+              : j.status}
+          </td>
+        </tr>`).join("")
+      : `<tr><td colspan="10">No history</td></tr>`;
+  }
+
+  /* --------------------------------------------------
+        SERVICE PIE
+  -------------------------------------------------- */
+  let pieStatus = null;
+
+  function drawPieStatus() {
+    const el = qs("#svcPieStatus");
+    if (!el || typeof Chart === "undefined") return;
+
+    const list = ensureServices();
+
+    const values = [
+      list.filter(j => j.status === "pending").length,
+      list.filter(j => j.status === "credit").length,
+      list.filter(j => j.status === "completed").length,
+      list.filter(j => j.status === "failed").length
+    ];
+
+    if (pieStatus) pieStatus.destroy();
+
+    pieStatus = new Chart(el, {
+      type: "pie",
+      data: {
+        labels: ["Pending", "Credit", "Completed", "Failed"],
+        datasets: [{ data: values.some(v => v > 0) ? values : [1, 0, 0, 0] }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        radius: "85%"
+      }
+    });
+  }
+
+  /* --------------------------------------------------
+        MONEY LIST
+  -------------------------------------------------- */
+  function renderMoneyList() {
+    const box = qs("#svcMoneyBox");
+    if (!box) return;
+
+    let cash = 0, credit = 0, collected = 0, profit = 0;
+
+    ensureServices().forEach(j => {
+      if (j.status === "completed" && !j.fromCredit) cash += j.paid;
+      if (j.status === "credit") credit += j.remaining;
+      if (j.status === "completed") {
+        collected += j.paid;
+        profit += j.profit;
+      }
+    });
+
+    box.innerHTML = `
+      <h4>ðŸ’° Service Financial Summary</h4>
+      <ul style="line-height:1.8;font-size:14px">
+        <li>ðŸ’µ Cash Collected: <b>â‚¹${cash}</b></li>
+        <li>ðŸ•’ Credit Pending: <b>â‚¹${credit}</b></li>
+        <li>âœ… Total Collected: <b>â‚¹${collected}</b></li>
+        <li>ðŸ“ˆ Total Profit: <b>â‚¹${profit}</b></li>
+      </ul>
+    `;
+  }
+
+  /* --------------------------------------------------
+        REFRESH (USED EVERYWHERE)
+  -------------------------------------------------- */
+  function refresh() {
+    renderCounts();
+    renderTables();
+    drawPieStatus();
+    renderMoneyList();
+  }
+
+  window.__svcRefresh = refresh;
+
+  /* --------------------------------------------------
+        ADD / UPDATE JOBS
+  -------------------------------------------------- */
+  function nextId() {
+    const nums = ensureServices().map(j => Number(j.jobNum) || 0);
+    const max = nums.length ? Math.max(...nums) : 0;
+    return { jobNum: max + 1, jobId: String(max + 1).padStart(2, "0") };
+  }
+
   function addJob() {
-
     const job = {
-      id: uid("svc"),
-      jobId: String(list().length + 1).padStart(2, "0"),
-
+      id: "svc_" + Math.random().toString(36).slice(2),
+      ...nextId(),
       date_in: toInternal(qs("#svcReceivedDate")?.value || today()),
       date_out: "",
-
-      customer: esc(qs("#svcCustomer")?.value),
-      phone: esc(qs("#svcPhone")?.value),
-
-      item: qs("#svcItemType")?.value || "",
-      model: esc(qs("#svcModel")?.value),
-      problem: esc(qs("#svcProblem")?.value),
-
+      customer: esc(qs("#svcCustomer")?.value || "").trim(),
+      phone: esc(qs("#svcPhone")?.value || "").trim(),
+      item: qs("#svcItemType")?.value || "Other",
+      model: esc(qs("#svcModel")?.value || ""),
+      problem: esc(qs("#svcProblem")?.value || ""),
       advance: Number(qs("#svcAdvance")?.value || 0),
-
       invest: 0,
       paid: 0,
       remaining: 0,
       profit: 0,
-
-      status: "pending",   // pending | paid | credit | failed
+      status: "pending",
       fromCredit: false
     };
 
     if (!job.customer || !job.phone || !job.problem)
       return alert("Fill all fields");
 
-    list().push(job);
-    saveServices();
-    clearAddForm();
+    ensureServices().push(job);
+    saveServicesOnline();
+
+    // âœ… FIXâ€“3 : clear stale filters
+    clearDropdown();
+    clearCalendar();
+    buildDateFilter();
     refresh();
   }
 
-  /* --------------------------------------------------
-        CLEAR ADD FORM
-  -------------------------------------------------- */
-  function clearAddForm() {
-    [
-      "#svcCustomer",
-      "#svcPhone",
-      "#svcModel",
-      "#svcProblem",
-      "#svcAdvance"
-    ].forEach(id => {
-      const el = qs(id);
-      if (el) el.value = "";
-    });
-
-    const d = qs("#svcReceivedDate");
-    if (d) d.value = today();
-  }
-
-  /* --------------------------------------------------
-        COMPLETE / CREDIT / FAIL
-  -------------------------------------------------- */
   function completeJob(id, mode) {
-    const j = list().find(x => x.id === id);
+    const j = ensureServices().find(x => x.id === id);
     if (!j) return;
 
-    const invest = Number(prompt("Repair Investment ₹:", j.invest) || 0);
-    const total  = Number(prompt("Total Bill ₹:", j.paid) || 0);
-    if (!total) return alert("Invalid amount");
+    const invest = Number(
+      prompt("Repair Investment Cost â‚¹:", j.invest) || 0
+    );
+    const full = Number(prompt("Total Bill â‚¹:", j.paid) || 0);
+    if (!full) return alert("Invalid amount");
 
     j.invest = invest;
+    j.profit = full - invest;
     j.date_out = today();
 
     if (mode === "paid") {
-      j.status = "paid";
-      j.fromCredit = false;
-      j.paid = total;
+      j.paid = full;
       j.remaining = 0;
-      j.profit = total - invest;
+      j.status = "completed";
+      j.fromCredit = false;
     } else {
+      j.paid = j.advance;
+      j.remaining = full - j.advance;
       j.status = "credit";
       j.fromCredit = false;
-      j.paid = j.advance;
-      j.remaining = total - j.advance;
-      j.profit = 0;
     }
 
-    saveServices();
+    saveServicesOnline();
+    buildDateFilter();
     refresh();
   }
 
   window.collectServiceCredit = function (id) {
-    const j = list().find(x => x.id === id);
+    const j = ensureServices().find(x => x.id === id);
     if (!j || j.status !== "credit") return;
 
-    if (!confirm(`Collect ₹${j.remaining}?`)) return;
+    if (!confirm(`Collect â‚¹${j.remaining}?`)) return;
 
     j.paid += j.remaining;
     j.remaining = 0;
-    j.status = "paid";
+    j.status = "completed";
     j.fromCredit = true;
-    j.profit = j.paid - j.invest;
 
-    saveServices();
-
-    window.addCollectionEntry?.(
-      "Service (Credit cleared)",
-      `${j.item} ${j.model || ""} — ${j.customer}`,
-      j.paid
-    );
-
+    saveServicesOnline();
     refresh();
   };
 
   function failJob(id) {
-    const j = list().find(x => x.id === id);
+    const j = ensureServices().find(x => x.id === id);
     if (!j) return;
 
     j.status = "failed";
     j.date_out = today();
     j.invest = j.paid = j.remaining = j.profit = 0;
 
-    saveServices();
+    saveServicesOnline();
     refresh();
-  }
-
-  /* --------------------------------------------------
-        FILTER + RENDER
-  -------------------------------------------------- */
-  function renderTables() {
-
-    const statusFilter =
-      qs("#svcFilterStatus")?.value?.toLowerCase() || "all";
-
-    const pBody = qs("#svcTable tbody");
-    const hBody = qs("#svcHistoryTable tbody");
-
-    const pending = list().filter(j => j.status === "pending");
-    let history  = list().filter(j => j.status !== "pending");
-
-    if (statusFilter !== "all") {
-      history = history.filter(j => {
-        if (statusFilter === "completed") return j.status === "paid" && !j.fromCredit;
-        if (statusFilter === "credit")    return j.status === "credit";
-        if (statusFilter === "credit-paid") return j.status === "paid" && j.fromCredit;
-        if (statusFilter === "failed")    return j.status === "failed";
-        return true;
-      });
-    }
-
-    pBody.innerHTML = pending.length
-      ? pending.map(j => `
-        <tr>
-          <td>${j.jobId}</td>
-          <td>${toDisplay(j.date_in)}</td>
-          <td>${j.customer}</td>
-          <td>${j.phone}</td>
-          <td>${j.item}</td>
-          <td>${j.problem}</td>
-          <td>Pending</td>
-          <td><button class="small-btn svc-view" data-id="${j.id}">Update</button></td>
-        </tr>
-      `).join("")
-      : `<tr><td colspan="8">No pending jobs</td></tr>`;
-
-    hBody.innerHTML = history.length
-      ? history.map(j => `
-        <tr>
-          <td>${j.jobId}</td>
-          <td>${toDisplay(j.date_in)}</td>
-          <td>${j.date_out ? toDisplay(j.date_out) : "-"}</td>
-          <td>${j.customer}</td>
-          <td>₹${j.invest}</td>
-          <td>₹${j.paid}</td>
-          <td>₹${j.profit}</td>
-          <td>${j.status}</td>
-        </tr>
-      `).join("")
-      : `<tr><td colspan="8">No history</td></tr>`;
-  }
-
-  /* --------------------------------------------------
-        REFRESH (🔥 PIE FIX HOOK)
-  -------------------------------------------------- */
-  function refresh() {
-    renderTables();
-    ensureServicePieSize();     // 🔥 KEY LINE
-    window.updateUniversalBar?.();
-    window.renderAnalytics?.();
   }
 
   /* --------------------------------------------------
@@ -271,7 +360,9 @@
     if (!btn) return;
 
     const id = btn.dataset.id;
-    const ch = prompt("1 - Paid\n2 - Credit\n3 - Failed");
+    const ch = prompt(
+      `1 - Completed (Paid)\n2 - Completed (Credit)\n3 - Failed`
+    );
 
     if (ch === "1") completeJob(id, "paid");
     else if (ch === "2") completeJob(id, "credit");
@@ -279,16 +370,26 @@
   });
 
   qs("#addServiceBtn")?.addEventListener("click", addJob);
+
+  qs("#clearServiceBtn")?.addEventListener("click", () => {
+    if (!confirm("Delete ALL service entries?")) return;
+    window.services = [];
+    saveServicesOnline();
+    buildDateFilter();
+    refresh();
+  });
+
   qs("#svcFilterStatus")?.addEventListener("change", refresh);
+  qs("#svcFilterType")?.addEventListener("change", refresh);
+  qs("#svcFilterDate")?.addEventListener("change", () => { clearCalendar(); refresh(); });
+  qs("#svcFilterCalendar")?.addEventListener("change", () => { clearDropdown(); refresh(); });
 
   /* --------------------------------------------------
-        INIT — PAGE LOAD FIX
+        INITIAL LOAD  âœ… FIXâ€“2
   -------------------------------------------------- */
   window.addEventListener("load", () => {
-    setTimeout(() => {
-      ensureServicePieSize();
-      refresh();
-    }, 100);
+    buildDateFilter();
+    refresh();
   });
 
 })();
