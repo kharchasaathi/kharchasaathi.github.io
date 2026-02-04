@@ -1,9 +1,11 @@
 /* ===========================================================
-   service.js — ONLINE MODE — FINAL v23.2 (CREDIT SAFE)
-   ✔ Status filter FIXED
+   service.js — ONLINE MODE — FINAL v23.3 (CREDIT SAFE)
+   ✔ Status filter mapping FIXED
+   ✔ Page refresh data load FIXED
+   ✔ Service summary / pie render FIXED
    ✔ All Dates filter REMOVED
    ✔ Add Job form auto-clear
-   ✔ UniversalBar compatible
+   ✔ UniversalBar + Analytics compatible
 =========================================================== */
 
 (function () {
@@ -15,22 +17,22 @@
   const today = () => new Date().toISOString().slice(0, 10);
 
   /* --------------------------------------------------
-        LOAD CACHE
+        LOAD CACHE (SYNC)
   -------------------------------------------------- */
   (function init() {
-    if (!Array.isArray(window.services)) {
-      try {
-        window.services = JSON.parse(
-          localStorage.getItem("service-data") || "[]"
-        );
-      } catch {
-        window.services = [];
-      }
+    try {
+      const raw = localStorage.getItem("service-data");
+      window.services = raw ? JSON.parse(raw) : [];
+      if (!Array.isArray(window.services)) window.services = [];
+    } catch {
+      window.services = [];
     }
   })();
 
+  const list = () => window.services || [];
+
   /* --------------------------------------------------
-        SAVE (LOCAL + CLOUD) — SAFE
+        SAVE (LOCAL + CLOUD)
   -------------------------------------------------- */
   function saveServices() {
     try {
@@ -42,11 +44,12 @@
     }
 
     if (typeof cloudPullAllIfAvailable === "function") {
-      setTimeout(() => cloudPullAllIfAvailable(), 200);
+      setTimeout(() => {
+        cloudPullAllIfAvailable();
+        refresh(); // 🔥 ensure UI refresh after cloud sync
+      }, 200);
     }
   }
-
-  const list = () => window.services || [];
 
   /* --------------------------------------------------
         ADD JOB
@@ -74,7 +77,7 @@
       remaining: 0,
       profit: 0,
 
-      status: "pending",
+      status: "pending",   // pending | paid | credit | failed
       fromCredit: false
     };
 
@@ -83,12 +86,12 @@
 
     list().push(job);
     saveServices();
-    clearAddForm();   // 🔥 FIX
+    clearAddForm();
     refresh();
   }
 
   /* --------------------------------------------------
-        CLEAR ADD FORM (FIX #3)
+        CLEAR ADD FORM
   -------------------------------------------------- */
   function clearAddForm() {
     [
@@ -122,11 +125,13 @@
 
     if (mode === "paid") {
       j.status = "paid";
+      j.fromCredit = false;
       j.paid = total;
       j.remaining = 0;
       j.profit = total - invest;
     } else {
       j.status = "credit";
+      j.fromCredit = false;
       j.paid = j.advance;
       j.remaining = total - j.advance;
       j.profit = 0;
@@ -172,7 +177,7 @@
   }
 
   /* --------------------------------------------------
-        FILTER + RENDER (FIX #1)
+        FILTER + RENDER (FULL FIX)
   -------------------------------------------------- */
   function renderTables() {
 
@@ -187,7 +192,25 @@
     let history = list().filter(j => j.status !== "pending");
 
     if (statusFilter !== "all") {
-      history = history.filter(j => j.status === statusFilter);
+      history = history.filter(j => {
+
+        if (statusFilter === "pending")
+          return j.status === "pending";
+
+        if (statusFilter === "completed")
+          return j.status === "paid" && !j.fromCredit;
+
+        if (statusFilter === "credit")
+          return j.status === "credit";
+
+        if (statusFilter === "credit-paid")
+          return j.status === "paid" && j.fromCredit;
+
+        if (statusFilter === "failed")
+          return j.status === "failed";
+
+        return true;
+      });
     }
 
     pBody.innerHTML = pending.length
@@ -230,7 +253,7 @@
   function refresh() {
     renderTables();
     window.updateUniversalBar?.();
-    window.renderAnalytics?.();
+    window.renderAnalytics?.();   // 🔥 pie + money summary fix
   }
 
   /* --------------------------------------------------
@@ -251,6 +274,11 @@
   qs("#addServiceBtn")?.addEventListener("click", addJob);
   qs("#svcFilterStatus")?.addEventListener("change", refresh);
 
-  window.addEventListener("load", refresh);
+  /* --------------------------------------------------
+        INIT — PAGE LOAD FIX
+  -------------------------------------------------- */
+  window.addEventListener("load", () => {
+    setTimeout(refresh, 0); // 🔥 ensures data + charts render
+  });
 
 })();
