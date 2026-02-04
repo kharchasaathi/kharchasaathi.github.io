@@ -1,11 +1,12 @@
 /* ======================================================
-   analytics.js — BUSINESS v24 (CREDIT SAFE)
+   analytics.js — BUSINESS v24.1 (CREDIT SAFE)
    ------------------------------------------------------
    ✅ Dashboard analytics only (READ ONLY)
-   ✅ Credit-safe (matches sales.js v21 & service.js v23)
+   ✅ Credit-safe (matches sales.js v21 & service.js v23+)
    ✅ NO offset reset
    ✅ UniversalBar = single source of truth
-   ✅ Credit pending visible correctly
+   ✅ Service + Sales timing SAFE
+   ✅ Pie size matched with dashboard
 ====================================================== */
 
 (function () {
@@ -17,8 +18,6 @@
 
   /* ======================================================
         TODAY ANALYTICS (READ ONLY)
-        ✔ Profit ONLY if money received
-        ✔ Credit shown separately
   ====================================================== */
   window.getAnalyticsData = function () {
 
@@ -42,10 +41,7 @@
 
       const st = String(s.status || "").toLowerCase();
 
-      if (st === "credit") {
-        todayCredit += num(s.total);
-      }
-
+      if (st === "credit") todayCredit += num(s.total);
       if (st === "paid") {
         todaySales  += num(s.total);
         todayProfit += num(s.profit);
@@ -54,24 +50,17 @@
 
     /* ---------- SERVICES ---------- */
     services.forEach(j => {
-      const st = String(j.status || "").toLowerCase();
-
       if (j.date_out !== today) return;
 
-      if (st === "paid") {
-        todayProfit += num(j.profit);
-      }
+      const st = String(j.status || "").toLowerCase();
 
-      if (st === "credit") {
-        todayCredit += num(j.remaining);
-      }
+      if (st === "paid")   todayProfit += num(j.profit);
+      if (st === "credit") todayCredit += num(j.remaining);
     });
 
     /* ---------- EXPENSES ---------- */
     expenses.forEach(e => {
-      if (e.date === today) {
-        todayExpenses += num(e.amount);
-      }
+      if (e.date === today) todayExpenses += num(e.amount);
     });
 
     return {
@@ -85,8 +74,6 @@
 
   /* ======================================================
         TOTAL SUMMARY (READ ONLY)
-        ✔ Investment ONLY after collection
-        ✔ Credit pending separated
   ====================================================== */
   window.getSummaryTotals = function () {
 
@@ -104,14 +91,10 @@
     sales.forEach(s => {
       const st = String(s.status || "").toLowerCase();
 
-      if (st === "credit") {
-        creditTotal += num(s.total);
-      }
+      if (st === "credit") creditTotal += num(s.total);
 
       if (st === "paid") {
         salesProfit += num(s.profit);
-
-        // 🔥 Stock investment ONLY when money received
         stockInvest += num(s.qty) * num(s.cost);
       }
     });
@@ -125,12 +108,9 @@
         serviceInvest += num(j.invest);
       }
 
-      if (st === "credit") {
-        creditTotal += num(j.remaining);
-      }
+      if (st === "credit") creditTotal += num(j.remaining);
     });
 
-    /* ---------- EXPENSES ---------- */
     const totalExpenses =
       expenses.reduce((a, e) => a + num(e.amount), 0);
 
@@ -146,7 +126,7 @@
   };
 
   /* ======================================================
-        RENDER DASHBOARD + PIE
+        RENDER DASHBOARD + PIE (SIZE FIXED)
   ====================================================== */
   window.renderAnalytics = function () {
 
@@ -170,12 +150,12 @@
       qs("#dashInv").textContent = "₹" + Math.round(totalInvestment);
 
     /* ---------- PIE CHART ---------- */
-    const ctx = qs("#cleanPie");
-    if (!ctx || typeof Chart === "undefined") return;
+    const canvas = qs("#cleanPie");
+    if (!canvas || typeof Chart === "undefined") return;
 
     try { cleanPieChart?.destroy(); } catch {}
 
-    cleanPieChart = new Chart(ctx, {
+    cleanPieChart = new Chart(canvas, {
       type: "pie",
       data: {
         labels: ["Profit", "Expenses", "Credit Pending", "Investment"],
@@ -196,7 +176,13 @@
       },
       options: {
         responsive: true,
-        plugins: { legend: { position: "bottom" } }
+        maintainAspectRatio: false,   // 🔥 SIZE FIX
+        plugins: {
+          legend: {
+            position: "bottom",
+            labels: { boxWidth: 14 }
+          }
+        }
       }
     });
   };
@@ -225,14 +211,25 @@
   };
 
   /* ======================================================
-        INIT (SAFE)
+        INIT — TIMING SAFE (🔥 MAIN FIX)
   ====================================================== */
   window.addEventListener("load", () => {
-    setTimeout(() => {
-      renderAnalytics?.();
-      updateSummaryCards?.();
-      updateUniversalBar?.(); // read-only refresh
-    }, 300);
+
+    const safeRender = () => {
+      if (
+        Array.isArray(window.services) &&
+        Array.isArray(window.sales)
+      ) {
+        renderAnalytics();
+        updateSummaryCards();
+        updateUniversalBar?.();
+      }
+    };
+
+    // immediate + delayed retries
+    safeRender();
+    setTimeout(safeRender, 500);
+    setTimeout(safeRender, 1000);
   });
 
 })();
