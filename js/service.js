@@ -1,7 +1,8 @@
 /* ===========================================================
-   service.js — ONLINE MODE — FINAL v23.5.2 (CREDIT SAFE, MERGED)
+   service.js — ONLINE MODE — FINAL v23.5.3 (CREDIT SAFE, MERGED)
 
-   ✅ NOTHING REMOVED from v23.5
+   ✅ NOTHING REMOVED from v23.5.2
+   ✅ cloudSaveDebounced ReferenceError FIXED
    ✅ Add Job form auto-clear FIXED
    ✅ Credit-safe logic (profit only after collection)
    ✅ Service status pie WORKING
@@ -43,19 +44,24 @@
   };
 
   /* --------------------------------------------------
-        SAVE (LOCAL + CLOUD)
+        SAVE (LOCAL + CLOUD)  ✅ FIXED HERE
   -------------------------------------------------- */
   function saveServices() {
     try {
       localStorage.setItem("service-data", JSON.stringify(window.services));
     } catch {}
 
-    cloudSaveDebounced?.("services", window.services);
-    setTimeout(() => cloudPullAllIfAvailable?.(), 200);
+    if (typeof cloudSaveDebounced === "function") {
+      cloudSaveDebounced("services", window.services);
+    }
+
+    if (typeof cloudPullAllIfAvailable === "function") {
+      setTimeout(() => cloudPullAllIfAvailable(), 200);
+    }
   }
 
   /* --------------------------------------------------
-        🔥 ADD FORM CLEAR (FIX)
+        ADD FORM CLEAR
   -------------------------------------------------- */
   function clearAddForm() {
     [
@@ -74,7 +80,7 @@
   }
 
   /* --------------------------------------------------
-        DATE FILTER (OLD FEATURE)
+        DATE FILTER
   -------------------------------------------------- */
   function buildDateFilter() {
     const sel = qs("#svcFilterDate");
@@ -102,7 +108,7 @@
   }
 
   /* --------------------------------------------------
-        FILTER (STATUS / TYPE / DATE)
+        FILTER
   -------------------------------------------------- */
   function getFiltered() {
     const list = ensureServices();
@@ -262,7 +268,7 @@
   }
 
   /* --------------------------------------------------
-        REFRESH (MASTER)
+        REFRESH
   -------------------------------------------------- */
   function refresh() {
     renderCounts();
@@ -304,7 +310,7 @@
 
     list.push(job);
     saveServices();
-    clearAddForm();     // 🔥 FIX
+    clearAddForm();
     buildDateFilter();
     refresh();
   }
@@ -394,9 +400,6 @@
     refresh();
   });
 
-  /* --------------------------------------------------
-        INITIAL LOAD
-  -------------------------------------------------- */
   window.addEventListener("load", () => {
     buildDateFilter();
     refresh();
