@@ -1,8 +1,8 @@
 /* ===========================================================
-   service.js — ONLINE MODE — FINAL v23.3 (CREDIT SAFE)
+   service.js — ONLINE MODE — FINAL v23.4 (CREDIT SAFE)
    ✔ Status filter mapping FIXED
    ✔ Page refresh data load FIXED
-   ✔ Service summary / pie render FIXED
+   ✔ Service pie size FORCE FIXED (Dashboard size)
    ✔ All Dates filter REMOVED
    ✔ Add Job form auto-clear
    ✔ UniversalBar + Analytics compatible
@@ -46,8 +46,30 @@
     if (typeof cloudPullAllIfAvailable === "function") {
       setTimeout(() => {
         cloudPullAllIfAvailable();
-        refresh(); // 🔥 ensure UI refresh after cloud sync
+        refresh();
       }, 200);
+    }
+  }
+
+  /* --------------------------------------------------
+        🔥 PIE SIZE FORCE FIX (MAIN FIX)
+  -------------------------------------------------- */
+  function ensureServicePieSize() {
+    const canvas = document.getElementById("cleanPie");
+    if (!canvas) return;
+
+    // Dashboard-equivalent size
+    canvas.style.width  = "320px";
+    canvas.style.height = "320px";
+    canvas.width  = 320;
+    canvas.height = 320;
+
+    const parent = canvas.parentElement;
+    if (parent) {
+      parent.style.minHeight = "340px";
+      parent.style.display = "flex";
+      parent.style.alignItems = "center";
+      parent.style.justifyContent = "center";
     }
   }
 
@@ -177,7 +199,7 @@
   }
 
   /* --------------------------------------------------
-        FILTER + RENDER (FULL FIX)
+        FILTER + RENDER
   -------------------------------------------------- */
   function renderTables() {
 
@@ -188,27 +210,14 @@
     const hBody = qs("#svcHistoryTable tbody");
 
     const pending = list().filter(j => j.status === "pending");
-
-    let history = list().filter(j => j.status !== "pending");
+    let history  = list().filter(j => j.status !== "pending");
 
     if (statusFilter !== "all") {
       history = history.filter(j => {
-
-        if (statusFilter === "pending")
-          return j.status === "pending";
-
-        if (statusFilter === "completed")
-          return j.status === "paid" && !j.fromCredit;
-
-        if (statusFilter === "credit")
-          return j.status === "credit";
-
-        if (statusFilter === "credit-paid")
-          return j.status === "paid" && j.fromCredit;
-
-        if (statusFilter === "failed")
-          return j.status === "failed";
-
+        if (statusFilter === "completed") return j.status === "paid" && !j.fromCredit;
+        if (statusFilter === "credit")    return j.status === "credit";
+        if (statusFilter === "credit-paid") return j.status === "paid" && j.fromCredit;
+        if (statusFilter === "failed")    return j.status === "failed";
         return true;
       });
     }
@@ -223,9 +232,7 @@
           <td>${j.item}</td>
           <td>${j.problem}</td>
           <td>Pending</td>
-          <td>
-            <button class="small-btn svc-view" data-id="${j.id}">Update</button>
-          </td>
+          <td><button class="small-btn svc-view" data-id="${j.id}">Update</button></td>
         </tr>
       `).join("")
       : `<tr><td colspan="8">No pending jobs</td></tr>`;
@@ -240,20 +247,20 @@
           <td>₹${j.invest}</td>
           <td>₹${j.paid}</td>
           <td>₹${j.profit}</td>
-          <td>
-            ${j.status === "credit"
-              ? `Credit <button class="small-btn" onclick="collectServiceCredit('${j.id}')">Collect</button>`
-              : j.status}
-          </td>
+          <td>${j.status}</td>
         </tr>
       `).join("")
       : `<tr><td colspan="8">No history</td></tr>`;
   }
 
+  /* --------------------------------------------------
+        REFRESH (🔥 PIE FIX HOOK)
+  -------------------------------------------------- */
   function refresh() {
     renderTables();
+    ensureServicePieSize();     // 🔥 KEY LINE
     window.updateUniversalBar?.();
-    window.renderAnalytics?.();   // 🔥 pie + money summary fix
+    window.renderAnalytics?.();
   }
 
   /* --------------------------------------------------
@@ -278,7 +285,10 @@
         INIT — PAGE LOAD FIX
   -------------------------------------------------- */
   window.addEventListener("load", () => {
-    setTimeout(refresh, 0); // 🔥 ensures data + charts render
+    setTimeout(() => {
+      ensureServicePieSize();
+      refresh();
+    }, 100);
   });
 
 })();
