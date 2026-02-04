@@ -1,12 +1,14 @@
 /* ===========================================================
-   service.js — ONLINE MODE — FINAL v23.5 (CREDIT SAFE, MERGED)
+   service.js — ONLINE MODE — FINAL v23.5.2 (CREDIT SAFE, MERGED)
 
-   ✅ NOTHING REMOVED from old v22.1
+   ✅ NOTHING REMOVED from v23.5
+   ✅ Add Job form auto-clear FIXED
    ✅ Credit-safe logic (profit only after collection)
-   ✅ Service status pie WORKING (same as old)
-   ✅ Service money summary WORKING (same as old)
+   ✅ Service status pie WORKING
+   ✅ Service money summary WORKING
    ✅ Filters (status / type / date / calendar) KEPT
-   ✅ Cloud-first (Firestore master), local = cache
+   ✅ Counts + Tables + Pie + Money summary KEPT
+   ✅ Cloud-first, local = cache
    ✅ UniversalBar + Analytics compatible
 =========================================================== */
 
@@ -41,24 +43,38 @@
   };
 
   /* --------------------------------------------------
-        SAVE (LOCAL CACHE + CLOUD MASTER)
+        SAVE (LOCAL + CLOUD)
   -------------------------------------------------- */
   function saveServices() {
     try {
       localStorage.setItem("service-data", JSON.stringify(window.services));
     } catch {}
 
-    if (typeof cloudSaveDebounced === "function") {
-      cloudSaveDebounced("services", window.services);
-    }
-
-    if (typeof cloudPullAllIfAvailable === "function") {
-      setTimeout(() => cloudPullAllIfAvailable(), 200);
-    }
+    cloudSaveDebounced?.("services", window.services);
+    setTimeout(() => cloudPullAllIfAvailable?.(), 200);
   }
 
   /* --------------------------------------------------
-        DATE FILTER (OLD FEATURE — RESTORED)
+        🔥 ADD FORM CLEAR (FIX)
+  -------------------------------------------------- */
+  function clearAddForm() {
+    [
+      "#svcCustomer",
+      "#svcPhone",
+      "#svcModel",
+      "#svcProblem",
+      "#svcAdvance"
+    ].forEach(id => {
+      const el = qs(id);
+      if (el) el.value = "";
+    });
+
+    const d = qs("#svcReceivedDate");
+    if (d) d.value = today();
+  }
+
+  /* --------------------------------------------------
+        DATE FILTER (OLD FEATURE)
   -------------------------------------------------- */
   function buildDateFilter() {
     const sel = qs("#svcFilterDate");
@@ -70,25 +86,23 @@
       if (j.date_out) set.add(j.date_out);
     });
 
-    const list = [...set].sort((a, b) => b.localeCompare(a));
-
     sel.innerHTML =
       `<option value="">All Dates</option>` +
-      list.map(d => `<option value="${d}">${toDisplay(d)}</option>`).join("");
+      [...set].sort((a, b) => b.localeCompare(a))
+        .map(d => `<option value="${d}">${toDisplay(d)}</option>`)
+        .join("");
   }
 
   function clearCalendar() {
-    const c = qs("#svcFilterCalendar");
-    if (c) c.value = "";
+    qs("#svcFilterCalendar") && (qs("#svcFilterCalendar").value = "");
   }
 
   function clearDropdown() {
-    const d = qs("#svcFilterDate");
-    if (d) d.value = "";
+    qs("#svcFilterDate") && (qs("#svcFilterDate").value = "");
   }
 
   /* --------------------------------------------------
-        FILTER (STATUS / TYPE / DATE) — OLD LOGIC
+        FILTER (STATUS / TYPE / DATE)
   -------------------------------------------------- */
   function getFiltered() {
     const list = ensureServices();
@@ -122,7 +136,7 @@
   }
 
   /* --------------------------------------------------
-        COUNTS (OLD FEATURE — RESTORED)
+        COUNTS
   -------------------------------------------------- */
   function renderCounts() {
     const list = ensureServices();
@@ -139,7 +153,7 @@
   }
 
   /* --------------------------------------------------
-        TABLES (PENDING + HISTORY)
+        TABLES
   -------------------------------------------------- */
   function renderTables() {
     const pendBody = qs("#svcTable tbody");
@@ -162,8 +176,7 @@
             <td>${esc(j.problem)}</td>
             <td>Pending</td>
             <td><button class="small-btn svc-view" data-id="${j.id}">View / Update</button></td>
-          </tr>
-        `).join("")
+          </tr>`).join("")
         : `<tr><td colspan="9">No pending jobs</td></tr>`;
 
     if (histBody)
@@ -184,13 +197,12 @@
                 ? `Credit <button class="small-btn" onclick="collectServiceCredit('${j.id}')">Collect</button>`
                 : j.status}
             </td>
-          </tr>
-        `).join("")
+          </tr>`).join("")
         : `<tr><td colspan="10">No history</td></tr>`;
   }
 
   /* --------------------------------------------------
-        SERVICE STATUS PIE (OLD WORKING LOGIC)
+        SERVICE STATUS PIE
   -------------------------------------------------- */
   let pieStatus = null;
 
@@ -199,7 +211,6 @@
     if (!el || typeof Chart === "undefined") return;
 
     const list = ensureServices();
-
     const values = [
       list.filter(j => j.status === "pending").length,
       list.filter(j => j.status === "credit").length,
@@ -208,14 +219,11 @@
     ];
 
     pieStatus?.destroy();
-
     pieStatus = new Chart(el, {
       type: "pie",
       data: {
         labels: ["Pending", "Credit", "Completed", "Failed"],
-        datasets: [{
-          data: values.some(v => v > 0) ? values : [1, 0, 0, 0]
-        }]
+        datasets: [{ data: values.some(v => v > 0) ? values : [1, 0, 0, 0] }]
       },
       options: {
         responsive: true,
@@ -226,7 +234,7 @@
   }
 
   /* --------------------------------------------------
-        SERVICE MONEY SUMMARY (OLD FEATURE)
+        SERVICE MONEY SUMMARY
   -------------------------------------------------- */
   function renderMoneyList() {
     const box = qs("#svcMoneyBox");
@@ -250,12 +258,11 @@
         <li>🕒 Credit Pending: <b>₹${credit}</b></li>
         <li>✅ Total Collected: <b>₹${collected}</b></li>
         <li>📈 Total Profit: <b>₹${profit}</b></li>
-      </ul>
-    `;
+      </ul>`;
   }
 
   /* --------------------------------------------------
-        REFRESH (SINGLE SOURCE)
+        REFRESH (MASTER)
   -------------------------------------------------- */
   function refresh() {
     renderCounts();
@@ -265,7 +272,6 @@
     window.updateUniversalBar?.();
     window.renderAnalytics?.();
   }
-
   window.__svcRefresh = refresh;
 
   /* --------------------------------------------------
@@ -298,6 +304,7 @@
 
     list.push(job);
     saveServices();
+    clearAddForm();     // 🔥 FIX
     buildDateFilter();
     refresh();
   }
