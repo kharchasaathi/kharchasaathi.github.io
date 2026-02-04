@@ -1,9 +1,9 @@
 /* ===========================================================
-   service.js — ONLINE MODE — FINAL v23.1 (CREDIT SAFE)
-   ✔ Matches sales.js v21 logic
-   ✔ Profit & investment ONLY after collection
+   service.js — ONLINE MODE — FINAL v23.2 (CREDIT SAFE)
+   ✔ Status filter FIXED
+   ✔ All Dates filter REMOVED
+   ✔ Add Job form auto-clear
    ✔ UniversalBar compatible
-   ✔ cloudSaveDebounced ReferenceError FIXED
 =========================================================== */
 
 (function () {
@@ -34,18 +34,13 @@
   -------------------------------------------------- */
   function saveServices() {
     try {
-      localStorage.setItem(
-        "service-data",
-        JSON.stringify(window.services)
-      );
+      localStorage.setItem("service-data", JSON.stringify(window.services));
     } catch {}
 
-    // ✅ SAFE cloud save (FIX)
     if (typeof cloudSaveDebounced === "function") {
       cloudSaveDebounced("services", window.services);
     }
 
-    // ✅ SAFE cloud pull
     if (typeof cloudPullAllIfAvailable === "function") {
       setTimeout(() => cloudPullAllIfAvailable(), 200);
     }
@@ -57,6 +52,7 @@
         ADD JOB
   -------------------------------------------------- */
   function addJob() {
+
     const job = {
       id: uid("svc"),
       jobId: String(list().length + 1).padStart(2, "0"),
@@ -78,7 +74,7 @@
       remaining: 0,
       profit: 0,
 
-      status: "pending",   // pending | credit | paid | failed
+      status: "pending",
       fromCredit: false
     };
 
@@ -87,11 +83,31 @@
 
     list().push(job);
     saveServices();
+    clearAddForm();   // 🔥 FIX
     refresh();
   }
 
   /* --------------------------------------------------
-        COMPLETE JOB
+        CLEAR ADD FORM (FIX #3)
+  -------------------------------------------------- */
+  function clearAddForm() {
+    [
+      "#svcCustomer",
+      "#svcPhone",
+      "#svcModel",
+      "#svcProblem",
+      "#svcAdvance"
+    ].forEach(id => {
+      const el = qs(id);
+      if (el) el.value = "";
+    });
+
+    const d = qs("#svcReceivedDate");
+    if (d) d.value = today();
+  }
+
+  /* --------------------------------------------------
+        COMPLETE / CREDIT / FAIL
   -------------------------------------------------- */
   function completeJob(id, mode) {
     const j = list().find(x => x.id === id);
@@ -106,25 +122,20 @@
 
     if (mode === "paid") {
       j.status = "paid";
-      j.fromCredit = false;
       j.paid = total;
       j.remaining = 0;
       j.profit = total - invest;
     } else {
       j.status = "credit";
-      j.fromCredit = false;
       j.paid = j.advance;
       j.remaining = total - j.advance;
-      j.profit = 0; // 🔥 CREDIT SAFE
+      j.profit = 0;
     }
 
     saveServices();
     refresh();
   }
 
-  /* --------------------------------------------------
-        COLLECT SERVICE CREDIT
-  -------------------------------------------------- */
   window.collectServiceCredit = function (id) {
     const j = list().find(x => x.id === id);
     if (!j || j.status !== "credit") return;
@@ -139,7 +150,6 @@
 
     saveServices();
 
-    // 🔥 Collection history (only on real money)
     window.addCollectionEntry?.(
       "Service (Credit cleared)",
       `${j.item} ${j.model || ""} — ${j.customer}`,
@@ -149,9 +159,6 @@
     refresh();
   };
 
-  /* --------------------------------------------------
-        FAIL JOB
-  -------------------------------------------------- */
   function failJob(id) {
     const j = list().find(x => x.id === id);
     if (!j) return;
@@ -165,14 +172,23 @@
   }
 
   /* --------------------------------------------------
-        RENDER TABLES
+        FILTER + RENDER (FIX #1)
   -------------------------------------------------- */
   function renderTables() {
+
+    const statusFilter =
+      qs("#svcFilterStatus")?.value?.toLowerCase() || "all";
+
     const pBody = qs("#svcTable tbody");
     const hBody = qs("#svcHistoryTable tbody");
 
     const pending = list().filter(j => j.status === "pending");
-    const history = list().filter(j => j.status !== "pending");
+
+    let history = list().filter(j => j.status !== "pending");
+
+    if (statusFilter !== "all") {
+      history = history.filter(j => j.status === statusFilter);
+    }
 
     pBody.innerHTML = pending.length
       ? pending.map(j => `
@@ -233,6 +249,7 @@
   });
 
   qs("#addServiceBtn")?.addEventListener("click", addJob);
+  qs("#svcFilterStatus")?.addEventListener("change", refresh);
 
   window.addEventListener("load", refresh);
 
