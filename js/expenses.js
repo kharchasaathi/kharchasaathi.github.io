@@ -1,9 +1,11 @@
 /* ===========================================================
-   expenses.js — ONLINE MODE (Cloud Master) — FINAL v13
+   expenses.js — ONLINE MODE (Cloud Master) — FINAL v13.1 FIXED
+
    ✔ Cloud-first save (Firestore)
    ✔ Local = cache only
-   ✔ Expense delete / clear = user-confirmed profit handling
-   ✔ Universal Bar logic respected (offset-based)
+   ✔ Expense delete / clear = SAFE profit handling FIXED
+   ✔ Cancel = profit NOT added
+   ✔ Universal Bar logic respected
 =========================================================== */
 
 /* ===========================================================
@@ -92,7 +94,7 @@ function addExpenseEntry() {
 }
 
 /* ===========================================================
-   ❌ DELETE SINGLE EXPENSE (USER CONFIRM PROFIT)
+   ❌ DELETE SINGLE EXPENSE — FIXED
 =========================================================== */
 function deleteExpense(id) {
   const exp = (window.expenses || []).find(e => e.id === id);
@@ -102,10 +104,8 @@ function deleteExpense(id) {
     `Expense Amount: ₹${exp.amount}\n\nDo you want to add this amount back to Net Profit?`
   );
 
-  window.expenses = window.expenses.filter(e => e.id !== id);
-
+  /* 🔥 FIX — Adjust offset BEFORE delete */
   if (addBack && window.__offsets) {
-    // reduce collected net offset so profit increases back
     window.__offsets.net = Math.max(
       0,
       Number(window.__offsets.net || 0) - Number(exp.amount || 0)
@@ -115,6 +115,9 @@ function deleteExpense(id) {
       cloudSaveDebounced("offsets", window.__offsets);
     }
   }
+
+  /* delete expense AFTER offset adjust */
+  window.expenses = window.expenses.filter(e => e.id !== id);
 
   saveExpensesOnline();
 
@@ -126,7 +129,7 @@ function deleteExpense(id) {
 window.deleteExpense = deleteExpense;
 
 /* ===========================================================
-   🗑 CLEAR ALL EXPENSES (USER CONFIRM)
+   🗑 CLEAR ALL EXPENSES — FIXED
 =========================================================== */
 qs("#clearExpensesBtn")?.addEventListener("click", () => {
   if (!(window.expenses || []).length) return;
@@ -139,8 +142,7 @@ qs("#clearExpensesBtn")?.addEventListener("click", () => {
     `Total Expenses: ₹${total}\n\nDo you want to add this amount back to Net Profit?`
   );
 
-  window.expenses = [];
-
+  /* 🔥 FIX — adjust BEFORE clear */
   if (addBack && window.__offsets) {
     window.__offsets.net = Math.max(
       0,
@@ -151,6 +153,8 @@ qs("#clearExpensesBtn")?.addEventListener("click", () => {
       cloudSaveDebounced("offsets", window.__offsets);
     }
   }
+
+  window.expenses = [];
 
   saveExpensesOnline();
 
@@ -196,6 +200,9 @@ function renderExpenses() {
   if (totalBox) totalBox.textContent = total || 0;
 }
 
+/* ===========================================================
+   EVENTS
+=========================================================== */
 qs("#addExpenseBtn")?.addEventListener("click", addExpenseEntry);
 
 window.addEventListener("load", () => {
