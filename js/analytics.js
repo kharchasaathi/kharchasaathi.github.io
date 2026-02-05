@@ -1,12 +1,11 @@
 /* ======================================================
-   analytics.js — BUSINESS v24.1 (CREDIT SAFE)
+   analytics.js — BUSINESS v24.2 (DASHBOARD CLEAR SAFE)
    ------------------------------------------------------
    ✅ Dashboard analytics only (READ ONLY)
-   ✅ Credit-safe (matches sales.js v21 & service.js v23+)
+   ✅ Credit-safe
    ✅ NO offset reset
-   ✅ UniversalBar = single source of truth
-   ✅ Service + Sales timing SAFE
-   ✅ Pie size matched with dashboard
+   ✅ UniversalBar = single source
+   ✅ Dashboard View Clear Protected
 ====================================================== */
 
 (function () {
@@ -126,9 +125,12 @@
   };
 
   /* ======================================================
-        RENDER DASHBOARD + PIE (SIZE FIXED)
+        RENDER DASHBOARD + PIE
   ====================================================== */
   window.renderAnalytics = function () {
+
+    /* 🔒 DASHBOARD VIEW CLEAR GUARD */
+    if (window.__dashboardViewCleared) return;
 
     const {
       totalProfit,
@@ -149,7 +151,7 @@
     if (qs("#dashInv"))
       qs("#dashInv").textContent = "₹" + Math.round(totalInvestment);
 
-    /* ---------- PIE CHART ---------- */
+    /* ---------- PIE ---------- */
     const canvas = qs("#cleanPie");
     if (!canvas || typeof Chart === "undefined") return;
 
@@ -176,7 +178,7 @@
       },
       options: {
         responsive: true,
-        maintainAspectRatio: false,   // 🔥 SIZE FIX
+        maintainAspectRatio: false,
         plugins: {
           legend: {
             position: "bottom",
@@ -185,12 +187,18 @@
         }
       }
     });
+
+    /* expose for dashboard clear */
+    window.cleanPieChart = cleanPieChart;
   };
 
   /* ======================================================
-        TODAY SUMMARY CARDS
+        TODAY CARDS
   ====================================================== */
   window.updateSummaryCards = function () {
+
+    /* 🔒 GUARD */
+    if (window.__dashboardViewCleared) return;
 
     const d = window.getAnalyticsData();
 
@@ -211,11 +219,15 @@
   };
 
   /* ======================================================
-        INIT — TIMING SAFE (🔥 MAIN FIX)
+        INIT — SAFE LOAD
   ====================================================== */
   window.addEventListener("load", () => {
 
     const safeRender = () => {
+
+      /* 🔒 GUARD */
+      if (window.__dashboardViewCleared) return;
+
       if (
         Array.isArray(window.services) &&
         Array.isArray(window.sales)
@@ -226,7 +238,6 @@
       }
     };
 
-    // immediate + delayed retries
     safeRender();
     setTimeout(safeRender, 500);
     setTimeout(safeRender, 1000);
