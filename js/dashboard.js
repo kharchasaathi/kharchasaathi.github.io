@@ -1,10 +1,15 @@
 /* =========================================
-   DASHBOARD VIEW CLEAR (SAFE FINAL)
+   DASHBOARD VIEW CLEAR — PERSISTENT SAFE
 ========================================= */
 
 (function () {
 
   const qs = s => document.querySelector(s);
+
+  /* RESTORE CLEAR STATE ON LOAD */
+  if (localStorage.getItem("dashboard-view-cleared") === "1") {
+    window.__dashboardViewCleared = true;
+  }
 
   function clearDashboardView() {
 
@@ -12,8 +17,9 @@
       "This will clear only Dashboard calculated view.\n\nBusiness data will NOT be deleted.\n\nContinue?"
     )) return;
 
-    /* 🔒 STOP AUTO REFILL */
+    /* FLAG + SAVE */
     window.__dashboardViewCleared = true;
+    localStorage.setItem("dashboard-view-cleared", "1");
 
     /* TODAY */
     qs("#todaySales").textContent    = "₹0";
@@ -33,10 +39,8 @@
       window.cleanPieChart.destroy();
       window.cleanPieChart = null;
     }
-
   }
 
-  /* GLOBAL ACCESS FOR BUTTON */
   window.clearDashboardView = clearDashboardView;
 
 })();
