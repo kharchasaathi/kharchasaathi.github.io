@@ -1,9 +1,5 @@
 /* ===========================================================
-   universal-bar.js — CREDIT SAFE VERSION (v17)
-   -----------------------------------------------------------
-   ✔ Matches sales.js v21
-   ✔ Matches service.js v23
-   ✔ Collect-only mutations
+   universal-bar.js — CREDIT SAFE VERSION (v18 FIXED)
 =========================================================== */
 
 (function () {
@@ -37,7 +33,15 @@
   };
 
   async function initOffsets() {
+
+    /* 🔒 DASHBOARD CLEAR GUARD */
+    if (window.__dashboardViewCleared) {
+      updateUniversalBar();
+      return;
+    }
+
     const o = await loadOffsets();
+
     Object.assign(window.__offsets, {
       net:     num(o.net),
       sale:    num(o.sale),
@@ -45,11 +49,12 @@
       stock:   num(o.stock),
       servInv: num(o.servInv)
     });
+
     updateUniversalBar();
   }
 
   /* --------------------------------------------------
-        CORE METRICS (PURE)
+        CORE METRICS
   -------------------------------------------------- */
   function computeMetrics() {
 
@@ -65,19 +70,18 @@
     let stockInvest = 0;
     let serviceInvest = 0;
 
-    /* ---------- SALES ---------- */
     sales.forEach(s => {
       const st = String(s.status).toLowerCase();
-      if (st === "credit") {
+
+      if (st === "credit")
         pendingCredit += num(s.total);
-      }
+
       if (st === "paid") {
         saleProfit += num(s.profit);
         stockInvest += num(s.qty) * num(s.cost);
       }
     });
 
-    /* ---------- SERVICES ---------- */
     services.forEach(j => {
       const st = String(j.status).toLowerCase();
 
@@ -86,12 +90,10 @@
         serviceInvest += num(j.invest);
       }
 
-      if (st === "credit") {
+      if (st === "credit")
         pendingCredit += num(j.remaining);
-      }
     });
 
-    /* ---------- EXPENSES ---------- */
     expenses.forEach(e => {
       expensesTotal += num(e.amount);
     });
@@ -99,12 +101,21 @@
     const offs = window.__offsets;
 
     return {
-      saleProfitCollected:    Math.max(0, saleProfit - offs.sale),
-      serviceProfitCollected: Math.max(0, serviceProfit - offs.service),
-      stockInvestSold:        Math.max(0, stockInvest - offs.stock),
-      serviceInvestCompleted: Math.max(0, serviceInvest - offs.servInv),
-      pendingCreditTotal:     pendingCredit,
-      expensesLive:           expensesTotal,
+      saleProfitCollected:
+        Math.max(0, saleProfit - offs.sale),
+
+      serviceProfitCollected:
+        Math.max(0, serviceProfit - offs.service),
+
+      stockInvestSold:
+        Math.max(0, stockInvest - offs.stock),
+
+      serviceInvestCompleted:
+        Math.max(0, serviceInvest - offs.servInv),
+
+      pendingCreditTotal: pendingCredit,
+      expensesLive: expensesTotal,
+
       netProfit: Math.max(
         0,
         (saleProfit + serviceProfit - expensesTotal) - offs.net
@@ -114,6 +125,28 @@
 
   /* -------------------------------------------------- */
   function updateUniversalBar() {
+
+    /* 🔒 DASHBOARD CLEAR GUARD */
+    if (window.__dashboardViewCleared) {
+
+      const ids = [
+        "unSaleProfit",
+        "unServiceProfit",
+        "unStockInv",
+        "unServiceInv",
+        "unExpenses",
+        "unCreditSales",
+        "unNetProfit"
+      ];
+
+      ids.forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.textContent = "₹0";
+      });
+
+      return;
+    }
+
     const m = computeMetrics();
     window.__unMetrics = m;
 
@@ -134,7 +167,7 @@
   window.updateUniversalBar = updateUniversalBar;
 
   /* --------------------------------------------------
-        COLLECT (ONLY MUTATION)
+        COLLECT
   -------------------------------------------------- */
   async function collect(kind) {
 
@@ -164,14 +197,25 @@
 
     offs[key] += amount;
 
+    /* 🔧 FIXED GLOBAL REFERENCES */
     if (kind === "net") {
+
+      const sales = window.sales || [];
+      const services = window.services || [];
+
       offs.sale =
-        sales.reduce((a, s) => a + (s.status === "Paid" ? num(s.profit) : 0), 0);
+        sales.reduce((a, s) =>
+          a + (String(s.status).toLowerCase() === "paid"
+            ? num(s.profit) : 0), 0);
+
       offs.service =
-        services.reduce((a, j) => a + (j.status === "paid" ? num(j.profit) : 0), 0);
+        services.reduce((a, j) =>
+          a + (String(j.status).toLowerCase() === "paid"
+            ? num(j.profit) : 0), 0);
     }
 
     await saveOffsets(offs);
+
     updateUniversalBar();
     renderCollection?.();
     renderAnalytics?.();
