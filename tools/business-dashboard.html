@@ -834,36 +834,58 @@ body{
 <!-- =============== AUTO SCRIPT LOADER (keeps load order stable) =============== -->
 <script>
 window.addEventListener("load", () => {
+
   const v = Date.now();
-const files = [
-  "/js/core.js",
-  "/js/firebase.js",
-  "/js/types.js",
-  "/js/stock.js",
-  "/js/sales.js",
-  "/js/service.js",
-  "/js/wanting.js",
-  "/js/expenses.js",
-  "/js/collection.js",
-  "/js/analytics.js",
-  "/js/universalBar.js",
-  "/js/security.js"
-];
+
+  const files = [
+
+    /* CORE SYSTEM */
+    "/js/core.js",
+    "/js/firebase.js",
+    "/js/types.js",
+
+    /* BUSINESS MODULES */
+    "/js/stock.js",
+    "/js/sales.js",
+    "/js/service.js",
+    "/js/wanting.js",
+    "/js/expenses.js",
+    "/js/collection.js",
+
+    /* DASHBOARD + ANALYTICS */
+    "/js/analytics.js",
+    "/js/dashboard.js",   // ✅ NEW FILE ADDED
+
+    /* UI SYSTEM */
+    "/js/universalBar.js",
+    "/js/security.js"
+  ];
 
   files.reduce((p, file) => {
     return p.then(() => new Promise(res => {
+
       const s = document.createElement("script");
+
       s.src = `${file}?v=${v}`;
+
       s.onload = () => res();
+
       s.onerror = () => {
-  alert("Script load failed: " + file);
-};
+        alert("Script load failed: " + file);
+      };
+
       document.body.appendChild(s);
+
     }));
-  }, Promise.resolve()).then(() => {
+  }, Promise.resolve())
+  .then(() => {
+
     console.log("ALL SCRIPTS LOADED!");
+
     window.__allScriptsLoaded = true;
+
   });
+
 });
 </script>
 
