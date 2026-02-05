@@ -1,15 +1,16 @@
 /* ===========================================================
-   expenses.js — ONLINE MODE (Cloud Master) — FINAL v13.1 FIXED
+   expenses.js — ONLINE MODE — FINAL v13.2 FIXED
 
-   ✔ Cloud-first save (Firestore)
-   ✔ Local = cache only
-   ✔ Expense delete / clear = SAFE profit handling FIXED
-   ✔ Cancel = profit NOT added
-   ✔ Universal Bar logic respected
+   ✔ Cancel = Profit NOT added
+   ✔ OK = Profit added back
+   ✔ Delete = History remove only
+   ✔ Clear All = Same safe logic
+   ✔ Universal Bar compatible
 =========================================================== */
 
+
 /* ===========================================================
-   CLOUD + LOCAL SAVE WRAPPER
+   CLOUD + LOCAL SAVE
 =========================================================== */
 function saveExpensesOnline() {
   try {
@@ -25,8 +26,9 @@ function saveExpensesOnline() {
   }
 }
 
+
 /* ===========================================================
-   ENSURE REQUIRED DOM EXISTS
+   ENSURE DOM
 =========================================================== */
 function ensureExpenseDOM() {
   const section = qs("#expenses");
@@ -58,10 +60,12 @@ function ensureExpenseDOM() {
   }
 }
 
+
 /* ===========================================================
-   ➕ ADD EXPENSE
+   ADD EXPENSE
 =========================================================== */
 function addExpenseEntry() {
+
   let date = qs("#expDate")?.value || todayDate();
   const category = qs("#expCat")?.value?.trim();
   const amount = Number(qs("#expAmount")?.value || 0);
@@ -93,10 +97,12 @@ function addExpenseEntry() {
   qs("#expNote").value = "";
 }
 
+
 /* ===========================================================
-   ❌ DELETE SINGLE EXPENSE — FIXED
+   DELETE EXPENSE — FIXED LOGIC
 =========================================================== */
 function deleteExpense(id) {
+
   const exp = (window.expenses || []).find(e => e.id === id);
   if (!exp) return;
 
@@ -104,20 +110,23 @@ function deleteExpense(id) {
     `Expense Amount: ₹${exp.amount}\n\nDo you want to add this amount back to Net Profit?`
   );
 
-  /* 🔥 FIX — Adjust offset BEFORE delete */
-  if (addBack && window.__offsets) {
-    window.__offsets.net = Math.max(
-      0,
-      Number(window.__offsets.net || 0) - Number(exp.amount || 0)
-    );
+  /* Remove expense history */
+  window.expenses = window.expenses.filter(e => e.id !== id);
+
+  /* 🔥 KEY FIX
+     Cancel → Neutralize profit increase
+     OK     → Allow profit increase
+  */
+  if (!addBack && window.__offsets) {
+
+    window.__offsets.net =
+      Number(window.__offsets.net || 0) +
+      Number(exp.amount || 0);
 
     if (typeof cloudSaveDebounced === "function") {
       cloudSaveDebounced("offsets", window.__offsets);
     }
   }
-
-  /* delete expense AFTER offset adjust */
-  window.expenses = window.expenses.filter(e => e.id !== id);
 
   saveExpensesOnline();
 
@@ -128,10 +137,12 @@ function deleteExpense(id) {
 }
 window.deleteExpense = deleteExpense;
 
+
 /* ===========================================================
-   🗑 CLEAR ALL EXPENSES — FIXED
+   CLEAR ALL — FIXED LOGIC
 =========================================================== */
 qs("#clearExpensesBtn")?.addEventListener("click", () => {
+
   if (!(window.expenses || []).length) return;
 
   const total = window.expenses.reduce(
@@ -142,19 +153,20 @@ qs("#clearExpensesBtn")?.addEventListener("click", () => {
     `Total Expenses: ₹${total}\n\nDo you want to add this amount back to Net Profit?`
   );
 
-  /* 🔥 FIX — adjust BEFORE clear */
-  if (addBack && window.__offsets) {
-    window.__offsets.net = Math.max(
-      0,
-      Number(window.__offsets.net || 0) - total
-    );
+  /* Clear history */
+  window.expenses = [];
+
+  /* 🔥 KEY FIX */
+  if (!addBack && window.__offsets) {
+
+    window.__offsets.net =
+      Number(window.__offsets.net || 0) +
+      total;
 
     if (typeof cloudSaveDebounced === "function") {
       cloudSaveDebounced("offsets", window.__offsets);
     }
   }
-
-  window.expenses = [];
 
   saveExpensesOnline();
 
@@ -164,10 +176,12 @@ qs("#clearExpensesBtn")?.addEventListener("click", () => {
   updateUniversalBar?.();
 });
 
+
 /* ===========================================================
-   📊 RENDER
+   RENDER
 =========================================================== */
 function renderExpenses() {
+
   ensureExpenseDOM();
 
   const tbody = qs("#expensesTable tbody");
@@ -178,7 +192,9 @@ function renderExpenses() {
 
   tbody.innerHTML = (window.expenses || [])
     .map(e => {
+
       total += Number(e.amount || 0);
+
       return `
         <tr>
           <td data-label="Date">${toDisplay(e.date)}</td>
@@ -199,6 +215,7 @@ function renderExpenses() {
 
   if (totalBox) totalBox.textContent = total || 0;
 }
+
 
 /* ===========================================================
    EVENTS
