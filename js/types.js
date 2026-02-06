@@ -1,16 +1,15 @@
 /* ======================================================
-   🗂 types.js — Product Type Manager (FINAL ONLINE v12)
+   🗂 types.js — Product Type Manager (FINAL ONLINE v13)
    ------------------------------------------------------
-   ✔ Cloud Master (Firestore)
-   ✔ Local = Cache only
    ✔ Logout/Login safe
-   ✔ Multi-device sync safe
-   ✔ Race-condition fixed
+   ✔ Cloud overwrite safe
+   ✔ Render timing fixed
+   ✔ Dropdown auto refresh
 ====================================================== */
 
 
 /* ------------------------------------------------------
-   🌐 SAVE WRAPPER (LOCAL + CLOUD)
+   🌐 SAVE WRAPPER
 ------------------------------------------------------ */
 window.saveTypes = function () {
 
@@ -25,7 +24,6 @@ window.saveTypes = function () {
     cloudSaveDebounced("types", window.types || []);
   }
 
-  /* Cloud pull re-sync */
   if (typeof cloudPullAllIfAvailable === "function") {
     setTimeout(() => cloudPullAllIfAvailable(), 200);
   }
@@ -52,6 +50,16 @@ function loadTypesLocal() {
 
 
 /* ------------------------------------------------------
+   🔁 SAFE RENDER WRAPPER
+------------------------------------------------------ */
+function safeRenderTypes() {
+
+  renderTypes();
+  updateTypeDropdowns();
+}
+
+
+/* ------------------------------------------------------
    ➕ ADD TYPE
 ------------------------------------------------------ */
 function addType() {
@@ -64,7 +72,6 @@ function addType() {
 
   window.types = window.types || [];
 
-  /* Prevent duplicate */
   if (
     window.types.some(
       t => t.name.toLowerCase() === name.toLowerCase()
@@ -80,14 +87,9 @@ function addType() {
 
   window.saveTypes();
 
-  renderTypes();
-  updateTypeDropdowns();
+  safeRenderTypes();
 
-  /* Cloud race sync */
-  setTimeout(() => {
-    renderTypes();
-    updateTypeDropdowns();
-  }, 180);
+  setTimeout(safeRenderTypes, 200);
 
   input.value = "";
 }
@@ -103,13 +105,7 @@ function clearTypes() {
   window.types = [];
   window.saveTypes();
 
-  renderTypes();
-  updateTypeDropdowns();
-
-  setTimeout(() => {
-    renderTypes();
-    updateTypeDropdowns();
-  }, 200);
+  safeRenderTypes();
 }
 
 
@@ -185,12 +181,10 @@ document.addEventListener("click", e => {
 
 /* ------------------------------------------------------
    ☁️ CLOUD SYNC LISTENER
-   (Triggered after cloudPullAllIfAvailable)
 ------------------------------------------------------ */
 window.addEventListener("cloud-data-loaded", () => {
 
-  renderTypes();
-  updateTypeDropdowns();
+  safeRenderTypes();
 });
 
 
@@ -199,19 +193,14 @@ window.addEventListener("cloud-data-loaded", () => {
 ------------------------------------------------------ */
 window.addEventListener("load", () => {
 
-  /* 1️⃣ Load local cache first */
+  /* 1️⃣ Local first */
   loadTypesLocal();
 
-  /* Ensure array */
   window.types = window.types || [];
 
-  /* 2️⃣ Initial render */
-  renderTypes();
-  updateTypeDropdowns();
+  safeRenderTypes();
 
-  /* 3️⃣ Cloud overwrite render */
-  setTimeout(() => {
-    renderTypes();
-    updateTypeDropdowns();
-  }, 250);
+  /* 2️⃣ Cloud overwrite retry */
+  setTimeout(safeRenderTypes, 400);
+  setTimeout(safeRenderTypes, 800);
 });
