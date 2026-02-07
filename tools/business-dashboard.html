@@ -831,7 +831,7 @@ body{
 <script src="https://www.gstatic.com/firebasejs/9.6.11/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.6.11/firebase-firestore-compat.js"></script>
 
-<!-- =============== AUTO SCRIPT LOADER (keeps load order stable) =============== -->
+<!-- =============== AUTO SCRIPT LOADER + FIRESTORE SAFE =============== -->
 <script>
 window.addEventListener("load", () => {
 
@@ -839,12 +839,16 @@ window.addEventListener("load", () => {
 
   const files = [
 
-    /* CORE SYSTEM */
+    /* ================= CORE SYSTEM ================= */
     "/js/core.js",
     "/js/firebase.js",
+
+    /* 🔥 REALTIME FIRESTORE LISTENERS (SAFE) */
+    "/js/firestore-listeners.js",
+
     "/js/types.js",
 
-    /* BUSINESS MODULES */
+    /* ================= BUSINESS MODULES ================= */
     "/js/stock.js",
     "/js/sales.js",
     "/js/service.js",
@@ -852,35 +856,64 @@ window.addEventListener("load", () => {
     "/js/expenses.js",
     "/js/collection.js",
 
-    /* DASHBOARD + ANALYTICS */
+    /* ================= DASHBOARD + ANALYTICS ================= */
     "/js/analytics.js",
-    "/js/dashboard.js",   // ✅ NEW FILE ADDED
+    "/js/dashboard.js",
 
-    /* UI SYSTEM */
+    /* ================= UI SYSTEM ================= */
     "/js/universalBar.js",
     "/js/security.js"
   ];
 
+  /* =====================================================
+     SEQUENTIAL SCRIPT LOADER
+  ===================================================== */
   files.reduce((p, file) => {
+
     return p.then(() => new Promise(res => {
 
       const s = document.createElement("script");
 
+      /* Cache-busting */
       s.src = `${file}?v=${v}`;
 
-      s.onload = () => res();
+      /* Keep order stable */
+      s.async = false;
 
+      /* Success */
+      s.onload = () => {
+
+        console.log(
+          "%c✔ Loaded: " + file,
+          "color:#4caf50"
+        );
+
+        res();
+      };
+
+      /* Error */
       s.onerror = () => {
+
+        console.error(
+          "%c❌ Failed: " + file,
+          "color:#f44336"
+        );
+
         alert("Script load failed: " + file);
       };
 
       document.body.appendChild(s);
 
     }));
+
   }, Promise.resolve())
+
   .then(() => {
 
-    console.log("ALL SCRIPTS LOADED!");
+    console.log(
+      "%c🚀 ALL SCRIPTS LOADED!",
+      "color:#4caf50;font-weight:bold;"
+    );
 
     window.__allScriptsLoaded = true;
 
