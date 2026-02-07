@@ -1,5 +1,5 @@
 /* ===========================================================
-   firestore-listeners.js — FINAL MERGED SAFE v3
+   firestore-listeners.js — FINAL MERGED SAFE v4
 
    ✔ Realtime cloud sync
    ✔ Razorpay ready
@@ -9,12 +9,13 @@
    ✔ Logout/Login safe
    ✔ Duplicate listener blocked
    ✔ Function load guard added
+   ✔ Collection write-lock guard added
 =========================================================== */
 
 (function () {
 
   /* --------------------------------------------------
-        DUPLICATE BLOCK
+        DUPLICATE LISTENER BLOCK
   -------------------------------------------------- */
   if (window.__fsListenersAttached) {
     console.warn("🔥 Firestore listeners already attached");
@@ -30,6 +31,64 @@
 
   const db   = window.db;
   const auth = window.auth;
+
+  /* ==================================================
+        🧠 COLLECTION WRITE LOCK GUARD
+        Prevent duplicate collection writes
+  ================================================== */
+
+  function attachCollectionWriteGuard() {
+
+    if (!window.addCollectionEntry) {
+      console.warn(
+        "Collection function not ready — guard skipped"
+      );
+      return;
+    }
+
+    if (window.__collectionGuardAttached) {
+      console.warn(
+        "Collection guard already attached"
+      );
+      return;
+    }
+
+    window.__collectionGuardAttached = true;
+
+    const _oldAddCollectionEntry =
+      window.addCollectionEntry;
+
+    window.__collectionWriteLock = false;
+
+    window.addCollectionEntry =
+      function (...args) {
+
+        if (window.__collectionWriteLock) {
+          console.warn(
+            "🚫 Duplicate collection blocked"
+          );
+          return;
+        }
+
+        window.__collectionWriteLock = true;
+
+        try {
+
+          _oldAddCollectionEntry(...args);
+
+        } finally {
+
+          setTimeout(() => {
+            window.__collectionWriteLock = false;
+          }, 500);
+        }
+      };
+
+    console.log(
+      "%c🔒 Collection write-lock active",
+      "color:#ff9800;font-weight:bold;"
+    );
+  }
 
   /* --------------------------------------------------
         WAIT FOR CLOUD READY
@@ -83,6 +142,9 @@
       db.collection("users")
         .doc(uid)
         .collection("data");
+
+    /* 🔒 Attach collection guard now */
+    attachCollectionWriteGuard();
 
     /* ==================================================
        SALES
@@ -184,7 +246,9 @@
         if (typeof updateSummaryCards === "function")
           updateSummaryCards();
 
-        console.log("🔄 Dashboard offset synced");
+        console.log(
+          "🔄 Dashboard offset synced"
+        );
       });
 
   }
