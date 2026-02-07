@@ -1,5 +1,5 @@
 /* ===========================================================
-   firestore-listeners.js — FINAL MERGED SAFE v4
+   firestore-listeners.js — FINAL MERGED SAFE v5
 
    ✔ Realtime cloud sync
    ✔ Razorpay ready
@@ -10,6 +10,7 @@
    ✔ Duplicate listener blocked
    ✔ Function load guard added
    ✔ Collection write-lock guard added
+   ✔ 🧠 Offset overwrite bug FIXED
 =========================================================== */
 
 (function () {
@@ -34,9 +35,7 @@
 
   /* ==================================================
         🧠 COLLECTION WRITE LOCK GUARD
-        Prevent duplicate collection writes
   ================================================== */
-
   function attachCollectionWriteGuard() {
 
     if (!window.addCollectionEntry) {
@@ -46,16 +45,12 @@
       return;
     }
 
-    if (window.__collectionGuardAttached) {
-      console.warn(
-        "Collection guard already attached"
-      );
+    if (window.__collectionGuardAttached)
       return;
-    }
 
     window.__collectionGuardAttached = true;
 
-    const _oldAddCollectionEntry =
+    const _oldAdd =
       window.addCollectionEntry;
 
     window.__collectionWriteLock = false;
@@ -64,20 +59,15 @@
       function (...args) {
 
         if (window.__collectionWriteLock) {
-          console.warn(
-            "🚫 Duplicate collection blocked"
-          );
+          console.warn("🚫 Duplicate collection blocked");
           return;
         }
 
         window.__collectionWriteLock = true;
 
         try {
-
-          _oldAddCollectionEntry(...args);
-
+          _oldAdd(...args);
         } finally {
-
           setTimeout(() => {
             window.__collectionWriteLock = false;
           }, 500);
@@ -115,20 +105,11 @@
   -------------------------------------------------- */
   function safeRefresh() {
 
-    if (typeof renderSales === "function")
-      renderSales();
-
-    if (typeof renderCollection === "function")
-      renderCollection();
-
-    if (typeof renderAnalytics === "function")
-      renderAnalytics();
-
-    if (typeof updateSummaryCards === "function")
-      updateSummaryCards();
-
-    if (typeof updateUniversalBar === "function")
-      updateUniversalBar();
+    renderSales?.();
+    renderCollection?.();
+    renderAnalytics?.();
+    updateSummaryCards?.();
+    updateUniversalBar?.();
   }
 
   /* --------------------------------------------------
@@ -143,94 +124,115 @@
         .doc(uid)
         .collection("data");
 
-    /* 🔒 Attach collection guard now */
     attachCollectionWriteGuard();
 
     /* ==================================================
        SALES
     ================================================== */
-    ref.doc("sales")
-      .onSnapshot(snap => {
+    ref.doc("sales").onSnapshot(snap => {
 
-        if (!snap.exists) return;
+      if (!snap.exists) return;
 
-        window.sales =
-          snap.data().value || [];
+      window.sales =
+        snap.data().value || [];
 
-        safeRefresh();
-
-        console.log("🔄 Sales synced");
-      });
+      safeRefresh();
+      console.log("🔄 Sales synced");
+    });
 
     /* ==================================================
        COLLECTIONS
     ================================================== */
-    ref.doc("collections")
-      .onSnapshot(snap => {
+    ref.doc("collections").onSnapshot(snap => {
 
-        if (!snap.exists) return;
+      if (!snap.exists) return;
 
-        window.collections =
-          snap.data().value || [];
+      window.collections =
+        snap.data().value || [];
 
-        safeRefresh();
-
-        console.log("🔄 Collections synced");
-      });
+      safeRefresh();
+      console.log("🔄 Collections synced");
+    });
 
     /* ==================================================
        SERVICES
     ================================================== */
-    ref.doc("services")
-      .onSnapshot(snap => {
+    ref.doc("services").onSnapshot(snap => {
 
-        if (!snap.exists) return;
+      if (!snap.exists) return;
 
-        window.services =
-          snap.data().value || [];
+      window.services =
+        snap.data().value || [];
 
-        safeRefresh();
-
-        console.log("🔄 Services synced");
-      });
+      safeRefresh();
+      console.log("🔄 Services synced");
+    });
 
     /* ==================================================
        EXPENSES
     ================================================== */
-    ref.doc("expenses")
-      .onSnapshot(snap => {
+    ref.doc("expenses").onSnapshot(snap => {
 
-        if (!snap.exists) return;
+      if (!snap.exists) return;
 
-        window.expenses =
-          snap.data().value || [];
+      window.expenses =
+        snap.data().value || [];
 
-        safeRefresh();
-
-        console.log("🔄 Expenses synced");
-      });
+      safeRefresh();
+      console.log("🔄 Expenses synced");
+    });
 
     /* ==================================================
-       OFFSETS (COLLECT BASELINE)
+       🧠 OFFSETS — OVERWRITE PROTECTED
     ================================================== */
-    ref.doc("offsets")
-      .onSnapshot(snap => {
+    ref.doc("offsets").onSnapshot(snap => {
 
-        if (!snap.exists) return;
+      if (!snap.exists) return;
 
-        Object.assign(
-          window.__offsets,
-          snap.data().value || {}
+      const incoming =
+        snap.data().value || {};
+
+      const local =
+        window.__offsets || {};
+
+      /* 🔒 Ignore snapshot while saving */
+      if (window.__offsetSaveLock) {
+        console.warn(
+          "⏳ Offset snapshot ignored (save lock)"
+        );
+        return;
+      }
+
+      /* 🔒 Ignore older data */
+      const isOlder =
+        Object.keys(incoming).every(k =>
+          Number(incoming[k] || 0)
+          <=
+          Number(local[k] || 0)
         );
 
-        if (typeof updateUniversalBar === "function")
-          updateUniversalBar();
+      if (isOlder) {
+        console.warn(
+          "⏳ Older offsets ignored"
+        );
+        return;
+      }
 
-        console.log("🔄 Offsets synced");
-      });
+      Object.assign(
+        window.__offsets,
+        incoming
+      );
+
+      updateUniversalBar?.();
+
+      console.log(
+        "%c🔄 Offsets synced (safe merge)",
+        "color:#4caf50"
+      );
+    });
 
     /* ==================================================
-       DASHBOARD OFFSET (CLEAR BASELINE)
+       DASHBOARD OFFSET
     ================================================== */
     ref.doc("dashboardOffset")
       .onSnapshot(snap => {
@@ -240,11 +242,8 @@
         window.__dashboardOffset =
           Number(snap.data().value || 0);
 
-        if (typeof renderAnalytics === "function")
-          renderAnalytics();
-
-        if (typeof updateSummaryCards === "function")
-          updateSummaryCards();
+        renderAnalytics?.();
+        updateSummaryCards?.();
 
         console.log(
           "🔄 Dashboard offset synced"
