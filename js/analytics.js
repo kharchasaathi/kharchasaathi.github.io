@@ -1,12 +1,12 @@
 /* ======================================================
-   analytics.js — CLOUD ONLY — FINAL v26
-   ------------------------------------------------------
+   analytics.js — FINAL v27 (OFFSET-AWARE CLOUD SAFE)
+
    ✔ Dashboard analytics only (READ ONLY)
    ✔ Credit-safe
-   ✔ NO offset reset
-   ✔ UniversalBar = single source
-   ✔ Dashboard View Clear Protected
+   ✔ Dashboard offset supported
+   ✔ UniversalBar independent
    ✔ Cloud sync compatible
+   ✔ Logout/Login safe
 ====================================================== */
 
 (function () {
@@ -17,7 +17,7 @@
   let cleanPieChart = null;
 
   /* ======================================================
-        TODAY ANALYTICS (READ ONLY)
+        TODAY ANALYTICS (NO OFFSET)
   ====================================================== */
   window.getAnalyticsData = function () {
 
@@ -84,7 +84,7 @@
   };
 
   /* ======================================================
-        TOTAL SUMMARY (READ ONLY)
+        TOTAL SUMMARY (OFFSET AWARE)
   ====================================================== */
   window.getSummaryTotals = function () {
 
@@ -134,16 +134,31 @@
         0
       );
 
+    /* ===================================================
+       🧠 DASHBOARD OFFSET APPLY
+    =================================================== */
+    const offset =
+      Number(window.__dashboardOffset || 0);
+
+    const totalProfitRaw =
+      salesProfit + serviceProfit;
+
+    const totalProfit =
+      Math.max(0, totalProfitRaw - offset);
+
+    const netProfit =
+      Math.max(
+        0,
+        (totalProfitRaw - totalExpenses)
+        - offset
+      );
+
     return {
       salesProfit,
       serviceProfit,
-      totalProfit:
-        salesProfit + serviceProfit,
+      totalProfit,
       totalExpenses,
-      netProfit:
-        salesProfit +
-        serviceProfit -
-        totalExpenses,
+      netProfit,
       creditTotal,
       totalInvestment:
         stockInvest + serviceInvest
@@ -155,7 +170,6 @@
   ====================================================== */
   window.renderAnalytics = function () {
 
-    /* 🔒 DASHBOARD VIEW CLEAR GUARD */
     if (window.__dashboardViewCleared)
       return;
 
@@ -234,7 +248,6 @@
         }
       });
 
-    /* expose for dashboard clear */
     window.cleanPieChart =
       cleanPieChart;
   };
@@ -272,7 +285,7 @@
   };
 
   /* ======================================================
-        ☁️ CLOUD SYNC LISTENER
+        CLOUD SYNC
   ====================================================== */
   window.addEventListener(
     "cloud-data-loaded",
@@ -288,7 +301,7 @@
   );
 
   /* ======================================================
-        INIT — SAFE LOAD
+        INIT SAFE LOAD
   ====================================================== */
   window.addEventListener("load", () => {
 
