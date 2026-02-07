@@ -1,82 +1,49 @@
 /* ===========================================================
-   📌 core.js — MASTER ENGINE (CLOUD SAFE — FINAL v19)
-   PART 1 — INFRA + HELPERS + BUSINESS BASE
+   core.js — FINAL v21 (FULL RESTORED + CLOUD SAFE)
+   PART 1 — HELPERS + BUSINESS BASE
 =========================================================== */
 
-/* ===========================================================
-   CLOUD COLLECTION KEYS
-=========================================================== */
-const KEY_TYPES       = "types";
-const KEY_STOCK       = "stock";
-const KEY_SALES       = "sales";
-const KEY_WANTING     = "wanting";
-const KEY_EXPENSES    = "expenses";
-const KEY_SERVICES    = "services";
-const KEY_COLLECTIONS = "collections";
+/* CLOUD KEYS */
+const KEY_TYPES="types";
+const KEY_STOCK="stock";
+const KEY_SALES="sales";
+const KEY_WANTING="wanting";
+const KEY_EXPENSES="expenses";
+const KEY_SERVICES="services";
+const KEY_COLLECTIONS="collections";
 
-/* ===========================================================
-   SAFE HELPERS
-=========================================================== */
-function toArray(v){
-  return Array.isArray(v) ? v : [];
-}
+/* ARRAY SAFE */
+const toArray=v=>Array.isArray(v)?v:[];
 
-/* ===========================================================
-   DATE HELPERS
-=========================================================== */
+/* DATE HELPERS */
 function toDisplay(d){
-  if(!d || typeof d!=="string" || !d.includes("-")) return d||"";
+  if(!d||!d.includes("-")) return d||"";
   const p=d.split("-");
-  return (p.length===3 && p[0].length===4)
-    ? `${p[2]}-${p[1]}-${p[0]}`
-    : d;
-}
-
-function toInternal(d){
-  if(!d || typeof d!=="string") return d||"";
-  const p=d.split("-");
-  if(p.length===3 && p[0].length===2)
-    return `${p[2]}-${p[1]}-${p[0]}`;
-  return d;
+  return p[0].length===4?`${p[2]}-${p[1]}-${p[0]}`:d;
 }
 
 function toInternalIfNeeded(d){
   if(!d) return "";
-  return (d.length>=10 && d[4]==="-")
-    ? d
-    : toInternal(d);
+  return d[4]==="-"?d:d.split("-").reverse().join("-");
 }
 
-window.toDisplay=toDisplay;
-window.toInternal=toInternal;
-window.toInternalIfNeeded=toInternalIfNeeded;
+Object.assign(window,{toDisplay,toInternalIfNeeded});
 
-/* ===========================================================
-   BASIC HELPERS
-=========================================================== */
-window.todayDate=function(){
+/* BASIC */
+window.todayDate=()=>{
   const d=new Date();
   d.setMinutes(d.getMinutes()-d.getTimezoneOffset());
   return d.toISOString().split("T")[0];
 };
 
-window.uid=function(p="id"){
-  return `${p}_${Math.random().toString(36).slice(2,10)}`;
-};
+window.uid=p=>`${p}_${Math.random().toString(36).slice(2,10)}`;
 
-window.esc=function(t){
-  return String(t||"").replace(/[&<>"']/g,m=>({
-    "&":"&amp;",
-    "<":"&lt;",
-    ">":"&gt;",
-    "\"":"&quot;",
-    "'":"&#39;"
-  }[m]));
-};
+window.esc=t=>String(t||"").replace(/[&<>"']/g,m=>({
+  "&":"&amp;","<":"&lt;",">":"&gt;",
+  "\"":"&quot;","'":"&#39;"
+}[m]));
 
-/* ===========================================================
-   GLOBAL DATA CONTAINERS
-=========================================================== */
+/* GLOBAL DATA */
 window.types=[];
 window.stock=[];
 window.sales=[];
@@ -85,23 +52,13 @@ window.expenses=[];
 window.services=[];
 window.collections=[];
 
-/* ===========================================================
-   LIMIT SYSTEM
-=========================================================== */
+/* LIMIT */
 window.globalLimit=0;
+window.setGlobalLimit=v=>globalLimit=+v||0;
+window.getGlobalLimit=()=>+globalLimit||0;
 
-window.setGlobalLimit=v=>{
-  globalLimit=Number(v)||0;
-};
-
-window.getGlobalLimit=()=>
-  Number(globalLimit||0);
-
-/* ===========================================================
-   ENSURE ARRAYS (INITIAL CALL RESTORED)
-=========================================================== */
+/* ENSURE */
 function ensureArrays(){
-
   [
     "types","stock","sales",
     "wanting","expenses",
@@ -113,9 +70,7 @@ function ensureArrays(){
 }
 ensureArrays();
 
-/* ===========================================================
-   NORMALIZE DATES
-=========================================================== */
+/* NORMALIZE */
 function normalizeAllDates(){
 
   stock=stock.map(s=>({...s,date:toInternalIfNeeded(s.date)}));
@@ -135,70 +90,42 @@ function normalizeAllDates(){
   }));
 }
 
-/* ===========================================================
-   CLOUD SAVE WRAPPER
-=========================================================== */
-window.cloudSync=function(key,data){
-
-  if(!window.__cloudReady){
-    console.warn("⛔ Save blocked:",key);
-    return;
-  }
-
-  if(typeof cloudSaveDebounced!=="function")
-    return;
-
-  cloudSaveDebounced(key,data||[]);
+/* CLOUD SAVE */
+window.cloudSync=(k,d)=>{
+  if(!window.__cloudReady) return;
+  cloudSaveDebounced?.(k,d||[]);
 };
 
-/* ===========================================================
-   SAVE HELPERS
-=========================================================== */
-window.saveTypes       =()=>cloudSync(KEY_TYPES,types);
-window.saveStock       =()=>cloudSync(KEY_STOCK,stock);
-window.saveSales       =()=>cloudSync(KEY_SALES,sales);
-window.saveWanting     =()=>cloudSync(KEY_WANTING,wanting);
-window.saveExpenses    =()=>cloudSync(KEY_EXPENSES,expenses);
-window.saveServices    =()=>cloudSync(KEY_SERVICES,services);
-window.saveCollections =()=>cloudSync(KEY_COLLECTIONS,collections);
+/* SAVE */
+window.saveTypes=()=>cloudSync(KEY_TYPES,types);
+window.saveStock=()=>cloudSync(KEY_STOCK,stock);
+window.saveSales=()=>cloudSync(KEY_SALES,sales);
+window.saveWanting=()=>cloudSync(KEY_WANTING,wanting);
+window.saveExpenses=()=>cloudSync(KEY_EXPENSES,expenses);
+window.saveServices=()=>cloudSync(KEY_SERVICES,services);
+window.saveCollections=()=>cloudSync(KEY_COLLECTIONS,collections);
 
-/* ===========================================================
-   BUSINESS BASE — TYPES
-=========================================================== */
-window.addType=function(name){
-
+/* TYPES */
+window.addType=name=>{
   name=(name||"").trim();
+  if(!name||types.find(t=>t.name.toLowerCase()===name.toLowerCase()))return;
 
-  if(!name ||
-     types.find(t=>
-       t.name.toLowerCase()===name.toLowerCase()
-     )
-  ) return;
-
-  types.push({
-    id:uid("type"),
-    name
-  });
-
+  types.push({id:uid("type"),name});
   saveTypes();
 };
 
-/* ===========================================================
-   PRODUCT HELPERS
-=========================================================== */
+/* PRODUCT HELPERS */
 window.findProduct=(type,name)=>
   stock.find(p=>
     p.type===type &&
-    String(p.name||"").toLowerCase()===
-    String(name||"").toLowerCase()
+    String(p.name).toLowerCase()===
+    String(name).toLowerCase()
   );
 
-window.getProductCost=function(type,name){
-
+window.getProductCost=(type,name)=>{
   const p=findProduct(type,name);
   if(!p) return 0;
-
-  if(p.cost) return Number(p.cost);
+  if(p.cost) return +p.cost;
 
   if(p.history?.length){
     let t=0,q=0;
@@ -208,27 +135,21 @@ window.getProductCost=function(type,name){
     });
     return q?t/q:0;
   }
-
   return 0;
 };
 
-/* ===========================================================
-   STOCK ENTRY
-=========================================================== */
-window.addStockEntry=function({
+/* STOCK ENTRY */
+window.addStockEntry=({
   date,type,name,qty,cost
-}){
+})=>{
 
   date=toInternalIfNeeded(date);
-  qty=+qty;
-  cost=+cost;
-
+  qty=+qty; cost=+cost;
   if(!type||!name||qty<=0||cost<=0) return;
 
   let p=findProduct(type,name);
 
   if(!p){
-
     stock.push({
       id:uid("stk"),
       date,type,name,qty,cost,
@@ -236,118 +157,18 @@ window.addStockEntry=function({
       limit:getGlobalLimit(),
       history:[{date,qty,cost}]
     });
-
   }else{
-
     p.qty+=qty;
     p.cost=cost;
-    p.history=p.history||[];
     p.history.push({date,qty,cost});
   }
 
   saveStock();
 };
 /* ===========================================================
-   📌 core.js — PART 2
-   CLOUD PULL + INIT + EVENTS + RENDER SYNC
+   PART 2 — CLOUD EVENTS + RENDER
 =========================================================== */
 
-/* ===========================================================
-   KEY → VAR MAP
-=========================================================== */
-function keyToVarName(key){
-  return {
-    types:"types",
-    stock:"stock",
-    sales:"sales",
-    wanting:"wanting",
-    expenses:"expenses",
-    services:"services",
-    collections:"collections"
-  }[key];
-}
-
-/* ===========================================================
-   FALLBACK CLOUD PULL
-=========================================================== */
-window.cloudPullAllIfAvailable=async function(){
-
-  if(typeof cloudLoad!=="function") return;
-  if(!window.__cloudReady) return;
-
-  const keys=[
-    "types","stock","sales",
-    "wanting","expenses",
-    "services","collections"
-  ];
-
-  for(const key of keys){
-
-    try{
-      const arr=toArray(await cloudLoad(key));
-      window[keyToVarName(key)]=arr;
-    }catch{
-      window[keyToVarName(key)]=[];
-    }
-  }
-
-  ensureArrays();
-  normalizeAllDates();
-
-  /* SAFE RENDER */
-  [
-    "renderTypes",
-    "renderStock",
-    "renderSales",
-    "renderWanting",
-    "renderExpenses",
-    "renderServiceTables",
-    "renderCollection",
-    "renderAnalytics",
-    "updateSummaryCards",
-    "updateUniversalBar",
-    "updateTypeDropdowns"
-  ].forEach(fn=>{
-    try{window[fn]?.();}catch{}
-  });
-
-};
-
-/* ===========================================================
-   AUTH READY → PULL (RESTORED)
-=========================================================== */
-window.addEventListener(
-  "firebase-auth-ready",
-  ()=>{
-
-    console.log("Auth ready → Pulling data");
-
-    setTimeout(()=>{
-      cloudPullAllIfAvailable();
-    },200);
-
-  }
-);
-
-/* ===========================================================
-   AUTO INIT (RESTORED)
-=========================================================== */
-window.addEventListener("load",()=>{
-
-  setTimeout(()=>{
-
-    cloudPullAllIfAvailable();
-
-    updateUniversalBar?.();
-    updateSummaryCards?.();
-
-  },300);
-
-});
-
-/* ===========================================================
-   CLOUD DATA EVENT
-=========================================================== */
 window.addEventListener(
   "cloud-data-loaded",
   ()=>{
@@ -374,9 +195,7 @@ window.addEventListener(
   }
 );
 
-/* ===========================================================
-   INVESTMENT HELPERS
-=========================================================== */
+/* INVESTMENT */
 window.getStockInvestmentAfterSale=()=>
   stock.reduce(
     (t,p)=>t+Number(p.sold||0)*Number(p.cost||0),
@@ -385,54 +204,32 @@ window.getStockInvestmentAfterSale=()=>
 
 window.getSalesProfitCollected=()=>
   sales
-    .filter(s=>
-      String(s.status||"").toLowerCase()!=="credit"
-    )
+    .filter(s=>String(s.status).toLowerCase()!=="credit")
     .reduce((t,s)=>t+Number(s.profit||0),0);
 
 window.getServiceProfitCollected=()=>
   services
-    .filter(s=>
-      String(s.status||"").toLowerCase()==="completed"
-    )
+    .filter(s=>String(s.status).toLowerCase()==="completed")
     .reduce((t,s)=>t+Number(s.profit||0),0);
 
-/* ===========================================================
-   EMAIL TAG
-=========================================================== */
-window.updateEmailTag=function(){
-
+/* EMAIL */
+window.updateEmailTag=()=>{
   const el=document.getElementById("emailTag");
   if(!el) return;
-
-  let email="";
-
-  try{
-    email=getFirebaseUser?.()?.email||"";
-  }catch{}
-
-  el.textContent=email||"Not logged in";
+  el.textContent=getFirebaseUser?.()?.email||"Not logged in";
 };
 
-/* ===========================================================
-   AUTH BRIDGE
-=========================================================== */
+/* AUTH BRIDGE (RESTORED) */
 if(typeof auth!=="undefined"){
-
   auth.onAuthStateChanged(user=>{
-
     if(user){
-
       window.dispatchEvent(
         new Event("firebase-auth-ready")
       );
-
     }
-
   });
-
 }
 
 console.log(
-  "⚙️ core.js v19 CLOUD ENGINE READY ✔"
+  "⚙️ core.js v21 CLOUD ENGINE READY ✔"
 );
