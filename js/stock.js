@@ -1,9 +1,9 @@
 /* ==========================================================
-   stock.js — ONLINE ONLY (Option-B Cloud Master) — FINAL v11
-   • Cloud is primary source of truth
-   • Local is only temporary UI cache
-   • All writes → cloudSync
-   • Auto-resync → cloudPullAllIfAvailable()
+   stock.js — CLOUD ONLY — FINAL v12
+   ✔ No localStorage
+   ✔ Logout/Login safe
+   ✔ Multi-device sync safe
+   ✔ Cloud master only
 ========================================================== */
 
 const $  = s => document.querySelector(s);
@@ -11,24 +11,16 @@ const num = v => isNaN(Number(v)) ? 0 : Number(v);
 const toDisp = d => (typeof window.toDisplay === "function" ? toDisplay(d) : d);
 
 /* ==========================================================
-   SAVE STOCK (Cloud Master)
+   SAVE STOCK — CLOUD ONLY
 ========================================================== */
 window.saveStock = function () {
 
-  // 1️⃣ Local temporary cache (for instant UI only)
-  try {
-    localStorage.setItem("stock-data", JSON.stringify(window.stock));
-  } catch {}
-
-  // 2️⃣ Cloud Master Save
   if (typeof cloudSaveDebounced === "function") {
-    cloudSaveDebounced("stock", window.stock);
+    cloudSaveDebounced("stock", window.stock || []);
   }
 
-  // 3️⃣ Trigger global resync (other devices)
-  if (typeof cloudPullAllIfAvailable === "function") {
-    setTimeout(() => cloudPullAllIfAvailable(), 200);
-  }
+  /* Trigger render sync */
+  window.dispatchEvent(new Event("cloud-data-loaded"));
 };
 
 /* ==========================================================
@@ -50,11 +42,12 @@ $("#addStockBtn")?.addEventListener("click", () => {
   }
 
   const p = (window.stock || []).find(
-    x => x.type === type && x.name.toLowerCase() === name.toLowerCase()
+    x => x.type === type &&
+         x.name.toLowerCase() === name.toLowerCase()
   );
 
   if (!p) {
-    // New product
+
     window.stock.push({
       id: uid("stk"),
       type,
@@ -68,11 +61,13 @@ $("#addStockBtn")?.addEventListener("click", () => {
     });
 
   } else {
-    // Update existing product
+
     p.qty += qty;
     p.cost = cost;
 
-    if (!Array.isArray(p.history)) p.history = [];
+    if (!Array.isArray(p.history))
+      p.history = [];
+
     p.history.push({ date, qty, cost });
   }
 
@@ -81,16 +76,16 @@ $("#addStockBtn")?.addEventListener("click", () => {
   renderStock();
   window.updateUniversalBar?.();
 
-  // Clear input fields
   $("#pname").value = "";
-  $("#pqty").value = "";
+  $("#pqty").value  = "";
   $("#pcost").value = "";
 });
 
 /* ==========================================================
-   SHOW PURCHASE HISTORY
+   PURCHASE HISTORY
 ========================================================== */
 function showStockHistory(id) {
+
   const p = (window.stock || []).find(x => x.id === id);
   if (!p || !p.history?.length) {
     alert("No history available.");
@@ -101,16 +96,20 @@ function showStockHistory(id) {
   let totalCost = 0, totalQty = 0;
 
   p.history.forEach(h => {
-    const q = num(h.qty), c = num(h.cost);
+
+    const q = num(h.qty);
+    const c = num(h.cost);
     const dt = h.date ? toDisp(h.date) : "-";
 
     totalCost += q * c;
     totalQty  += q;
 
-    msg += `${dt} — ${q} qty × ₹${c} = ₹${q * c}\n`;
+    msg += `${dt} — ${q} qty × ₹${c} = ₹${q*c}\n`;
   });
 
-  const avg = totalQty ? (totalCost / totalQty).toFixed(2) : 0;
+  const avg = totalQty
+    ? (totalCost / totalQty).toFixed(2)
+    : 0;
 
   msg += `\nTotal Purchased Qty: ${totalQty}`;
   msg += `\nAverage Cost: ₹${avg}`;
@@ -120,9 +119,10 @@ function showStockHistory(id) {
 window.showStockHistory = showStockHistory;
 
 /* ==========================================================
-   CLEAR ALL STOCK
+   CLEAR STOCK
 ========================================================== */
 $("#clearStockBtn")?.addEventListener("click", () => {
+
   if (!confirm("Delete ALL stock?")) return;
 
   window.stock = [];
@@ -133,10 +133,12 @@ $("#clearStockBtn")?.addEventListener("click", () => {
 });
 
 /* ==========================================================
-   SET GLOBAL LIMIT FOR ALL ITEMS
+   GLOBAL LIMIT
 ========================================================== */
 $("#setLimitBtn")?.addEventListener("click", () => {
+
   const limit = num($("#globalLimit").value || 2);
+
   window.stock.forEach(p => p.limit = limit);
 
   window.saveStock();
@@ -144,9 +146,10 @@ $("#setLimitBtn")?.addEventListener("click", () => {
 });
 
 /* ==========================================================
-   STOCK QUICK SALE (Cash / Credit)
+   QUICK SALE
 ========================================================== */
 function stockQuickSale(i, mode) {
+
   const p = window.stock[i];
   if (!p) return;
 
@@ -154,13 +157,13 @@ function stockQuickSale(i, mode) {
   if (remain <= 0) return alert("No stock left.");
 
   const qty = num(prompt(`Enter Qty (Available: ${remain})`));
-  if (!qty || qty <= 0 || qty > remain) return;
+  if (!qty || qty > remain) return;
 
   const price = num(prompt("Enter Selling Price ₹:"));
-  if (!price || price <= 0) return;
+  if (!price) return;
 
-  let customer = "", phone = "";
-  if (mode === "Credit") {
+  let customer="", phone="";
+  if (mode==="Credit") {
     customer = prompt("Customer Name:") || "";
     phone    = prompt("Phone Number:") || "";
   }
@@ -202,9 +205,10 @@ function stockQuickSale(i, mode) {
 window.stockQuickSale = stockQuickSale;
 
 /* ==========================================================
-   RENDER STOCK TABLE
+   RENDER TABLE
 ========================================================== */
 function renderStock() {
+
   const tbody = $("#stockTable tbody");
   if (!tbody) return;
 
@@ -213,71 +217,68 @@ function renderStock() {
 
   let data = window.stock || [];
 
-  if (filterType !== "all") data = data.filter(p => p.type === filterType);
+  if (filterType !== "all")
+    data = data.filter(p => p.type === filterType);
+
   if (searchTxt)
     data = data.filter(p =>
       p.name.toLowerCase().includes(searchTxt) ||
       p.type.toLowerCase().includes(searchTxt)
     );
 
-  tbody.innerHTML = data.map((p, i) => {
+  tbody.innerHTML = data.map((p,i)=>{
+
     const remain = num(p.qty) - num(p.sold);
     const alert  = remain <= p.limit ? "⚠️" : "";
 
     return `
-      <tr>
-        <td>${toDisp(p.date)}</td>
-        <td>${p.type}</td>
-        <td>${p.name}</td>
-        <td>${p.qty}</td>
-        <td>${p.sold}</td>
-        <td>${remain}</td>
-        <td>${alert}</td>
-        <td>${p.limit}</td>
-        <td>
-          <button class="small-btn"
-                  style="background:#555;color:#fff;"
-                  onclick="showStockHistory('${p.id}')">📜</button>
-          <button class="small-btn" onclick="stockQuickSale(${i}, 'Paid')">Cash</button>
-          <button class="small-btn"
-                  onclick="stockQuickSale(${i}, 'Credit')"
-                  style="background:#facc15;color:black;">Credit</button>
-        </td>
-      </tr>`;
+    <tr>
+      <td>${toDisp(p.date)}</td>
+      <td>${p.type}</td>
+      <td>${p.name}</td>
+      <td>${p.qty}</td>
+      <td>${p.sold}</td>
+      <td>${remain}</td>
+      <td>${alert}</td>
+      <td>${p.limit}</td>
+      <td>
+        <button onclick="showStockHistory('${p.id}')">📜</button>
+        <button onclick="stockQuickSale(${i},'Paid')">Cash</button>
+        <button onclick="stockQuickSale(${i},'Credit')">Credit</button>
+      </td>
+    </tr>`;
   }).join("");
 
   updateStockInvestment();
 }
 
 /* ==========================================================
-   STOCK INVESTMENT (Remaining stock value)
+   INVESTMENT
 ========================================================== */
-function updateStockInvestment() {
-  const total = (window.stock || []).reduce((sum, p) => {
-    const remain = num(p.qty) - num(p.sold);
-    return sum + remain * num(p.cost);
-  }, 0);
+function updateStockInvestment(){
 
-  $("#stockInvValue").textContent = "₹" + total;
+  const total = (window.stock||[])
+    .reduce((sum,p)=>{
+      const remain = num(p.qty)-num(p.sold);
+      return sum + remain*num(p.cost);
+    },0);
+
+  $("#stockInvValue").textContent = "₹"+total;
 }
 
 /* ==========================================================
    FILTER EVENTS
 ========================================================== */
-$("#productSearch")?.addEventListener("input", renderStock);
-$("#filterType")?.addEventListener("change", renderStock);
+$("#productSearch")?.addEventListener("input",renderStock);
+$("#filterType")?.addEventListener("change",renderStock);
 
 /* ==========================================================
    INIT
 ========================================================== */
-window.addEventListener("load", () => {
+window.addEventListener("load",()=>{
+
   renderStock();
   updateStockInvestment();
   window.updateUniversalBar?.();
 
-  // 🔥 Safe re-sync after cloud pull
-  setTimeout(() => {
-    renderStock();
-    updateStockInvestment();
-  }, 250);
 });
