@@ -1,15 +1,16 @@
 /* ===========================================================
-   firebase.js — FINAL V16 (STABLE + COMPAT MODE + LOGIN GUARD)
+   firebase.js — FINAL V17 (CLOUD-ONLY + SESSION SAFE)
    ✔ No illegal return
    ✔ No double loading errors
    ✔ Auth + Firestore compat
-   ✔ Global methods safe
+   ✔ Login guard protected
+   ✔ Cloud-only session (No local cache)
 =========================================================== */
 
 console.log("%c🔥 firebase.js loaded", "color:#ff9800;font-weight:bold;");
 
 /* -----------------------------------------------------------
-   PREVENT DOUBLE LOAD (SAFE VERSION)
+   PREVENT DOUBLE LOAD
 ----------------------------------------------------------- */
 if (window.__firebase_loaded) {
   console.warn("firebase.js already loaded → skipped");
@@ -44,7 +45,7 @@ window.db   = db;
 console.log("%c☁️ Firebase connected!", "color:#4caf50;font-weight:bold;");
 
 /* -----------------------------------------------------------
-   PATHS
+   ROUTE GUARD PATHS
 ----------------------------------------------------------- */
 const PROTECTED = ["/tools/business-dashboard.html"];
 const AUTH_PAGES = ["/login.html", "/signup.html", "/reset.html"];
@@ -53,68 +54,79 @@ function path() {
   return window.location.pathname || "";
 }
 
-/* -----------------------------------------------------------
-   EMAIL HELPERS
------------------------------------------------------------ */
-function saveEmail(mail) {
-  try { localStorage.setItem("ks-user-email", mail); } catch {}
-}
-
-function clearEmail() {
-  try { localStorage.removeItem("ks-user-email"); } catch {}
-}
-
 /* ===========================================================
-   AUTH API (COMPAT)
+   AUTH API (CLOUD SESSION ONLY)
 =========================================================== */
 
+/* ---------------- LOGIN ---------------- */
 window.fsLogin = async (email, pw) => {
   const r = await auth.signInWithEmailAndPassword(email, pw);
-  saveEmail(r.user.email);
   return r;
 };
 
+/* ---------------- SIGNUP ---------------- */
 window.fsSignUp = async (email, pw) => {
   const r = await auth.createUserWithEmailAndPassword(email, pw);
-  saveEmail(r.user.email);
+
+  /* Optional: Email verification */
+  try {
+    await r.user.sendEmailVerification();
+  } catch {}
+
   return r;
 };
 
+/* ---------------- RESET ---------------- */
 window.fsSendPasswordReset = email =>
   auth.sendPasswordResetEmail(email);
 
+/* ---------------- LOGOUT ---------------- */
 window.fsLogout = async () => {
+
   try {
     await auth.signOut();
   } catch {}
-  clearEmail();
+
+  /* Hard redirect */
   window.location.href = "/login.html";
 };
 
+/* ---------------- CURRENT USER ---------------- */
 window.getFirebaseUser = () => auth.currentUser;
 
 /* ===========================================================
-   AUTH STATE LISTENER
+   AUTH STATE LISTENER (SESSION GUARD)
 =========================================================== */
 auth.onAuthStateChanged(async user => {
+
   const p = path();
 
   if (user) {
-    saveEmail(user.email);
-    console.log("%c🔐 Logged in:", "color:#03a9f4;font-weight:bold;", user.email);
 
+    console.log(
+      "%c🔐 Logged in:",
+      "color:#03a9f4;font-weight:bold;",
+      user.email
+    );
+
+    /* Redirect if on auth pages */
     if (AUTH_PAGES.some(x => p.endsWith(x))) {
       window.location.replace("/tools/business-dashboard.html");
     }
 
   } else {
-    clearEmail();
-    console.log("%c🔓 Logged out", "color:#f44336;font-weight:bold;");
 
+    console.log(
+      "%c🔓 Logged out",
+      "color:#f44336;font-weight:bold;"
+    );
+
+    /* Redirect if accessing protected */
     if (PROTECTED.some(x => p.endsWith(x))) {
       window.location.replace("/login.html");
     }
   }
+
 });
 
 console.log("%c⚙️ firebase.js READY ✔", "color:#03a9f4;font-weight:bold;");
