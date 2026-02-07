@@ -466,7 +466,27 @@
       clearDropdown();
       refresh();
     });
+/* --------------------------------------------------
+      CLEAR ALL SERVICES — CLOUD SAFE
+-------------------------------------------------- */
+qs("#clearServiceBtn")
+  ?.addEventListener("click", async () => {
 
+  if (!confirm(
+    "Delete ALL service history?\n\nThis cannot be undone."
+  )) return;
+
+  /* Clear array */
+  window.services = [];
+
+  /* Save to cloud */
+  saveServices();
+
+  /* Refresh UI */
+  buildDateFilter();
+  refresh();
+
+});
   /* --------------------------------------------------
         CLOUD SYNC LISTENER
   -------------------------------------------------- */
