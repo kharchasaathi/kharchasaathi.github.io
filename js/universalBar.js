@@ -1,9 +1,10 @@
 /* ===========================================================
-   universal-bar.js — CLOUD ONLY — FINAL v19
-   ✔ Credit-safe accounting
-   ✔ Cloud offsets sync
-   ✔ Collection integration
-   ✔ No localStorage dependency
+   universal-bar.js — FINAL v22 (OPTION-2 FULL SAFE)
+   ✔ Dashboard isolated
+   ✔ Collect persistent
+   ✔ Cloud offsets synced
+   ✔ Logout/Login safe
+   ✔ Multi-device safe
 =========================================================== */
 
 (function () {
@@ -17,30 +18,6 @@
   const OFFSET_KEY = "offsets";
 
   /* --------------------------------------------------
-        CLOUD LOAD / SAVE
-  -------------------------------------------------- */
-  async function loadOffsets() {
-
-    if (typeof cloudLoad !== "function")
-      return {};
-
-    try {
-      const d = await cloudLoad(OFFSET_KEY);
-      return (typeof d === "object" && d) ? d : {};
-    }
-    catch {
-      return {};
-    }
-  }
-
-  async function saveOffsets(obj) {
-
-    if (typeof cloudSaveDebounced === "function") {
-      cloudSaveDebounced(OFFSET_KEY, obj);
-    }
-  }
-
-  /* --------------------------------------------------
         GLOBAL OFFSETS STORE
   -------------------------------------------------- */
   window.__offsets = {
@@ -52,15 +29,48 @@
   };
 
   /* --------------------------------------------------
-        INIT OFFSETS
+        CLOUD LOAD
+  -------------------------------------------------- */
+  async function loadOffsets() {
+
+    if (typeof cloudLoad !== "function")
+      return {};
+
+    try {
+
+      const d = await cloudLoad(OFFSET_KEY);
+
+      return (typeof d === "object" && d)
+        ? d
+        : {};
+
+    } catch {
+
+      return {};
+    }
+  }
+
+  /* --------------------------------------------------
+        CLOUD SAVE
+  -------------------------------------------------- */
+  async function saveOffsets(obj) {
+
+    if (!window.__cloudReady) {
+      console.warn("⛔ Offsets save blocked");
+      return;
+    }
+
+    if (typeof cloudSaveDebounced === "function") {
+      cloudSaveDebounced(OFFSET_KEY, obj);
+    }
+  }
+
+  /* --------------------------------------------------
+        INIT OFFSETS (CLOUD SAFE)
   -------------------------------------------------- */
   async function initOffsets() {
 
-    /* Dashboard temporary clear guard */
-    if (window.__dashboardViewCleared) {
-      updateUniversalBar();
-      return;
-    }
+    if (!window.__cloudReady) return;
 
     const o = await loadOffsets();
 
@@ -76,7 +86,7 @@
   }
 
   /* --------------------------------------------------
-        CORE METRICS ENGINE
+        METRICS ENGINE
   -------------------------------------------------- */
   function computeMetrics() {
 
@@ -100,6 +110,7 @@
         pendingCredit += num(s.total);
 
       if (st === "paid") {
+
         saleProfit += num(s.profit);
         stockInvest += num(s.qty) * num(s.cost);
       }
@@ -111,6 +122,7 @@
       const st = String(j.status).toLowerCase();
 
       if (st === "paid") {
+
         serviceProfit += num(j.profit);
         serviceInvest += num(j.invest);
       }
@@ -156,28 +168,9 @@
   }
 
   /* --------------------------------------------------
-        UI UPDATE
+        UI UPDATE (NO DASHBOARD BLOCK)
   -------------------------------------------------- */
   function updateUniversalBar() {
-
-    if (window.__dashboardViewCleared) {
-
-      [
-        "unSaleProfit",
-        "unServiceProfit",
-        "unStockInv",
-        "unServiceInv",
-        "unExpenses",
-        "unCreditSales",
-        "unNetProfit"
-      ].forEach(id => {
-
-        const el = document.getElementById(id);
-        if (el) el.textContent = "₹0";
-      });
-
-      return;
-    }
 
     const m = computeMetrics();
     window.__unMetrics = m;
@@ -241,7 +234,7 @@
     if (amount <= 0 || amount > available)
       return alert("Invalid amount");
 
-    /* ---------- COLLECTION ENTRY ---------- */
+    /* COLLECTION ENTRY */
     window.addCollectionEntry?.(
       label,
       "",
@@ -250,27 +243,22 @@
 
     offs[key] += amount;
 
-    /* ---------- NET COLLECT FIX ---------- */
+    /* NET COLLECT AUTO OFFSET */
     if (kind === "net") {
 
-      const sales = window.sales || [];
-      const services = window.services || [];
-
       offs.sale =
-        sales.reduce((a, s) =>
-          a + (
-            String(s.status).toLowerCase() === "paid"
-            ? num(s.profit)
-            : 0
-          ), 0);
+        (window.sales || [])
+        .filter(s =>
+          String(s.status).toLowerCase() === "paid"
+        )
+        .reduce((a, s) => a + num(s.profit), 0);
 
       offs.service =
-        services.reduce((a, j) =>
-          a + (
-            String(j.status).toLowerCase() === "paid"
-            ? num(j.profit)
-            : 0
-          ), 0);
+        (window.services || [])
+        .filter(j =>
+          String(j.status).toLowerCase() === "paid"
+        )
+        .reduce((a, j) => a + num(j.profit), 0);
     }
 
     await saveOffsets(offs);
@@ -294,11 +282,15 @@
   });
 
   /* --------------------------------------------------
-        INIT
+        CLOUD READY INIT
   -------------------------------------------------- */
-  window.addEventListener("load", () => {
+  window.addEventListener(
+    "cloud-data-loaded",
+    () => {
 
-    setTimeout(initOffsets, 300);
-  });
+      initOffsets();
+      updateUniversalBar();
+    }
+  );
 
 })();
