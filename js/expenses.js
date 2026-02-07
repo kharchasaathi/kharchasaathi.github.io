@@ -1,6 +1,9 @@
 /* ===========================================================
-   expenses.js — ONLINE MODE — FINAL v13.2 FIXED
+   expenses.js — CLOUD ONLY — FINAL v14
 
+   ✔ No localStorage
+   ✔ Logout/Login safe
+   ✔ Multi-device sync safe
    ✔ Cancel = Profit NOT added
    ✔ OK = Profit added back
    ✔ Delete = History remove only
@@ -10,20 +13,21 @@
 
 
 /* ===========================================================
-   CLOUD + LOCAL SAVE
+   ☁️ CLOUD SAVE
 =========================================================== */
-function saveExpensesOnline() {
-  try {
-    localStorage.setItem("expenses-data", JSON.stringify(window.expenses));
-  } catch {}
+function saveExpenses() {
 
   if (typeof cloudSaveDebounced === "function") {
-    cloudSaveDebounced("expenses", window.expenses);
+    cloudSaveDebounced(
+      "expenses",
+      window.expenses || []
+    );
   }
 
-  if (typeof cloudPullAllIfAvailable === "function") {
-    setTimeout(() => cloudPullAllIfAvailable(), 200);
-  }
+  /* 🔄 Trigger realtime UI refresh */
+  window.dispatchEvent(
+    new Event("cloud-data-loaded")
+  );
 }
 
 
@@ -31,12 +35,16 @@ function saveExpensesOnline() {
    ENSURE DOM
 =========================================================== */
 function ensureExpenseDOM() {
+
   const section = qs("#expenses");
   if (!section) return;
 
   if (!qs("#expensesTable")) {
+
     const table = document.createElement("table");
+
     table.id = "expensesTable";
+
     table.innerHTML = `
       <thead>
         <tr>
@@ -49,13 +57,19 @@ function ensureExpenseDOM() {
       </thead>
       <tbody></tbody>
     `;
+
     section.appendChild(table);
   }
 
   if (!qs("#expTotal")) {
+
     const box = document.createElement("div");
+
     box.style.marginTop = "8px";
-    box.innerHTML = `<b>Total: ₹<span id="expTotal">0</span></b>`;
+
+    box.innerHTML =
+      `<b>Total: ₹<span id="expTotal">0</span></b>`;
+
     section.appendChild(box);
   }
 }
@@ -66,19 +80,31 @@ function ensureExpenseDOM() {
 =========================================================== */
 function addExpenseEntry() {
 
-  let date = qs("#expDate")?.value || todayDate();
-  const category = qs("#expCat")?.value?.trim();
-  const amount = Number(qs("#expAmount")?.value || 0);
-  const note = qs("#expNote")?.value?.trim();
+  let date =
+    qs("#expDate")?.value ||
+    todayDate();
+
+  const category =
+    qs("#expCat")?.value?.trim();
+
+  const amount =
+    Number(qs("#expAmount")?.value || 0);
+
+  const note =
+    qs("#expNote")?.value?.trim();
 
   if (!category || amount <= 0)
-    return alert("Enter category and valid amount!");
+    return alert(
+      "Enter category and valid amount!"
+    );
 
   date = toInternalIfNeeded(date);
 
-  window.expenses = window.expenses || [];
+  window.expenses =
+    window.expenses || [];
 
   window.expenses.push({
+
     id: uid("exp"),
     date,
     category,
@@ -86,7 +112,7 @@ function addExpenseEntry() {
     note
   });
 
-  saveExpensesOnline();
+  saveExpenses();
 
   renderExpenses();
   renderAnalytics?.();
@@ -99,24 +125,28 @@ function addExpenseEntry() {
 
 
 /* ===========================================================
-   DELETE EXPENSE — FIXED LOGIC
+   DELETE EXPENSE — SAFE PROFIT LOGIC
 =========================================================== */
 function deleteExpense(id) {
 
-  const exp = (window.expenses || []).find(e => e.id === id);
+  const exp =
+    (window.expenses || [])
+      .find(e => e.id === id);
+
   if (!exp) return;
 
   const addBack = confirm(
-    `Expense Amount: ₹${exp.amount}\n\nDo you want to add this amount back to Net Profit?`
+    `Expense Amount: ₹${exp.amount}\n\n` +
+    `Do you want to add this amount back to Net Profit?`
   );
 
-  /* Remove expense history */
-  window.expenses = window.expenses.filter(e => e.id !== id);
+  /* Remove history */
+  window.expenses =
+    window.expenses.filter(
+      e => e.id !== id
+    );
 
-  /* 🔥 KEY FIX
-     Cancel → Neutralize profit increase
-     OK     → Allow profit increase
-  */
+  /* 🔥 Profit neutralization */
   if (!addBack && window.__offsets) {
 
     window.__offsets.net =
@@ -124,11 +154,14 @@ function deleteExpense(id) {
       Number(exp.amount || 0);
 
     if (typeof cloudSaveDebounced === "function") {
-      cloudSaveDebounced("offsets", window.__offsets);
+      cloudSaveDebounced(
+        "offsets",
+        window.__offsets
+      );
     }
   }
 
-  saveExpensesOnline();
+  saveExpenses();
 
   renderExpenses();
   renderAnalytics?.();
@@ -139,24 +172,30 @@ window.deleteExpense = deleteExpense;
 
 
 /* ===========================================================
-   CLEAR ALL — FIXED LOGIC
+   CLEAR ALL EXPENSES
 =========================================================== */
-qs("#clearExpensesBtn")?.addEventListener("click", () => {
+qs("#clearExpensesBtn")
+?.addEventListener("click", () => {
 
-  if (!(window.expenses || []).length) return;
+  if (!(window.expenses || []).length)
+    return;
 
-  const total = window.expenses.reduce(
-    (a, e) => a + Number(e.amount || 0), 0
-  );
+  const total =
+    window.expenses.reduce(
+      (a, e) =>
+        a + Number(e.amount || 0),
+      0
+    );
 
   const addBack = confirm(
-    `Total Expenses: ₹${total}\n\nDo you want to add this amount back to Net Profit?`
+    `Total Expenses: ₹${total}\n\n` +
+    `Do you want to add this amount back to Net Profit?`
   );
 
   /* Clear history */
   window.expenses = [];
 
-  /* 🔥 KEY FIX */
+  /* 🔥 Profit neutralization */
   if (!addBack && window.__offsets) {
 
     window.__offsets.net =
@@ -164,11 +203,14 @@ qs("#clearExpensesBtn")?.addEventListener("click", () => {
       total;
 
     if (typeof cloudSaveDebounced === "function") {
-      cloudSaveDebounced("offsets", window.__offsets);
+      cloudSaveDebounced(
+        "offsets",
+        window.__offsets
+      );
     }
   }
 
-  saveExpensesOnline();
+  saveExpenses();
 
   renderExpenses();
   renderAnalytics?.();
@@ -184,47 +226,90 @@ function renderExpenses() {
 
   ensureExpenseDOM();
 
-  const tbody = qs("#expensesTable tbody");
-  const totalBox = qs("#expTotal");
+  const tbody =
+    qs("#expensesTable tbody");
+
+  const totalBox =
+    qs("#expTotal");
+
   if (!tbody) return;
 
   let total = 0;
 
-  tbody.innerHTML = (window.expenses || [])
-    .map(e => {
+  tbody.innerHTML =
+    (window.expenses || [])
+      .map(e => {
 
-      total += Number(e.amount || 0);
+        total +=
+          Number(e.amount || 0);
 
-      return `
-        <tr>
-          <td data-label="Date">${toDisplay(e.date)}</td>
-          <td data-label="Category">${esc(e.category)}</td>
-          <td data-label="Amount">₹${esc(e.amount)}</td>
-          <td data-label="Note">${esc(e.note || "-")}</td>
-          <td data-label="Action">
-            <button class="small-btn"
-              onclick="deleteExpense('${e.id}')"
-              style="background:#d32f2f;color:white;">
-              🗑 Delete
-            </button>
-          </td>
-        </tr>
-      `;
-    })
-    .join("");
+        return `
+          <tr>
+            <td data-label="Date">
+              ${toDisplay(e.date)}
+            </td>
 
-  if (totalBox) totalBox.textContent = total || 0;
+            <td data-label="Category">
+              ${esc(e.category)}
+            </td>
+
+            <td data-label="Amount">
+              ₹${esc(e.amount)}
+            </td>
+
+            <td data-label="Note">
+              ${esc(e.note || "-")}
+            </td>
+
+            <td data-label="Action">
+              <button
+                class="small-btn"
+                onclick="deleteExpense('${e.id}')"
+                style="background:#d32f2f;color:white;">
+                🗑 Delete
+              </button>
+            </td>
+          </tr>
+        `;
+      })
+      .join("");
+
+  if (totalBox)
+    totalBox.textContent = total || 0;
 }
 
 
 /* ===========================================================
    EVENTS
 =========================================================== */
-qs("#addExpenseBtn")?.addEventListener("click", addExpenseEntry);
+qs("#addExpenseBtn")
+?.addEventListener(
+  "click",
+  addExpenseEntry
+);
 
+
+/* ===========================================================
+   ☁️ CLOUD SYNC LISTENER
+=========================================================== */
+window.addEventListener(
+  "cloud-data-loaded",
+  renderExpenses
+);
+
+
+/* ===========================================================
+   INIT
+=========================================================== */
 window.addEventListener("load", () => {
+
   renderExpenses();
   updateUniversalBar?.();
+
 });
 
+
+/* ===========================================================
+   GLOBAL EXPORT
+=========================================================== */
 window.renderExpenses = renderExpenses;
