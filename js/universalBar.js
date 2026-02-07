@@ -1,13 +1,10 @@
 /* ===========================================================
-   universal-bar.js — FINAL v24 (OFFSET LOCK + BASELINE SAFE)
-
-   ✔ Collect baseline reset
-   ✔ Old profit never reappears
-   ✔ Cloud offsets synced
-   ✔ Offset save duplicate blocked
-   ✔ Logout/Login safe
-   ✔ Dashboard isolated
-   ✔ Multi-device safe
+   universal-bar.js — FINAL v25
+   ✔ Service profit auto calculation FIXED
+   ✔ Paid − Invest safe calc
+   ✔ Old records supported
+   ✔ Offset + Baseline lock safe
+   ✔ Cloud sync safe
 =========================================================== */
 
 (function () {
@@ -33,8 +30,6 @@
   };
 
   window.__universalBaseline = 0;
-
-  /* 🔒 OFFSET SAVE LOCK */
   window.__offsetSaveLock = false;
 
   /* --------------------------------------------------
@@ -118,14 +113,30 @@
       }
     });
 
-    /* ---------- SERVICES ---------- */
+    /* ==================================================
+          🔥 SERVICE PROFIT FIX — SAFE CALC
+    ================================================== */
     services.forEach(j => {
 
       const st = String(j.status).toLowerCase();
 
       if (st === "paid") {
-        serviceProfit += num(j.profit);
-        serviceInvest += num(j.invest);
+
+        const invest = num(j.invest);
+
+        /* SAFE PROFIT CALC */
+        let profit = num(j.profit);
+
+        if (!profit) {
+
+          const paid =
+            num(j.paid || j.total || j.amount);
+
+          profit = paid - invest;
+        }
+
+        serviceProfit += Math.max(0, profit);
+        serviceInvest += invest;
       }
 
       if (st === "credit")
@@ -139,7 +150,7 @@
 
     const offs = window.__offsets;
 
-    /* BASELINE LOCK APPLY */
+    /* BASELINE LOCK */
     const totalProfitRaw =
       saleProfit + serviceProfit;
 
@@ -245,7 +256,6 @@
     if (amount <= 0 || amount > available)
       return alert("Invalid amount");
 
-    /* COLLECTION ENTRY */
     window.addCollectionEntry?.(
       label,
       "",
@@ -269,9 +279,7 @@
       );
     }
 
-    /* ===================================================
-       🔒 OFFSET SAVE LOCK (NEW FIX)
-    =================================================== */
+    /* OFFSET SAVE LOCK */
     if (!window.__offsetSaveLock) {
 
       window.__offsetSaveLock = true;
