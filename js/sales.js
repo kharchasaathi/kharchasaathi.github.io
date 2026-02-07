@@ -1,11 +1,14 @@
 /* ===========================================================
-   sales.js — CLOUD ONLY — FINAL v22
+   sales.js — FINAL v23 (OPTION-2 CREDIT SAFE FIXED)
+
    ✔ No localStorage
    ✔ Logout/Login safe
    ✔ Multi-device sync safe
    ✔ Credit-safe accounting
+   ✔ Smart clear guard (real pending check)
    ✔ Instant universal update
 =========================================================== */
+
 
 /* -----------------------------------------------------------
    HELPER — Time in 12hr format
@@ -16,6 +19,7 @@ function getCurrentTime12hr() {
     minute: "2-digit"
   });
 }
+
 
 /* -----------------------------------------------------------
    REFRESH TYPE SELECTOR
@@ -33,20 +37,28 @@ function refreshSaleTypeSelector() {
   });
 }
 
+
 /* ===========================================================
    SAVE SALES — CLOUD ONLY
 =========================================================== */
 window.saveSales = function () {
 
-  if (typeof cloudSaveDebounced === "function") {
-    cloudSaveDebounced("sales", window.sales || []);
+  if (
+    typeof cloudSaveDebounced === "function" &&
+    window.__cloudReady
+  ) {
+    cloudSaveDebounced(
+      "sales",
+      window.sales || []
+    );
   }
 
-  /* 🔄 Trigger global UI refresh */
+  /* 🔄 Global refresh */
   window.dispatchEvent(
     new Event("cloud-data-loaded")
   );
 };
+
 
 /* ===========================================================
    ADD SALE ENTRY
@@ -114,6 +126,7 @@ function addSaleEntry({
   window.updateUniversalBar?.();
 }
 
+
 /* ===========================================================
    CREDIT → PAID COLLECTION
 =========================================================== */
@@ -169,6 +182,7 @@ function collectCreditSale(id) {
   alert("Credit Collected Successfully!");
 }
 window.collectCreditSale = collectCreditSale;
+
 
 /* ===========================================================
    RENDER SALES TABLE
@@ -269,6 +283,7 @@ function renderSales() {
 }
 window.renderSales = renderSales;
 
+
 /* ===========================================================
    FILTER EVENTS
 =========================================================== */
@@ -284,8 +299,9 @@ document.getElementById("saleView")
 document.getElementById("filterSalesBtn")
   ?.addEventListener("click", renderSales);
 
+
 /* ===========================================================
-   CLEAR SALES
+   CLEAR SALES — SMART CREDIT SAFE
 =========================================================== */
 document.getElementById("clearSalesBtn")
 ?.addEventListener("click", () => {
@@ -293,8 +309,19 @@ document.getElementById("clearSalesBtn")
   const view =
     document.getElementById("saleView")?.value || "all";
 
-  if (!(view === "cash" || view === "credit-paid"))
-    return alert("❌ Cannot clear Credit Pending data!");
+  /* ---------- REAL CREDIT CHECK ---------- */
+  const hasPendingCredit =
+    (window.sales || []).some(s =>
+      String(s.status).toLowerCase() === "credit"
+    );
+
+  if (hasPendingCredit &&
+     view !== "credit-pending")
+  {
+    return alert(
+      "❌ Cannot clear while Credit Pending exists!"
+    );
+  }
 
   if (!confirm("Clear ALL records in this view?"))
     return;
@@ -314,7 +341,10 @@ document.getElementById("clearSalesBtn")
       if (view === "credit-paid")
         return !(st === "paid" && fc);
 
-      return true;
+      if (view === "credit-pending")
+        return st !== "credit";
+
+      return false; // clear all
     });
 
   window.saveSales();
