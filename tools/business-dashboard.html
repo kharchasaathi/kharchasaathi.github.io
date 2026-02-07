@@ -832,88 +832,29 @@ body{
 <script src="https://www.gstatic.com/firebasejs/9.6.11/firebase-firestore-compat.js"></script>
 
 <!-- =============== AUTO SCRIPT LOADER + FIRESTORE SAFE =============== -->
-<script>
-window.addEventListener("load", () => {
+<!-- CORE -->
+<script src="/js/firebase.js"></script>
+<script src="/js/core.js"></script>
+<script src="/js/firestore-listeners.js"></script>
+<script src="/js/types.js"></script>
 
-  const v = Date.now();
+<!-- BUSINESS -->
+<script src="/js/stock.js"></script>
+<script src="/js/sales.js"></script>
+<script src="/js/service.js"></script>
+<script src="/js/wanting.js"></script>
+<script src="/js/expenses.js"></script>
+<script src="/js/collection.js"></script>
 
-  const files = [
+<!-- UNIVERSAL -->
+<script src="/js/universalBar.js"></script>
 
-    /* CORE */
-    "/js/core.js",
-    "/js/firebase.js",
-    "/js/firestore-listeners.js",
-    "/js/types.js",
+<!-- DASHBOARD -->
+<script src="/js/analytics.js"></script>
+<script src="/js/dashboard.js"></script>
 
-    /* BUSINESS */
-    "/js/stock.js",
-    "/js/sales.js",
-    "/js/service.js",
-    "/js/wanting.js",
-    "/js/expenses.js",
-    "/js/collection.js",
-
-    /* ✅ UNIVERSAL BEFORE ANALYTICS */
-    "/js/universalBar.js",
-
-    /* DASHBOARD */
-    "/js/analytics.js",
-    "/js/dashboard.js",
-
-    /* SECURITY */
-    "/js/security.js"
-  ];
-
-  files.reduce((p, file) => {
-
-    return p.then(() => new Promise(res => {
-
-      const s = document.createElement("script");
-
-      s.src = `${file}?v=${v}`;
-      s.async = false;
-
-      /* SUCCESS */
-      s.onload = () => {
-
-        console.log(
-          "%c✔ Loaded: " + file,
-          "color:#4caf50"
-        );
-
-        res();
-      };
-
-      /* ERROR */
-      s.onerror = () => {
-
-        console.error(
-          "%c❌ Failed: " + file,
-          "color:#f44336"
-        );
-
-        alert("Script load failed: " + file);
-      };
-
-      document.body.appendChild(s);
-
-    }));
-
-  }, Promise.resolve())
-
-  .then(() => {
-
-    console.log(
-      "%c🚀 ALL SCRIPTS LOADED!",
-      "color:#4caf50;font-weight:bold;"
-    );
-
-    window.__allScriptsLoaded = true;
-
-  });
-
-});
-</script>
+<!-- SECURITY -->
+<script src="/js/security.js"></script>
 
 <!-- =============== TAB SWITCHER + HOOKS =============== -->
 <script>
@@ -982,21 +923,7 @@ document.getElementById("logoutBtn")?.addEventListener("click", async () => {
 });
 </script>
 
-<!-- =============== LATE REFRESH =============== -->
-<script>
-window.addEventListener("load", () => {
-  function lateRefresh() {
-    if (!window.__allScriptsLoaded) return setTimeout(lateRefresh, 100);
 
-    // CLEANED (removed charts heavy auto refresh)
-    try { renderCollection?.(); } catch {}
-    try { renderExpenses?.(); } catch {}
-    try { updateSummaryCards?.(); } catch {}
-    try { updateUniversalBar?.(); } catch {}
-  }
-  lateRefresh();
-});
-</script>
 
 </body>
 </html>
