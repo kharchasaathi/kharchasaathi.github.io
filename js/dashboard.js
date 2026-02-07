@@ -1,16 +1,17 @@
 /* =========================================
-   dashboard.js — CLOUD ONLY — FINAL v2
+   dashboard.js — CLOUD ONLY — FINAL v3
    -----------------------------------------
    ✔ Dashboard View Clear = Cloud synced
    ✔ Logout/Login safe
    ✔ Multi-device safe
    ✔ Business data NOT deleted
    ✔ Analytics + UniversalBar protected
+   ✔ Syntax error fixed
 ========================================= */
 
 (function () {
 
-  const qs = s => document.querySelector(s);
+  const qs  = s => document.querySelector(s);
   const KEY = "dashboardViewCleared";
 
   /* ---------------------------------------
@@ -26,11 +27,15 @@
       const flag = await cloudLoad(KEY);
 
       if (flag === true || flag === "1") {
+
         window.__dashboardViewCleared = true;
+
         applyClearView();
       }
 
-    } catch {}
+    } catch (e) {
+      console.warn("Dashboard flag load failed:", e);
+    }
   }
 
   /* ---------------------------------------
@@ -44,24 +49,34 @@
   }
 
   /* ---------------------------------------
+        SAFE TEXT SETTER
+  --------------------------------------- */
+  function setText(id, value) {
+
+    const el = qs(id);
+
+    if (el) el.textContent = value;
+  }
+
+  /* ---------------------------------------
         APPLY CLEAR UI
   --------------------------------------- */
   function applyClearView() {
 
-    /* TODAY */
-    qs("#todaySales")?.textContent    = "₹0";
-    qs("#todayCredit")?.textContent   = "₹0";
-    qs("#todayExpenses")?.textContent = "₹0";
-    qs("#todayGross")?.textContent    = "₹0";
-    qs("#todayNet")?.textContent      = "₹0";
+    /* ---------- TODAY ---------- */
+    setText("#todaySales",    "₹0");
+    setText("#todayCredit",   "₹0");
+    setText("#todayExpenses", "₹0");
+    setText("#todayGross",    "₹0");
+    setText("#todayNet",      "₹0");
 
-    /* TOTAL */
-    qs("#dashProfit")?.textContent   = "₹0";
-    qs("#dashExpenses")?.textContent = "₹0";
-    qs("#dashCredit")?.textContent   = "₹0";
-    qs("#dashInv")?.textContent      = "₹0";
+    /* ---------- TOTAL ---------- */
+    setText("#dashProfit",   "₹0");
+    setText("#dashExpenses", "₹0");
+    setText("#dashCredit",   "₹0");
+    setText("#dashInv",      "₹0");
 
-    /* PIE DESTROY */
+    /* ---------- PIE DESTROY ---------- */
     if (window.cleanPieChart) {
       try {
         window.cleanPieChart.destroy();
@@ -69,7 +84,7 @@
       window.cleanPieChart = null;
     }
 
-    /* Universal bar reset view */
+    /* ---------- UNIVERSAL BAR ---------- */
     window.updateUniversalBar?.();
   }
 
