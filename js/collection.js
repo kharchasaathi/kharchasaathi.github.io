@@ -1,12 +1,13 @@
 /* ===========================================================
-   collection.js — CLOUD ONLY — FINAL v16
+   collection.js — FINAL v17 (OPTION-2 CLOUD SAFE)
 
    ✔ No localStorage
    ✔ Logout/Login safe
    ✔ Multi-device sync safe
    ✔ Stores ONLY collected amounts
-   ✔ No collect logic here
-   ✔ UniversalBar + Analytics compatible
+   ✔ UniversalBar compatible
+   ✔ Analytics compatible
+   ✔ Cloud-ready guarded
 =========================================================== */
 
 
@@ -26,9 +27,17 @@ function cNum(v) {
 
 
 /* ===========================================================
-   ☁️ CLOUD SAVE
+   ☁️ CLOUD SAVE (SAFE)
 =========================================================== */
 function saveCollections() {
+
+  /* Cloud ready guard */
+  if (!window.__cloudReady) {
+    console.warn(
+      "⛔ Collections save blocked — cloud not ready"
+    );
+    return;
+  }
 
   if (typeof cloudSaveDebounced === "function") {
     cloudSaveDebounced(
@@ -36,11 +45,6 @@ function saveCollections() {
       window.collections || []
     );
   }
-
-  /* 🔄 Trigger realtime UI refresh */
-  window.dispatchEvent(
-    new Event("cloud-data-loaded")
-  );
 }
 
 window.saveCollections = saveCollections;
@@ -48,7 +52,7 @@ window.saveCollections = saveCollections;
 
 /* ===========================================================
    ADD COLLECTION ENTRY
-   (CALLED FROM SALES / SERVICES / UNIVERSAL BAR)
+   (Called from Universal / Sales / Services)
 =========================================================== */
 window.addCollectionEntry = function (
   source,
@@ -85,7 +89,9 @@ window.addCollectionEntry = function (
 window.renderCollection = function () {
 
   const tbody =
-    qs("#collectionHistory tbody");
+    document.querySelector(
+      "#collectionHistory tbody"
+    );
 
   if (!tbody) return;
 
@@ -107,10 +113,13 @@ window.renderCollection = function () {
 
   tbody.innerHTML = list.map(e => `
     <tr>
+
       <td>
-        ${toDisplay
-          ? toDisplay(e.date)
-          : e.date}
+        ${
+          typeof toDisplay === "function"
+            ? toDisplay(e.date)
+            : e.date
+        }
       </td>
 
       <td>${escLocal(e.source)}</td>
@@ -118,6 +127,7 @@ window.renderCollection = function () {
       <td>${escLocal(e.details)}</td>
 
       <td>₹${cNum(e.amount)}</td>
+
     </tr>
   `).join("");
 };
@@ -125,7 +135,7 @@ window.renderCollection = function () {
 
 /* ===========================================================
    CLEAR COLLECTION HISTORY
-   (ONLY THIS TAB)
+   (Only this tab)
 =========================================================== */
 document.addEventListener("click", e => {
 
@@ -154,19 +164,11 @@ document.addEventListener("click", e => {
 window.addEventListener(
   "cloud-data-loaded",
   () => {
+
     renderCollection();
+    window.updateUniversalBar?.();
+    window.renderAnalytics?.();
+    window.updateSummaryCards?.();
+
   }
 );
-
-
-/* ===========================================================
-   INIT
-=========================================================== */
-window.addEventListener("load", () => {
-
-  renderCollection();
-  window.updateUniversalBar?.();
-  window.renderAnalytics?.();
-  window.updateSummaryCards?.();
-
-});
