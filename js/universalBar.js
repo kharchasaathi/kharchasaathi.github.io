@@ -1,10 +1,13 @@
 /* ===========================================================
-   universal-bar.js — FINAL v25
-   ✔ Service profit auto calculation FIXED
-   ✔ Paid − Invest safe calc
-   ✔ Old records supported
-   ✔ Offset + Baseline lock safe
-   ✔ Cloud sync safe
+   universal-bar.js — FINAL v26 (FRESH PROFIT ENGINE)
+
+   ✔ Sale & Service profit separated
+   ✔ No cross subtraction bug
+   ✔ Fresh profit after collect only
+   ✔ Baseline hard lock
+   ✔ Service calc fixed
+   ✔ Expenses safe subtract
+   ✔ Cloud offsets safe
 =========================================================== */
 
 (function () {
@@ -60,7 +63,7 @@
   }
 
   /* --------------------------------------------------
-        INIT CLOUD DATA
+        INIT CLOUD
   -------------------------------------------------- */
   async function initCloud() {
 
@@ -84,7 +87,7 @@
   }
 
   /* --------------------------------------------------
-        METRICS ENGINE
+        METRICS ENGINE (FULL FIXED)
   -------------------------------------------------- */
   function computeMetrics() {
 
@@ -92,14 +95,14 @@
     const services = window.services || [];
     const expenses = window.expenses || [];
 
-    let saleProfit     = 0;
-    let serviceProfit  = 0;
-    let pendingCredit  = 0;
-    let expensesTotal  = 0;
-    let stockInvest    = 0;
-    let serviceInvest  = 0;
+    let saleProfitAll    = 0;
+    let serviceProfitAll = 0;
+    let pendingCredit    = 0;
+    let expensesTotal    = 0;
+    let stockInvestAll   = 0;
+    let serviceInvestAll = 0;
 
-    /* ---------- SALES ---------- */
+    /* ================= SALES ================= */
     sales.forEach(s => {
 
       const st = String(s.status).toLowerCase();
@@ -108,14 +111,15 @@
         pendingCredit += num(s.total);
 
       if (st === "paid") {
-        saleProfit += num(s.profit);
-        stockInvest += num(s.qty) * num(s.cost);
+
+        saleProfitAll += num(s.profit);
+
+        stockInvestAll +=
+          num(s.qty) * num(s.cost);
       }
     });
 
-    /* ==================================================
-          🔥 SERVICE PROFIT FIX — SAFE CALC
-    ================================================== */
+    /* ================= SERVICES ================= */
     services.forEach(j => {
 
       const st = String(j.status).toLowerCase();
@@ -124,7 +128,7 @@
 
         const invest = num(j.invest);
 
-        /* SAFE PROFIT CALC */
+        /* SAFE PROFIT */
         let profit = num(j.profit);
 
         if (!profit) {
@@ -135,44 +139,62 @@
           profit = paid - invest;
         }
 
-        serviceProfit += Math.max(0, profit);
-        serviceInvest += invest;
+        serviceProfitAll +=
+          Math.max(0, profit);
+
+        serviceInvestAll += invest;
       }
 
       if (st === "credit")
         pendingCredit += num(j.remaining);
     });
 
-    /* ---------- EXPENSES ---------- */
+    /* ================= EXPENSES ================= */
     expenses.forEach(e => {
       expensesTotal += num(e.amount);
     });
 
-    const offs = window.__offsets;
+    /* ==================================================
+          🔒 BASELINE SEPARATION
+    ================================================== */
 
-    /* BASELINE LOCK */
-    const totalProfitRaw =
-      saleProfit + serviceProfit;
+    const totalProfitAll =
+      saleProfitAll + serviceProfitAll;
 
     const baseline =
       num(window.__universalBaseline);
 
-    const totalProfit =
-      Math.max(0, totalProfitRaw - baseline);
+    const freshProfit =
+      Math.max(0, totalProfitAll - baseline);
 
+    /* ==================================================
+          FINAL METRICS
+    ================================================== */
     return {
 
       saleProfitCollected:
-        Math.max(0, saleProfit - offs.sale),
+        Math.max(
+          0,
+          saleProfitAll - window.__offsets.sale
+        ),
 
       serviceProfitCollected:
-        Math.max(0, serviceProfit - offs.service),
+        Math.max(
+          0,
+          serviceProfitAll - window.__offsets.service
+        ),
 
       stockInvestSold:
-        Math.max(0, stockInvest - offs.stock),
+        Math.max(
+          0,
+          stockInvestAll - window.__offsets.stock
+        ),
 
       serviceInvestCompleted:
-        Math.max(0, serviceInvest - offs.servInv),
+        Math.max(
+          0,
+          serviceInvestAll - window.__offsets.servInv
+        ),
 
       pendingCreditTotal:
         pendingCredit,
@@ -183,8 +205,8 @@
       netProfit:
         Math.max(
           0,
-          (totalProfit - expensesTotal)
-          - offs.net
+          freshProfit - expensesTotal
+          - window.__offsets.net
         )
     };
   }
@@ -223,23 +245,9 @@
 
     const map = {
 
-      net: [
-        "Net Profit",
-        m.netProfit,
-        "net"
-      ],
-
-      stock: [
-        "Stock Investment",
-        m.stockInvestSold,
-        "stock"
-      ],
-
-      service: [
-        "Service Investment",
-        m.serviceInvestCompleted,
-        "servInv"
-      ]
+      net:     ["Net Profit",        m.netProfit,     "net"],
+      stock:   ["Stock Investment", m.stockInvestSold,"stock"],
+      service: ["Service Investment",m.serviceInvestCompleted,"servInv"]
     };
 
     if (!map[kind]) return;
@@ -256,6 +264,7 @@
     if (amount <= 0 || amount > available)
       return alert("Invalid amount");
 
+    /* COLLECTION ENTRY */
     window.addCollectionEntry?.(
       label,
       "",
@@ -264,14 +273,13 @@
 
     offs[key] += amount;
 
-    /* BASELINE SHIFT */
+    /* BASELINE SHIFT ONLY FOR NET */
     if (kind === "net") {
 
-      const currentProfit =
-        (window.__unMetrics?.netProfit || 0);
+      const fresh =
+        window.__unMetrics?.netProfit || 0;
 
-      window.__universalBaseline +=
-        currentProfit;
+      window.__universalBaseline += fresh;
 
       await saveCloud(
         BASELINE_KEY,
@@ -279,7 +287,7 @@
       );
     }
 
-    /* OFFSET SAVE LOCK */
+    /* SAVE OFFSETS */
     if (!window.__offsetSaveLock) {
 
       window.__offsetSaveLock = true;
@@ -313,7 +321,7 @@
   });
 
   /* --------------------------------------------------
-        CLOUD READY INIT
+        CLOUD READY
   -------------------------------------------------- */
   window.addEventListener(
     "cloud-data-loaded",
