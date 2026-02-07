@@ -1,9 +1,10 @@
 /* ===========================================================
-   universal-bar.js — FINAL v23 (BASELINE LOCK SAFE)
+   universal-bar.js — FINAL v24 (OFFSET LOCK + BASELINE SAFE)
 
    ✔ Collect baseline reset
    ✔ Old profit never reappears
    ✔ Cloud offsets synced
+   ✔ Offset save duplicate blocked
    ✔ Logout/Login safe
    ✔ Dashboard isolated
    ✔ Multi-device safe
@@ -32,6 +33,9 @@
   };
 
   window.__universalBaseline = 0;
+
+  /* 🔒 OFFSET SAVE LOCK */
+  window.__offsetSaveLock = false;
 
   /* --------------------------------------------------
         CLOUD LOAD
@@ -135,10 +139,7 @@
 
     const offs = window.__offsets;
 
-    /* ===================================================
-       🧠 BASELINE LOCK APPLY
-    =================================================== */
-
+    /* BASELINE LOCK APPLY */
     const totalProfitRaw =
       saleProfit + serviceProfit;
 
@@ -253,10 +254,7 @@
 
     offs[key] += amount;
 
-    /* ===================================================
-       🧠 BASELINE SHIFT (LOCK OLD PROFIT)
-    =================================================== */
-
+    /* BASELINE SHIFT */
     if (kind === "net") {
 
       const currentProfit =
@@ -271,7 +269,22 @@
       );
     }
 
-    await saveCloud(OFFSET_KEY, offs);
+    /* ===================================================
+       🔒 OFFSET SAVE LOCK (NEW FIX)
+    =================================================== */
+    if (!window.__offsetSaveLock) {
+
+      window.__offsetSaveLock = true;
+
+      await saveCloud(
+        OFFSET_KEY,
+        offs
+      );
+
+      setTimeout(() => {
+        window.__offsetSaveLock = false;
+      }, 500);
+    }
 
     updateUniversalBar();
     renderCollection?.();
