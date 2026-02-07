@@ -839,16 +839,13 @@ window.addEventListener("load", () => {
 
   const files = [
 
-    /* ================= CORE SYSTEM ================= */
+    /* CORE */
     "/js/core.js",
     "/js/firebase.js",
-
-    /* 🔥 REALTIME FIRESTORE LISTENERS (SAFE) */
     "/js/firestore-listeners.js",
-
     "/js/types.js",
 
-    /* ================= BUSINESS MODULES ================= */
+    /* BUSINESS */
     "/js/stock.js",
     "/js/sales.js",
     "/js/service.js",
@@ -856,31 +853,27 @@ window.addEventListener("load", () => {
     "/js/expenses.js",
     "/js/collection.js",
 
-    /* ================= DASHBOARD + ANALYTICS ================= */
+    /* ✅ UNIVERSAL BEFORE ANALYTICS */
+    "/js/universalBar.js",
+
+    /* DASHBOARD */
     "/js/analytics.js",
     "/js/dashboard.js",
 
-    /* ================= UI SYSTEM ================= */
-    "/js/universalBar.js",
+    /* SECURITY */
     "/js/security.js"
   ];
 
-  /* =====================================================
-     SEQUENTIAL SCRIPT LOADER
-  ===================================================== */
   files.reduce((p, file) => {
 
     return p.then(() => new Promise(res => {
 
       const s = document.createElement("script");
 
-      /* Cache-busting */
       s.src = `${file}?v=${v}`;
-
-      /* Keep order stable */
       s.async = false;
 
-      /* Success */
+      /* SUCCESS */
       s.onload = () => {
 
         console.log(
@@ -891,7 +884,7 @@ window.addEventListener("load", () => {
         res();
       };
 
-      /* Error */
+      /* ERROR */
       s.onerror = () => {
 
         console.error(
