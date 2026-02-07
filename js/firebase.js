@@ -1,10 +1,11 @@
 /* ===========================================================
-firebase.js — FINAL V20 (OPTION-2 SAFE ENGINE)
+firebase.js — FINAL V21 (OPTION-2 + DASHBOARD OFFSET)
+
 ✔ Pulls ALL business data
 ✔ Prevents empty overwrite
 ✔ Duplicate pull blocked
 ✔ Offsets cloud synced
-✔ Dashboard clear = UI only
+✔ Dashboard clear persistent
 ✔ Multi-device data safe
 =========================================================== */
 
@@ -97,7 +98,7 @@ function cloudSaveDebounced(key,value){
 window.cloudSaveDebounced=cloudSaveDebounced;
 
 /* ===========================================================
-🌍 FULL CLOUD PULL (NO DASHBOARD FLAG)
+🌍 FULL CLOUD PULL (WITH DASHBOARD OFFSET)
 =========================================================== */
 async function cloudPullAll(){
 
@@ -114,7 +115,8 @@ async function cloudPullAll(){
     "expenses",
     "services",
     "collections",
-    "offsets"
+    "offsets",
+    "dashboardOffset"   // ✅ NEW KEY
   ];
 
   const results=await Promise.all(
@@ -129,7 +131,8 @@ async function cloudPullAll(){
     expenses,
     services,
     collections,
-    offsets
+    offsets,
+    dashboardOffset   // ✅ NEW
   ]=results;
 
   if(types!==null)       window.types=types;
@@ -148,6 +151,12 @@ async function cloudPullAll(){
     stock:0,
     servInv:0
   },offsets||{});
+
+  /* =======================================================
+     DASHBOARD OFFSET INIT
+  ======================================================= */
+  window.__dashboardOffset =
+    Number(dashboardOffset || 0);
 
   window.__cloudPulled=true;
   window.__cloudReady=true;
