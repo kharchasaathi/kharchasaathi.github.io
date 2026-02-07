@@ -1,9 +1,11 @@
 /* ===========================================================
-   universal-bar.js — FINAL v22 (OPTION-2 FULL SAFE)
-   ✔ Dashboard isolated
-   ✔ Collect persistent
+   universal-bar.js — FINAL v23 (BASELINE LOCK SAFE)
+
+   ✔ Collect baseline reset
+   ✔ Old profit never reappears
    ✔ Cloud offsets synced
    ✔ Logout/Login safe
+   ✔ Dashboard isolated
    ✔ Multi-device safe
 =========================================================== */
 
@@ -15,10 +17,11 @@
   const num = v => (isNaN(v = Number(v))) ? 0 : Number(v);
   const money = v => "₹" + Math.round(num(v));
 
-  const OFFSET_KEY = "offsets";
+  const OFFSET_KEY   = "offsets";
+  const BASELINE_KEY = "universalBaseline";
 
   /* --------------------------------------------------
-        GLOBAL OFFSETS STORE
+        GLOBAL STORES
   -------------------------------------------------- */
   window.__offsets = {
     net: 0,
@@ -28,59 +31,55 @@
     servInv: 0
   };
 
+  window.__universalBaseline = 0;
+
   /* --------------------------------------------------
         CLOUD LOAD
   -------------------------------------------------- */
-  async function loadOffsets() {
+  async function loadCloud(key) {
 
     if (typeof cloudLoad !== "function")
-      return {};
+      return null;
 
     try {
-
-      const d = await cloudLoad(OFFSET_KEY);
-
-      return (typeof d === "object" && d)
-        ? d
-        : {};
-
+      return await cloudLoad(key);
     } catch {
-
-      return {};
+      return null;
     }
   }
 
   /* --------------------------------------------------
         CLOUD SAVE
   -------------------------------------------------- */
-  async function saveOffsets(obj) {
+  async function saveCloud(key, value) {
 
-    if (!window.__cloudReady) {
-      console.warn("⛔ Offsets save blocked");
-      return;
-    }
+    if (!window.__cloudReady) return;
 
     if (typeof cloudSaveDebounced === "function") {
-      cloudSaveDebounced(OFFSET_KEY, obj);
+      cloudSaveDebounced(key, value);
     }
   }
 
   /* --------------------------------------------------
-        INIT OFFSETS (CLOUD SAFE)
+        INIT CLOUD DATA
   -------------------------------------------------- */
-  async function initOffsets() {
+  async function initCloud() {
 
     if (!window.__cloudReady) return;
 
-    const o = await loadOffsets();
+    const offsets  = await loadCloud(OFFSET_KEY);
+    const baseline = await loadCloud(BASELINE_KEY);
 
     Object.assign(window.__offsets, {
-      net:     num(o.net),
-      sale:    num(o.sale),
-      service: num(o.service),
-      stock:   num(o.stock),
-      servInv: num(o.servInv)
+      net:     num(offsets?.net),
+      sale:    num(offsets?.sale),
+      service: num(offsets?.service),
+      stock:   num(offsets?.stock),
+      servInv: num(offsets?.servInv)
     });
+
+    window.__universalBaseline =
+      num(baseline);
 
     updateUniversalBar();
   }
@@ -110,7 +109,6 @@
         pendingCredit += num(s.total);
 
       if (st === "paid") {
-
         saleProfit += num(s.profit);
         stockInvest += num(s.qty) * num(s.cost);
       }
@@ -122,7 +120,6 @@
       const st = String(j.status).toLowerCase();
 
       if (st === "paid") {
-
         serviceProfit += num(j.profit);
         serviceInvest += num(j.invest);
       }
@@ -137,6 +134,19 @@
     });
 
     const offs = window.__offsets;
+
+    /* ===================================================
+       🧠 BASELINE LOCK APPLY
+    =================================================== */
+
+    const totalProfitRaw =
+      saleProfit + serviceProfit;
+
+    const baseline =
+      num(window.__universalBaseline);
+
+    const totalProfit =
+      Math.max(0, totalProfitRaw - baseline);
 
     return {
 
@@ -161,14 +171,14 @@
       netProfit:
         Math.max(
           0,
-          (saleProfit + serviceProfit - expensesTotal)
+          (totalProfit - expensesTotal)
           - offs.net
         )
     };
   }
 
   /* --------------------------------------------------
-        UI UPDATE (NO DASHBOARD BLOCK)
+        UI UPDATE
   -------------------------------------------------- */
   function updateUniversalBar() {
 
@@ -196,7 +206,7 @@
   -------------------------------------------------- */
   async function collect(kind) {
 
-    const m = window.__unMetrics || {};
+    const m    = window.__unMetrics || {};
     const offs = window.__offsets;
 
     const map = {
@@ -243,25 +253,25 @@
 
     offs[key] += amount;
 
-    /* NET COLLECT AUTO OFFSET */
+    /* ===================================================
+       🧠 BASELINE SHIFT (LOCK OLD PROFIT)
+    =================================================== */
+
     if (kind === "net") {
 
-      offs.sale =
-        (window.sales || [])
-        .filter(s =>
-          String(s.status).toLowerCase() === "paid"
-        )
-        .reduce((a, s) => a + num(s.profit), 0);
+      const currentProfit =
+        (window.__unMetrics?.netProfit || 0);
 
-      offs.service =
-        (window.services || [])
-        .filter(j =>
-          String(j.status).toLowerCase() === "paid"
-        )
-        .reduce((a, j) => a + num(j.profit), 0);
+      window.__universalBaseline +=
+        currentProfit;
+
+      await saveCloud(
+        BASELINE_KEY,
+        window.__universalBaseline
+      );
     }
 
-    await saveOffsets(offs);
+    await saveCloud(OFFSET_KEY, offs);
 
     updateUniversalBar();
     renderCollection?.();
@@ -288,7 +298,7 @@
     "cloud-data-loaded",
     () => {
 
-      initOffsets();
+      initCloud();
       updateUniversalBar();
     }
   );
