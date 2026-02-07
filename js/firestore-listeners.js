@@ -1,25 +1,38 @@
 /* ===========================================================
-   firestore-listeners.js — FINAL SAFE v1
+   firestore-listeners.js — FINAL MERGED SAFE v3
 
    ✔ Realtime cloud sync
-   ✔ Multi-device safe
    ✔ Razorpay ready
-   ✔ Offset compatible
-   ✔ Dashboard baseline safe
+   ✔ Collect offsets synced
+   ✔ Dashboard baseline synced
+   ✔ Multi-device safe
+   ✔ Logout/Login safe
    ✔ Duplicate listener blocked
+   ✔ Function load guard added
 =========================================================== */
 
 (function () {
 
-  if (window.__listenersAttached) {
+  /* --------------------------------------------------
+        DUPLICATE BLOCK
+  -------------------------------------------------- */
+  if (window.__fsListenersAttached) {
     console.warn("🔥 Firestore listeners already attached");
     return;
   }
 
-  window.__listenersAttached = true;
+  window.__fsListenersAttached = true;
+
+  console.log(
+    "%c👂 Attaching Firestore listeners...",
+    "color:#03a9f4;font-weight:bold;"
+  );
+
+  const db   = window.db;
+  const auth = window.auth;
 
   /* --------------------------------------------------
-        WAIT FOR AUTH + CLOUD READY
+        WAIT FOR CLOUD READY
   -------------------------------------------------- */
   function waitForCloudReady(cb) {
 
@@ -39,46 +52,58 @@
   }
 
   /* --------------------------------------------------
+        SAFE UI REFRESH
+  -------------------------------------------------- */
+  function safeRefresh() {
+
+    if (typeof renderSales === "function")
+      renderSales();
+
+    if (typeof renderCollection === "function")
+      renderCollection();
+
+    if (typeof renderAnalytics === "function")
+      renderAnalytics();
+
+    if (typeof updateSummaryCards === "function")
+      updateSummaryCards();
+
+    if (typeof updateUniversalBar === "function")
+      updateUniversalBar();
+  }
+
+  /* --------------------------------------------------
         ATTACH LISTENERS
   -------------------------------------------------- */
   function attachListeners() {
 
     const uid = auth.currentUser.uid;
 
-    const baseRef =
+    const ref =
       db.collection("users")
         .doc(uid)
         .collection("data");
 
-    console.log(
-      "%c👂 Attaching Firestore listeners...",
-      "color:#03a9f4;font-weight:bold;"
-    );
-
     /* ==================================================
-       SALES LISTENER
+       SALES
     ================================================== */
-    baseRef.doc("sales")
+    ref.doc("sales")
       .onSnapshot(snap => {
 
         if (!snap.exists) return;
 
-        const data = snap.data().value || [];
+        window.sales =
+          snap.data().value || [];
 
-        window.sales = data;
-
-        renderSales?.();
-        updateUniversalBar?.();
-        renderAnalytics?.();
-        updateSummaryCards?.();
+        safeRefresh();
 
         console.log("🔄 Sales synced");
       });
 
     /* ==================================================
-       COLLECTIONS LISTENER
+       COLLECTIONS
     ================================================== */
-    baseRef.doc("collections")
+    ref.doc("collections")
       .onSnapshot(snap => {
 
         if (!snap.exists) return;
@@ -86,17 +111,47 @@
         window.collections =
           snap.data().value || [];
 
-        renderCollection?.();
-        updateUniversalBar?.();
-        renderAnalytics?.();
+        safeRefresh();
 
         console.log("🔄 Collections synced");
       });
 
     /* ==================================================
-       OFFSETS LISTENER
+       SERVICES
     ================================================== */
-    baseRef.doc("offsets")
+    ref.doc("services")
+      .onSnapshot(snap => {
+
+        if (!snap.exists) return;
+
+        window.services =
+          snap.data().value || [];
+
+        safeRefresh();
+
+        console.log("🔄 Services synced");
+      });
+
+    /* ==================================================
+       EXPENSES
+    ================================================== */
+    ref.doc("expenses")
+      .onSnapshot(snap => {
+
+        if (!snap.exists) return;
+
+        window.expenses =
+          snap.data().value || [];
+
+        safeRefresh();
+
+        console.log("🔄 Expenses synced");
+      });
+
+    /* ==================================================
+       OFFSETS (COLLECT BASELINE)
+    ================================================== */
+    ref.doc("offsets")
       .onSnapshot(snap => {
 
         if (!snap.exists) return;
@@ -106,15 +161,16 @@
           snap.data().value || {}
         );
 
-        updateUniversalBar?.();
+        if (typeof updateUniversalBar === "function")
+          updateUniversalBar();
 
         console.log("🔄 Offsets synced");
       });
 
     /* ==================================================
-       DASHBOARD OFFSET LISTENER
+       DASHBOARD OFFSET (CLEAR BASELINE)
     ================================================== */
-    baseRef.doc("dashboardOffset")
+    ref.doc("dashboardOffset")
       .onSnapshot(snap => {
 
         if (!snap.exists) return;
@@ -122,8 +178,11 @@
         window.__dashboardOffset =
           Number(snap.data().value || 0);
 
-        renderAnalytics?.();
-        updateSummaryCards?.();
+        if (typeof renderAnalytics === "function")
+          renderAnalytics();
+
+        if (typeof updateSummaryCards === "function")
+          updateSummaryCards();
 
         console.log("🔄 Dashboard offset synced");
       });
