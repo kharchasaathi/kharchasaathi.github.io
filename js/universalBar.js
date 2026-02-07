@@ -1,29 +1,48 @@
 /* ===========================================================
-   universal-bar.js — CREDIT SAFE VERSION (v18 FIXED)
+   universal-bar.js — CLOUD ONLY — FINAL v19
+   ✔ Credit-safe accounting
+   ✔ Cloud offsets sync
+   ✔ Collection integration
+   ✔ No localStorage dependency
 =========================================================== */
 
 (function () {
 
+  /* --------------------------------------------------
+        HELPERS
+  -------------------------------------------------- */
   const num = v => (isNaN(v = Number(v))) ? 0 : Number(v);
   const money = v => "₹" + Math.round(num(v));
 
   const OFFSET_KEY = "offsets";
 
+  /* --------------------------------------------------
+        CLOUD LOAD / SAVE
+  -------------------------------------------------- */
   async function loadOffsets() {
-    if (typeof cloudLoad !== "function") return {};
+
+    if (typeof cloudLoad !== "function")
+      return {};
+
     try {
       const d = await cloudLoad(OFFSET_KEY);
-      return typeof d === "object" && d ? d : {};
-    } catch {
+      return (typeof d === "object" && d) ? d : {};
+    }
+    catch {
       return {};
     }
   }
 
   async function saveOffsets(obj) {
-    cloudSaveDebounced?.(OFFSET_KEY, obj);
+
+    if (typeof cloudSaveDebounced === "function") {
+      cloudSaveDebounced(OFFSET_KEY, obj);
+    }
   }
 
-  /* -------------------------------------------------- */
+  /* --------------------------------------------------
+        GLOBAL OFFSETS STORE
+  -------------------------------------------------- */
   window.__offsets = {
     net: 0,
     sale: 0,
@@ -32,9 +51,12 @@
     servInv: 0
   };
 
+  /* --------------------------------------------------
+        INIT OFFSETS
+  -------------------------------------------------- */
   async function initOffsets() {
 
-    /* 🔒 DASHBOARD CLEAR GUARD */
+    /* Dashboard temporary clear guard */
     if (window.__dashboardViewCleared) {
       updateUniversalBar();
       return;
@@ -54,7 +76,7 @@
   }
 
   /* --------------------------------------------------
-        CORE METRICS
+        CORE METRICS ENGINE
   -------------------------------------------------- */
   function computeMetrics() {
 
@@ -62,15 +84,16 @@
     const services = window.services || [];
     const expenses = window.expenses || [];
 
-    let saleProfit = 0;
-    let serviceProfit = 0;
-    let pendingCredit = 0;
-    let expensesTotal = 0;
+    let saleProfit     = 0;
+    let serviceProfit  = 0;
+    let pendingCredit  = 0;
+    let expensesTotal  = 0;
+    let stockInvest    = 0;
+    let serviceInvest  = 0;
 
-    let stockInvest = 0;
-    let serviceInvest = 0;
-
+    /* ---------- SALES ---------- */
     sales.forEach(s => {
+
       const st = String(s.status).toLowerCase();
 
       if (st === "credit")
@@ -82,7 +105,9 @@
       }
     });
 
+    /* ---------- SERVICES ---------- */
     services.forEach(j => {
+
       const st = String(j.status).toLowerCase();
 
       if (st === "paid") {
@@ -94,6 +119,7 @@
         pendingCredit += num(j.remaining);
     });
 
+    /* ---------- EXPENSES ---------- */
     expenses.forEach(e => {
       expensesTotal += num(e.amount);
     });
@@ -101,6 +127,7 @@
     const offs = window.__offsets;
 
     return {
+
       saleProfitCollected:
         Math.max(0, saleProfit - offs.sale),
 
@@ -113,23 +140,29 @@
       serviceInvestCompleted:
         Math.max(0, serviceInvest - offs.servInv),
 
-      pendingCreditTotal: pendingCredit,
-      expensesLive: expensesTotal,
+      pendingCreditTotal:
+        pendingCredit,
 
-      netProfit: Math.max(
-        0,
-        (saleProfit + serviceProfit - expensesTotal) - offs.net
-      )
+      expensesLive:
+        expensesTotal,
+
+      netProfit:
+        Math.max(
+          0,
+          (saleProfit + serviceProfit - expensesTotal)
+          - offs.net
+        )
     };
   }
 
-  /* -------------------------------------------------- */
+  /* --------------------------------------------------
+        UI UPDATE
+  -------------------------------------------------- */
   function updateUniversalBar() {
 
-    /* 🔒 DASHBOARD CLEAR GUARD */
     if (window.__dashboardViewCleared) {
 
-      const ids = [
+      [
         "unSaleProfit",
         "unServiceProfit",
         "unStockInv",
@@ -137,9 +170,8 @@
         "unExpenses",
         "unCreditSales",
         "unNetProfit"
-      ];
+      ].forEach(id => {
 
-      ids.forEach(id => {
         const el = document.getElementById(id);
         if (el) el.textContent = "₹0";
       });
@@ -155,19 +187,19 @@
       if (el) el.textContent = money(v);
     };
 
-    set("unSaleProfit",   m.saleProfitCollected);
-    set("unServiceProfit",m.serviceProfitCollected);
-    set("unStockInv",     m.stockInvestSold);
-    set("unServiceInv",   m.serviceInvestCompleted);
-    set("unExpenses",     m.expensesLive);
-    set("unCreditSales",  m.pendingCreditTotal);
-    set("unNetProfit",    m.netProfit);
+    set("unSaleProfit",    m.saleProfitCollected);
+    set("unServiceProfit", m.serviceProfitCollected);
+    set("unStockInv",      m.stockInvestSold);
+    set("unServiceInv",    m.serviceInvestCompleted);
+    set("unExpenses",      m.expensesLive);
+    set("unCreditSales",   m.pendingCreditTotal);
+    set("unNetProfit",     m.netProfit);
   }
 
   window.updateUniversalBar = updateUniversalBar;
 
   /* --------------------------------------------------
-        COLLECT
+        COLLECT HANDLER
   -------------------------------------------------- */
   async function collect(kind) {
 
@@ -175,9 +207,24 @@
     const offs = window.__offsets;
 
     const map = {
-      net:    ["Net Profit", m.netProfit, "net"],
-      stock:  ["Stock Investment", m.stockInvestSold, "stock"],
-      service:["Service Investment", m.serviceInvestCompleted, "servInv"]
+
+      net: [
+        "Net Profit",
+        m.netProfit,
+        "net"
+      ],
+
+      stock: [
+        "Stock Investment",
+        m.stockInvestSold,
+        "stock"
+      ],
+
+      service: [
+        "Service Investment",
+        m.serviceInvestCompleted,
+        "servInv"
+      ]
     };
 
     if (!map[kind]) return;
@@ -188,16 +235,22 @@
       return alert("Nothing available to collect.");
 
     const amount = num(prompt(
-      `${label}\nAvailable ₹${available}\nEnter amount:`));
+      `${label}\nAvailable ₹${available}\nEnter amount:`
+    ));
 
     if (amount <= 0 || amount > available)
       return alert("Invalid amount");
 
-    window.addCollectionEntry?.(label, "", amount);
+    /* ---------- COLLECTION ENTRY ---------- */
+    window.addCollectionEntry?.(
+      label,
+      "",
+      amount
+    );
 
     offs[key] += amount;
 
-    /* 🔧 FIXED GLOBAL REFERENCES */
+    /* ---------- NET COLLECT FIX ---------- */
     if (kind === "net") {
 
       const sales = window.sales || [];
@@ -205,13 +258,19 @@
 
       offs.sale =
         sales.reduce((a, s) =>
-          a + (String(s.status).toLowerCase() === "paid"
-            ? num(s.profit) : 0), 0);
+          a + (
+            String(s.status).toLowerCase() === "paid"
+            ? num(s.profit)
+            : 0
+          ), 0);
 
       offs.service =
         services.reduce((a, j) =>
-          a + (String(j.status).toLowerCase() === "paid"
-            ? num(j.profit) : 0), 0);
+          a + (
+            String(j.status).toLowerCase() === "paid"
+            ? num(j.profit)
+            : 0
+          ), 0);
     }
 
     await saveOffsets(offs);
@@ -223,12 +282,22 @@
 
   window.handleCollect = collect;
 
+  /* --------------------------------------------------
+        BUTTON EVENTS
+  -------------------------------------------------- */
   document.addEventListener("click", e => {
+
     const b = e.target.closest(".collect-btn");
-    if (b) collect(b.dataset.collect);
+
+    if (b)
+      collect(b.dataset.collect);
   });
 
+  /* --------------------------------------------------
+        INIT
+  -------------------------------------------------- */
   window.addEventListener("load", () => {
+
     setTimeout(initOffsets, 300);
   });
 
