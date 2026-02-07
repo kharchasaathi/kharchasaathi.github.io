@@ -1,58 +1,18 @@
 /* ======================================================
-   🗂 types.js — Product Type Manager (FINAL ONLINE v13)
+   🗂 types.js — Product Type Manager
+   CLOUD ONLY — FINAL v14
    ------------------------------------------------------
+   ✔ No localStorage
    ✔ Logout/Login safe
+   ✔ Multi-device sync safe
    ✔ Cloud overwrite safe
-   ✔ Render timing fixed
-   ✔ Dropdown auto refresh
 ====================================================== */
-
-
-/* ------------------------------------------------------
-   🌐 SAVE WRAPPER
------------------------------------------------------- */
-window.saveTypes = function () {
-
-  try {
-    localStorage.setItem(
-      "types-data",
-      JSON.stringify(window.types || [])
-    );
-  } catch {}
-
-  if (typeof cloudSaveDebounced === "function") {
-    cloudSaveDebounced("types", window.types || []);
-  }
-
-  if (typeof cloudPullAllIfAvailable === "function") {
-    setTimeout(() => cloudPullAllIfAvailable(), 200);
-  }
-};
-
-
-/* ------------------------------------------------------
-   📥 LOAD LOCAL CACHE
------------------------------------------------------- */
-function loadTypesLocal() {
-
-  try {
-    const d = JSON.parse(
-      localStorage.getItem("types-data")
-    );
-
-    if (Array.isArray(d)) {
-      window.types = d;
-    }
-  } catch {
-    window.types = [];
-  }
-}
 
 
 /* ------------------------------------------------------
    🔁 SAFE RENDER WRAPPER
 ------------------------------------------------------ */
-function safeRenderTypes() {
+function safeRenderTypes(){
 
   renderTypes();
   updateTypeDropdowns();
@@ -62,48 +22,50 @@ function safeRenderTypes() {
 /* ------------------------------------------------------
    ➕ ADD TYPE
 ------------------------------------------------------ */
-function addType() {
+function addType(){
 
-  const input = document.getElementById("typeName");
-  if (!input) return;
+  const input=document.getElementById("typeName");
+  if(!input) return;
 
-  const name = input.value.trim();
-  if (!name) return alert("Enter a valid type name.");
+  const name=input.value.trim();
+  if(!name) return alert("Enter a valid type name.");
 
-  window.types = window.types || [];
+  window.types=window.types||[];
 
-  if (
+  /* Prevent duplicate */
+  if(
     window.types.some(
-      t => t.name.toLowerCase() === name.toLowerCase()
+      t=>t.name.toLowerCase()===name.toLowerCase()
     )
-  ) {
+  ){
     return alert("Type already exists!");
   }
 
   window.types.push({
-    id: uid("type"),
+    id:uid("type"),
     name
   });
 
-  window.saveTypes();
+  /* ☁️ Cloud save */
+  saveTypes?.();
 
   safeRenderTypes();
 
-  setTimeout(safeRenderTypes, 200);
-
-  input.value = "";
+  input.value="";
 }
 
 
 /* ------------------------------------------------------
    ❌ CLEAR ALL TYPES
 ------------------------------------------------------ */
-function clearTypes() {
+function clearTypes(){
 
-  if (!confirm("Delete ALL types?")) return;
+  if(!confirm("Delete ALL types?")) return;
 
-  window.types = [];
-  window.saveTypes();
+  window.types=[];
+
+  /* ☁️ Cloud save */
+  saveTypes?.();
 
   safeRenderTypes();
 }
@@ -112,20 +74,20 @@ function clearTypes() {
 /* ------------------------------------------------------
    📋 RENDER TYPES
 ------------------------------------------------------ */
-function renderTypes() {
+function renderTypes(){
 
-  const list = document.getElementById("typeList");
-  if (!list) return;
+  const list=document.getElementById("typeList");
+  if(!list) return;
 
-  const types = window.types || [];
+  const types=window.types||[];
 
-  if (!types.length) {
-    list.innerHTML = "<li>No types added.</li>";
+  if(!types.length){
+    list.innerHTML="<li>No types added.</li>";
     return;
   }
 
-  list.innerHTML = types
-    .map(t => `<li>${esc(t.name)}</li>`)
+  list.innerHTML=types
+    .map(t=>`<li>${esc(t.name)}</li>`)
     .join("");
 }
 
@@ -133,48 +95,48 @@ function renderTypes() {
 /* ------------------------------------------------------
    🔽 UPDATE DROPDOWNS
 ------------------------------------------------------ */
-function updateTypeDropdowns() {
+function updateTypeDropdowns(){
 
-  const types = window.types || [];
+  const types=window.types||[];
 
-  const addStockType = document.getElementById("ptype");
-  const filterStock  = document.getElementById("filterType");
-  const saleType     = document.getElementById("saleType");
-  const wantType     = document.getElementById("wantType");
+  const addStockType=document.getElementById("ptype");
+  const filterStock=document.getElementById("filterType");
+  const saleType=document.getElementById("saleType");
+  const wantType=document.getElementById("wantType");
 
-  const options = types
-    .map(t =>
+  const options=types
+    .map(t=>
       `<option value="${esc(t.name)}">${esc(t.name)}</option>`
     )
     .join("");
 
-  if (addStockType)
-    addStockType.innerHTML =
-      `<option value="">Select</option>` + options;
+  if(addStockType)
+    addStockType.innerHTML=
+      `<option value="">Select</option>`+options;
 
-  if (filterStock)
-    filterStock.innerHTML =
-      `<option value="all">All Types</option>` + options;
+  if(filterStock)
+    filterStock.innerHTML=
+      `<option value="all">All Types</option>`+options;
 
-  if (saleType)
-    saleType.innerHTML =
-      `<option value="all">All Types</option>` + options;
+  if(saleType)
+    saleType.innerHTML=
+      `<option value="all">All Types</option>`+options;
 
-  if (wantType)
-    wantType.innerHTML =
-      `<option value="">Select Type</option>` + options;
+  if(wantType)
+    wantType.innerHTML=
+      `<option value="">Select Type</option>`+options;
 }
 
 
 /* ------------------------------------------------------
    🖱 EVENTS
 ------------------------------------------------------ */
-document.addEventListener("click", e => {
+document.addEventListener("click",e=>{
 
-  if (e.target.id === "addTypeBtn")
+  if(e.target.id==="addTypeBtn")
     addType();
 
-  if (e.target.id === "clearTypesBtn")
+  if(e.target.id==="clearTypesBtn")
     clearTypes();
 });
 
@@ -182,25 +144,24 @@ document.addEventListener("click", e => {
 /* ------------------------------------------------------
    ☁️ CLOUD SYNC LISTENER
 ------------------------------------------------------ */
-window.addEventListener("cloud-data-loaded", () => {
-
-  safeRenderTypes();
-});
+window.addEventListener(
+  "cloud-data-loaded",
+  ()=>{
+    safeRenderTypes();
+  }
+);
 
 
 /* ------------------------------------------------------
    🚀 INIT
 ------------------------------------------------------ */
-window.addEventListener("load", () => {
+window.addEventListener("load",()=>{
 
-  /* 1️⃣ Local first */
-  loadTypesLocal();
-
-  window.types = window.types || [];
-
+  /* Cloud pull renders automatically */
   safeRenderTypes();
 
-  /* 2️⃣ Cloud overwrite retry */
-  setTimeout(safeRenderTypes, 400);
-  setTimeout(safeRenderTypes, 800);
+  /* Retry after pull delay */
+  setTimeout(safeRenderTypes,400);
+  setTimeout(safeRenderTypes,800);
+
 });
