@@ -7,6 +7,7 @@
    ✔ UniversalBar independent
    ✔ Cloud sync compatible
    ✔ Logout/Login safe
+   ✔ Loader order crash fixed
 ====================================================== */
 
 (function () {
@@ -134,9 +135,7 @@
         0
       );
 
-    /* ===================================================
-       🧠 DASHBOARD OFFSET APPLY
-    =================================================== */
+    /* OFFSET APPLY */
     const offset =
       Number(window.__dashboardOffset || 0);
 
@@ -196,7 +195,7 @@
       qs("#dashInv").textContent =
         "₹" + Math.round(totalInvestment);
 
-    /* ---------- PIE ---------- */
+    /* PIE */
     const canvas = qs("#cleanPie");
 
     if (!canvas ||
@@ -285,7 +284,7 @@
   };
 
   /* ======================================================
-        CLOUD SYNC
+        ☁️ CLOUD SYNC (REPLACED SAFE VERSION)
   ====================================================== */
   window.addEventListener(
     "cloud-data-loaded",
@@ -294,9 +293,14 @@
       if (window.__dashboardViewCleared)
         return;
 
-      renderAnalytics();
-      updateSummaryCards();
-      updateUniversalBar?.();
+      if (typeof renderAnalytics === "function")
+        renderAnalytics();
+
+      if (typeof updateSummaryCards === "function")
+        updateSummaryCards();
+
+      if (typeof updateUniversalBar === "function")
+        updateUniversalBar();
     }
   );
 
@@ -314,9 +318,15 @@
         Array.isArray(window.services) &&
         Array.isArray(window.sales)
       ) {
-        renderAnalytics();
-        updateSummaryCards();
-        updateUniversalBar?.();
+
+        if (typeof renderAnalytics === "function")
+          renderAnalytics();
+
+        if (typeof updateSummaryCards === "function")
+          updateSummaryCards();
+
+        if (typeof updateUniversalBar === "function")
+          updateUniversalBar();
       }
     };
 
