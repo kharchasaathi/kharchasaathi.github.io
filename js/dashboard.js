@@ -1,125 +1,94 @@
 /* =========================================
-   dashboard.js — CLOUD ONLY — FINAL v3
-   -----------------------------------------
-   ✔ Dashboard View Clear = Cloud synced
-   ✔ Logout/Login safe
-   ✔ Multi-device safe
-   ✔ Business data NOT deleted
-   ✔ Analytics + UniversalBar protected
-   ✔ Syntax error fixed
+dashboard.js — FINAL v23 (OPTION 2 SAFE)
+
+✔ Dashboard clear = UI only
+✔ No cloud flag
+✔ Logout safe
+✔ Universal unaffected
+✔ Render guard added
 ========================================= */
 
 (function () {
 
-  const qs  = s => document.querySelector(s);
-  const KEY = "dashboardViewCleared";
+const qs = s => document.querySelector(s);
 
-  /* ---------------------------------------
-        LOAD FLAG FROM CLOUD
-  --------------------------------------- */
-  async function loadFlag() {
+/* ---------------------------------------
+SAFE TEXT SETTER
+--------------------------------------- */
+function setText(id, value) {
 
-    if (typeof cloudLoad !== "function")
-      return;
+const el = qs(id);
+if (el) el.textContent = value;
 
-    try {
+}
 
-      const flag = await cloudLoad(KEY);
+/* ---------------------------------------
+APPLY CLEAR UI
+--------------------------------------- */
+function applyClearView() {
 
-      if (flag === true || flag === "1") {
+/* ---------- TODAY ---------- */
+setText("#todaySales",    "₹0");
+setText("#todayCredit",   "₹0");
+setText("#todayExpenses", "₹0");
+setText("#todayGross",    "₹0");
+setText("#todayNet",      "₹0");
 
-        window.__dashboardViewCleared = true;
+/* ---------- TOTAL ---------- */
+setText("#dashProfit",   "₹0");
+setText("#dashExpenses", "₹0");
+setText("#dashCredit",   "₹0");
+setText("#dashInv",      "₹0");
 
-        applyClearView();
-      }
+/* ---------- PIE DESTROY ---------- */
+if (window.cleanPieChart) {
 
-    } catch (e) {
-      console.warn("Dashboard flag load failed:", e);
-    }
-  }
+  try {
+    window.cleanPieChart.destroy();
+  } catch {}
 
-  /* ---------------------------------------
-        SAVE FLAG TO CLOUD
-  --------------------------------------- */
-  function saveFlag() {
+  window.cleanPieChart = null;
+}
 
-    if (typeof cloudSaveDebounced === "function") {
-      cloudSaveDebounced(KEY, true);
-    }
-  }
+}
 
-  /* ---------------------------------------
-        SAFE TEXT SETTER
-  --------------------------------------- */
-  function setText(id, value) {
+/* ---------------------------------------
+CLEAR DASHBOARD VIEW
+--------------------------------------- */
+function clearDashboardView() {
 
-    const el = qs(id);
+if (!confirm(
+  "This will clear only Dashboard calculated view.\n\nBusiness data will NOT be deleted.\n\nContinue?"
+)) return;
 
-    if (el) el.textContent = value;
-  }
+window.__dashboardViewCleared = true;
 
-  /* ---------------------------------------
-        APPLY CLEAR UI
-  --------------------------------------- */
-  function applyClearView() {
+applyClearView();
 
-    /* ---------- TODAY ---------- */
-    setText("#todaySales",    "₹0");
-    setText("#todayCredit",   "₹0");
-    setText("#todayExpenses", "₹0");
-    setText("#todayGross",    "₹0");
-    setText("#todayNet",      "₹0");
+}
 
-    /* ---------- TOTAL ---------- */
-    setText("#dashProfit",   "₹0");
-    setText("#dashExpenses", "₹0");
-    setText("#dashCredit",   "₹0");
-    setText("#dashInv",      "₹0");
+window.clearDashboardView = clearDashboardView;
 
-    /* ---------- PIE DESTROY ---------- */
-    if (window.cleanPieChart) {
-      try {
-        window.cleanPieChart.destroy();
-      } catch {}
-      window.cleanPieChart = null;
-    }
+/* ---------------------------------------
+RENDER GUARD
+--------------------------------------- */
+function applyGuardIfNeeded() {
 
-    /* ---------- UNIVERSAL BAR ---------- */
-    window.updateUniversalBar?.();
-  }
+if (window.__dashboardViewCleared) {
+  applyClearView();
+}
 
-  /* ---------------------------------------
-        CLEAR DASHBOARD VIEW
-  --------------------------------------- */
-  function clearDashboardView() {
+}
 
-    if (!confirm(
-      "This will clear only Dashboard calculated view.\n\nBusiness data will NOT be deleted.\n\nContinue?"
-    )) return;
+window.__applyDashboardClearGuard =
+applyGuardIfNeeded;
 
-    /* FLAG */
-    window.__dashboardViewCleared = true;
-
-    /* SAVE CLOUD */
-    saveFlag();
-
-    /* APPLY UI */
-    applyClearView();
-  }
-
-  window.clearDashboardView = clearDashboardView;
-
-  /* ---------------------------------------
-        CLOUD SYNC LISTENER
-  --------------------------------------- */
-  window.addEventListener(
-    "cloud-data-loaded",
-    loadFlag
-  );
-
-  /* ---------------------------------------
-        INIT
-  --------------------------------------- */
-  window.addEventListener("load", loadFlag);
+/* ---------------------------------------
+CLOUD DATA LOAD
+--------------------------------------- */
+window.addEventListener(
+"cloud-data-loaded",
+applyGuardIfNeeded
+);
 
 })();
