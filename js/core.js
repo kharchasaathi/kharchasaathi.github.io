@@ -1,20 +1,18 @@
 /* ===========================================================
-   📌 core.js — Master Engine (CLOUD ONLY — FINAL v16 PART 1)
-   ⭐ Infra + Helpers + Business Base
-   ⭐ Limit System Restored
-   ❌ No LocalStorage dependency
+   📌 core.js — MASTER ENGINE (CLOUD SAFE — FINAL v19)
+   PART 1 — INFRA + HELPERS + BUSINESS BASE
 =========================================================== */
 
 /* ===========================================================
    CLOUD COLLECTION KEYS
 =========================================================== */
-const KEY_TYPES        = "types";
-const KEY_STOCK        = "stock";
-const KEY_SALES        = "sales";
-const KEY_WANTING      = "wanting";
-const KEY_EXPENSES     = "expenses";
-const KEY_SERVICES     = "services";
-const KEY_COLLECTIONS  = "collections";
+const KEY_TYPES       = "types";
+const KEY_STOCK       = "stock";
+const KEY_SALES       = "sales";
+const KEY_WANTING     = "wanting";
+const KEY_EXPENSES    = "expenses";
+const KEY_SERVICES    = "services";
+const KEY_COLLECTIONS = "collections";
 
 /* ===========================================================
    SAFE HELPERS
@@ -56,19 +54,17 @@ window.toInternalIfNeeded=toInternalIfNeeded;
 /* ===========================================================
    BASIC HELPERS
 =========================================================== */
-function todayDate(){
+window.todayDate=function(){
   const d=new Date();
   d.setMinutes(d.getMinutes()-d.getTimezoneOffset());
   return d.toISOString().split("T")[0];
-}
-window.todayDate=todayDate;
+};
 
-function uid(p="id"){
+window.uid=function(p="id"){
   return `${p}_${Math.random().toString(36).slice(2,10)}`;
-}
-window.uid=uid;
+};
 
-function esc(t){
+window.esc=function(t){
   return String(t||"").replace(/[&<>"']/g,m=>({
     "&":"&amp;",
     "<":"&lt;",
@@ -76,11 +72,10 @@ function esc(t){
     "\"":"&quot;",
     "'":"&#39;"
   }[m]));
-}
-window.esc=esc;
+};
 
 /* ===========================================================
-   GLOBAL CLOUD DATA CONTAINERS
+   GLOBAL DATA CONTAINERS
 =========================================================== */
 window.types=[];
 window.stock=[];
@@ -91,29 +86,30 @@ window.services=[];
 window.collections=[];
 
 /* ===========================================================
-   GLOBAL LIMIT SYSTEM (RESTORED)
+   LIMIT SYSTEM
 =========================================================== */
 window.globalLimit=0;
 
-window.setGlobalLimit=function(v){
+window.setGlobalLimit=v=>{
   globalLimit=Number(v)||0;
 };
 
-window.getGlobalLimit=function(){
-  return Number(globalLimit||0);
-};
+window.getGlobalLimit=()=>
+  Number(globalLimit||0);
 
 /* ===========================================================
-   ENSURE ARRAYS
+   ENSURE ARRAYS (INITIAL CALL RESTORED)
 =========================================================== */
 function ensureArrays(){
-  if(!Array.isArray(types)) types=[];
-  if(!Array.isArray(stock)) stock=[];
-  if(!Array.isArray(sales)) sales=[];
-  if(!Array.isArray(wanting)) wanting=[];
-  if(!Array.isArray(expenses)) expenses=[];
-  if(!Array.isArray(services)) services=[];
-  if(!Array.isArray(collections)) collections=[];
+
+  [
+    "types","stock","sales",
+    "wanting","expenses",
+    "services","collections"
+  ].forEach(k=>{
+    if(!Array.isArray(window[k]))
+      window[k]=[];
+  });
 }
 ensureArrays();
 
@@ -122,25 +118,10 @@ ensureArrays();
 =========================================================== */
 function normalizeAllDates(){
 
-  stock=stock.map(s=>({
-    ...s,
-    date:toInternalIfNeeded(s.date)
-  }));
-
-  sales=sales.map(s=>({
-    ...s,
-    date:toInternalIfNeeded(s.date)
-  }));
-
-  expenses=expenses.map(e=>({
-    ...e,
-    date:toInternalIfNeeded(e.date)
-  }));
-
-  wanting=wanting.map(w=>({
-    ...w,
-    date:toInternalIfNeeded(w.date)
-  }));
+  stock=stock.map(s=>({...s,date:toInternalIfNeeded(s.date)}));
+  sales=sales.map(s=>({...s,date:toInternalIfNeeded(s.date)}));
+  expenses=expenses.map(e=>({...e,date:toInternalIfNeeded(e.date)}));
+  wanting=wanting.map(w=>({...w,date:toInternalIfNeeded(w.date)}));
 
   services=services.map(j=>({
     ...j,
@@ -159,38 +140,27 @@ function normalizeAllDates(){
 =========================================================== */
 window.cloudSync=function(key,data){
 
-  if(typeof cloudSaveDebounced!=="function") return;
+  if(!window.__cloudReady){
+    console.warn("⛔ Save blocked:",key);
+    return;
+  }
 
-  const map={
-    [KEY_TYPES]:"types",
-    [KEY_STOCK]:"stock",
-    [KEY_SALES]:"sales",
-    [KEY_WANTING]:"wanting",
-    [KEY_EXPENSES]:"expenses",
-    [KEY_SERVICES]:"services",
-    [KEY_COLLECTIONS]:"collections"
-  };
+  if(typeof cloudSaveDebounced!=="function")
+    return;
 
-  const col=map[key];
-  if(col) cloudSaveDebounced(col,data||[]);
+  cloudSaveDebounced(key,data||[]);
 };
 
 /* ===========================================================
-   SAVE HELPERS (CLOUD ONLY)
+   SAVE HELPERS
 =========================================================== */
-function saveTypes(){cloudSync(KEY_TYPES,types);}
-function saveStock(){cloudSync(KEY_STOCK,stock);}
-function saveSales(){cloudSync(KEY_SALES,sales);}
-function saveWanting(){cloudSync(KEY_WANTING,wanting);}
-function saveExpenses(){cloudSync(KEY_EXPENSES,expenses);}
-function saveServices(){cloudSync(KEY_SERVICES,services);}
-function saveCollections(){cloudSync(KEY_COLLECTIONS,collections);}
-
-Object.assign(window,{
-  saveTypes,saveStock,saveSales,
-  saveWanting,saveExpenses,
-  saveServices,saveCollections
-});
+window.saveTypes       =()=>cloudSync(KEY_TYPES,types);
+window.saveStock       =()=>cloudSync(KEY_STOCK,stock);
+window.saveSales       =()=>cloudSync(KEY_SALES,sales);
+window.saveWanting     =()=>cloudSync(KEY_WANTING,wanting);
+window.saveExpenses    =()=>cloudSync(KEY_EXPENSES,expenses);
+window.saveServices    =()=>cloudSync(KEY_SERVICES,services);
+window.saveCollections =()=>cloudSync(KEY_COLLECTIONS,collections);
 
 /* ===========================================================
    BUSINESS BASE — TYPES
@@ -243,7 +213,7 @@ window.getProductCost=function(type,name){
 };
 
 /* ===========================================================
-   STOCK ENTRY (LIMIT RESTORED)
+   STOCK ENTRY
 =========================================================== */
 window.addStockEntry=function({
   date,type,name,qty,cost
@@ -261,13 +231,9 @@ window.addStockEntry=function({
 
     stock.push({
       id:uid("stk"),
-      date,
-      type,
-      name,
-      qty,
-      cost,
+      date,type,name,qty,cost,
       sold:0,
-      limit:getGlobalLimit(),   // 🔥 RESTORED
+      limit:getGlobalLimit(),
       history:[{date,qty,cost}]
     });
 
@@ -275,7 +241,6 @@ window.addStockEntry=function({
 
     p.qty+=qty;
     p.cost=cost;
-
     p.history=p.history||[];
     p.history.push({date,qty,cost});
   }
@@ -284,11 +249,11 @@ window.addStockEntry=function({
 };
 /* ===========================================================
    📌 core.js — PART 2
-   CLOUD PULL + INIT + RENDER SYNC
+   CLOUD PULL + INIT + EVENTS + RENDER SYNC
 =========================================================== */
 
 /* ===========================================================
-   KEY → GLOBAL VAR MAP
+   KEY → VAR MAP
 =========================================================== */
 function keyToVarName(key){
   return {
@@ -303,53 +268,25 @@ function keyToVarName(key){
 }
 
 /* ===========================================================
-   ☁️ CLOUD PULL ENGINE
+   FALLBACK CLOUD PULL
 =========================================================== */
 window.cloudPullAllIfAvailable=async function(){
 
   if(typeof cloudLoad!=="function") return;
-
-  let email="";
-
-  try{
-    email=getFirebaseUser?.()?.email||"";
-  }catch{}
-
-  if(!email){
-    console.warn("No user → Cloud pull skipped");
-    return;
-  }
-
-  console.log("☁️ Pulling cloud data…");
+  if(!window.__cloudReady) return;
 
   const keys=[
-    "types",
-    "stock",
-    "sales",
-    "wanting",
-    "expenses",
-    "services",
-    "collections"
+    "types","stock","sales",
+    "wanting","expenses",
+    "services","collections"
   ];
 
   for(const key of keys){
 
     try{
-
-      const arr=toArray(
-        await cloudLoad(key)
-      );
-
+      const arr=toArray(await cloudLoad(key));
       window[keyToVarName(key)]=arr;
-
-    }catch(err){
-
-      console.warn(
-        "Cloud load failed →",
-        key,
-        err
-      );
-
+    }catch{
       window[keyToVarName(key)]=[];
     }
   }
@@ -357,7 +294,7 @@ window.cloudPullAllIfAvailable=async function(){
   ensureArrays();
   normalizeAllDates();
 
-  /* SAFE RENDERS */
+  /* SAFE RENDER */
   [
     "renderTypes",
     "renderStock",
@@ -377,20 +314,23 @@ window.cloudPullAllIfAvailable=async function(){
 };
 
 /* ===========================================================
-   🔄 AUTH READY → CLOUD PULL
+   AUTH READY → PULL (RESTORED)
 =========================================================== */
-window.addEventListener("firebase-auth-ready",()=>{
+window.addEventListener(
+  "firebase-auth-ready",
+  ()=>{
 
-  console.log("Auth ready → Pulling data");
+    console.log("Auth ready → Pulling data");
 
-  setTimeout(()=>{
-    cloudPullAllIfAvailable();
-  },200);
+    setTimeout(()=>{
+      cloudPullAllIfAvailable();
+    },200);
 
-});
+  }
+);
 
 /* ===========================================================
-   🚀 AUTO INIT
+   AUTO INIT (RESTORED)
 =========================================================== */
 window.addEventListener("load",()=>{
 
@@ -406,7 +346,7 @@ window.addEventListener("load",()=>{
 });
 
 /* ===========================================================
-   🔁 CLOUD DATA EVENT
+   CLOUD DATA EVENT
 =========================================================== */
 window.addEventListener(
   "cloud-data-loaded",
@@ -435,40 +375,30 @@ window.addEventListener(
 );
 
 /* ===========================================================
-   📊 INVESTMENT HELPERS
+   INVESTMENT HELPERS
 =========================================================== */
 window.getStockInvestmentAfterSale=()=>
   stock.reduce(
-    (t,p)=>
-      t+Number(p.sold||0)*
-        Number(p.cost||0),
+    (t,p)=>t+Number(p.sold||0)*Number(p.cost||0),
     0
   );
 
 window.getSalesProfitCollected=()=>
   sales
     .filter(s=>
-      String(s.status||"")
-        .toLowerCase()!=="credit"
+      String(s.status||"").toLowerCase()!=="credit"
     )
-    .reduce(
-      (t,s)=>t+Number(s.profit||0),
-      0
-    );
+    .reduce((t,s)=>t+Number(s.profit||0),0);
 
 window.getServiceProfitCollected=()=>
   services
     .filter(s=>
-      String(s.status||"")
-        .toLowerCase()==="completed"
+      String(s.status||"").toLowerCase()==="completed"
     )
-    .reduce(
-      (t,s)=>t+Number(s.profit||0),
-      0
-    );
+    .reduce((t,s)=>t+Number(s.profit||0),0);
 
 /* ===========================================================
-   📧 EMAIL TAG (CLOUD SESSION ONLY)
+   EMAIL TAG
 =========================================================== */
 window.updateEmailTag=function(){
 
@@ -485,7 +415,7 @@ window.updateEmailTag=function(){
 };
 
 /* ===========================================================
-   🔒 AUTH EVENT BRIDGE
+   AUTH BRIDGE
 =========================================================== */
 if(typeof auth!=="undefined"){
 
@@ -504,5 +434,5 @@ if(typeof auth!=="undefined"){
 }
 
 console.log(
-  "⚙️ core.js v16 CLOUD ENGINE READY ✔"
+  "⚙️ core.js v19 CLOUD ENGINE READY ✔"
 );
