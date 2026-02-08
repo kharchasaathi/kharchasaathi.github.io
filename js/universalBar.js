@@ -1,12 +1,12 @@
 /* ===========================================================
-   universal-bar.js — FINAL v28 (FULL SETTLEMENT ENGINE)
+   universal-bar.js — FINAL v29 (TRUE SETTLEMENT ENGINE)
 
    ✔ Net collect = Full settlement
    ✔ Sale + Service reset
    ✔ Expenses impact reset
-   ✔ Fresh profit only after collect
-   ✔ Baseline hard lock
-   ✔ Breakdown safe
+   ✔ Future profit works
+   ✔ No double subtraction bug
+   ✔ Baseline hard lock safe
    ✔ Cloud sync safe
 =========================================================== */
 
@@ -30,7 +30,7 @@
     service: 0,
     stock: 0,
     servInv: 0,
-    expenses: 0   // 🔥 NEW
+    expenses: 0
   };
 
   window.__universalBaseline = 0;
@@ -71,7 +71,7 @@
       service: num(offsets?.service),
       stock:   num(offsets?.stock),
       servInv: num(offsets?.servInv),
-      expenses:num(offsets?.expenses)   // 🔥 NEW
+      expenses:num(offsets?.expenses)
     });
 
     window.__universalBaseline = num(baseline);
@@ -134,7 +134,7 @@
       expensesAll += num(e.amount);
     });
 
-    /* BASELINE */
+    /* BASELINE APPLY */
     const totalProfitAll =
       saleProfitAll + serviceProfitAll;
 
@@ -169,7 +169,6 @@
           0,
           freshProfit
           - (expensesAll - window.__offsets.expenses)
-          - window.__offsets.net
         )
     };
   }
@@ -197,14 +196,13 @@
   window.updateUniversalBar = updateUniversalBar;
 
   /* --------------------------------------------------
-        COLLECT HANDLER
+        COLLECT HANDLER — TRUE SETTLEMENT
   -------------------------------------------------- */
   async function collect(kind) {
 
-    const m    = window.__unMetrics || {};
-    const offs = window.__offsets;
-
     if (kind !== "net") return;
+
+    const m = window.__unMetrics || {};
 
     if (m.netProfit <= 0)
       return alert("Nothing to collect.");
@@ -223,24 +221,22 @@
     );
 
     /* ==================================================
-          🔥 FULL SETTLEMENT ENGINE
+          🔥 TRUE SETTLEMENT ENGINE
+          ONLY BASELINE SHIFT
+          NO OFFSET SHIFT (BUG FIX)
     ================================================== */
 
     const salesAll    = window.sales    || [];
     const servicesAll = window.services || [];
-    const expensesAll = window.expenses || [];
 
     let saleProfitAll    = 0;
     let serviceProfitAll = 0;
-    let expensesTotalAll = 0;
 
-    /* SALES */
     salesAll.forEach(s => {
       if (String(s.status).toLowerCase() === "paid")
         saleProfitAll += num(s.profit);
     });
 
-    /* SERVICES */
     servicesAll.forEach(j => {
 
       if (String(j.status).toLowerCase() === "paid") {
@@ -257,11 +253,6 @@
       }
     });
 
-    /* EXPENSES */
-    expensesAll.forEach(e => {
-      expensesTotalAll += num(e.amount);
-    });
-
     const totalAll =
       saleProfitAll + serviceProfitAll;
 
@@ -273,13 +264,10 @@
       window.__universalBaseline
     );
 
-    /* BREAKDOWN RESET */
-    offs.sale     += saleProfitAll;
-    offs.service  += serviceProfitAll;
-    offs.expenses += expensesTotalAll;   // 🔥 NEW
-
-    /* SAVE OFFSETS */
-    await saveCloud(OFFSET_KEY, offs);
+    /* IMPORTANT:
+       No sale/service/expense offsets shift
+       → prevents future profit block bug
+    */
 
     updateUniversalBar();
     renderCollection?.();
@@ -288,7 +276,9 @@
 
   window.handleCollect = collect;
 
-  /* BUTTON EVENTS */
+  /* --------------------------------------------------
+        BUTTON EVENTS
+  -------------------------------------------------- */
   document.addEventListener("click", e => {
 
     const b = e.target.closest(".collect-btn");
@@ -297,7 +287,9 @@
       collect(b.dataset.collect);
   });
 
-  /* CLOUD READY */
+  /* --------------------------------------------------
+        CLOUD READY
+  -------------------------------------------------- */
   window.addEventListener(
     "cloud-data-loaded",
     () => {
