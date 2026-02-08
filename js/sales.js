@@ -1,12 +1,15 @@
 /* ===========================================================
-   sales.js — FINAL v23 (OPTION-2 CREDIT SAFE FIXED)
+   sales.js — FINAL v26 (FULL MERGED ERP ENGINE)
 
-   ✔ No localStorage
-   ✔ Logout/Login safe
-   ✔ Multi-device sync safe
+   ✔ Cloud only
+   ✔ Universal sync safe
+   ✔ Net collect safe
+   ✔ Wanting auto add
    ✔ Credit-safe accounting
-   ✔ Smart clear guard (real pending check)
-   ✔ Instant universal update
+   ✔ Filters restored
+   ✔ Filter button restored
+   ✔ Smart clear guard
+   ✔ Multi-device safe
 =========================================================== */
 
 
@@ -47,13 +50,10 @@ window.saveSales = function () {
     typeof cloudSaveDebounced === "function" &&
     window.__cloudReady
   ) {
-    cloudSaveDebounced(
-      "sales",
-      window.sales || []
-    );
+    cloudSaveDebounced("sales", window.sales || []);
   }
 
-  /* 🔄 Global refresh */
+  /* Global refresh */
   window.dispatchEvent(
     new Event("cloud-data-loaded")
   );
@@ -87,7 +87,9 @@ function addSaleEntry({
   if (!p)
     return alert("Product not found in stock.");
 
-  const remain = Number(p.qty) - Number(p.sold);
+  const remain =
+    Number(p.qty) - Number(p.sold);
+
   if (remain < qty)
     return alert("Not enough stock!");
 
@@ -96,8 +98,39 @@ function addSaleEntry({
 
   /* ---------- STOCK REDUCE ---------- */
   p.sold = Number(p.sold) + qty;
+
+  /* ---------- AUTO WANTING ENGINE ---------- */
+  const remaining =
+    Number(p.qty) - Number(p.sold);
+
+  if (remaining <= 0) {
+
+    window.wanting =
+      window.wanting || [];
+
+    const exists =
+      window.wanting.find(
+        w => w.type === p.type &&
+             w.name === p.name
+      );
+
+    if (!exists) {
+
+      window.wanting.push({
+        id: uid("want"),
+        type: p.type,
+        name: p.name,
+        qty: p.reorderQty || 1,
+        date: todayDate()
+      });
+
+      window.saveWanting?.();
+    }
+  }
+
   window.saveStock?.();
 
+  /* ---------- PROFIT ---------- */
   const isPaid = status === "paid";
 
   window.sales.push({
@@ -109,7 +142,9 @@ function addSaleEntry({
     qty,
     price,
     total,
-    profit: isPaid ? (total - qty * cost) : 0,
+    profit: isPaid
+      ? (total - qty * cost)
+      : 0,
     cost,
     status: isPaid ? "Paid" : "Credit",
     fromCredit: !isPaid,
@@ -151,16 +186,17 @@ function collectCreditSale(id) {
       "\n\nMark as PAID & Collect?"))
     return;
 
-  /* ---------- PROFIT UNLOCK ---------- */
+  /* PROFIT UNLOCK */
   s.status = "Paid";
   s.fromCredit = true;
+
   s.profit =
     Number(s.total) -
     Number(s.qty * s.cost);
 
   window.saveSales();
 
-  /* ---------- COLLECTION LOG ---------- */
+  /* COLLECTION LOG */
   const details =
     `${s.product} — Qty ${s.qty} × ₹${s.price} = ₹${s.total}` +
     ` (Credit Cleared)` +
@@ -296,6 +332,7 @@ document.getElementById("saleDate")
 document.getElementById("saleView")
   ?.addEventListener("change", renderSales);
 
+/* 🔥 RESTORED */
 document.getElementById("filterSalesBtn")
   ?.addEventListener("click", renderSales);
 
@@ -309,7 +346,6 @@ document.getElementById("clearSalesBtn")
   const view =
     document.getElementById("saleView")?.value || "all";
 
-  /* ---------- REAL CREDIT CHECK ---------- */
   const hasPendingCredit =
     (window.sales || []).some(s =>
       String(s.status).toLowerCase() === "credit"
@@ -344,7 +380,7 @@ document.getElementById("clearSalesBtn")
       if (view === "credit-pending")
         return st !== "credit";
 
-      return false; // clear all
+      return false;
     });
 
   window.saveSales();
