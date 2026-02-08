@@ -1,6 +1,14 @@
 /* ===========================================================
-   universal-bar.js — FINAL v31
-   COMPLETE SETTLEMENT + OFFSET LOCK + FUTURE SAFE
+   universal-bar.js — FINAL v33
+   FULL MERGE (v31 + v32)
+
+   ✔ Main tab profit live add fix
+   ✔ Baseline safe
+   ✔ Collect reset safe
+   ✔ Offset save lock
+   ✔ Investment tracking restored
+   ✔ Cloud sync safe
+   ✔ Multi-device safe
 =========================================================== */
 
 (function () {
@@ -74,9 +82,9 @@
     updateUniversalBar();
   }
 
-  /* --------------------------------------------------
-        METRICS ENGINE
-  -------------------------------------------------- */
+  /* ==========================================================
+     METRICS ENGINE — FULL MERGE FIXED
+  ========================================================== */
   function computeMetrics() {
 
     const sales    = window.sales    || [];
@@ -90,7 +98,7 @@
     let serviceInvestAll = 0;
     let pendingCredit    = 0;
 
-    /* SALES */
+    /* ---------------- SALES ---------------- */
     sales.forEach(s => {
 
       const st = String(s.status).toLowerCase();
@@ -99,12 +107,16 @@
         pendingCredit += num(s.total);
 
       if (st === "paid") {
+
         saleProfitAll += num(s.profit);
-        stockInvestAll += num(s.qty) * num(s.cost);
+
+        /* Investment tracking */
+        stockInvestAll +=
+          num(s.qty) * num(s.cost);
       }
     });
 
-    /* SERVICES */
+    /* ---------------- SERVICES ---------------- */
     services.forEach(j => {
 
       const st = String(j.status).toLowerCase();
@@ -121,7 +133,9 @@
           profit = paid - invest;
         }
 
-        serviceProfitAll += Math.max(0, profit);
+        serviceProfitAll +=
+          Math.max(0, profit);
+
         serviceInvestAll += invest;
       }
 
@@ -129,56 +143,74 @@
         pendingCredit += num(j.remaining);
     });
 
-    /* EXPENSES */
+    /* ---------------- EXPENSES ---------------- */
     expenses.forEach(e => {
       expensesAll += num(e.amount);
     });
 
-    /* BASELINE */
+    /* ==================================================
+       🔥 BASELINE ONLY FOR NET
+       (Main tab live fix)
+    ================================================== */
+
     const totalProfitAll =
       saleProfitAll + serviceProfitAll;
 
     const freshProfit =
       Math.max(
         0,
-        totalProfitAll - num(window.__universalBaseline)
+        totalProfitAll -
+        num(window.__universalBaseline)
       );
 
     return {
 
+      /* Breakdown LIVE */
       saleProfitCollected:
-        Math.max(0,
-          saleProfitAll - window.__offsets.sale
+        Math.max(
+          0,
+          saleProfitAll -
+          window.__offsets.sale
         ),
 
       serviceProfitCollected:
-        Math.max(0,
-          serviceProfitAll - window.__offsets.service
+        Math.max(
+          0,
+          serviceProfitAll -
+          window.__offsets.service
         ),
 
       stockInvestSold:
-        Math.max(0,
-          stockInvestAll - window.__offsets.stock
+        Math.max(
+          0,
+          stockInvestAll -
+          window.__offsets.stock
         ),
 
       serviceInvestCompleted:
-        Math.max(0,
-          serviceInvestAll - window.__offsets.servInv
+        Math.max(
+          0,
+          serviceInvestAll -
+          window.__offsets.servInv
         ),
 
       expensesLive:
-        Math.max(0,
-          expensesAll - window.__offsets.expenses
+        Math.max(
+          0,
+          expensesAll -
+          window.__offsets.expenses
         ),
 
       pendingCreditTotal:
         pendingCredit,
 
+      /* Net after baseline */
       netProfit:
         Math.max(
           0,
           freshProfit
-          - (expensesAll - window.__offsets.expenses)
+          - (expensesAll -
+             window.__offsets.expenses)
           - window.__offsets.net
         )
     };
@@ -208,9 +240,9 @@
 
   window.updateUniversalBar = updateUniversalBar;
 
-  /* --------------------------------------------------
-        COLLECT HANDLER — FULL SETTLEMENT
-  -------------------------------------------------- */
+  /* ==========================================================
+     COLLECT — FULL RESET SAFE
+  ========================================================== */
   async function collect(kind) {
 
     if (kind !== "net") return;
@@ -220,7 +252,6 @@
     if (m.netProfit <= 0)
       return alert("Nothing to collect.");
 
-    /* FULL COLLECT ONLY */
     if (!confirm(
       `Collect FULL Net Profit ₹${m.netProfit} ?`
     )) return;
@@ -231,52 +262,11 @@
       m.netProfit
     );
 
-    const sales    = window.sales    || [];
-    const services = window.services || [];
-    const expenses = window.expenses || [];
-
-    let saleProfitAll    = 0;
-    let serviceProfitAll = 0;
-    let expensesAll      = 0;
-    let stockInvestAll   = 0;
-    let serviceInvestAll = 0;
-
-    /* SALES */
-    sales.forEach(s => {
-      if (String(s.status).toLowerCase() === "paid") {
-        saleProfitAll += num(s.profit);
-        stockInvestAll += num(s.qty) * num(s.cost);
-      }
-    });
-
-    /* SERVICES */
-    services.forEach(j => {
-      if (String(j.status).toLowerCase() === "paid") {
-
-        const invest = num(j.invest);
-
-        let profit = num(j.profit);
-
-        if (!profit) {
-          const paid =
-            num(j.paid || j.total || j.amount);
-          profit = paid - invest;
-        }
-
-        serviceProfitAll += Math.max(0, profit);
-        serviceInvestAll += invest;
-      }
-    });
-
-    /* EXPENSES */
-    expenses.forEach(e => {
-      expensesAll += num(e.amount);
-    });
-
     const totalAll =
-      saleProfitAll + serviceProfitAll;
+      m.saleProfitCollected +
+      m.serviceProfitCollected;
 
-    /* BASELINE SHIFT */
+    /* 🔥 BASELINE SHIFT */
     window.__universalBaseline += totalAll;
 
     await saveCloud(
@@ -284,15 +274,15 @@
       window.__universalBaseline
     );
 
-    /* BREAKDOWN RESET */
-    window.__offsets.sale     += saleProfitAll;
-    window.__offsets.service  += serviceProfitAll;
-    window.__offsets.expenses += expensesAll;
-    window.__offsets.stock    += stockInvestAll;
-    window.__offsets.servInv  += serviceInvestAll;
+    /* 🔥 FULL BREAKDOWN RESET */
+    window.__offsets.sale     += m.saleProfitCollected;
+    window.__offsets.service  += m.serviceProfitCollected;
+    window.__offsets.expenses += m.expensesLive;
+    window.__offsets.stock    += m.stockInvestSold;
+    window.__offsets.servInv  += m.serviceInvestCompleted;
     window.__offsets.net      += m.netProfit;
 
-    /* SAVE LOCK */
+    /* 🔒 SAVE LOCK */
     if (!window.__offsetSaveLock) {
 
       window.__offsetSaveLock = true;
@@ -314,7 +304,9 @@
 
   window.handleCollect = collect;
 
-  /* BUTTON EVENTS */
+  /* --------------------------------------------------
+        BUTTON EVENTS
+  -------------------------------------------------- */
   document.addEventListener("click", e => {
 
     const b = e.target.closest(".collect-btn");
@@ -323,7 +315,9 @@
       collect(b.dataset.collect);
   });
 
-  /* CLOUD READY */
+  /* --------------------------------------------------
+        CLOUD READY
+  -------------------------------------------------- */
   window.addEventListener(
     "cloud-data-loaded",
     () => {
