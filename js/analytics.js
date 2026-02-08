@@ -1,13 +1,5 @@
 /* ======================================================
-   analytics.js — FINAL v27 (OFFSET-AWARE CLOUD SAFE)
-
-   ✔ Dashboard analytics only (READ ONLY)
-   ✔ Credit-safe
-   ✔ Dashboard offset supported
-   ✔ UniversalBar independent
-   ✔ Cloud sync compatible
-   ✔ Logout/Login safe
-   ✔ Loader order crash fixed
+   analytics.js — FINAL v30 (EXECUTION + UNIVERSAL FIX)
 ====================================================== */
 
 (function () {
@@ -18,7 +10,7 @@
   let cleanPieChart = null;
 
   /* ======================================================
-        TODAY ANALYTICS (NO OFFSET)
+        TODAY ANALYTICS
   ====================================================== */
   window.getAnalyticsData = function () {
 
@@ -36,7 +28,7 @@
     let todayExpenses = 0;
     let todayProfit   = 0;
 
-    /* ---------- SALES ---------- */
+    /* SALES */
     sales.forEach(s => {
 
       if (s.date !== today) return;
@@ -53,7 +45,7 @@
       }
     });
 
-    /* ---------- SERVICES ---------- */
+    /* SERVICES */
     services.forEach(j => {
 
       if (j.date_out !== today) return;
@@ -68,7 +60,7 @@
         todayCredit += num(j.remaining);
     });
 
-    /* ---------- EXPENSES ---------- */
+    /* EXPENSES */
     expenses.forEach(e => {
 
       if (e.date === today)
@@ -83,208 +75,156 @@
       netProfit: todayProfit - todayExpenses
     };
   };
-
-  /* ======================================================
-        TOTAL SUMMARY (OFFSET AWARE)
+   /* ======================================================
+        TOTAL SUMMARY (UNIVERSAL LINKED + OFFSET SAFE)
   ====================================================== */
   window.getSummaryTotals = function () {
 
-    const sales    = window.sales    || [];
-    const services = window.services || [];
-    const expenses = window.expenses || [];
+    const m = window.__unMetrics || {};
 
-    let salesProfit   = 0;
-    let serviceProfit = 0;
-    let creditTotal   = 0;
-    let stockInvest   = 0;
-    let serviceInvest = 0;
-
-    /* ---------- SALES ---------- */
-    sales.forEach(s => {
-
-      const st =
-        String(s.status || "").toLowerCase();
-
-      if (st === "credit")
-        creditTotal += num(s.total);
-
-      if (st === "paid") {
-        salesProfit += num(s.profit);
-        stockInvest += num(s.qty) * num(s.cost);
-      }
-    });
-
-    /* ---------- SERVICES ---------- */
-    services.forEach(j => {
-
-      const st =
-        String(j.status || "").toLowerCase();
-
-      if (st === "paid") {
-        serviceProfit += num(j.profit);
-        serviceInvest += num(j.invest);
-      }
-
-      if (st === "credit")
-        creditTotal += num(j.remaining);
-    });
-
-    const totalExpenses =
-      expenses.reduce(
-        (a, e) => a + num(e.amount),
-        0
-      );
-
-    /* OFFSET APPLY */
-    const offset =
-      Number(window.__dashboardOffset || 0);
-
+    const salesProfit   = num(m.saleProfitCollected);
+    const serviceProfit = num(m.serviceProfitCollected);
     const totalProfitRaw =
       salesProfit + serviceProfit;
 
-    const totalProfit =
-      Math.max(0, totalProfitRaw - offset);
+    const totalExpenses =
+      num(m.expensesLive);
 
-    const netProfit =
-      Math.max(
-        0,
-        (totalProfitRaw - totalExpenses)
-        - offset
-      );
+    const offset =
+      Number(window.__dashboardOffset || 0);
 
     return {
+
       salesProfit,
       serviceProfit,
-      totalProfit,
+
+      totalProfit:
+        Math.max(0, totalProfitRaw - offset),
+
       totalExpenses,
-      netProfit,
-      creditTotal,
+
+      netProfit:
+        Math.max(
+          0,
+          (totalProfitRaw - totalExpenses)
+          - offset
+        ),
+
+      creditTotal:
+        num(m.pendingCreditTotal),
+
       totalInvestment:
-        stockInvest + serviceInvest
+        num(m.stockInvestSold)
+        + num(m.serviceInvestCompleted)
     };
   };
 
   /* ======================================================
-        RENDER DASHBOARD + PIE
+        RENDER DASHBOARD
   ====================================================== */
   window.renderAnalytics = function () {
 
     if (window.__dashboardViewCleared)
       return;
 
-    const {
-      totalProfit,
-      totalExpenses,
-      creditTotal,
-      totalInvestment
-    } = window.getSummaryTotals();
+    const t = window.getSummaryTotals();
 
-    if (qs("#dashProfit"))
-      qs("#dashProfit").textContent =
-        "₹" + Math.round(totalProfit);
+    qs("#dashProfit") &&
+      (qs("#dashProfit").textContent =
+        "₹" + Math.round(t.totalProfit));
 
-    if (qs("#dashExpenses"))
-      qs("#dashExpenses").textContent =
-        "₹" + Math.round(totalExpenses);
+    qs("#dashExpenses") &&
+      (qs("#dashExpenses").textContent =
+        "₹" + Math.round(t.totalExpenses));
 
-    if (qs("#dashCredit"))
-      qs("#dashCredit").textContent =
-        "₹" + Math.round(creditTotal);
+    qs("#dashCredit") &&
+      (qs("#dashCredit").textContent =
+        "₹" + Math.round(t.creditTotal));
 
-    if (qs("#dashInv"))
-      qs("#dashInv").textContent =
-        "₹" + Math.round(totalInvestment);
+    qs("#dashInv") &&
+      (qs("#dashInv").textContent =
+        "₹" + Math.round(t.totalInvestment));
 
     /* PIE */
     const canvas = qs("#cleanPie");
-
-    if (!canvas ||
-        typeof Chart === "undefined")
+    if (!canvas || typeof Chart === "undefined")
       return;
 
     try { cleanPieChart?.destroy(); }
     catch {}
 
-    cleanPieChart =
-      new Chart(canvas, {
+    cleanPieChart = new Chart(canvas, {
 
-        type: "pie",
+      type: "pie",
 
-        data: {
-          labels: [
-            "Profit",
-            "Expenses",
-            "Credit Pending",
-            "Investment"
+      data: {
+        labels: [
+          "Profit",
+          "Expenses",
+          "Credit Pending",
+          "Investment"
+        ],
+
+        datasets: [{
+          data: [
+            t.totalProfit,
+            t.totalExpenses,
+            t.creditTotal,
+            t.totalInvestment
           ],
 
-          datasets: [{
-            data: [
-              totalProfit,
-              totalExpenses,
-              creditTotal,
-              totalInvestment
-            ],
+          backgroundColor: [
+            "#16a34a",
+            "#dc2626",
+            "#2563eb",
+            "#facc15"
+          ]
+        }]
+      },
 
-            backgroundColor: [
-              "#16a34a",
-              "#dc2626",
-              "#2563eb",
-              "#facc15"
-            ]
-          }]
-        },
-
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          plugins: {
-            legend: {
-              position: "bottom",
-              labels: { boxWidth: 14 }
-            }
-          }
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { position: "bottom" }
         }
-      });
-
-    window.cleanPieChart =
-      cleanPieChart;
+      }
+    });
   };
 
   /* ======================================================
-        TODAY CARDS
+        TODAY SUMMARY CARDS
   ====================================================== */
   window.updateSummaryCards = function () {
 
     if (window.__dashboardViewCleared)
       return;
 
-    const d =
-      window.getAnalyticsData();
+    const d = window.getAnalyticsData();
 
-    if (qs("#todaySales"))
-      qs("#todaySales").textContent =
-        "₹" + Math.round(d.todaySales);
+    qs("#todaySales") &&
+      (qs("#todaySales").textContent =
+        "₹" + Math.round(d.todaySales));
 
-    if (qs("#todayCredit"))
-      qs("#todayCredit").textContent =
-        "₹" + Math.round(d.todayCredit);
+    qs("#todayCredit") &&
+      (qs("#todayCredit").textContent =
+        "₹" + Math.round(d.todayCredit));
 
-    if (qs("#todayExpenses"))
-      qs("#todayExpenses").textContent =
-        "₹" + Math.round(d.todayExpenses);
+    qs("#todayExpenses") &&
+      (qs("#todayExpenses").textContent =
+        "₹" + Math.round(d.todayExpenses));
 
-    if (qs("#todayGross"))
-      qs("#todayGross").textContent =
-        "₹" + Math.round(d.grossProfit);
+    qs("#todayGross") &&
+      (qs("#todayGross").textContent =
+        "₹" + Math.round(d.grossProfit));
 
-    if (qs("#todayNet"))
-      qs("#todayNet").textContent =
-        "₹" + Math.round(d.netProfit);
+    qs("#todayNet") &&
+      (qs("#todayNet").textContent =
+        "₹" + Math.round(d.netProfit));
   };
 
   /* ======================================================
-        ☁️ CLOUD SYNC (REPLACED SAFE VERSION)
+        CLOUD SYNC
   ====================================================== */
   window.addEventListener(
     "cloud-data-loaded",
@@ -293,19 +233,14 @@
       if (window.__dashboardViewCleared)
         return;
 
-      if (typeof renderAnalytics === "function")
-        renderAnalytics();
-
-      if (typeof updateSummaryCards === "function")
-        updateSummaryCards();
-
-      if (typeof updateUniversalBar === "function")
-        updateUniversalBar();
+      renderAnalytics?.();
+      updateSummaryCards?.();
+      updateUniversalBar?.();
     }
   );
 
   /* ======================================================
-        INIT SAFE LOAD
+        SAFE LOAD
   ====================================================== */
   window.addEventListener("load", () => {
 
@@ -315,18 +250,13 @@
         return;
 
       if (
-        Array.isArray(window.services) &&
-        Array.isArray(window.sales)
+        Array.isArray(window.sales) &&
+        Array.isArray(window.services)
       ) {
 
-        if (typeof renderAnalytics === "function")
-          renderAnalytics();
-
-        if (typeof updateSummaryCards === "function")
-          updateSummaryCards();
-
-        if (typeof updateUniversalBar === "function")
-          updateUniversalBar();
+        renderAnalytics?.();
+        updateSummaryCards?.();
+        updateUniversalBar?.();
       }
     };
 
