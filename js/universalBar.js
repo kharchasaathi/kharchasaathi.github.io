@@ -1,6 +1,6 @@
 /* ===========================================================
-   universal-bar.js — FINAL v33
-   FULL MERGE (v31 + v32)
+   universal-bar.js — FINAL v34
+   FULL MERGE + LIVE REFRESH FIX
 
    ✔ Main tab profit live add fix
    ✔ Baseline safe
@@ -9,6 +9,7 @@
    ✔ Investment tracking restored
    ✔ Cloud sync safe
    ✔ Multi-device safe
+   ✔ LIVE EVENT REFRESH ADDED
 =========================================================== */
 
 (function () {
@@ -83,7 +84,7 @@
   }
 
   /* ==========================================================
-     METRICS ENGINE — FULL MERGE FIXED
+     METRICS ENGINE
   ========================================================== */
   function computeMetrics() {
 
@@ -98,7 +99,7 @@
     let serviceInvestAll = 0;
     let pendingCredit    = 0;
 
-    /* ---------------- SALES ---------------- */
+    /* SALES */
     sales.forEach(s => {
 
       const st = String(s.status).toLowerCase();
@@ -107,16 +108,12 @@
         pendingCredit += num(s.total);
 
       if (st === "paid") {
-
         saleProfitAll += num(s.profit);
-
-        /* Investment tracking */
-        stockInvestAll +=
-          num(s.qty) * num(s.cost);
+        stockInvestAll += num(s.qty) * num(s.cost);
       }
     });
 
-    /* ---------------- SERVICES ---------------- */
+    /* SERVICES */
     services.forEach(j => {
 
       const st = String(j.status).toLowerCase();
@@ -124,7 +121,6 @@
       if (st === "paid") {
 
         const invest = num(j.invest);
-
         let profit = num(j.profit);
 
         if (!profit) {
@@ -133,9 +129,7 @@
           profit = paid - invest;
         }
 
-        serviceProfitAll +=
-          Math.max(0, profit);
-
+        serviceProfitAll += Math.max(0, profit);
         serviceInvestAll += invest;
       }
 
@@ -143,15 +137,10 @@
         pendingCredit += num(j.remaining);
     });
 
-    /* ---------------- EXPENSES ---------------- */
+    /* EXPENSES */
     expenses.forEach(e => {
       expensesAll += num(e.amount);
     });
-
-    /* ==================================================
-       🔥 BASELINE ONLY FOR NET
-       (Main tab live fix)
-    ================================================== */
 
     const totalProfitAll =
       saleProfitAll + serviceProfitAll;
@@ -165,52 +154,39 @@
 
     return {
 
-      /* Breakdown LIVE */
       saleProfitCollected:
-        Math.max(
-          0,
-          saleProfitAll -
-          window.__offsets.sale
+        Math.max(0,
+          saleProfitAll - window.__offsets.sale
         ),
 
       serviceProfitCollected:
-        Math.max(
-          0,
-          serviceProfitAll -
-          window.__offsets.service
+        Math.max(0,
+          serviceProfitAll - window.__offsets.service
         ),
 
       stockInvestSold:
-        Math.max(
-          0,
-          stockInvestAll -
-          window.__offsets.stock
+        Math.max(0,
+          stockInvestAll - window.__offsets.stock
         ),
 
       serviceInvestCompleted:
-        Math.max(
-          0,
-          serviceInvestAll -
-          window.__offsets.servInv
+        Math.max(0,
+          serviceInvestAll - window.__offsets.servInv
         ),
 
       expensesLive:
-        Math.max(
-          0,
-          expensesAll -
-          window.__offsets.expenses
+        Math.max(0,
+          expensesAll - window.__offsets.expenses
         ),
 
       pendingCreditTotal:
         pendingCredit,
 
-      /* Net after baseline */
       netProfit:
         Math.max(
           0,
           freshProfit
-          - (expensesAll -
-             window.__offsets.expenses)
+          - (expensesAll - window.__offsets.expenses)
           - window.__offsets.net
         )
     };
@@ -241,7 +217,7 @@
   window.updateUniversalBar = updateUniversalBar;
 
   /* ==========================================================
-     COLLECT — FULL RESET SAFE
+     COLLECT
   ========================================================== */
   async function collect(kind) {
 
@@ -266,7 +242,6 @@
       m.saleProfitCollected +
       m.serviceProfitCollected;
 
-    /* 🔥 BASELINE SHIFT */
     window.__universalBaseline += totalAll;
 
     await saveCloud(
@@ -274,7 +249,6 @@
       window.__universalBaseline
     );
 
-    /* 🔥 FULL BREAKDOWN RESET */
     window.__offsets.sale     += m.saleProfitCollected;
     window.__offsets.service  += m.serviceProfitCollected;
     window.__offsets.expenses += m.expensesLive;
@@ -282,7 +256,6 @@
     window.__offsets.servInv  += m.serviceInvestCompleted;
     window.__offsets.net      += m.netProfit;
 
-    /* 🔒 SAVE LOCK */
     if (!window.__offsetSaveLock) {
 
       window.__offsetSaveLock = true;
@@ -304,9 +277,7 @@
 
   window.handleCollect = collect;
 
-  /* --------------------------------------------------
-        BUTTON EVENTS
-  -------------------------------------------------- */
+  /* BUTTON EVENTS */
   document.addEventListener("click", e => {
 
     const b = e.target.closest(".collect-btn");
@@ -315,9 +286,7 @@
       collect(b.dataset.collect);
   });
 
-  /* --------------------------------------------------
-        CLOUD READY
-  -------------------------------------------------- */
+  /* CLOUD READY */
   window.addEventListener(
     "cloud-data-loaded",
     () => {
@@ -325,5 +294,17 @@
       updateUniversalBar();
     }
   );
+
+  /* ==========================================================
+     🔥 LIVE DATA TRIGGERS — MAIN TAB FIX
+  ========================================================== */
+
+  window.addEventListener("sales-updated", updateUniversalBar);
+  window.addEventListener("services-updated", updateUniversalBar);
+  window.addEventListener("expenses-updated", updateUniversalBar);
+
+  /* Fallback refresh */
+  setTimeout(updateUniversalBar, 500);
+  setTimeout(updateUniversalBar, 1200);
 
 })();
