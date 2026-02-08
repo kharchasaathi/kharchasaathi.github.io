@@ -1,15 +1,14 @@
 /* ===========================================================
-   universal-bar.js — FINAL v34
-   FULL MERGE + LIVE REFRESH FIX
+   universal-bar.js — FINAL v35
+   NO BASELINE + LIVE PROFIT ADD FIX
 
-   ✔ Main tab profit live add fix
-   ✔ Baseline safe
-   ✔ Collect reset safe
-   ✔ Offset save lock
-   ✔ Investment tracking restored
+   ✔ Collect after profit live add
+   ✔ No baseline blocking
+   ✔ Offsets only settlement
+   ✔ Expenses reset safe
+   ✔ Investment tracking safe
    ✔ Cloud sync safe
    ✔ Multi-device safe
-   ✔ LIVE EVENT REFRESH ADDED
 =========================================================== */
 
 (function () {
@@ -20,8 +19,7 @@
   const num = v => (isNaN(v = Number(v))) ? 0 : Number(v);
   const money = v => "₹" + Math.round(num(v));
 
-  const OFFSET_KEY   = "offsets";
-  const BASELINE_KEY = "universalBaseline";
+  const OFFSET_KEY = "offsets";
 
   /* --------------------------------------------------
         GLOBAL STORES
@@ -35,7 +33,6 @@
     expenses: 0
   };
 
-  window.__universalBaseline = 0;
   window.__offsetSaveLock = false;
 
   /* --------------------------------------------------
@@ -66,8 +63,7 @@
 
     if (!window.__cloudReady) return;
 
-    const offsets  = await loadCloud(OFFSET_KEY);
-    const baseline = await loadCloud(BASELINE_KEY);
+    const offsets = await loadCloud(OFFSET_KEY);
 
     Object.assign(window.__offsets, {
       net:     num(offsets?.net),
@@ -78,13 +74,11 @@
       expenses:num(offsets?.expenses)
     });
 
-    window.__universalBaseline = num(baseline);
-
     updateUniversalBar();
   }
 
   /* ==========================================================
-     METRICS ENGINE
+     METRICS ENGINE — BASELINE REMOVED
   ========================================================== */
   function computeMetrics() {
 
@@ -121,7 +115,7 @@
       if (st === "paid") {
 
         const invest = num(j.invest);
-        let profit = num(j.profit);
+        let profit   = num(j.profit);
 
         if (!profit) {
           const paid =
@@ -142,27 +136,38 @@
       expensesAll += num(e.amount);
     });
 
-    const totalProfitAll =
-      saleProfitAll + serviceProfitAll;
+    /* ==================================================
+       🔥 FINAL NET FORMULA (NO BASELINE)
+    ================================================== */
 
-    const freshProfit =
+    const saleCollected =
+      Math.max(0,
+        saleProfitAll - window.__offsets.sale
+      );
+
+    const serviceCollected =
+      Math.max(0,
+        serviceProfitAll - window.__offsets.service
+      );
+
+    const expensesLive =
+      Math.max(0,
+        expensesAll - window.__offsets.expenses
+      );
+
+    const netProfit =
       Math.max(
         0,
-        totalProfitAll -
-        num(window.__universalBaseline)
+        saleCollected +
+        serviceCollected -
+        expensesLive -
+        window.__offsets.net
       );
 
     return {
 
-      saleProfitCollected:
-        Math.max(0,
-          saleProfitAll - window.__offsets.sale
-        ),
-
-      serviceProfitCollected:
-        Math.max(0,
-          serviceProfitAll - window.__offsets.service
-        ),
+      saleProfitCollected: saleCollected,
+      serviceProfitCollected: serviceCollected,
 
       stockInvestSold:
         Math.max(0,
@@ -174,21 +179,9 @@
           serviceInvestAll - window.__offsets.servInv
         ),
 
-      expensesLive:
-        Math.max(0,
-          expensesAll - window.__offsets.expenses
-        ),
-
-      pendingCreditTotal:
-        pendingCredit,
-
-      netProfit:
-        Math.max(
-          0,
-          freshProfit
-          - (expensesAll - window.__offsets.expenses)
-          - window.__offsets.net
-        )
+      expensesLive,
+      pendingCreditTotal: pendingCredit,
+      netProfit
     };
   }
 
@@ -217,7 +210,7 @@
   window.updateUniversalBar = updateUniversalBar;
 
   /* ==========================================================
-     COLLECT
+     COLLECT — OFFSET ONLY RESET
   ========================================================== */
   async function collect(kind) {
 
@@ -238,17 +231,7 @@
       m.netProfit
     );
 
-    const totalAll =
-      m.saleProfitCollected +
-      m.serviceProfitCollected;
-
-    window.__universalBaseline += totalAll;
-
-    await saveCloud(
-      BASELINE_KEY,
-      window.__universalBaseline
-    );
-
+    /* 🔥 OFFSETS RESET ONLY */
     window.__offsets.sale     += m.saleProfitCollected;
     window.__offsets.service  += m.serviceProfitCollected;
     window.__offsets.expenses += m.expensesLive;
@@ -296,14 +279,24 @@
   );
 
   /* ==========================================================
-     🔥 LIVE DATA TRIGGERS — MAIN TAB FIX
+     LIVE DATA REFRESH
   ========================================================== */
 
-  window.addEventListener("sales-updated", updateUniversalBar);
-  window.addEventListener("services-updated", updateUniversalBar);
-  window.addEventListener("expenses-updated", updateUniversalBar);
+  window.addEventListener(
+    "sales-updated",
+    updateUniversalBar
+  );
 
-  /* Fallback refresh */
+  window.addEventListener(
+    "services-updated",
+    updateUniversalBar
+  );
+
+  window.addEventListener(
+    "expenses-updated",
+    updateUniversalBar
+  );
+
   setTimeout(updateUniversalBar, 500);
   setTimeout(updateUniversalBar, 1200);
 
