@@ -1,13 +1,6 @@
 /* ===========================================================
-   universal-bar.js — FINAL v29 (TRUE SETTLEMENT ENGINE)
-
-   ✔ Net collect = Full settlement
-   ✔ Sale + Service reset
-   ✔ Expenses impact reset
-   ✔ Future profit works
-   ✔ No double subtraction bug
-   ✔ Baseline hard lock safe
-   ✔ Cloud sync safe
+   universal-bar.js — FINAL v31
+   COMPLETE SETTLEMENT + OFFSET LOCK + FUTURE SAFE
 =========================================================== */
 
 (function () {
@@ -49,7 +42,9 @@
         CLOUD SAVE
   -------------------------------------------------- */
   async function saveCloud(key, value) {
+
     if (!window.__cloudReady) return;
+
     if (typeof cloudSaveDebounced === "function") {
       cloudSaveDebounced(key, value);
     }
@@ -91,6 +86,8 @@
     let saleProfitAll    = 0;
     let serviceProfitAll = 0;
     let expensesAll      = 0;
+    let stockInvestAll   = 0;
+    let serviceInvestAll = 0;
     let pendingCredit    = 0;
 
     /* SALES */
@@ -101,8 +98,10 @@
       if (st === "credit")
         pendingCredit += num(s.total);
 
-      if (st === "paid")
+      if (st === "paid") {
         saleProfitAll += num(s.profit);
+        stockInvestAll += num(s.qty) * num(s.cost);
+      }
     });
 
     /* SERVICES */
@@ -123,6 +122,7 @@
         }
 
         serviceProfitAll += Math.max(0, profit);
+        serviceInvestAll += invest;
       }
 
       if (st === "credit")
@@ -134,7 +134,7 @@
       expensesAll += num(e.amount);
     });
 
-    /* BASELINE APPLY */
+    /* BASELINE */
     const totalProfitAll =
       saleProfitAll + serviceProfitAll;
 
@@ -156,6 +156,16 @@
           serviceProfitAll - window.__offsets.service
         ),
 
+      stockInvestSold:
+        Math.max(0,
+          stockInvestAll - window.__offsets.stock
+        ),
+
+      serviceInvestCompleted:
+        Math.max(0,
+          serviceInvestAll - window.__offsets.servInv
+        ),
+
       expensesLive:
         Math.max(0,
           expensesAll - window.__offsets.expenses
@@ -169,6 +179,7 @@
           0,
           freshProfit
           - (expensesAll - window.__offsets.expenses)
+          - window.__offsets.net
         )
     };
   }
@@ -188,6 +199,8 @@
 
     set("unSaleProfit",    m.saleProfitCollected);
     set("unServiceProfit", m.serviceProfitCollected);
+    set("unStockInv",      m.stockInvestSold);
+    set("unServiceInv",    m.serviceInvestCompleted);
     set("unExpenses",      m.expensesLive);
     set("unCreditSales",   m.pendingCreditTotal);
     set("unNetProfit",     m.netProfit);
@@ -196,7 +209,7 @@
   window.updateUniversalBar = updateUniversalBar;
 
   /* --------------------------------------------------
-        COLLECT HANDLER — TRUE SETTLEMENT
+        COLLECT HANDLER — FULL SETTLEMENT
   -------------------------------------------------- */
   async function collect(kind) {
 
@@ -207,50 +220,57 @@
     if (m.netProfit <= 0)
       return alert("Nothing to collect.");
 
-    const amount = num(prompt(
-      `Net Profit\nAvailable ₹${m.netProfit}\nEnter amount:`
-    ));
-
-    if (amount <= 0 || amount > m.netProfit)
-      return alert("Invalid amount");
+    /* FULL COLLECT ONLY */
+    if (!confirm(
+      `Collect FULL Net Profit ₹${m.netProfit} ?`
+    )) return;
 
     window.addCollectionEntry?.(
       "Net Profit",
       "",
-      amount
+      m.netProfit
     );
 
-    /* ==================================================
-          🔥 TRUE SETTLEMENT ENGINE
-          ONLY BASELINE SHIFT
-          NO OFFSET SHIFT (BUG FIX)
-    ================================================== */
-
-    const salesAll    = window.sales    || [];
-    const servicesAll = window.services || [];
+    const sales    = window.sales    || [];
+    const services = window.services || [];
+    const expenses = window.expenses || [];
 
     let saleProfitAll    = 0;
     let serviceProfitAll = 0;
+    let expensesAll      = 0;
+    let stockInvestAll   = 0;
+    let serviceInvestAll = 0;
 
-    salesAll.forEach(s => {
-      if (String(s.status).toLowerCase() === "paid")
+    /* SALES */
+    sales.forEach(s => {
+      if (String(s.status).toLowerCase() === "paid") {
         saleProfitAll += num(s.profit);
+        stockInvestAll += num(s.qty) * num(s.cost);
+      }
     });
 
-    servicesAll.forEach(j => {
-
+    /* SERVICES */
+    services.forEach(j => {
       if (String(j.status).toLowerCase() === "paid") {
+
+        const invest = num(j.invest);
 
         let profit = num(j.profit);
 
         if (!profit) {
           const paid =
             num(j.paid || j.total || j.amount);
-          profit = paid - num(j.invest);
+          profit = paid - invest;
         }
 
         serviceProfitAll += Math.max(0, profit);
+        serviceInvestAll += invest;
       }
+    });
+
+    /* EXPENSES */
+    expenses.forEach(e => {
+      expensesAll += num(e.amount);
     });
 
     const totalAll =
@@ -264,10 +284,28 @@
       window.__universalBaseline
     );
 
-    /* IMPORTANT:
-       No sale/service/expense offsets shift
-       → prevents future profit block bug
-    */
+    /* BREAKDOWN RESET */
+    window.__offsets.sale     += saleProfitAll;
+    window.__offsets.service  += serviceProfitAll;
+    window.__offsets.expenses += expensesAll;
+    window.__offsets.stock    += stockInvestAll;
+    window.__offsets.servInv  += serviceInvestAll;
+    window.__offsets.net      += m.netProfit;
+
+    /* SAVE LOCK */
+    if (!window.__offsetSaveLock) {
+
+      window.__offsetSaveLock = true;
+
+      await saveCloud(
+        OFFSET_KEY,
+        window.__offsets
+      );
+
+      setTimeout(() => {
+        window.__offsetSaveLock = false;
+      }, 500);
+    }
 
     updateUniversalBar();
     renderCollection?.();
@@ -276,9 +314,7 @@
 
   window.handleCollect = collect;
 
-  /* --------------------------------------------------
-        BUTTON EVENTS
-  -------------------------------------------------- */
+  /* BUTTON EVENTS */
   document.addEventListener("click", e => {
 
     const b = e.target.closest(".collect-btn");
@@ -287,9 +323,7 @@
       collect(b.dataset.collect);
   });
 
-  /* --------------------------------------------------
-        CLOUD READY
-  -------------------------------------------------- */
+  /* CLOUD READY */
   window.addEventListener(
     "cloud-data-loaded",
     () => {
