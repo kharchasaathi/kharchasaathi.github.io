@@ -890,6 +890,87 @@ body{
 
 <!-- SECURITY -->
 <script src="/js/security.js"></script>
+  <!-- =============== RESET ENGINE =============== -->
+<script>
+
+document.addEventListener("click", async e => {
+
+  if (e.target.id !== "resetAllDataBtn") return;
+
+  if (!confirm(
+    "⚠️ This will DELETE entire business system.\n\nContinue?"
+  )) return;
+
+  if (!confirm(
+    "Final warning.\n\nAll data will be lost.\n\nProceed?"
+  )) return;
+
+  try {
+
+    /* -------------------------------
+       LOCAL MEMORY RESET
+    ------------------------------- */
+    window.types = [];
+    window.stock = [];
+    window.sales = [];
+    window.services = [];
+    window.expenses = [];
+    window.collections = [];
+    window.wanting = [];
+
+    window.__dashboardOffset = 0;
+    window.__dashboardViewCleared = false;
+
+    /* -------------------------------
+       CLOUD RESET
+    ------------------------------- */
+    if (window.__cloudReady &&
+        typeof cloudSave === "function") {
+
+      await cloudSave("types", []);
+      await cloudSave("stock", []);
+      await cloudSave("sales", []);
+      await cloudSave("services", []);
+      await cloudSave("expenses", []);
+      await cloudSave("collections", []);
+      await cloudSave("wanting", []);
+      await cloudSave("dashboardOffset", 0);
+    }
+
+    /* -------------------------------
+       UI REFRESH
+    ------------------------------- */
+    renderStock?.();
+    renderSales?.();
+    renderWanting?.();
+    renderExpenses?.();
+    renderCollection?.();
+    window.__svcRefresh?.();
+    updateUniversalBar?.();
+    renderAnalytics?.();
+    updateSummaryCards?.();
+
+    alert("✅ System fully reset");
+
+    console.log(
+      "🧨 Full system reset completed"
+    );
+
+  } catch (err) {
+
+    console.error(
+      "❌ Reset failed",
+      err
+    );
+
+    alert(
+      "Reset failed — see console"
+    );
+  }
+
+});
+
+</script>
   
 <script src="/js/accounting-audit.js"></script>
 <!-- =============== TAB SWITCHER + HOOKS =============== -->
