@@ -1,14 +1,13 @@
 /* ===========================================================
-   expenses.js — CLOUD ONLY — FINAL v14
+   expenses.js — FINAL v15
+   SETTLEMENT SAFE + UNIVERSAL v36 ALIGNED
 
-   ✔ No localStorage
-   ✔ Logout/Login safe
-   ✔ Multi-device sync safe
-   ✔ Cancel = Profit NOT added
-   ✔ OK = Profit added back
-   ✔ Delete = History remove only
-   ✔ Clear All = Same safe logic
-   ✔ Universal Bar compatible
+   ✔ Expense reversal fixed
+   ✔ Settlement isolated to expenses offset
+   ✔ Cloud race lock added
+   ✔ Multi-device safe
+   ✔ Net profit safe
+   ✔ Universal sync safe
 =========================================================== */
 
 
@@ -24,9 +23,13 @@ function saveExpenses() {
     );
   }
 
-  /* 🔄 Trigger realtime UI refresh */
+  /* 🔄 Global realtime refresh */
   window.dispatchEvent(
     new Event("cloud-data-loaded")
+  );
+
+  window.dispatchEvent(
+    new Event("expenses-updated")
   );
 }
 
@@ -104,7 +107,6 @@ function addExpenseEntry() {
     window.expenses || [];
 
   window.expenses.push({
-
     id: uid("exp"),
     date,
     category,
@@ -125,7 +127,7 @@ function addExpenseEntry() {
 
 
 /* ===========================================================
-   DELETE EXPENSE — SAFE PROFIT LOGIC
+   DELETE EXPENSE — SETTLEMENT SAFE
 =========================================================== */
 function deleteExpense(id) {
 
@@ -137,7 +139,7 @@ function deleteExpense(id) {
 
   const addBack = confirm(
     `Expense Amount: ₹${exp.amount}\n\n` +
-    `Do you want to add this amount back to Net Profit?`
+    `Add this amount back to Profit?`
   );
 
   /* Remove history */
@@ -146,19 +148,17 @@ function deleteExpense(id) {
       e => e.id !== id
     );
 
-  /* 🔥 Profit neutralization */
-  if (!addBack && window.__offsets) {
+  /* 🔥 Settlement reversal FIXED */
+  if (addBack && window.__offsets) {
 
-    window.__offsets.net =
-      Number(window.__offsets.net || 0) +
+    window.__offsets.expenses =
+      Number(window.__offsets.expenses || 0) -
       Number(exp.amount || 0);
 
-    if (typeof cloudSaveDebounced === "function") {
-      cloudSaveDebounced(
-        "offsets",
-        window.__offsets
-      );
-    }
+    if (window.__offsets.expenses < 0)
+      window.__offsets.expenses = 0;
+
+    saveOffsetsSafe();
   }
 
   saveExpenses();
@@ -172,7 +172,7 @@ window.deleteExpense = deleteExpense;
 
 
 /* ===========================================================
-   CLEAR ALL EXPENSES
+   CLEAR ALL EXPENSES — SETTLEMENT SAFE
 =========================================================== */
 qs("#clearExpensesBtn")
 ?.addEventListener("click", () => {
@@ -189,25 +189,22 @@ qs("#clearExpensesBtn")
 
   const addBack = confirm(
     `Total Expenses: ₹${total}\n\n` +
-    `Do you want to add this amount back to Net Profit?`
+    `Add back to Profit?`
   );
 
-  /* Clear history */
   window.expenses = [];
 
-  /* 🔥 Profit neutralization */
-  if (!addBack && window.__offsets) {
+  /* 🔥 Settlement reversal FIXED */
+  if (addBack && window.__offsets) {
 
-    window.__offsets.net =
-      Number(window.__offsets.net || 0) +
+    window.__offsets.expenses =
+      Number(window.__offsets.expenses || 0) -
       total;
 
-    if (typeof cloudSaveDebounced === "function") {
-      cloudSaveDebounced(
-        "offsets",
-        window.__offsets
-      );
-    }
+    if (window.__offsets.expenses < 0)
+      window.__offsets.expenses = 0;
+
+    saveOffsetsSafe();
   }
 
   saveExpenses();
@@ -217,6 +214,28 @@ qs("#clearExpensesBtn")
   updateSummaryCards?.();
   updateUniversalBar?.();
 });
+
+
+/* ===========================================================
+   🔐 OFFSET SAVE (RACE SAFE)
+=========================================================== */
+async function saveOffsetsSafe() {
+
+  if (window.__offsetSaveLock) return;
+
+  window.__offsetSaveLock = true;
+
+  if (typeof cloudSaveDebounced === "function") {
+    cloudSaveDebounced(
+      "offsets",
+      window.__offsets
+    );
+  }
+
+  setTimeout(() => {
+    window.__offsetSaveLock = false;
+  }, 600);
+}
 
 
 /* ===========================================================
@@ -245,23 +264,11 @@ function renderExpenses() {
 
         return `
           <tr>
-            <td data-label="Date">
-              ${toDisplay(e.date)}
-            </td>
-
-            <td data-label="Category">
-              ${esc(e.category)}
-            </td>
-
-            <td data-label="Amount">
-              ₹${esc(e.amount)}
-            </td>
-
-            <td data-label="Note">
-              ${esc(e.note || "-")}
-            </td>
-
-            <td data-label="Action">
+            <td>${toDisplay(e.date)}</td>
+            <td>${esc(e.category)}</td>
+            <td>₹${esc(e.amount)}</td>
+            <td>${esc(e.note || "-")}</td>
+            <td>
               <button
                 class="small-btn"
                 onclick="deleteExpense('${e.id}')"
@@ -290,7 +297,7 @@ qs("#addExpenseBtn")
 
 
 /* ===========================================================
-   ☁️ CLOUD SYNC LISTENER
+   CLOUD SYNC
 =========================================================== */
 window.addEventListener(
   "cloud-data-loaded",
@@ -310,6 +317,6 @@ window.addEventListener("load", () => {
 
 
 /* ===========================================================
-   GLOBAL EXPORT
+   EXPORT
 =========================================================== */
 window.renderExpenses = renderExpenses;
