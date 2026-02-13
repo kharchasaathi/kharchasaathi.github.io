@@ -1,22 +1,19 @@
 /* ===========================================================
-   firestore-listeners.js — FINAL MERGED SAFE v5
+   firestore-listeners.js — FINAL SAFE v6 (OFFSET HYDRATION FIX)
 
    ✔ Realtime cloud sync
-   ✔ Razorpay ready
-   ✔ Collect offsets synced
-   ✔ Dashboard baseline synced
-   ✔ Multi-device safe
+   ✔ Offset overwrite bug FIXED
+   ✔ Hydration guard added
+   ✔ Settlement safe
    ✔ Logout/Login safe
-   ✔ Duplicate listener blocked
-   ✔ Function load guard added
-   ✔ Collection write-lock guard added
-   ✔ 🧠 Offset overwrite bug FIXED
+   ✔ Multi-device safe
+   ✔ Collection write-lock safe
 =========================================================== */
 
 (function () {
 
   /* --------------------------------------------------
-        DUPLICATE LISTENER BLOCK
+     DUPLICATE LISTENER BLOCK
   -------------------------------------------------- */
   if (window.__fsListenersAttached) {
     console.warn("🔥 Firestore listeners already attached");
@@ -34,54 +31,42 @@
   const auth = window.auth;
 
   /* ==================================================
-        🧠 COLLECTION WRITE LOCK GUARD
+     COLLECTION WRITE LOCK
   ================================================== */
   function attachCollectionWriteGuard() {
 
-    if (!window.addCollectionEntry) {
-      console.warn(
-        "Collection function not ready — guard skipped"
-      );
-      return;
-    }
-
-    if (window.__collectionGuardAttached)
-      return;
+    if (!window.addCollectionEntry) return;
+    if (window.__collectionGuardAttached) return;
 
     window.__collectionGuardAttached = true;
 
-    const _oldAdd =
-      window.addCollectionEntry;
+    const oldAdd = window.addCollectionEntry;
 
     window.__collectionWriteLock = false;
 
-    window.addCollectionEntry =
-      function (...args) {
+    window.addCollectionEntry = function (...args) {
 
-        if (window.__collectionWriteLock) {
-          console.warn("🚫 Duplicate collection blocked");
-          return;
-        }
+      if (window.__collectionWriteLock) {
+        console.warn("🚫 Duplicate collection blocked");
+        return;
+      }
 
-        window.__collectionWriteLock = true;
+      window.__collectionWriteLock = true;
 
-        try {
-          _oldAdd(...args);
-        } finally {
-          setTimeout(() => {
-            window.__collectionWriteLock = false;
-          }, 500);
-        }
-      };
+      try {
+        oldAdd(...args);
+      } finally {
+        setTimeout(() => {
+          window.__collectionWriteLock = false;
+        }, 500);
+      }
+    };
 
-    console.log(
-      "%c🔒 Collection write-lock active",
-      "color:#ff9800;font-weight:bold;"
-    );
+    console.log("🔒 Collection write-lock active");
   }
 
   /* --------------------------------------------------
-        WAIT FOR CLOUD READY
+     WAIT FOR CLOUD READY
   -------------------------------------------------- */
   function waitForCloudReady(cb) {
 
@@ -101,7 +86,7 @@
   }
 
   /* --------------------------------------------------
-        SAFE UI REFRESH
+     SAFE UI REFRESH
   -------------------------------------------------- */
   function safeRefresh() {
 
@@ -109,11 +94,15 @@
     renderCollection?.();
     renderAnalytics?.();
     updateSummaryCards?.();
-    updateUniversalBar?.();
+
+    /* Delay universal bar until offsets ready */
+    setTimeout(() => {
+      updateUniversalBar?.();
+    }, 50);
   }
 
   /* --------------------------------------------------
-        ATTACH LISTENERS
+     ATTACH LISTENERS
   -------------------------------------------------- */
   function attachListeners() {
 
@@ -126,23 +115,18 @@
 
     attachCollectionWriteGuard();
 
-    /* ==================================================
-       SALES
-    ================================================== */
+    /* ================= SALES ================= */
     ref.doc("sales").onSnapshot(snap => {
 
       if (!snap.exists) return;
 
-      window.sales =
-        snap.data().value || [];
-
+      window.sales = snap.data().value || [];
       safeRefresh();
+
       console.log("🔄 Sales synced");
     });
 
-    /* ==================================================
-       COLLECTIONS
-    ================================================== */
+    /* ================= COLLECTIONS ================= */
     ref.doc("collections").onSnapshot(snap => {
 
       if (!snap.exists) return;
@@ -151,12 +135,11 @@
         snap.data().value || [];
 
       safeRefresh();
+
       console.log("🔄 Collections synced");
     });
 
-    /* ==================================================
-       SERVICES
-    ================================================== */
+    /* ================= SERVICES ================= */
     ref.doc("services").onSnapshot(snap => {
 
       if (!snap.exists) return;
@@ -165,12 +148,11 @@
         snap.data().value || [];
 
       safeRefresh();
+
       console.log("🔄 Services synced");
     });
 
-    /* ==================================================
-       EXPENSES
-    ================================================== */
+    /* ================= EXPENSES ================= */
     ref.doc("expenses").onSnapshot(snap => {
 
       if (!snap.exists) return;
@@ -179,11 +161,12 @@
         snap.data().value || [];
 
       safeRefresh();
+
       console.log("🔄 Expenses synced");
     });
 
     /* ==================================================
-       🧠 OFFSETS — OVERWRITE PROTECTED
+       🧠 OFFSETS — HYDRATION SAFE
     ================================================== */
     ref.doc("offsets").onSnapshot(snap => {
 
@@ -192,48 +175,30 @@
       const incoming =
         snap.data().value || {};
 
-      const local =
-        window.__offsets || {};
-
-      /* 🔒 Ignore snapshot while saving */
-      if (window.__offsetSaveLock) {
-        console.warn(
-          "⏳ Offset snapshot ignored (save lock)"
+      /* 🔒 FIRST LOAD ONLY */
+      if (window.__offsetsHydrated) {
+        console.log(
+          "⏭ Offsets already hydrated — skip overwrite"
         );
         return;
       }
 
-      /* 🔒 Ignore older data */
-      const isOlder =
-        Object.keys(incoming).every(k =>
-          Number(incoming[k] || 0)
-          <=
-          Number(local[k] || 0)
-        );
-
-      if (isOlder) {
-        console.warn(
-          "⏳ Older offsets ignored"
-        );
-        return;
-      }
+      window.__offsetsHydrated = true;
 
       Object.assign(
         window.__offsets,
         incoming
       );
 
-      updateUniversalBar?.();
-
       console.log(
-        "%c🔄 Offsets synced (safe merge)",
-        "color:#4caf50"
+        "%c🔄 Offsets hydrated",
+        "color:#4caf50;font-weight:bold;"
       );
+
+      updateUniversalBar?.();
     });
 
-    /* ==================================================
-       DASHBOARD OFFSET
-    ================================================== */
+    /* ================= DASHBOARD OFFSET ================= */
     ref.doc("dashboardOffset")
       .onSnapshot(snap => {
 
@@ -245,15 +210,13 @@
         renderAnalytics?.();
         updateSummaryCards?.();
 
-        console.log(
-          "🔄 Dashboard offset synced"
-        );
+        console.log("🔄 Dashboard offset synced");
       });
 
   }
 
   /* --------------------------------------------------
-        INIT
+     INIT
   -------------------------------------------------- */
   waitForCloudReady(attachListeners);
 
