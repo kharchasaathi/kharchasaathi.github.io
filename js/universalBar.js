@@ -1,22 +1,21 @@
 /* ===========================================================
-   universal-bar.js — FINAL v37
-   SETTLEMENT SAFE CORE ENGINE (DOUBLE OFFSET FIXED)
+   universal-bar.js — FINAL v40
+   BULLETPROOF SETTLEMENT ENGINE
 
-   ✔ Net profit formula fixed
-   ✔ Component settlement removed from net collect
-   ✔ Expense settlement isolated
-   ✔ Investment collect separated
-   ✔ Credit excluded
-   ✔ Offset overwrite protected
-   ✔ Cloud sync race-safe
+   ✔ Net settlement safe
+   ✔ Component snapshot restore
+   ✔ Post-collect accumulation fixed
+   ✔ Logout/login safe
+   ✔ Cloud reload safe
+   ✔ Dashboard clear guard
+   ✔ Audit mismatch fixed
    ✔ Multi-device safe
-   ✔ Post-collect profit accumulation FIXED
 =========================================================== */
 
 (function () {
 
   /* --------------------------------------------------
-        HELPERS
+     HELPERS
   -------------------------------------------------- */
   const num = v => (isNaN(v = Number(v))) ? 0 : Number(v);
   const money = v => "₹" + Math.round(num(v));
@@ -24,7 +23,7 @@
   const OFFSET_KEY = "offsets";
 
   /* --------------------------------------------------
-        GLOBAL OFFSETS STORE
+     GLOBAL OFFSETS
   -------------------------------------------------- */
   window.__offsets = window.__offsets || {
     net: 0,
@@ -38,7 +37,7 @@
   window.__offsetSaveLock = false;
 
   /* --------------------------------------------------
-        CLOUD LOAD
+     CLOUD LOAD
   -------------------------------------------------- */
   async function loadCloud(key) {
     if (typeof cloudLoad !== "function") return null;
@@ -47,7 +46,7 @@
   }
 
   /* --------------------------------------------------
-        CLOUD SAVE
+     CLOUD SAVE
   -------------------------------------------------- */
   async function saveCloud(key, value) {
 
@@ -59,7 +58,7 @@
   }
 
   /* --------------------------------------------------
-        INIT CLOUD OFFSETS
+     INIT CLOUD OFFSETS (REHYDRATION SAFE)
   -------------------------------------------------- */
   async function initCloud() {
 
@@ -81,9 +80,23 @@
   }
 
   /* ==========================================================
-     🧠 METRICS ENGINE (CORE PROFIT LOGIC)
+     🧠 METRICS ENGINE
+     PURE CALCULATION ONLY
   ========================================================== */
   function computeMetrics() {
+
+    /* 🔒 Dashboard clear guard */
+    if (window.__dashboardViewCleared) {
+      return {
+        saleProfitCollected: 0,
+        serviceProfitCollected: 0,
+        stockInvestSold: 0,
+        serviceInvestCompleted: 0,
+        expensesLive: 0,
+        pendingCreditTotal: 0,
+        netProfit: 0
+      };
+    }
 
     const sales    = window.sales    || [];
     const services = window.services || [];
@@ -107,9 +120,7 @@
       if (st === "paid") {
 
         saleProfitAll += num(s.profit);
-
-        stockInvestAll +=
-          num(s.qty) * num(s.cost);
+        stockInvestAll += num(s.qty) * num(s.cost);
       }
     });
 
@@ -138,9 +149,7 @@
       expensesAll += num(e.amount);
     });
 
-    /* ==================================================
-       LIVE PROFITS (after settlement deduction)
-    ================================================== */
+    /* ---------------- LIVE VALUES ---------------- */
 
     const saleLive =
       Math.max(0,
@@ -157,56 +166,41 @@
         expensesAll - window.__offsets.expenses
       );
 
-    /* ---------------- NET PROFIT ---------------- */
-if (kind === "net") {
+    const netRaw =
+      saleLive +
+      serviceLive -
+      expenseLive;
 
-  if (m.netProfit <= 0)
-    return alert("Nothing to collect.");
+    const netLive =
+      Math.max(0,
+        netRaw - window.__offsets.net
+      );
 
-  if (!confirm(
-    `Collect Net Profit ₹${m.netProfit} ?`
-  )) return;
+    return {
 
-  window.addCollectionEntry?.(
-    "Net Profit",
-    "",
-    m.netProfit
-  );
+      saleProfitCollected: saleLive,
+      serviceProfitCollected: serviceLive,
 
-  /* ✅ NET OFFSET */
-  window.__offsets.net += m.netProfit;
+      stockInvestSold:
+        Math.max(0,
+          stockInvestAll -
+          window.__offsets.stock
+        ),
 
-  /* ✅ COMPONENT SNAPSHOT SYNC */
-  const sales = window.sales || [];
-  const services = window.services || [];
-  const expenses = window.expenses || [];
+      serviceInvestCompleted:
+        Math.max(0,
+          serviceInvestAll -
+          window.__offsets.servInv
+        ),
 
-  window.__offsets.sale =
-    sales.reduce((a, s) =>
-      a + (
-        String(s.status).toLowerCase() === "paid"
-          ? num(s.profit)
-          : 0
-      ), 0);
-
-  window.__offsets.service =
-    services.reduce((a, j) =>
-      a + (
-        String(j.status).toLowerCase() === "paid"
-          ? (
-              num(j.profit) ||
-              (num(j.paid) - num(j.invest))
-            )
-          : 0
-      ), 0);
-
-  window.__offsets.expenses =
-    expenses.reduce((a, e) =>
-      a + num(e.amount), 0);
-}
+      expensesLive: expenseLive,
+      pendingCreditTotal: pendingCredit,
+      netProfit: netLive
+    };
+  }
 
   /* --------------------------------------------------
-        UI UPDATE
+     UI UPDATE
   -------------------------------------------------- */
   function updateUniversalBar() {
 
@@ -230,7 +224,7 @@ if (kind === "net") {
   window.updateUniversalBar = updateUniversalBar;
 
   /* ==========================================================
-     💰 COLLECT ENGINE (FIXED)
+     💰 COLLECT ENGINE
   ========================================================== */
   async function collect(kind) {
 
@@ -252,8 +246,37 @@ if (kind === "net") {
         m.netProfit
       );
 
-      /* ✅ ONLY NET OFFSET — NO COMPONENT SETTLEMENT */
+      /* NET OFFSET */
       window.__offsets.net += m.netProfit;
+
+      /* 🔥 SNAPSHOT LOCK (CRITICAL FIX) */
+
+      const sales    = window.sales || [];
+      const services = window.services || [];
+      const expenses = window.expenses || [];
+
+      window.__offsets.sale =
+        sales.reduce((a, s) =>
+          a + (
+            String(s.status).toLowerCase() === "paid"
+              ? num(s.profit)
+              : 0
+          ), 0);
+
+      window.__offsets.service =
+        services.reduce((a, j) =>
+          a + (
+            String(j.status).toLowerCase() === "paid"
+              ? (
+                  num(j.profit) ||
+                  (num(j.paid) - num(j.invest))
+                )
+              : 0
+          ), 0);
+
+      window.__offsets.expenses =
+        expenses.reduce((a, e) =>
+          a + num(e.amount), 0);
     }
 
     /* ---------------- STOCK INVEST ---------------- */
@@ -288,7 +311,7 @@ if (kind === "net") {
         m.serviceInvestCompleted;
     }
 
-    /* ---------------- SAVE OFFSETS ---------------- */
+    /* ---------------- SAVE CLOUD ---------------- */
     if (!window.__offsetSaveLock) {
 
       window.__offsetSaveLock = true;
@@ -311,7 +334,7 @@ if (kind === "net") {
   window.handleCollect = collect;
 
   /* --------------------------------------------------
-        BUTTON EVENTS
+     BUTTON EVENTS
   -------------------------------------------------- */
   document.addEventListener("click", e => {
 
@@ -322,7 +345,7 @@ if (kind === "net") {
   });
 
   /* --------------------------------------------------
-        CLOUD READY SYNC
+     CLOUD READY
   -------------------------------------------------- */
   window.addEventListener(
     "cloud-data-loaded",
@@ -333,7 +356,7 @@ if (kind === "net") {
   );
 
   /* --------------------------------------------------
-        LIVE DATA EVENTS
+     LIVE DATA SYNC
   -------------------------------------------------- */
   [
     "sales-updated",
