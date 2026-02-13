@@ -85,7 +85,7 @@ function getFiltered(){
     if(statusVal==="credit") return s==="credit";
     if(statusVal==="credit-paid")
       return s==="paid" && j.fromCredit;
-    if(statusVal==="failed") return s==="failed;
+    if(statusVal==="failed") return s==="failed";
 
     return true;
   });
