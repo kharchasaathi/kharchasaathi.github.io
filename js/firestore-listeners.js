@@ -1,13 +1,15 @@
 /* ===========================================================
-   firestore-listeners.js — FINAL SAFE v6 (OFFSET HYDRATION FIX)
+   firestore-listeners.js — FINAL SAFE v7
 
    ✔ Realtime cloud sync
-   ✔ Offset overwrite bug FIXED
-   ✔ Hydration guard added
+   ✔ Offset hydration safe
    ✔ Settlement safe
    ✔ Logout/Login safe
    ✔ Multi-device safe
    ✔ Collection write-lock safe
+   ✔ Types sync restored
+   ✔ Stock sync restored
+   ✔ Wanting sync restored
 =========================================================== */
 
 (function () {
@@ -95,7 +97,6 @@
     renderAnalytics?.();
     updateSummaryCards?.();
 
-    /* Delay universal bar until offsets ready */
     setTimeout(() => {
       updateUniversalBar?.();
     }, 50);
@@ -115,12 +116,54 @@
 
     attachCollectionWriteGuard();
 
+    /* ================= TYPES ================= */
+    ref.doc("types").onSnapshot(snap => {
+
+      if (!snap.exists) return;
+
+      window.types =
+        snap.data().value || [];
+
+      renderTypes?.();
+
+      console.log("🔄 Types synced");
+    });
+
+    /* ================= STOCK ================= */
+    ref.doc("stock").onSnapshot(snap => {
+
+      if (!snap.exists) return;
+
+      window.stock =
+        snap.data().value || [];
+
+      renderStock?.();
+      updateUniversalBar?.();
+
+      console.log("🔄 Stock synced");
+    });
+
+    /* ================= WANTING ================= */
+    ref.doc("wanting").onSnapshot(snap => {
+
+      if (!snap.exists) return;
+
+      window.wanting =
+        snap.data().value || [];
+
+      renderWanting?.();
+
+      console.log("🔄 Wanting synced");
+    });
+
     /* ================= SALES ================= */
     ref.doc("sales").onSnapshot(snap => {
 
       if (!snap.exists) return;
 
-      window.sales = snap.data().value || [];
+      window.sales =
+        snap.data().value || [];
+
       safeRefresh();
 
       console.log("🔄 Sales synced");
@@ -175,7 +218,6 @@
       const incoming =
         snap.data().value || {};
 
-      /* 🔒 FIRST LOAD ONLY */
       if (window.__offsetsHydrated) {
         console.log(
           "⏭ Offsets already hydrated — skip overwrite"
