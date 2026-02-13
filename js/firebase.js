@@ -1,12 +1,14 @@
 /* ===========================================================
-firebase.js — FINAL V21 (OPTION-2 + DASHBOARD OFFSET)
+firebase.js — FINAL V22 (OFFSET BULLETPROOF + DASHBOARD SAFE)
 
 ✔ Pulls ALL business data
 ✔ Prevents empty overwrite
 ✔ Duplicate pull blocked
 ✔ Offsets cloud synced
+✔ Expenses offset added
 ✔ Dashboard clear persistent
 ✔ Multi-device data safe
+✔ Settlement aligned
 =========================================================== */
 
 console.log("%c🔥 firebase.js loaded","color:#ff9800;font-weight:bold;");
@@ -43,7 +45,7 @@ window.db=db;
 console.log("%c☁️ Firebase connected!","color:#4caf50;font-weight:bold;");
 
 /* ===========================================================
-CLOUD ENGINE
+CLOUD ENGINE FLAGS
 =========================================================== */
 
 window.__cloudReady=false;
@@ -98,7 +100,7 @@ function cloudSaveDebounced(key,value){
 window.cloudSaveDebounced=cloudSaveDebounced;
 
 /* ===========================================================
-🌍 FULL CLOUD PULL (WITH DASHBOARD OFFSET)
+🌍 FULL CLOUD PULL (OFFSET BULLETPROOF)
 =========================================================== */
 async function cloudPullAll(){
 
@@ -116,7 +118,7 @@ async function cloudPullAll(){
     "services",
     "collections",
     "offsets",
-    "dashboardOffset"   // ✅ NEW KEY
+    "dashboardOffset"
   ];
 
   const results=await Promise.all(
@@ -132,28 +134,33 @@ async function cloudPullAll(){
     services,
     collections,
     offsets,
-    dashboardOffset   // ✅ NEW
+    dashboardOffset
   ]=results;
 
-  if(types!==null)       window.types=types;
-  if(stock!==null)       window.stock=stock;
-  if(sales!==null)       window.sales=sales;
-  if(wanting!==null)     window.wanting=wanting;
-  if(expenses!==null)    window.expenses=expenses;
-  if(services!==null)    window.services=services;
-  if(collections!==null)window.collections=collections;
+  if(types!==null)        window.types=types;
+  if(stock!==null)        window.stock=stock;
+  if(sales!==null)        window.sales=sales;
+  if(wanting!==null)      window.wanting=wanting;
+  if(expenses!==null)     window.expenses=expenses;
+  if(services!==null)     window.services=services;
+  if(collections!==null) window.collections=collections;
 
-  /* OFFSETS SAFE MERGE */
-  window.__offsets=Object.assign({
+  /* =======================================================
+     🧠 OFFSETS — BULLETPROOF INIT
+  ======================================================= */
+  window.__offsets = Object.assign({
+
     net:0,
     sale:0,
     service:0,
     stock:0,
-    servInv:0
-  },offsets||{});
+    servInv:0,
+    expenses:0   // 🔥 ADDED (FINAL FIX)
+
+  }, offsets || {});
 
   /* =======================================================
-     DASHBOARD OFFSET INIT
+     DASHBOARD OFFSET
   ======================================================= */
   window.__dashboardOffset =
     Number(dashboardOffset || 0);
