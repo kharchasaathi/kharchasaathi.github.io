@@ -157,42 +157,53 @@
         expensesAll - window.__offsets.expenses
       );
 
-    /* ==================================================
-       NET PROFIT (ONLY NET OFFSET APPLIED)
-    ================================================== */
+    /* ---------------- NET PROFIT ---------------- */
+if (kind === "net") {
 
-    const netRaw =
-      saleLive +
-      serviceLive -
-      expenseLive;
+  if (m.netProfit <= 0)
+    return alert("Nothing to collect.");
 
-    const netLive =
-      Math.max(0,
-        netRaw - window.__offsets.net
-      );
+  if (!confirm(
+    `Collect Net Profit ₹${m.netProfit} ?`
+  )) return;
 
-    return {
+  window.addCollectionEntry?.(
+    "Net Profit",
+    "",
+    m.netProfit
+  );
 
-      saleProfitCollected: saleLive,
-      serviceProfitCollected: serviceLive,
+  /* ✅ NET OFFSET */
+  window.__offsets.net += m.netProfit;
 
-      stockInvestSold:
-        Math.max(0,
-          stockInvestAll -
-          window.__offsets.stock
-        ),
+  /* ✅ COMPONENT SNAPSHOT SYNC */
+  const sales = window.sales || [];
+  const services = window.services || [];
+  const expenses = window.expenses || [];
 
-      serviceInvestCompleted:
-        Math.max(0,
-          serviceInvestAll -
-          window.__offsets.servInv
-        ),
+  window.__offsets.sale =
+    sales.reduce((a, s) =>
+      a + (
+        String(s.status).toLowerCase() === "paid"
+          ? num(s.profit)
+          : 0
+      ), 0);
 
-      expensesLive: expenseLive,
-      pendingCreditTotal: pendingCredit,
-      netProfit: netLive
-    };
-  }
+  window.__offsets.service =
+    services.reduce((a, j) =>
+      a + (
+        String(j.status).toLowerCase() === "paid"
+          ? (
+              num(j.profit) ||
+              (num(j.paid) - num(j.invest))
+            )
+          : 0
+      ), 0);
+
+  window.__offsets.expenses =
+    expenses.reduce((a, e) =>
+      a + num(e.amount), 0);
+}
 
   /* --------------------------------------------------
         UI UPDATE
