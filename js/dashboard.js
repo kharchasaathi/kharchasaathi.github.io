@@ -1,25 +1,147 @@
 /* =========================================
-   dashboard.js — FINAL v25
+   dashboard.js — FINAL v30
+   SETTLEMENT AWARE ANALYTICS ENGINE
 
-   ✔ Persistent clear FIXED
-   ✔ Cloud offset load safe
+   ✔ Clear button removed
+   ✔ Dashboard offset removed
+   ✔ Settlement aware profit
    ✔ Logout/Login safe
-   ✔ Analytics offset applied
-   ✔ Pie safe destroy
-   ✔ Universal unaffected
+   ✔ Universal synced
+   ✔ Multi-device safe
 ========================================= */
 
 (function () {
 
   const qs = s => document.querySelector(s);
 
-  const OFFSET_KEY = "dashboardOffset";
-
   /* ---------------------------------------
      SAFE NUM
   --------------------------------------- */
   const num = v =>
     (isNaN(v = Number(v))) ? 0 : Number(v);
+
+  const money = v =>
+    "₹" + Math.round(num(v));
+
+  /* ---------------------------------------
+     GET OFFSETS
+  --------------------------------------- */
+  function getOffsets() {
+
+    return window.__offsets || {
+      net: 0,
+      sale: 0,
+      service: 0,
+      stock: 0,
+      servInv: 0,
+      expenses: 0
+    };
+  }
+
+  /* ---------------------------------------
+     CORE ANALYTICS ENGINE
+  --------------------------------------- */
+  function computeDashboard() {
+
+    const sales    = window.sales    || [];
+    const services = window.services || [];
+    const expenses = window.expenses || [];
+
+    const offs = getOffsets();
+
+    let saleTotal    = 0;
+    let serviceTotal = 0;
+    let expenseTotal = 0;
+    let creditTotal  = 0;
+    let investTotal  = 0;
+
+    /* -------- SALES -------- */
+    sales.forEach(s => {
+
+      const st = String(s.status).toLowerCase();
+
+      if (st === "credit")
+        creditTotal += num(s.total);
+
+      if (st === "paid") {
+
+        saleTotal += num(s.profit);
+        investTotal += num(s.qty) * num(s.cost);
+      }
+    });
+
+    /* -------- SERVICES -------- */
+    services.forEach(j => {
+
+      const st = String(j.status).toLowerCase();
+
+      if (st === "credit")
+        creditTotal += num(j.remaining);
+
+      if (st === "paid") {
+
+        const invest = num(j.invest);
+        const profit =
+          num(j.profit) ||
+          (num(j.paid) - invest);
+
+        serviceTotal += Math.max(0, profit);
+        investTotal  += invest;
+      }
+    });
+
+    /* -------- EXPENSES -------- */
+    expenses.forEach(e => {
+      expenseTotal += num(e.amount);
+    });
+
+    /* =====================================
+       🔥 APPLY SETTLEMENT OFFSETS
+    ===================================== */
+
+    const saleLive =
+      Math.max(0, saleTotal - offs.sale);
+
+    const serviceLive =
+      Math.max(0, serviceTotal - offs.service);
+
+    const expenseLive =
+      Math.max(0, expenseTotal - offs.expenses);
+
+    const netRaw =
+      saleLive +
+      serviceLive -
+      expenseLive;
+
+    const netLive =
+      Math.max(0, netRaw - offs.net);
+
+    return {
+
+      profit:   netLive,
+      gross:    saleLive + serviceLive,
+      expenses: expenseLive,
+      credit:   creditTotal,
+      invest:   investTotal
+    };
+  }
+
+  /* ---------------------------------------
+     UI RENDER
+  --------------------------------------- */
+  function renderDashboard() {
+
+    const d = computeDashboard();
+
+    setText("#dashProfit",   money(d.profit));
+    setText("#dashExpenses", money(d.expenses));
+    setText("#dashCredit",   money(d.credit));
+    setText("#dashInv",      money(d.invest));
+
+    /* TODAY cards can reuse same safe values */
+    setText("#todayGross", money(d.gross));
+    setText("#todayNet",   money(d.profit));
+  }
 
   /* ---------------------------------------
      SAFE TEXT SETTER
@@ -31,157 +153,34 @@
   }
 
   /* ---------------------------------------
-     APPLY CLEAR UI
-  --------------------------------------- */
-  function applyClearView() {
-
-    /* TODAY */
-    setText("#todaySales",    "₹0");
-    setText("#todayCredit",   "₹0");
-    setText("#todayExpenses", "₹0");
-    setText("#todayGross",    "₹0");
-    setText("#todayNet",      "₹0");
-
-    /* TOTAL */
-    setText("#dashProfit",   "₹0");
-    setText("#dashExpenses", "₹0");
-    setText("#dashCredit",   "₹0");
-    setText("#dashInv",      "₹0");
-
-    /* PIE DESTROY */
-    if (window.cleanPieChart) {
-
-      try {
-        window.cleanPieChart.destroy();
-      } catch {}
-
-      window.cleanPieChart = null;
-    }
-  }
-
-  /* ---------------------------------------
-     CLOUD SAVE
-  --------------------------------------- */
-  function saveDashboardOffset(amount) {
-
-    if (
-      typeof cloudSaveDebounced === "function" &&
-      window.__cloudReady
-    ) {
-      cloudSaveDebounced(
-        OFFSET_KEY,
-        amount
-      );
-    }
-  }
-
-  /* ---------------------------------------
-     CLOUD LOAD
-  --------------------------------------- */
-  async function loadDashboardOffset() {
-
-    if (
-      typeof cloudLoad !== "function" ||
-      !window.__cloudReady
-    ) return;
-
-    try {
-
-      const val =
-        await cloudLoad(OFFSET_KEY);
-
-      window.__dashboardOffset =
-        num(val);
-
-      if (window.__dashboardOffset > 0) {
-        window.__dashboardViewCleared = true;
-      }
-
-      applyGuardIfNeeded();
-
-    } catch (err) {
-
-      console.warn(
-        "Dashboard offset load failed",
-        err
-      );
-    }
-  }
-
-  /* ---------------------------------------
-     CLEAR DASHBOARD VIEW
-  --------------------------------------- */
-  function clearDashboardView() {
-
-    if (!confirm(
-      "This will clear only Dashboard calculated view.\n\nBusiness data will NOT be deleted.\n\nContinue?"
-    )) return;
-
-    /* Capture baseline profit */
-    const profit =
-      num(window.__unMetrics?.netProfit);
-
-    /* Save offset */
-    window.__dashboardOffset = profit;
-
-    /* Mark cleared */
-    window.__dashboardViewCleared = true;
-
-    /* Cloud save */
-    saveDashboardOffset(profit);
-
-    /* Apply UI */
-    applyClearView();
-  }
-
-  window.clearDashboardView =
-    clearDashboardView;
-
-  /* ---------------------------------------
-     OFFSET APPLY ENGINE
-  --------------------------------------- */
-  function applyDashboardOffset(data) {
-
-    const offs =
-      num(window.__dashboardOffset);
-
-    if (!offs) return data;
-
-    return {
-
-      profit:
-        Math.max(0, num(data.profit) - offs),
-
-      gross:
-        Math.max(0, num(data.gross) - offs)
-    };
-  }
-
-  window.__applyDashboardOffset =
-    applyDashboardOffset;
-
-  /* ---------------------------------------
-     RENDER GUARD
-  --------------------------------------- */
-  function applyGuardIfNeeded() {
-
-    if (window.__dashboardViewCleared) {
-      applyClearView();
-    }
-  }
-
-  window.__applyDashboardClearGuard =
-    applyGuardIfNeeded;
-
-  /* ---------------------------------------
-     CLOUD READY INIT
+     UNIVERSAL SYNC
   --------------------------------------- */
   window.addEventListener(
-    "cloud-data-loaded",
-    () => {
-
-      loadDashboardOffset();
-    }
+    "sales-updated",
+    renderDashboard
   );
+
+  window.addEventListener(
+    "services-updated",
+    renderDashboard
+  );
+
+  window.addEventListener(
+    "expenses-updated",
+    renderDashboard
+  );
+
+  window.addEventListener(
+    "collection-updated",
+    renderDashboard
+  );
+
+  window.addEventListener(
+    "cloud-data-loaded",
+    renderDashboard
+  );
+
+  /* Initial load */
+  setTimeout(renderDashboard, 800);
 
 })();
