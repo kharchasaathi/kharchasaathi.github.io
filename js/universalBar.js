@@ -1,14 +1,16 @@
 /* ===========================================================
-   universal-bar.js — FINAL v36
-   SETTLEMENT SAFE CORE ENGINE
+   universal-bar.js — FINAL v37
+   SETTLEMENT SAFE CORE ENGINE (DOUBLE OFFSET FIXED)
 
    ✔ Net profit formula fixed
+   ✔ Component settlement removed from net collect
    ✔ Expense settlement isolated
    ✔ Investment collect separated
    ✔ Credit excluded
    ✔ Offset overwrite protected
    ✔ Cloud sync race-safe
    ✔ Multi-device safe
+   ✔ Post-collect profit accumulation FIXED
 =========================================================== */
 
 (function () {
@@ -64,7 +66,6 @@
     if (!window.__cloudReady) return;
 
     const offsets = await loadCloud(OFFSET_KEY);
-
     if (!offsets) return;
 
     Object.assign(window.__offsets, {
@@ -107,7 +108,6 @@
 
         saleProfitAll += num(s.profit);
 
-        /* Investment only when sold */
         stockInvestAll +=
           num(s.qty) * num(s.cost);
       }
@@ -139,7 +139,7 @@
     });
 
     /* ==================================================
-       🔥 LIVE PROFITS (after settlement deduction)
+       LIVE PROFITS (after settlement deduction)
     ================================================== */
 
     const saleLive =
@@ -158,16 +158,17 @@
       );
 
     /* ==================================================
-       🔥 NET PROFIT (FINAL SAFE FORMULA)
+       NET PROFIT (ONLY NET OFFSET APPLIED)
     ================================================== */
 
+    const netRaw =
+      saleLive +
+      serviceLive -
+      expenseLive;
+
     const netLive =
-      Math.max(
-        0,
-        saleLive +
-        serviceLive -
-        expenseLive -
-        window.__offsets.net
+      Math.max(0,
+        netRaw - window.__offsets.net
       );
 
     return {
@@ -218,7 +219,7 @@
   window.updateUniversalBar = updateUniversalBar;
 
   /* ==========================================================
-     💰 COLLECT ENGINE
+     💰 COLLECT ENGINE (FIXED)
   ========================================================== */
   async function collect(kind) {
 
@@ -240,11 +241,8 @@
         m.netProfit
       );
 
-      /* Settlement offsets */
-      window.__offsets.sale     += m.saleProfitCollected;
-      window.__offsets.service  += m.serviceProfitCollected;
-      window.__offsets.expenses += m.expensesLive;
-      window.__offsets.net      += m.netProfit;
+      /* ✅ ONLY NET OFFSET — NO COMPONENT SETTLEMENT */
+      window.__offsets.net += m.netProfit;
     }
 
     /* ---------------- STOCK INVEST ---------------- */
