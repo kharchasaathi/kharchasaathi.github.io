@@ -865,12 +865,11 @@ body{
 <script src="https://www.gstatic.com/firebasejs/9.6.11/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.6.11/firebase-firestore-compat.js"></script>
 
-
 <!-- CORE -->
 <script src="/js/firebase.js"></script>
 <script src="/js/core.js"></script>
 
-<!-- UNIVERSAL (LOAD BEFORE LISTENERS) -->
+<!-- UNIVERSAL -->
 <script src="/js/universalBar.js"></script>
 
 <!-- LISTENERS -->
@@ -888,10 +887,16 @@ body{
 <!-- DASHBOARD -->
 <script src="/js/analytics.js"></script>
 <script src="/js/dashboard.js"></script>
+
+<!-- 🔍 AUDIT (AFTER ALL DATA ENGINES) -->
+<script src="/js/accounting-audit.js"></script>
+
+<!-- RESET -->
 <script src="/js/reset-engine.js"></script>
 
 <!-- SECURITY -->
 <script src="/js/security.js"></script>
+
   <!-- =============== RESET ENGINE =============== -->
 <script>
 
@@ -974,7 +979,7 @@ document.addEventListener("click", async e => {
 
 </script>
   
-<script src="/js/accounting-audit.js"></script>
+
 <!-- =============== TAB SWITCHER + HOOKS =============== -->
 <script>
 function switchTab(id) {
