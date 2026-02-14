@@ -1,14 +1,13 @@
 /* ===========================================================
-   universal-bar.js — FINAL v40
-   BULLETPROOF SETTLEMENT ENGINE
+   universal-bar.js — FINAL v42
+   SETTLEMENT BASELINE ENGINE
 
-   ✔ Net settlement safe
-   ✔ Component snapshot restore
-   ✔ Post-collect accumulation fixed
+   ✔ Profit accumulation safe
+   ✔ Snapshot overwrite REMOVED
+   ✔ Baseline freeze added
+   ✔ Audit mismatch FIXED
    ✔ Logout/login safe
-   ✔ Cloud reload safe
-   ✔ Dashboard clear guard
-   ✔ Audit mismatch fixed
+   ✔ Cloud sync safe
    ✔ Multi-device safe
 =========================================================== */
 
@@ -20,10 +19,11 @@
   const num = v => (isNaN(v = Number(v))) ? 0 : Number(v);
   const money = v => "₹" + Math.round(num(v));
 
-  const OFFSET_KEY = "offsets";
+  const OFFSET_KEY   = "offsets";
+  const BASELINE_KEY = "settlementBaseline";
 
   /* --------------------------------------------------
-     GLOBAL OFFSETS
+     GLOBAL STORES
   -------------------------------------------------- */
   window.__offsets = window.__offsets || {
     net: 0,
@@ -33,6 +33,13 @@
     servInv: 0,
     expenses: 0
   };
+
+  window.__baseline =
+    window.__baseline || {
+      sale: 0,
+      service: 0,
+      expenses: 0
+    };
 
   window.__offsetSaveLock = false;
 
@@ -58,45 +65,41 @@
   }
 
   /* --------------------------------------------------
-     INIT CLOUD OFFSETS (REHYDRATION SAFE)
+     INIT CLOUD DATA
   -------------------------------------------------- */
   async function initCloud() {
 
     if (!window.__cloudReady) return;
 
-    const offsets = await loadCloud(OFFSET_KEY);
-    if (!offsets) return;
+    const offsets  = await loadCloud(OFFSET_KEY);
+    const baseline = await loadCloud(BASELINE_KEY);
 
-    Object.assign(window.__offsets, {
-      net:     num(offsets.net),
-      sale:    num(offsets.sale),
-      service: num(offsets.service),
-      stock:   num(offsets.stock),
-      servInv: num(offsets.servInv),
-      expenses:num(offsets.expenses)
-    });
+    if (offsets) {
+      Object.assign(window.__offsets, {
+        net:     num(offsets.net),
+        sale:    num(offsets.sale),
+        service: num(offsets.service),
+        stock:   num(offsets.stock),
+        servInv: num(offsets.servInv),
+        expenses:num(offsets.expenses)
+      });
+    }
+
+    if (baseline) {
+      Object.assign(window.__baseline, {
+        sale:     num(baseline.sale),
+        service:  num(baseline.service),
+        expenses: num(baseline.expenses)
+      });
+    }
 
     updateUniversalBar();
   }
 
   /* ==========================================================
-     🧠 METRICS ENGINE
-     PURE CALCULATION ONLY
+     METRICS ENGINE
   ========================================================== */
   function computeMetrics() {
-
-    /* 🔒 Dashboard clear guard */
-    if (window.__dashboardViewCleared) {
-      return {
-        saleProfitCollected: 0,
-        serviceProfitCollected: 0,
-        stockInvestSold: 0,
-        serviceInvestCompleted: 0,
-        expensesLive: 0,
-        pendingCreditTotal: 0,
-        netProfit: 0
-      };
-    }
 
     const sales    = window.sales    || [];
     const services = window.services || [];
@@ -109,7 +112,7 @@
     let serviceInvestAll = 0;
     let pendingCredit    = 0;
 
-    /* ---------------- SALES ---------------- */
+    /* SALES */
     sales.forEach(s => {
 
       const st = String(s.status).toLowerCase();
@@ -118,13 +121,12 @@
         pendingCredit += num(s.total);
 
       if (st === "paid") {
-
         saleProfitAll += num(s.profit);
         stockInvestAll += num(s.qty) * num(s.cost);
       }
     });
 
-    /* ---------------- SERVICES ---------------- */
+    /* SERVICES */
     services.forEach(j => {
 
       const st = String(j.status).toLowerCase();
@@ -144,26 +146,35 @@
       }
     });
 
-    /* ---------------- EXPENSES ---------------- */
+    /* EXPENSES */
     expenses.forEach(e => {
       expensesAll += num(e.amount);
     });
 
-    /* ---------------- LIVE VALUES ---------------- */
+    /* LIVE VALUES */
 
     const saleLive =
-      Math.max(0,
-        saleProfitAll - window.__offsets.sale
+      Math.max(
+        0,
+        saleProfitAll -
+        window.__offsets.sale -
+        window.__baseline.sale
       );
 
     const serviceLive =
-      Math.max(0,
-        serviceProfitAll - window.__offsets.service
+      Math.max(
+        0,
+        serviceProfitAll -
+        window.__offsets.service -
+        window.__baseline.service
       );
 
     const expenseLive =
-      Math.max(0,
-        expensesAll - window.__offsets.expenses
+      Math.max(
+        0,
+        expensesAll -
+        window.__offsets.expenses -
+        window.__baseline.expenses
       );
 
     const netRaw =
@@ -172,8 +183,10 @@
       expenseLive;
 
     const netLive =
-      Math.max(0,
-        netRaw - window.__offsets.net
+      Math.max(
+        0,
+        netRaw -
+        window.__offsets.net
       );
 
     return {
@@ -182,13 +195,15 @@
       serviceProfitCollected: serviceLive,
 
       stockInvestSold:
-        Math.max(0,
+        Math.max(
+          0,
           stockInvestAll -
           window.__offsets.stock
         ),
 
       serviceInvestCompleted:
-        Math.max(0,
+        Math.max(
+          0,
           serviceInvestAll -
           window.__offsets.servInv
         ),
@@ -224,13 +239,12 @@
   window.updateUniversalBar = updateUniversalBar;
 
   /* ==========================================================
-     💰 COLLECT ENGINE
+     COLLECT ENGINE
   ========================================================== */
   async function collect(kind) {
 
     const m = window.__unMetrics || {};
 
-    /* ---------------- NET PROFIT ---------------- */
     if (kind === "net") {
 
       if (m.netProfit <= 0)
@@ -246,40 +260,19 @@
         m.netProfit
       );
 
-      /* NET OFFSET */
       window.__offsets.net += m.netProfit;
 
-      /* 🔥 SNAPSHOT LOCK (CRITICAL FIX) */
+      /* BASELINE FREEZE */
+      window.__baseline.sale     += m.saleProfitCollected;
+      window.__baseline.service  += m.serviceProfitCollected;
+      window.__baseline.expenses += m.expensesLive;
 
-      const sales    = window.sales || [];
-      const services = window.services || [];
-      const expenses = window.expenses || [];
-
-      window.__offsets.sale =
-        sales.reduce((a, s) =>
-          a + (
-            String(s.status).toLowerCase() === "paid"
-              ? num(s.profit)
-              : 0
-          ), 0);
-
-      window.__offsets.service =
-        services.reduce((a, j) =>
-          a + (
-            String(j.status).toLowerCase() === "paid"
-              ? (
-                  num(j.profit) ||
-                  (num(j.paid) - num(j.invest))
-                )
-              : 0
-          ), 0);
-
-      window.__offsets.expenses =
-        expenses.reduce((a, e) =>
-          a + num(e.amount), 0);
+      await saveCloud(
+        BASELINE_KEY,
+        window.__baseline
+      );
     }
 
-    /* ---------------- STOCK INVEST ---------------- */
     if (kind === "stock") {
 
       if (m.stockInvestSold <= 0)
@@ -295,7 +288,6 @@
         m.stockInvestSold;
     }
 
-    /* ---------------- SERVICE INVEST ---------------- */
     if (kind === "service") {
 
       if (m.serviceInvestCompleted <= 0)
@@ -311,7 +303,6 @@
         m.serviceInvestCompleted;
     }
 
-    /* ---------------- SAVE CLOUD ---------------- */
     if (!window.__offsetSaveLock) {
 
       window.__offsetSaveLock = true;
@@ -333,9 +324,6 @@
 
   window.handleCollect = collect;
 
-  /* --------------------------------------------------
-     BUTTON EVENTS
-  -------------------------------------------------- */
   document.addEventListener("click", e => {
 
     const b = e.target.closest(".collect-btn");
@@ -344,9 +332,6 @@
     collect(b.dataset.collect);
   });
 
-  /* --------------------------------------------------
-     CLOUD READY
-  -------------------------------------------------- */
   window.addEventListener(
     "cloud-data-loaded",
     () => {
@@ -355,9 +340,6 @@
     }
   );
 
-  /* --------------------------------------------------
-     LIVE DATA SYNC
-  -------------------------------------------------- */
   [
     "sales-updated",
     "services-updated",
