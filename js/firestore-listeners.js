@@ -1,13 +1,12 @@
 /* ===========================================================
-   firestore-listeners.js — FINAL SAFE v12
-   RESTORED FULL REFRESH + RAW REALTIME ENGINE
+   firestore-listeners.js — FINAL SAFE v13
+   ERROR-FREE RESTORE BUILD
 
    ✔ Realtime cloud sync
    ✔ No baseline filtering
    ✔ No settlement math
-   ✔ Full UI refresh safety
+   ✔ Console error fixed
    ✔ Main tab instant update
-   ✔ Inside tab clean data
    ✔ Offset hydration safe
    ✔ Collection write-lock safe
    ✔ Logout/Login safe
@@ -89,14 +88,12 @@
   }
 
   /* --------------------------------------------------
-     SAFE FULL UI REFRESH  (RESTORED)
+     SAFE UI REFRESH  (ERROR-FREE)
   -------------------------------------------------- */
   function safeRefresh() {
 
-    /* ---- DATA TABS ---- */
+    /* ---- DATA ---- */
     renderSales?.();
-    renderServices?.();
-    renderExpenses?.();
     renderCollection?.();
 
     /* ---- ANALYTICS ---- */
