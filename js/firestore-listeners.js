@@ -1,15 +1,16 @@
 /* ===========================================================
-   firestore-listeners.js — FINAL SAFE v7
+   firestore-listeners.js — FINAL SAFE v8
+   BASELINE SYNC + LIVE RESET FIX
 
    ✔ Realtime cloud sync
    ✔ Offset hydration safe
-   ✔ Settlement safe
+   ✔ Settlement baseline aware
+   ✔ Inside tab old data blocked
+   ✔ Main tab instant update
    ✔ Logout/Login safe
    ✔ Multi-device safe
    ✔ Collection write-lock safe
-   ✔ Types sync restored
-   ✔ Stock sync restored
-   ✔ Wanting sync restored
+   ✔ Render guards added
 =========================================================== */
 
 (function () {
@@ -43,7 +44,6 @@
     window.__collectionGuardAttached = true;
 
     const oldAdd = window.addCollectionEntry;
-
     window.__collectionWriteLock = false;
 
     window.addCollectionEntry = function (...args) {
@@ -87,12 +87,78 @@
     }, 300);
   }
 
+  /* ==================================================
+     🔥 BASELINE FILTER ENGINE
+  ================================================== */
+  function applyBaselineFilter() {
+
+    if (!window.__componentBaseline) return;
+
+    const base = window.__componentBaseline;
+
+    /* SALES FILTER */
+    if (Array.isArray(window.sales)) {
+
+      let running = 0;
+
+      window.salesFiltered =
+        window.sales.filter(s => {
+
+          if (String(s.status).toLowerCase() !== "paid")
+            return true;
+
+          running += Number(s.profit || 0);
+
+          return running > base.sale;
+        });
+    }
+
+    /* SERVICES FILTER */
+    if (Array.isArray(window.services)) {
+
+      let running = 0;
+
+      window.servicesFiltered =
+        window.services.filter(j => {
+
+          if (String(j.status).toLowerCase() !== "paid")
+            return true;
+
+          const p =
+            Number(j.profit) ||
+            (Number(j.paid) - Number(j.invest));
+
+          running += p;
+
+          return running > base.service;
+        });
+    }
+
+    /* EXPENSES FILTER */
+    if (Array.isArray(window.expenses)) {
+
+      let running = 0;
+
+      window.expensesFiltered =
+        window.expenses.filter(e => {
+
+          running += Number(e.amount || 0);
+          return running > base.expenses;
+        });
+    }
+  }
+
   /* --------------------------------------------------
      SAFE UI REFRESH
   -------------------------------------------------- */
   function safeRefresh() {
 
-    renderSales?.();
+    applyBaselineFilter();
+
+    renderSales?.(
+      window.salesFiltered || window.sales
+    );
+
     renderCollection?.();
     renderAnalytics?.();
     updateSummaryCards?.();
@@ -125,7 +191,6 @@
         snap.data().value || [];
 
       renderTypes?.();
-
       console.log("🔄 Types synced");
     });
 
@@ -152,7 +217,6 @@
         snap.data().value || [];
 
       renderWanting?.();
-
       console.log("🔄 Wanting synced");
     });
 
@@ -208,9 +272,7 @@
       console.log("🔄 Expenses synced");
     });
 
-    /* ==================================================
-       🧠 OFFSETS — HYDRATION SAFE
-    ================================================== */
+    /* ================= OFFSETS ================= */
     ref.doc("offsets").onSnapshot(snap => {
 
       if (!snap.exists) return;
@@ -232,12 +294,12 @@
         incoming
       );
 
+      updateUniversalBar?.();
+
       console.log(
         "%c🔄 Offsets hydrated",
         "color:#4caf50;font-weight:bold;"
       );
-
-      updateUniversalBar?.();
     });
 
     /* ================= DASHBOARD OFFSET ================= */
