@@ -1,10 +1,11 @@
 /* ===========================================================
-   firestore-listeners.js — FINAL SAFE v11
-   RAW REALTIME SYNC ENGINE
+   firestore-listeners.js — FINAL SAFE v12
+   RESTORED FULL REFRESH + RAW REALTIME ENGINE
 
    ✔ Realtime cloud sync
    ✔ No baseline filtering
    ✔ No settlement math
+   ✔ Full UI refresh safety
    ✔ Main tab instant update
    ✔ Inside tab clean data
    ✔ Offset hydration safe
@@ -88,18 +89,21 @@
   }
 
   /* --------------------------------------------------
-     SAFE UI REFRESH (RAW)
+     SAFE FULL UI REFRESH  (RESTORED)
   -------------------------------------------------- */
   function safeRefresh() {
 
+    /* ---- DATA TABS ---- */
     renderSales?.();
     renderServices?.();
     renderExpenses?.();
     renderCollection?.();
+
+    /* ---- ANALYTICS ---- */
     renderAnalytics?.();
     updateSummaryCards?.();
 
-    /* Universal bar refresh */
+    /* ---- UNIVERSAL ---- */
     setTimeout(() => {
       updateUniversalBar?.();
     }, 50);
@@ -124,10 +128,9 @@
 
       if (!snap.exists) return;
 
-      window.types =
-        snap.data().value || [];
-
+      window.types = snap.data().value || [];
       renderTypes?.();
+
       console.log("🔄 Types synced");
     });
 
@@ -136,8 +139,7 @@
 
       if (!snap.exists) return;
 
-      window.stock =
-        snap.data().value || [];
+      window.stock = snap.data().value || [];
 
       renderStock?.();
       updateUniversalBar?.();
@@ -150,10 +152,9 @@
 
       if (!snap.exists) return;
 
-      window.wanting =
-        snap.data().value || [];
-
+      window.wanting = snap.data().value || [];
       renderWanting?.();
+
       console.log("🔄 Wanting synced");
     });
 
@@ -162,10 +163,9 @@
 
       if (!snap.exists) return;
 
-      window.sales =
-        snap.data().value || [];
-
+      window.sales = snap.data().value || [];
       safeRefresh();
+
       console.log("🔄 Sales synced");
     });
 
@@ -174,10 +174,9 @@
 
       if (!snap.exists) return;
 
-      window.services =
-        snap.data().value || [];
-
+      window.services = snap.data().value || [];
       safeRefresh();
+
       console.log("🔄 Services synced");
     });
 
@@ -186,10 +185,9 @@
 
       if (!snap.exists) return;
 
-      window.expenses =
-        snap.data().value || [];
-
+      window.expenses = snap.data().value || [];
       safeRefresh();
+
       console.log("🔄 Expenses synced");
     });
 
@@ -198,11 +196,8 @@
 
       if (!snap.exists) return;
 
-      window.collections =
-        snap.data().value || [];
-
-      renderCollection?.();
-      updateUniversalBar?.();
+      window.collections = snap.data().value || [];
+      safeRefresh();
 
       console.log("🔄 Collections synced");
     });
@@ -214,8 +209,7 @@
 
       if (!snap.exists) return;
 
-      const incoming =
-        snap.data().value || {};
+      const incoming = snap.data().value || {};
 
       if (window.__offsetsHydrated) {
         console.log(
