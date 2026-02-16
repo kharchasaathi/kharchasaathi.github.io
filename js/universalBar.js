@@ -1,11 +1,11 @@
 /* ===========================================================
-   universal-bar.js — FINAL v42
-   SETTLEMENT BASELINE ENGINE
+   universal-bar.js — FINAL v44
+   PURE NET SETTLEMENT ENGINE + DASHBOARD GUARD
 
    ✔ Profit accumulation safe
-   ✔ Snapshot overwrite REMOVED
-   ✔ Baseline freeze added
-   ✔ Audit mismatch FIXED
+   ✔ Snapshot REMOVED
+   ✔ Baseline REMOVED
+   ✔ Dashboard clear guard RESTORED
    ✔ Logout/login safe
    ✔ Cloud sync safe
    ✔ Multi-device safe
@@ -19,11 +19,10 @@
   const num = v => (isNaN(v = Number(v))) ? 0 : Number(v);
   const money = v => "₹" + Math.round(num(v));
 
-  const OFFSET_KEY   = "offsets";
-  const BASELINE_KEY = "settlementBaseline";
+  const OFFSET_KEY = "offsets";
 
   /* --------------------------------------------------
-     GLOBAL STORES
+     GLOBAL OFFSETS
   -------------------------------------------------- */
   window.__offsets = window.__offsets || {
     net: 0,
@@ -33,13 +32,6 @@
     servInv: 0,
     expenses: 0
   };
-
-  window.__baseline =
-    window.__baseline || {
-      sale: 0,
-      service: 0,
-      expenses: 0
-    };
 
   window.__offsetSaveLock = false;
 
@@ -65,33 +57,23 @@
   }
 
   /* --------------------------------------------------
-     INIT CLOUD DATA
+     INIT CLOUD OFFSETS
   -------------------------------------------------- */
   async function initCloud() {
 
     if (!window.__cloudReady) return;
 
-    const offsets  = await loadCloud(OFFSET_KEY);
-    const baseline = await loadCloud(BASELINE_KEY);
+    const offsets = await loadCloud(OFFSET_KEY);
+    if (!offsets) return;
 
-    if (offsets) {
-      Object.assign(window.__offsets, {
-        net:     num(offsets.net),
-        sale:    num(offsets.sale),
-        service: num(offsets.service),
-        stock:   num(offsets.stock),
-        servInv: num(offsets.servInv),
-        expenses:num(offsets.expenses)
-      });
-    }
-
-    if (baseline) {
-      Object.assign(window.__baseline, {
-        sale:     num(baseline.sale),
-        service:  num(baseline.service),
-        expenses: num(baseline.expenses)
-      });
-    }
+    Object.assign(window.__offsets, {
+      net:     num(offsets.net),
+      sale:    num(offsets.sale),
+      service: num(offsets.service),
+      stock:   num(offsets.stock),
+      servInv: num(offsets.servInv),
+      expenses:num(offsets.expenses)
+    });
 
     updateUniversalBar();
   }
@@ -100,6 +82,19 @@
      METRICS ENGINE
   ========================================================== */
   function computeMetrics() {
+
+    /* 🔒 DASHBOARD CLEAR GUARD (RESTORED) */
+    if (window.__dashboardViewCleared) {
+      return {
+        saleProfitCollected: 0,
+        serviceProfitCollected: 0,
+        stockInvestSold: 0,
+        serviceInvestCompleted: 0,
+        expensesLive: 0,
+        pendingCreditTotal: 0,
+        netProfit: 0
+      };
+    }
 
     const sales    = window.sales    || [];
     const services = window.services || [];
@@ -112,7 +107,7 @@
     let serviceInvestAll = 0;
     let pendingCredit    = 0;
 
-    /* SALES */
+    /* ---------------- SALES ---------------- */
     sales.forEach(s => {
 
       const st = String(s.status).toLowerCase();
@@ -126,7 +121,7 @@
       }
     });
 
-    /* SERVICES */
+    /* ---------------- SERVICES ---------------- */
     services.forEach(j => {
 
       const st = String(j.status).toLowerCase();
@@ -146,35 +141,26 @@
       }
     });
 
-    /* EXPENSES */
+    /* ---------------- EXPENSES ---------------- */
     expenses.forEach(e => {
       expensesAll += num(e.amount);
     });
 
-    /* LIVE VALUES */
+    /* ---------------- LIVE VALUES ---------------- */
 
     const saleLive =
-      Math.max(
-        0,
-        saleProfitAll -
-        window.__offsets.sale -
-        window.__baseline.sale
+      Math.max(0,
+        saleProfitAll - window.__offsets.sale
       );
 
     const serviceLive =
-      Math.max(
-        0,
-        serviceProfitAll -
-        window.__offsets.service -
-        window.__baseline.service
+      Math.max(0,
+        serviceProfitAll - window.__offsets.service
       );
 
     const expenseLive =
-      Math.max(
-        0,
-        expensesAll -
-        window.__offsets.expenses -
-        window.__baseline.expenses
+      Math.max(0,
+        expensesAll - window.__offsets.expenses
       );
 
     const netRaw =
@@ -183,10 +169,8 @@
       expenseLive;
 
     const netLive =
-      Math.max(
-        0,
-        netRaw -
-        window.__offsets.net
+      Math.max(0,
+        netRaw - window.__offsets.net
       );
 
     return {
@@ -195,15 +179,13 @@
       serviceProfitCollected: serviceLive,
 
       stockInvestSold:
-        Math.max(
-          0,
+        Math.max(0,
           stockInvestAll -
           window.__offsets.stock
         ),
 
       serviceInvestCompleted:
-        Math.max(
-          0,
+        Math.max(0,
           serviceInvestAll -
           window.__offsets.servInv
         ),
@@ -245,6 +227,7 @@
 
     const m = window.__unMetrics || {};
 
+    /* ---------------- NET PROFIT ---------------- */
     if (kind === "net") {
 
       if (m.netProfit <= 0)
@@ -260,19 +243,11 @@
         m.netProfit
       );
 
+      /* ONLY NET OFFSET */
       window.__offsets.net += m.netProfit;
-
-      /* BASELINE FREEZE */
-      window.__baseline.sale     += m.saleProfitCollected;
-      window.__baseline.service  += m.serviceProfitCollected;
-      window.__baseline.expenses += m.expensesLive;
-
-      await saveCloud(
-        BASELINE_KEY,
-        window.__baseline
-      );
     }
 
+    /* ---------------- STOCK INVEST ---------------- */
     if (kind === "stock") {
 
       if (m.stockInvestSold <= 0)
@@ -288,6 +263,7 @@
         m.stockInvestSold;
     }
 
+    /* ---------------- SERVICE INVEST ---------------- */
     if (kind === "service") {
 
       if (m.serviceInvestCompleted <= 0)
@@ -303,6 +279,7 @@
         m.serviceInvestCompleted;
     }
 
+    /* ---------------- SAVE CLOUD ---------------- */
     if (!window.__offsetSaveLock) {
 
       window.__offsetSaveLock = true;
@@ -324,6 +301,9 @@
 
   window.handleCollect = collect;
 
+  /* --------------------------------------------------
+     BUTTON EVENTS
+  -------------------------------------------------- */
   document.addEventListener("click", e => {
 
     const b = e.target.closest(".collect-btn");
@@ -332,6 +312,9 @@
     collect(b.dataset.collect);
   });
 
+  /* --------------------------------------------------
+     CLOUD READY
+  -------------------------------------------------- */
   window.addEventListener(
     "cloud-data-loaded",
     () => {
@@ -340,6 +323,9 @@
     }
   );
 
+  /* --------------------------------------------------
+     LIVE DATA SYNC
+  -------------------------------------------------- */
   [
     "sales-updated",
     "services-updated",
