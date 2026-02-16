@@ -476,22 +476,23 @@ qs("#svcFilterCalendar")
   clearDropdown();
   refresh();
 });
-/* -------------------------------------------------- CLEAR ALL — HISTORY ONLY SAFE */
+/* --------------------------------------------------
+   CLEAR ALL — HISTORY ONLY + PROFIT SAFE
+-------------------------------------------------- */
 qs("#clearServiceBtn")
 ?.addEventListener("click", () => {
 
   const list = ensureServices();
 
   if (!list.length)
-    return alert("No service history to clear.");
+    return alert("No service history.");
 
-  /* ---------- Calculate earned profit ---------- */
+  /* ---------- Earned profit ---------- */
   const earnedProfit =
     list
       .filter(j => j.status === "paid")
       .reduce((a,b) => a + num(b.profit), 0);
 
-  /* ---------- Warning ---------- */
   if (!confirm(
 `Delete all service history?
 
@@ -503,29 +504,33 @@ in Profit Tab.
 Continue?`
   )) return;
 
-  /* ---------- Preserve profit ---------- */
+  /* ==================================================
+     PROFIT PRESERVE → NET LEDGER
+  ================================================== */
+
   if (earnedProfit > 0) {
 
-    /* Add collection entry */
-    window.addCollectionEntry?.(
-      "Service History Cleared",
-      "Profit Preserved",
-      earnedProfit
-    );
+    if (!window.__offsets)
+      window.__offsets = {};
 
-    /* Offset service profit */
-    window.__offsets = window.__offsets || {};
-    window.__offsets.service =
-      (window.__offsets.service || 0)
+    /* 🔥 FIX — move to NET */
+    window.__offsets.net =
+      (window.__offsets.net || 0)
       + earnedProfit;
 
     cloudSaveDebounced?.(
       "offsets",
       window.__offsets
     );
+
+    window.addCollectionEntry?.(
+      "Service History Cleared",
+      "Profit Preserved",
+      earnedProfit
+    );
   }
 
-  /* ---------- Clear only history ---------- */
+  /* ---------- Clear history ---------- */
   window.services = [];
 
   saveServices();
