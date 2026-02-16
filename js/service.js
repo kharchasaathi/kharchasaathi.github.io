@@ -476,6 +476,18 @@ qs("#svcFilterCalendar")
   clearDropdown();
   refresh();
 });
+   /* -------------------------------------------------- CLEAR ALL */
+qs("#clearServiceBtn")
+?.addEventListener("click",()=>{
+
+  if(!confirm("Delete ALL service history?")) return;
+
+  window.services = [];
+
+  saveServices();
+  buildDateFilter();
+  refresh();
+});
 
 /* -------------------------------------------------- INIT */
 window.addEventListener("load",()=>{
