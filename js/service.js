@@ -476,19 +476,62 @@ qs("#svcFilterCalendar")
   clearDropdown();
   refresh();
 });
-   /* -------------------------------------------------- CLEAR ALL */
+/* -------------------------------------------------- CLEAR ALL — HISTORY ONLY SAFE */
 qs("#clearServiceBtn")
-?.addEventListener("click",()=>{
+?.addEventListener("click", () => {
 
-  if(!confirm("Delete ALL service history?")) return;
+  const list = ensureServices();
 
+  if (!list.length)
+    return alert("No service history to clear.");
+
+  /* ---------- Calculate earned profit ---------- */
+  const earnedProfit =
+    list
+      .filter(j => j.status === "paid")
+      .reduce((a,b) => a + num(b.profit), 0);
+
+  /* ---------- Warning ---------- */
+  if (!confirm(
+`Delete all service history?
+
+Earned Profit: ₹${earnedProfit}
+
+This profit will be preserved
+in Profit Tab.
+
+Continue?`
+  )) return;
+
+  /* ---------- Preserve profit ---------- */
+  if (earnedProfit > 0) {
+
+    /* Add collection entry */
+    window.addCollectionEntry?.(
+      "Service History Cleared",
+      "Profit Preserved",
+      earnedProfit
+    );
+
+    /* Offset service profit */
+    window.__offsets = window.__offsets || {};
+    window.__offsets.service =
+      (window.__offsets.service || 0)
+      + earnedProfit;
+
+    cloudSaveDebounced?.(
+      "offsets",
+      window.__offsets
+    );
+  }
+
+  /* ---------- Clear only history ---------- */
   window.services = [];
 
   saveServices();
   buildDateFilter();
   refresh();
 });
-
 /* -------------------------------------------------- INIT */
 window.addEventListener("load",()=>{
   buildDateFilter();
