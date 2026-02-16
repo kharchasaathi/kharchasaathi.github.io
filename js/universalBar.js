@@ -1,13 +1,6 @@
 /* ===========================================================
-   universal-bar.js — FINAL v49
-   NET SETTLEMENT + LIVE COMPONENT RESET FIX
-
-   ✔ Main reset
-   ✔ Inside reset
-   ✔ Future sales visible instantly
-   ✔ No hard refresh needed
-   ✔ Live sync safe
-   ✔ Cloud safe
+   universal-bar.js — BACKUP LOGIC RESTORE BUILD
+   OFFSET SETTLEMENT ONLY + INSTANT LIVE UPDATE
 =========================================================== */
 
 (function () {
@@ -27,14 +20,6 @@
     servInv: 0,
     expenses: 0
   };
-
-  /* 🔥 COMPONENT BASELINE SNAPSHOT */
-  window.__componentBaseline =
-    window.__componentBaseline || {
-      sale: 0,
-      service: 0,
-      expenses: 0
-    };
 
   window.__offsetSaveLock = false;
 
@@ -70,13 +55,9 @@
   }
 
   /* ==========================================================
-     METRICS ENGINE
+     METRICS ENGINE — OFFSET ONLY
   ========================================================== */
   function computeMetrics() {
-
-    if (window.__dashboardViewCleared) {
-      return zeroMetrics();
-    }
 
     const sales    = window.sales || [];
     const services = window.services || [];
@@ -128,34 +109,31 @@
       expensesAll += num(e.amount);
     });
 
-    /* 🔥 COMPONENT RESET APPLY */
+    /* OFFSET SETTLEMENT ONLY */
 
     const saleLive =
       Math.max(0,
         saleProfitAll -
-        window.__componentBaseline.sale
+        window.__offsets.sale
       );
 
     const serviceLive =
       Math.max(0,
         serviceProfitAll -
-        window.__componentBaseline.service
+        window.__offsets.service
       );
 
     const expenseLive =
       Math.max(0,
         expensesAll -
-        window.__componentBaseline.expenses
+        window.__offsets.expenses
       );
-
-    const netRaw =
-      saleLive +
-      serviceLive -
-      expenseLive;
 
     const netLive =
       Math.max(0,
-        netRaw -
+        saleLive +
+        serviceLive -
+        expenseLive -
         window.__offsets.net
       );
 
@@ -182,18 +160,6 @@
     };
   }
 
-  function zeroMetrics() {
-    return {
-      saleProfitCollected: 0,
-      serviceProfitCollected: 0,
-      stockInvestSold: 0,
-      serviceInvestCompleted: 0,
-      expensesLive: 0,
-      pendingCreditTotal: 0,
-      netProfit: 0
-    };
-  }
-
   /* ---------------- UI ---------------- */
   function updateUniversalBar() {
 
@@ -217,7 +183,7 @@
   window.updateUniversalBar = updateUniversalBar;
 
   /* ==========================================================
-     COLLECT ENGINE
+     COLLECT ENGINE — OFFSET ONLY
   ========================================================== */
   async function collect(kind) {
 
@@ -238,51 +204,22 @@
         m.netProfit
       );
 
-      /* OFFSETS */
-      window.__offsets.net += m.netProfit;
-
-      /* 🔥 SNAPSHOT FREEZE */
-      window.__componentBaseline.sale +=
-        m.saleProfitCollected;
-
-      window.__componentBaseline.service +=
-        m.serviceProfitCollected;
-
-      window.__componentBaseline.expenses +=
-        m.expensesLive;
+      window.__offsets.net      += m.netProfit;
+      window.__offsets.sale    += m.saleProfitCollected;
+      window.__offsets.service += m.serviceProfitCollected;
+      window.__offsets.expenses+= m.expensesLive;
     }
 
     if (kind === "stock") {
-
-      if (m.stockInvestSold <= 0)
-        return alert("No stock investment to collect.");
-
-      window.addCollectionEntry?.(
-        "Stock Investment",
-        "Sold Items",
-        m.stockInvestSold
-      );
-
       window.__offsets.stock +=
         m.stockInvestSold;
     }
 
     if (kind === "service") {
-
-      if (m.serviceInvestCompleted <= 0)
-        return alert("No service investment to collect.");
-
-      window.addCollectionEntry?.(
-        "Service Investment",
-        "Completed Jobs",
-        m.serviceInvestCompleted
-      );
-
       window.__offsets.servInv +=
         m.serviceInvestCompleted;
     }
 
-    /* SAVE CLOUD */
     if (!window.__offsetSaveLock) {
 
       window.__offsetSaveLock = true;
@@ -297,44 +234,24 @@
       }, 600);
     }
 
-    /* 🔥 FORCE LIVE REFRESH */
     updateUniversalBar();
-    renderCollection?.();
-    renderAnalytics?.();
   }
 
   window.handleCollect = collect;
 
-  /* ---------------- EVENTS ---------------- */
-
-  document.addEventListener("click", e => {
-    const b = e.target.closest(".collect-btn");
-    if (!b) return;
-    collect(b.dataset.collect);
-  });
-
-  window.addEventListener(
-    "cloud-data-loaded",
-    () => {
-      initCloud();
-      updateUniversalBar();
-    }
-  );
-
-  /* 🔥 LIVE SYNC */
+  /* LIVE SYNC */
   [
     "sales-updated",
     "services-updated",
     "expenses-updated",
     "collection-updated"
   ].forEach(ev => {
-    window.addEventListener(ev, () => {
-      updateUniversalBar();
-    });
+    window.addEventListener(ev, updateUniversalBar);
   });
 
-  /* 🔥 TIMEOUT GUARDS */
-  setTimeout(updateUniversalBar, 500);
-  setTimeout(updateUniversalBar, 1500);
+  window.addEventListener(
+    "cloud-data-loaded",
+    initCloud
+  );
 
 })();
