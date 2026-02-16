@@ -1,8 +1,9 @@
 /* ===========================================================
-   universal-bar.js — FINAL v44
-   PURE NET SETTLEMENT ENGINE + DASHBOARD GUARD
+   universal-bar.js — FINAL v45
+   PURE NET SETTLEMENT ENGINE + COMPONENT RESET FIX
 
    ✔ Profit accumulation safe
+   ✔ Component reset after collect
    ✔ Snapshot REMOVED
    ✔ Baseline REMOVED
    ✔ Dashboard clear guard RESTORED
@@ -83,7 +84,7 @@
   ========================================================== */
   function computeMetrics() {
 
-    /* 🔒 DASHBOARD CLEAR GUARD (RESTORED) */
+    /* 🔒 DASHBOARD CLEAR GUARD */
     if (window.__dashboardViewCleared) {
       return {
         saleProfitCollected: 0,
@@ -107,7 +108,7 @@
     let serviceInvestAll = 0;
     let pendingCredit    = 0;
 
-    /* ---------------- SALES ---------------- */
+    /* SALES */
     sales.forEach(s => {
 
       const st = String(s.status).toLowerCase();
@@ -121,7 +122,7 @@
       }
     });
 
-    /* ---------------- SERVICES ---------------- */
+    /* SERVICES */
     services.forEach(j => {
 
       const st = String(j.status).toLowerCase();
@@ -141,12 +142,12 @@
       }
     });
 
-    /* ---------------- EXPENSES ---------------- */
+    /* EXPENSES */
     expenses.forEach(e => {
       expensesAll += num(e.amount);
     });
 
-    /* ---------------- LIVE VALUES ---------------- */
+    /* LIVE VALUES */
 
     const saleLive =
       Math.max(0,
@@ -243,8 +244,13 @@
         m.netProfit
       );
 
-      /* ONLY NET OFFSET */
+      /* NET OFFSET */
       window.__offsets.net += m.netProfit;
+
+      /* 🔥 COMPONENT RESET FREEZE (FINAL FIX) */
+      window.__offsets.sale     += m.saleProfitCollected;
+      window.__offsets.service += m.serviceProfitCollected;
+      window.__offsets.expenses += m.expensesLive;
     }
 
     /* ---------------- STOCK INVEST ---------------- */
@@ -279,7 +285,7 @@
         m.serviceInvestCompleted;
     }
 
-    /* ---------------- SAVE CLOUD ---------------- */
+    /* SAVE CLOUD */
     if (!window.__offsetSaveLock) {
 
       window.__offsetSaveLock = true;
@@ -301,9 +307,7 @@
 
   window.handleCollect = collect;
 
-  /* --------------------------------------------------
-     BUTTON EVENTS
-  -------------------------------------------------- */
+  /* BUTTON EVENTS */
   document.addEventListener("click", e => {
 
     const b = e.target.closest(".collect-btn");
@@ -312,9 +316,7 @@
     collect(b.dataset.collect);
   });
 
-  /* --------------------------------------------------
-     CLOUD READY
-  -------------------------------------------------- */
+  /* CLOUD READY */
   window.addEventListener(
     "cloud-data-loaded",
     () => {
@@ -323,9 +325,7 @@
     }
   );
 
-  /* --------------------------------------------------
-     LIVE DATA SYNC
-  -------------------------------------------------- */
+  /* LIVE SYNC */
   [
     "sales-updated",
     "services-updated",
