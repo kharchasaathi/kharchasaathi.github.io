@@ -1,11 +1,10 @@
 /* ===========================================================
-   universal-bar.js — FINAL v45
-   PURE NET SETTLEMENT ENGINE + COMPONENT RESET FIX
+   universal-bar.js — FINAL v46
+   PURE NET SETTLEMENT ENGINE + FULL COMPONENT RESET
 
    ✔ Profit accumulation safe
-   ✔ Component reset after collect
-   ✔ Snapshot REMOVED
-   ✔ Baseline REMOVED
+   ✔ Net collect resets all components
+   ✔ Inside tabs reset FIXED
    ✔ Dashboard clear guard RESTORED
    ✔ Logout/login safe
    ✔ Cloud sync safe
@@ -244,16 +243,14 @@
         m.netProfit
       );
 
-      /* NET OFFSET */
-      window.__offsets.net += m.netProfit;
-
-      /* 🔥 COMPONENT RESET FREEZE (FINAL FIX) */
-      window.__offsets.sale     += m.saleProfitCollected;
+      /* 🔥 FULL COMPONENT FREEZE */
+      window.__offsets.net      += m.netProfit;
+      window.__offsets.sale    += m.saleProfitCollected;
       window.__offsets.service += m.serviceProfitCollected;
-      window.__offsets.expenses += m.expensesLive;
+      window.__offsets.expenses+= m.expensesLive;
     }
 
-    /* ---------------- STOCK INVEST ---------------- */
+    /* ---------------- STOCK ---------------- */
     if (kind === "stock") {
 
       if (m.stockInvestSold <= 0)
@@ -265,8 +262,7 @@
         m.stockInvestSold
       );
 
-      window.__offsets.stock +=
-        m.stockInvestSold;
+      window.__offsets.stock += m.stockInvestSold;
     }
 
     /* ---------------- SERVICE INVEST ---------------- */
