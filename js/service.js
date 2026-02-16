@@ -1,6 +1,7 @@
 /* ===========================================================
-   service.js — FINAL v26
-   100% COMPLETE + SETTLEMENT SAFE + UNIVERSAL v36 ALIGNED
+   service.js — FINAL MERGED RESTORE BUILD
+   LOCAL + CLOUD + SETTLEMENT SAFE + UNIVERSAL ALIGNED
+   FILTERS + HELPERS RESTORED
 =========================================================== */
 
 (function () {
@@ -13,8 +14,20 @@ const toDisplay = window.toDisplay || (d => d);
 const toInternal = window.toInternalIfNeeded || (d => d);
 const today = () => new Date().toISOString().slice(0, 10);
 
+/* -------------------------------------------------- LOAD LOCAL CACHE */
+(function initServiceStore(){
+  try{
+    const raw = localStorage.getItem("service-data");
+    window.services = raw ? JSON.parse(raw) : [];
+    if(!Array.isArray(window.services))
+      window.services = [];
+  }catch{
+    window.services = [];
+  }
+})();
+
 const ensureServices = () => {
-  if (!Array.isArray(window.services))
+  if(!Array.isArray(window.services))
     window.services = [];
   return window.services;
 };
@@ -22,53 +35,106 @@ const ensureServices = () => {
 /* -------------------------------------------------- SAVE */
 function saveServices(){
 
-  cloudSaveDebounced?.("services", window.services);
+  /* LOCAL */
+  try{
+    localStorage.setItem(
+      "service-data",
+      JSON.stringify(window.services)
+    );
+  }catch{}
 
-  window.dispatchEvent(new Event("cloud-data-loaded"));
-  window.dispatchEvent(new Event("services-updated"));
+  /* CLOUD */
+  cloudSaveDebounced?.(
+    "services",
+    window.services
+  );
+
+  /* CLOUD PULL */
+  if(typeof cloudPullAllIfAvailable==="function"){
+    setTimeout(
+      ()=>cloudPullAllIfAvailable(),
+      200
+    );
+  }
+
+  /* LIVE EVENT */
+  window.dispatchEvent(
+    new Event("services-updated")
+  );
+}
+
+/* -------------------------------------------------- FORM CLEAR */
+function clearAddForm(){
+
+  [
+    "#svcCustomer",
+    "#svcPhone",
+    "#svcModel",
+    "#svcProblem",
+    "#svcAdvance"
+  ].forEach(id=>{
+    const el=qs(id);
+    if(el) el.value="";
+  });
+
+  const d=qs("#svcReceivedDate");
+  if(d) d.value=today();
 }
 
 /* -------------------------------------------------- DATE FILTER */
 function buildDateFilter(){
 
-  const sel = qs("#svcFilterDate");
+  const sel=qs("#svcFilterDate");
   if(!sel) return;
 
-  const set = new Set();
+  const set=new Set();
 
   ensureServices().forEach(j=>{
     if(j.date_in) set.add(j.date_in);
     if(j.date_out) set.add(j.date_out);
   });
 
-  sel.innerHTML =
-    `<option value="">All Dates</option>` +
+  sel.innerHTML=
+    `<option value="">All Dates</option>`+
     [...set]
       .sort((a,b)=>b.localeCompare(a))
-      .map(d =>
-        `<option value="${d}">${toDisplay(d)}</option>`
+      .map(d=>
+        `<option value="${d}">
+          ${toDisplay(d)}
+        </option>`
       ).join("");
+}
+
+/* -------------------------------------------------- FILTER HELPERS (RESTORED) */
+function clearCalendar(){
+  qs("#svcFilterCalendar") &&
+  (qs("#svcFilterCalendar").value="");
+}
+
+function clearDropdown(){
+  qs("#svcFilterDate") &&
+  (qs("#svcFilterDate").value="");
 }
 
 /* -------------------------------------------------- FILTER ENGINE */
 function getFiltered(){
 
-  const list = ensureServices();
+  const list=ensureServices();
 
-  const typeVal =
-    qs("#svcFilterType")?.value || "all";
+  const typeVal=
+    qs("#svcFilterType")?.value||"all";
 
-  const statusVal =
-    (qs("#svcFilterStatus")?.value || "all")
+  const statusVal=
+    (qs("#svcFilterStatus")?.value||"all")
       .toLowerCase();
 
-  const dropDate =
-    qs("#svcFilterDate")?.value || "";
+  const dropDate=
+    qs("#svcFilterDate")?.value||"";
 
-  const calendarDate =
-    qs("#svcFilterCalendar")?.value || "";
+  const calendarDate=
+    qs("#svcFilterCalendar")?.value||"";
 
-  const dateVal = calendarDate || dropDate;
+  const dateVal=calendarDate||dropDate;
 
   let out=[...list];
 
@@ -81,10 +147,10 @@ function getFiltered(){
     if(statusVal==="all") return true;
     if(statusVal==="pending") return s==="pending";
     if(statusVal==="completed")
-      return s==="paid" && !j.fromCredit;
+      return s==="paid"&&!j.fromCredit;
     if(statusVal==="credit") return s==="credit";
     if(statusVal==="credit-paid")
-      return s==="paid" && j.fromCredit;
+      return s==="paid"&&j.fromCredit;
     if(statusVal==="failed") return s==="failed";
 
     return true;
@@ -92,7 +158,7 @@ function getFiltered(){
 
   if(dateVal)
     out=out.filter(j=>
-      j.date_in===dateVal ||
+      j.date_in===dateVal||
       j.date_out===dateVal
     );
 
@@ -104,13 +170,13 @@ function renderCounts(){
 
   const list=ensureServices();
 
-  const pending =
+  const pending=
     list.filter(j=>j.status==="pending").length;
 
-  const completed =
+  const completed=
     list.filter(j=>j.status==="paid").length;
 
-  const profit =
+  const profit=
     list.filter(j=>j.status==="paid")
         .reduce((a,b)=>a+num(b.profit),0);
 
@@ -207,7 +273,12 @@ function drawPieStatus(){
     type:"pie",
     data:{
       labels:["Pending","Credit","Completed","Failed"],
-      datasets:[{data:values}]
+      datasets:[{
+        data:
+          values.some(v=>v>0)
+          ? values
+          : [1,0,0,0]
+      }]
     },
     options:{
       responsive:true,
@@ -256,7 +327,9 @@ function addJob(){
   const job={
     id:uid("svc"),
     jobId:String(list.length+1).padStart(2,"0"),
-    date_in:toInternal(qs("#svcReceivedDate")?.value||today()),
+    date_in:toInternal(
+      qs("#svcReceivedDate")?.value||today()
+    ),
     date_out:"",
     customer:esc(qs("#svcCustomer")?.value).trim(),
     phone:esc(qs("#svcPhone")?.value).trim(),
@@ -278,6 +351,7 @@ function addJob(){
   list.push(job);
 
   saveServices();
+  clearAddForm();
   buildDateFilter();
   refresh();
 }
@@ -364,19 +438,7 @@ function refresh(){
 
 window.__svcRefresh=refresh;
 
-/* -------------------------------------------------- CLEAR */
-qs("#clearServiceBtn")
-?.addEventListener("click",()=>{
-
-  if(!confirm("Delete ALL service history?")) return;
-
-  window.services=[];
-  saveServices();
-  buildDateFilter();
-  refresh();
-});
-
-/* -------------------------------------------------- EVENTS */
+/* -------------------------------------------------- EVENTS (RESTORED) */
 document.addEventListener("click",e=>{
 
   const btn=e.target.closest(".svc-view");
@@ -393,14 +455,27 @@ document.addEventListener("click",e=>{
   else if(ch==="3") failJob(id);
 });
 
-/* -------------------------------------------------- SYNC */
-window.addEventListener(
-  "cloud-data-loaded",
-  ()=>{
-    buildDateFilter();
-    refresh();
-  }
-);
+qs("#addServiceBtn")
+?.addEventListener("click",addJob);
+
+/* FILTER EVENTS RESTORED */
+qs("#svcFilterStatus")
+?.addEventListener("change",refresh);
+
+qs("#svcFilterType")
+?.addEventListener("change",refresh);
+
+qs("#svcFilterDate")
+?.addEventListener("change",()=>{
+  clearCalendar();
+  refresh();
+});
+
+qs("#svcFilterCalendar")
+?.addEventListener("change",()=>{
+  clearDropdown();
+  refresh();
+});
 
 /* -------------------------------------------------- INIT */
 window.addEventListener("load",()=>{
