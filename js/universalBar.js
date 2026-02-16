@@ -1,14 +1,13 @@
 /* ===========================================================
-   universal-bar.js — FINAL v48
-   NET SETTLEMENT + SAFE COMPONENT RESET + FULL SYNC RESTORED
+   universal-bar.js — FINAL v49
+   NET SETTLEMENT + LIVE COMPONENT RESET FIX
 
    ✔ Main reset
    ✔ Inside reset
-   ✔ Future sales safe
-   ✔ Live sync restored
-   ✔ Stock / Service collect restored
-   ✔ Cloud number safety restored
-   ✔ Timeout guards restored
+   ✔ Future sales visible instantly
+   ✔ No hard refresh needed
+   ✔ Live sync safe
+   ✔ Cloud safe
 =========================================================== */
 
 (function () {
@@ -29,7 +28,7 @@
     expenses: 0
   };
 
-  /* 🔥 COMPONENT BASELINE (visual reset) */
+  /* 🔥 COMPONENT BASELINE SNAPSHOT */
   window.__componentBaseline =
     window.__componentBaseline || {
       sale: 0,
@@ -71,20 +70,12 @@
   }
 
   /* ==========================================================
-     METRICS
+     METRICS ENGINE
   ========================================================== */
   function computeMetrics() {
 
     if (window.__dashboardViewCleared) {
-      return {
-        saleProfitCollected: 0,
-        serviceProfitCollected: 0,
-        stockInvestSold: 0,
-        serviceInvestCompleted: 0,
-        expensesLive: 0,
-        pendingCreditTotal: 0,
-        netProfit: 0
-      };
+      return zeroMetrics();
     }
 
     const sales    = window.sales || [];
@@ -137,7 +128,7 @@
       expensesAll += num(e.amount);
     });
 
-    /* 🔥 APPLY COMPONENT RESET */
+    /* 🔥 COMPONENT RESET APPLY */
 
     const saleLive =
       Math.max(0,
@@ -191,6 +182,18 @@
     };
   }
 
+  function zeroMetrics() {
+    return {
+      saleProfitCollected: 0,
+      serviceProfitCollected: 0,
+      stockInvestSold: 0,
+      serviceInvestCompleted: 0,
+      expensesLive: 0,
+      pendingCreditTotal: 0,
+      netProfit: 0
+    };
+  }
+
   /* ---------------- UI ---------------- */
   function updateUniversalBar() {
 
@@ -220,7 +223,6 @@
 
     const m = window.__unMetrics || {};
 
-    /* -------- NET -------- */
     if (kind === "net") {
 
       if (m.netProfit <= 0)
@@ -239,7 +241,7 @@
       /* OFFSETS */
       window.__offsets.net += m.netProfit;
 
-      /* 🔥 COMPONENT RESET */
+      /* 🔥 SNAPSHOT FREEZE */
       window.__componentBaseline.sale +=
         m.saleProfitCollected;
 
@@ -250,7 +252,6 @@
         m.expensesLive;
     }
 
-    /* -------- STOCK -------- */
     if (kind === "stock") {
 
       if (m.stockInvestSold <= 0)
@@ -266,7 +267,6 @@
         m.stockInvestSold;
     }
 
-    /* -------- SERVICE -------- */
     if (kind === "service") {
 
       if (m.serviceInvestCompleted <= 0)
@@ -282,7 +282,7 @@
         m.serviceInvestCompleted;
     }
 
-    /* -------- SAVE CLOUD -------- */
+    /* SAVE CLOUD */
     if (!window.__offsetSaveLock) {
 
       window.__offsetSaveLock = true;
@@ -297,6 +297,7 @@
       }, 600);
     }
 
+    /* 🔥 FORCE LIVE REFRESH */
     updateUniversalBar();
     renderCollection?.();
     renderAnalytics?.();
@@ -320,17 +321,19 @@
     }
   );
 
-  /* 🔥 LIVE SYNC RESTORED */
+  /* 🔥 LIVE SYNC */
   [
     "sales-updated",
     "services-updated",
     "expenses-updated",
     "collection-updated"
   ].forEach(ev => {
-    window.addEventListener(ev, updateUniversalBar);
+    window.addEventListener(ev, () => {
+      updateUniversalBar();
+    });
   });
 
-  /* 🔥 TIMEOUT GUARDS RESTORED */
+  /* 🔥 TIMEOUT GUARDS */
   setTimeout(updateUniversalBar, 500);
   setTimeout(updateUniversalBar, 1500);
 
