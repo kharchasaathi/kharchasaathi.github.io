@@ -223,6 +223,11 @@
       transition: all 0.2s;
     }
 
+    .btn-danger:hover {
+      background: #9f3a3a;
+      transform: translateY(-1px);
+    }
+
     /* KPI Cards */
     .kpi-grid {
       display: grid;
@@ -431,6 +436,7 @@
       border: 1px solid var(--neutral-200);
       overflow-x: auto;
       box-shadow: var(--shadow-sm);
+      margin-top: 1rem;
     }
 
     table {
@@ -533,6 +539,18 @@
     .danger-zone h3 {
       color: var(--danger);
       margin-bottom: 0.5rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    /* Filter Row */
+    .filter-row {
+      display: flex;
+      gap: 1rem;
+      flex-wrap: wrap;
+      align-items: center;
+      margin: 1rem 0;
     }
 
     /* Responsive */
@@ -560,10 +578,20 @@
         width: 100%;
         justify-content: space-between;
       }
+      
+      .filter-row {
+        flex-direction: column;
+        align-items: stretch;
+      }
     }
   </style>
 </head>
 <body>
+  <script>
+    const qs = s => document.querySelector(s);
+    const qsa = s => Array.from(document.querySelectorAll(s));
+  </script>
+
   <!-- App Bar -->
   <header class="app-bar">
     <div class="logo-area">
@@ -661,7 +689,7 @@
 
   <!-- Main Content -->
   <main class="main-content">
-    <!-- Types Section -->
+    <!-- =============== TYPES SECTION =============== -->
     <section id="types" class="section active">
       <div class="section-header">
         <h2><i class="fas fa-tags"></i> Manage Item Types</h2>
@@ -690,7 +718,7 @@
       </div>
     </section>
 
-    <!-- Stock Section -->
+    <!-- =============== STOCK SECTION =============== -->
     <section id="stock" class="section">
       <div class="section-header">
         <h2><i class="fas fa-boxes"></i> Current Stock</h2>
@@ -699,6 +727,9 @@
           <input type="number" id="globalLimit" class="form-control" placeholder="2" style="width: 80px;">
           <button id="setLimitBtn" class="btn-outline">Set</button>
           <button id="syncStockBtn" class="btn-outline"><i class="fas fa-cloud-upload-alt"></i> Sync</button>
+          <button id="clearStockBtn" class="btn-outline" style="background: var(--danger-light); color: var(--danger); border-color: #fecaca;">
+            <i class="fas fa-trash-alt"></i> Clear All
+          </button>
         </div>
       </div>
 
@@ -711,15 +742,19 @@
         <button id="addStockBtn" class="btn-primary"><i class="fas fa-plus"></i> Add Stock</button>
       </div>
 
-      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
-        <div style="display: flex; gap: 1rem; align-items: center;">
+      <div class="filter-row">
+        <div style="display: flex; gap: 1rem; align-items: center; flex-wrap: wrap;">
           <select id="filterType" class="form-control" style="width: 200px;">
             <option value="all">All Types</option>
           </select>
           <input type="text" id="productSearch" class="form-control" placeholder="Search products..." style="width: 250px;">
         </div>
-        <div class="badge badge-success" style="font-size: 0.875rem;">
-          <i class="fas fa-rupee-sign"></i> Stock Investment: <span id="stockInvValue">₹0</span>
+        <div style="display: flex; gap: 0.5rem; align-items: center; margin-left: auto;">
+          <div class="badge badge-success" style="font-size: 0.875rem;">
+            <i class="fas fa-rupee-sign"></i> Investment: <span id="stockInvValue">₹0</span>
+          </div>
+          <button id="exportStockBtn" class="btn-outline"><i class="fas fa-download"></i> Export</button>
+          <button id="importStockBtn" class="btn-outline"><i class="fas fa-upload"></i> Import</button>
         </div>
       </div>
 
@@ -742,13 +777,16 @@
       </div>
     </section>
 
-    <!-- Sales Section -->
+    <!-- =============== SALES SECTION =============== -->
     <section id="sales" class="section">
       <div class="section-header">
         <h2><i class="fas fa-chart-line"></i> Sales & Profit</h2>
         <div class="action-bar">
           <button id="filterSalesBtn" class="btn-outline"><i class="fas fa-filter"></i> Filter</button>
           <button id="syncSalesBtn" class="btn-outline"><i class="fas fa-cloud-upload-alt"></i> Sync</button>
+          <button id="clearSalesBtn" class="btn-outline" style="background: var(--danger-light); color: var(--danger); border-color: #fecaca;">
+            <i class="fas fa-trash-alt"></i> Clear All
+          </button>
         </div>
       </div>
 
@@ -763,7 +801,6 @@
           <option value="credit-pending">Credit Pending</option>
           <option value="credit-paid">Credit Paid</option>
         </select>
-        <button id="clearSalesBtn" class="btn-outline"><i class="fas fa-trash-alt"></i> Clear All</button>
       </div>
 
       <div class="table-container">
@@ -793,12 +830,13 @@
       </div>
     </section>
 
-    <!-- Wanting Section -->
+    <!-- =============== WANTING SECTION =============== -->
     <section id="wanting" class="section">
       <div class="section-header">
         <h2><i class="fas fa-cart-plus"></i> Wanting List</h2>
         <div class="action-bar">
           <button id="syncWantingBtn" class="btn-outline"><i class="fas fa-cloud-upload-alt"></i> Sync</button>
+          <button id="clearWantBtn" class="btn-outline"><i class="fas fa-trash-alt"></i> Clear</button>
         </div>
       </div>
 
@@ -826,7 +864,7 @@
       </div>
     </section>
 
-    <!-- Service Section -->
+    <!-- =============== SERVICE SECTION (PART 1) =============== -->
     <section id="service" class="section">
       <div class="section-header">
         <h2><i class="fas fa-tools"></i> Service & Repair</h2>
@@ -839,18 +877,18 @@
         <summary style="cursor: pointer; font-weight: 600; color: var(--primary);">
           <i class="fas fa-plus-circle"></i> Add New Repair Job
         </summary>
-        <div style="display: flex; gap: 0.75rem; flex-wrap: wrap; margin-top: 1rem;">
-          <input type="date" id="svcReceivedDate" class="form-control">
-          <input type="text" id="svcCustomer" class="form-control" placeholder="Customer name">
-          <input type="text" id="svcPhone" class="form-control" placeholder="Phone">
-          <select id="svcItemType" class="form-control">
+        <div style="display: flex; gap: 0.75rem; flex-wrap: wrap; margin-top: 1rem; width: 100%;">
+          <input type="date" id="svcReceivedDate" class="form-control" style="flex: 1;">
+          <input type="text" id="svcCustomer" class="form-control" placeholder="Customer name" style="flex: 1;">
+          <input type="text" id="svcPhone" class="form-control" placeholder="Phone" style="flex: 1;">
+          <select id="svcItemType" class="form-control" style="width: 120px;">
             <option value="Mobile">Mobile</option>
             <option value="Laptop">Laptop</option>
             <option value="Other">Other</option>
           </select>
-          <input type="text" id="svcModel" class="form-control" placeholder="Model">
+          <input type="text" id="svcModel" class="form-control" placeholder="Model" style="flex: 1;">
           <input type="text" id="svcProblem" class="form-control" placeholder="Problem" style="flex: 2;">
-          <input type="number" id="svcAdvance" class="form-control" placeholder="Advance ₹">
+          <input type="number" id="svcAdvance" class="form-control" placeholder="Advance ₹" style="width: 120px;">
           <button id="addServiceBtn" class="btn-primary"><i class="fas fa-save"></i> Add Job</button>
         </div>
       </details>
@@ -889,14 +927,101 @@
           <tbody></tbody>
         </table>
       </div>
+
+      <button id="clearServiceBtn" class="btn-outline" style="background: var(--danger-light); color: var(--danger); border-color: #fecaca; margin: 1rem 0;">
+        <i class="fas fa-trash-alt"></i> Clear All Service Jobs
+      </button>
+
+      <!-- =============== SERVICE SECTION CONTINUES IN PART 2 =============== -->
+            <!-- =============== SERVICE SECTION (PART 2 - CONTINUED) =============== -->
+      <h3 style="margin: 2rem 0 1rem; font-size: 1.1rem; color: var(--primary);">Service History & Analytics</h3>
+      
+      <!-- FILTERS -->
+      <div class="filter-row">
+        <select id="svcFilterStatus" class="form-control" style="width: 200px;">
+          <option value="all">All Status</option>
+          <option value="pending">Pending</option>
+          <option value="completed">Cash Completed</option>
+          <option value="credit">Credit Pending</option>
+          <option value="credit-paid">Credit Paid</option>
+          <option value="failed">Failed / Returned</option>
+        </select>
+
+        <select id="svcFilterType" class="form-control" style="width: 150px;">
+          <option value="all">All Types</option>
+          <option value="Mobile">Mobile</option>
+          <option value="Laptop">Laptop</option>
+          <option value="Other">Other</option>
+        </select>
+
+        <input id="svcFilterCalendar" type="date" class="form-control" style="width: 160px;">
+      </div>
+
+      <!-- HISTORY TABLE -->
+      <div class="table-container">
+        <table id="svcHistoryTable">
+          <thead>
+            <tr>
+              <th>Job ID</th>
+              <th>Received</th>
+              <th>Completed</th>
+              <th>Customer</th>
+              <th>Phone</th>
+              <th>Item</th>
+              <th>Investment</th>
+              <th>Paid</th>
+              <th>Profit</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+
+      <!-- SPLIT VIEW FOR ANALYTICS -->
+      <div style="display: flex; gap: 20px; align-items: flex-start; margin-top: 2rem; flex-wrap: wrap;">
+        <!-- SERVICE PIE CHART -->
+        <div class="stat-card" style="flex: 1; min-width: 300px;">
+          <h4 style="text-align: center; margin-bottom: 1rem;">Service Status Summary</h4>
+          <div style="height: 260px; position: relative;">
+            <canvas id="svcPieStatus"></canvas>
+          </div>
+        </div>
+
+        <!-- MONEY BOX -->
+        <div id="svcMoneyBox" class="stat-card" style="flex: 1; min-width: 280px;">
+          <h4>Financial Summary</h4>
+          <div style="margin-top: 1rem;">
+            <div style="display: flex; justify-content: space-between; padding: 0.5rem 0; border-bottom: 1px dashed var(--neutral-200);">
+              <span>Total Investment:</span>
+              <span style="font-weight: 600;" id="svcTotalInvestment">₹0</span>
+            </div>
+            <div style="display: flex; justify-content: space-between; padding: 0.5rem 0; border-bottom: 1px dashed var(--neutral-200);">
+              <span>Total Collected:</span>
+              <span style="font-weight: 600; color: var(--success);" id="svcTotalCollected">₹0</span>
+            </div>
+            <div style="display: flex; justify-content: space-between; padding: 0.5rem 0; border-bottom: 1px dashed var(--neutral-200);">
+              <span>Pending Payments:</span>
+              <span style="font-weight: 600; color: var(--warning);" id="svcPendingPayments">₹0</span>
+            </div>
+            <div style="display: flex; justify-content: space-between; padding: 0.5rem 0; font-size: 1.1rem;">
+              <span>Net Profit:</span>
+              <span style="font-weight: 700; color: var(--success);" id="svcNetProfit">₹0</span>
+            </div>
+          </div>
+        </div>
+      </div>
     </section>
 
-    <!-- Expenses Section -->
+    <!-- =============== EXPENSES SECTION =============== -->
     <section id="expenses" class="section">
       <div class="section-header">
         <h2><i class="fas fa-file-invoice"></i> Expenses</h2>
         <div class="action-bar">
           <button id="syncExpensesBtn" class="btn-outline"><i class="fas fa-cloud-upload-alt"></i> Sync</button>
+          <button id="clearExpensesBtn" class="btn-outline" style="background: var(--danger-light); color: var(--danger); border-color: #fecaca;">
+            <i class="fas fa-trash-alt"></i> Clear All
+          </button>
         </div>
       </div>
 
@@ -922,8 +1047,8 @@
           <tbody></tbody>
           <tfoot>
             <tr>
-              <td colspan="2" style="text-align: right;">Total:</td>
-              <td id="expTotal">0</td>
+              <td colspan="2" style="text-align: right;">Total Expenses:</td>
+              <td id="expTotal">₹0</td>
               <td></td>
               <td></td>
             </tr>
@@ -932,7 +1057,7 @@
       </div>
     </section>
 
-    <!-- Dashboard Section -->
+    <!-- =============== DASHBOARD SECTION =============== -->
     <section id="dashboard" class="section">
       <div class="section-header">
         <h2><i class="fas fa-chart-pie"></i> Business Dashboard</h2>
@@ -941,29 +1066,40 @@
         </button>
       </div>
 
+      <!-- TODAY'S STATS -->
       <div class="stats-grid">
         <div class="stat-card">
-          <h4>Today's Sales</h4>
+          <h4><i class="fas fa-calendar-day"></i> Today's Sales</h4>
           <div class="stat-number" id="todaySales">₹0</div>
         </div>
         <div class="stat-card">
-          <h4>Today's Credit</h4>
+          <h4><i class="fas fa-credit-card"></i> Today's Credit</h4>
           <div class="stat-number" id="todayCredit">₹0</div>
         </div>
         <div class="stat-card" style="background: var(--warning-light);">
-          <h4>Today's Expenses</h4>
+          <h4><i class="fas fa-receipt"></i> Today's Expenses</h4>
           <div class="stat-number" style="color: var(--warning);" id="todayExpenses">₹0</div>
         </div>
         <div class="stat-card" style="background: var(--success-light);">
-          <h4>Today's Net Profit</h4>
+          <h4><i class="fas fa-chart-line"></i> Today's Gross</h4>
+          <div class="stat-number" style="color: var(--success);" id="todayGross">₹0</div>
+        </div>
+        <div class="stat-card" style="background: var(--success-light);">
+          <h4><i class="fas fa-coins"></i> Today's Net</h4>
           <div class="stat-number" style="color: var(--success);" id="todayNet">₹0</div>
         </div>
       </div>
 
-      <div class="stats-grid" style="margin-top: 2rem;">
+      <hr style="margin: 2rem 0; border: none; border-top: 1px dashed var(--neutral-200);">
+
+      <!-- OVERALL STATS -->
+      <h3 style="margin-bottom: 1.5rem; color: var(--primary);">Overall Performance</h3>
+      
+      <div class="stats-grid">
         <div class="stat-card" style="background: var(--success-light);">
           <h4>Total Profit</h4>
           <div class="stat-number" style="color: var(--success);" id="dashProfit">₹0</div>
+          <small>Sale + Service (collected)</small>
         </div>
         <div class="stat-card" style="background: var(--warning-light);">
           <h4>Total Expenses</h4>
@@ -973,14 +1109,20 @@
           <h4>Pending Credit</h4>
           <div class="stat-number" id="dashCredit">₹0</div>
         </div>
-        <div class="stat-card">
+        <div class="stat-card" style="background: #fefce8;">
           <h4>Total Investment</h4>
-          <div class="stat-number" id="dashInv">₹0</div>
+          <div class="stat-number" style="color: #ca8a04;" id="dashInv">₹0</div>
+          <small>Sold stock + Service</small>
         </div>
+      </div>
+
+      <!-- PIE CHART -->
+      <div style="max-width: 600px; margin: 2rem auto;">
+        <canvas id="cleanPie" height="200"></canvas>
       </div>
     </section>
 
-    <!-- Collection Section -->
+    <!-- =============== COLLECTION SECTION =============== -->
     <section id="collection" class="section">
       <div class="section-header">
         <h2><i class="fas fa-coins"></i> Collection Center</h2>
@@ -999,13 +1141,14 @@
           <h4>Pending Credits</h4>
           <div class="stat-number" style="color: var(--warning);" id="colCredit">₹0</div>
         </div>
-        <div class="stat-card">
+        <div class="stat-card" style="background: #fefce8;">
           <h4>Investment Value</h4>
-          <div class="stat-number" id="colInvRemain">₹0</div>
+          <div class="stat-number" style="color: #ca8a04;" id="colInvRemain">₹0</div>
         </div>
       </div>
 
-      <h3 style="margin: 1.5rem 0 1rem;">Collection History</h3>
+      <h3 style="margin: 2rem 0 1rem;">Collection History</h3>
+      
       <div class="table-container">
         <table id="collectionHistory">
           <thead>
@@ -1019,16 +1162,21 @@
           <tbody></tbody>
         </table>
       </div>
+
+      <button id="clearCollectionBtn" class="btn-outline" style="background: var(--danger-light); color: var(--danger); border-color: #fecaca; margin-top: 1rem;">
+        <i class="fas fa-trash-alt"></i> Clear Collection History
+      </button>
     </section>
 
-    <!-- Reset Section -->
+    <!-- =============== RESET SECTION =============== -->
     <section id="reset" class="section">
       <div class="danger-zone">
         <h3><i class="fas fa-exclamation-triangle"></i> Danger Zone</h3>
         <p style="margin: 1rem 0; color: var(--neutral-600);">
           This action will permanently delete ALL business data including:
-          Types, Stock, Sales, Services, Expenses, Collections, and History.
-          This cannot be undone.
+          Types, Stock, Sales, Services, Expenses, Collections, Wanting, and History.
+          <br><br>
+          <strong>This cannot be undone.</strong>
         </p>
         <button id="resetAllDataBtn" class="btn-danger">
           <i class="fas fa-trash-alt"></i> Reset Entire System
@@ -1043,13 +1191,13 @@
   <script src="https://www.gstatic.com/firebasejs/9.6.11/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.6.11/firebase-firestore-compat.js"></script>
 
-  <!-- Your existing JS files - paths should be updated as needed -->
+  <!-- Core JavaScript -->
   <script>
-    // Utility function
+    // =============== UTILITY FUNCTIONS ===============
     const qs = s => document.querySelector(s);
     const qsa = s => Array.from(document.querySelectorAll(s));
 
-    // Tab switching
+    // =============== TAB SWITCHING ===============
     function switchTab(id) {
       qsa(".section").forEach(sec => sec.classList.remove("active"));
       const target = qs("#" + id);
@@ -1058,16 +1206,24 @@
       qsa(".nav-tab").forEach(t => t.classList.remove("active"));
       const tab = qs(`.nav-tab[data-tab="${id}"]`);
       if (tab) tab.classList.add("active");
+
+      // Trigger render functions if they exist
+      try { if (typeof renderStock === 'function') renderStock(); } catch {}
+      try { if (typeof renderSales === 'function') renderSales(); } catch {}
+      try { if (typeof renderWanting === 'function') renderWanting(); } catch {}
+      try { if (typeof renderExpenses === 'function') renderExpenses(); } catch {}
+      try { if (typeof window.__svcRefresh === 'function') window.__svcRefresh(); } catch {}
+      try { if (typeof renderCollection === 'function') renderCollection(); } catch {}
+      try { if (typeof updateUniversalBar === 'function') updateUniversalBar(); } catch {}
     }
 
     document.addEventListener("click", e => {
-      if (e.target.classList.contains("nav-tab") || e.target.parentElement?.classList.contains("nav-tab")) {
-        const tab = e.target.classList.contains("nav-tab") ? e.target : e.target.parentElement;
-        switchTab(tab.dataset.tab);
+      if (e.target.classList.contains("nav-tab")) {
+        switchTab(e.target.dataset.tab);
       }
     });
 
-    // Clock
+    // =============== CLOCK ===============
     function updateClock() {
       const d = new Date();
       const t = qs("#clockTime");
@@ -1080,24 +1236,96 @@
     setInterval(updateClock, 1000);
     updateClock();
 
-    // Logout
+    // =============== THEME BUTTON ===============
+    document.getElementById("themeBtn")?.addEventListener("click", () => {
+      alert("Theme customization coming soon!");
+    });
+
+    // =============== LOGOUT ===============
     document.getElementById("logoutBtn")?.addEventListener("click", async () => {
       if (confirm("Logout from KharchaSaathi?")) {
-        window.location.href = "/login.html";
+        try {
+          if (window.fsLogout) {
+            await window.fsLogout();
+          } else {
+            localStorage.removeItem("ks-user-email");
+            window.location.href = "/login.html";
+          }
+        } catch (e) {
+          console.error("Logout error:", e);
+          window.location.href = "/login.html";
+        }
       }
     });
 
-    // Reset confirmation
+    // =============== RESET FUNCTIONALITY ===============
     document.getElementById("resetAllDataBtn")?.addEventListener("click", async () => {
       if (!confirm("⚠️ This will DELETE ALL business data. Continue?")) return;
-      if (!confirm("Final warning. All data will be permanently lost. Proceed?")) return;
-      
-      alert("Reset functionality will be handled by your reset-engine.js");
-      // Your existing reset logic here
+      if (!confirm("FINAL WARNING. All data will be permanently lost. Proceed?")) return;
+
+      try {
+        // Local memory reset
+        window.types = [];
+        window.stock = [];
+        window.sales = [];
+        window.services = [];
+        window.expenses = [];
+        window.collections = [];
+        window.wanting = [];
+        window.__dashboardOffset = 0;
+        window.__dashboardViewCleared = false;
+
+        // Cloud reset (if available)
+        if (window.__cloudReady && typeof cloudSave === "function") {
+          await cloudSave("types", []);
+          await cloudSave("stock", []);
+          await cloudSave("sales", []);
+          await cloudSave("services", []);
+          await cloudSave("expenses", []);
+          await cloudSave("collections", []);
+          await cloudSave("wanting", []);
+          await cloudSave("dashboardOffset", 0);
+        }
+
+        // Refresh UI
+        if (typeof renderStock === 'function') renderStock();
+        if (typeof renderSales === 'function') renderSales();
+        if (typeof renderWanting === 'function') renderWanting();
+        if (typeof renderExpenses === 'function') renderExpenses();
+        if (typeof renderCollection === 'function') renderCollection();
+        if (typeof window.__svcRefresh === 'function') window.__svcRefresh();
+        if (typeof updateUniversalBar === 'function') updateUniversalBar();
+        if (typeof renderAnalytics === 'function') renderAnalytics();
+
+        alert("✅ System fully reset");
+      } catch (err) {
+        console.error("❌ Reset failed:", err);
+        alert("Reset failed - check console");
+      }
+    });
+
+    // =============== DASHBOARD CLEAR ===============
+    window.clearDashboardView = function() {
+      if (confirm("Clear dashboard history view?")) {
+        window.__dashboardViewCleared = true;
+        if (typeof updateSummaryCards === 'function') updateSummaryCards();
+        alert("Dashboard view cleared");
+      }
+    };
+
+    // =============== INIT ===============
+    document.addEventListener('DOMContentLoaded', () => {
+      // Set today's date as default for date inputs
+      const today = new Date().toISOString().split('T')[0];
+      const dateInputs = ['pdate', 'saleDate', 'expDate', 'svcReceivedDate'];
+      dateInputs.forEach(id => {
+        const el = document.getElementById(id);
+        if (el && !el.value) el.value = today;
+      });
     });
   </script>
 
-  <!-- Your existing JS files -->
+  <!-- External JS files (keep your existing paths) -->
   <script src="/js/firebase.js"></script>
   <script src="/js/core.js"></script>
   <script src="/js/universalBar.js"></script>
