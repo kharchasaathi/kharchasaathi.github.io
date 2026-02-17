@@ -13,6 +13,7 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
 
   <style>
+    /* === PROFESSIONAL MODERN STYLES (RETAINING ALL OLD IDs/CLASSES) === */
     * {
       margin: 0;
       padding: 0;
@@ -20,7 +21,6 @@
     }
 
     :root {
-      /* Professional Navy Theme */
       --primary: #0b2b4a;
       --primary-light: #1e3a5f;
       --primary-soft: #eef2f8;
@@ -55,8 +55,8 @@
       min-height: 100vh;
     }
 
-    /* Modern App Bar */
-    .app-bar {
+    /* Modern App Bar (replaces .topbar) */
+    .topbar {
       background: var(--white);
       border-bottom: 1px solid var(--neutral-200);
       padding: 0.75rem 2rem;
@@ -71,13 +71,18 @@
       box-shadow: var(--shadow-sm);
     }
 
-    .logo-area {
+    .topbar h1 {
+      margin: 0;
+      font-size: 1.25rem;
+      font-weight: 600;
+      letter-spacing: 0.02em;
+      color: var(--primary);
       display: flex;
       align-items: center;
       gap: 1rem;
     }
 
-    .logo-icon {
+    .topbar-logo {
       width: 40px;
       height: 40px;
       background: linear-gradient(135deg, var(--primary) 0%, var(--accent) 100%);
@@ -91,25 +96,18 @@
       box-shadow: 0 4px 12px rgba(11,43,74,0.25);
     }
 
-    .logo-text {
-      font-size: 1.25rem;
-      font-weight: 600;
-      letter-spacing: 0.02em;
-      color: var(--primary);
+    .topbar-logo span {
+      font-size: 1.5rem;
+      color: white;
     }
 
-    .logo-text span {
-      color: var(--accent);
-      font-weight: 300;
-    }
-
-    .user-area {
+    .topbar-right {
       display: flex;
       align-items: center;
       gap: 1.25rem;
     }
 
-    .user-badge {
+    #emailTag {
       background: var(--primary-soft);
       padding: 0.5rem 1rem;
       border-radius: 100px;
@@ -121,11 +119,7 @@
       gap: 0.5rem;
     }
 
-    .user-badge i {
-      color: var(--accent);
-    }
-
-    .clock-widget {
+    .simple-clock {
       background: var(--white);
       border: 1px solid var(--neutral-200);
       padding: 0.4rem 1rem;
@@ -136,59 +130,17 @@
       gap: 0.75rem;
     }
 
-    .clock-time {
+    .clock-line {
       font-weight: 600;
       color: var(--primary);
     }
 
-    .clock-date {
+    .clock-line.small {
       color: var(--neutral-600);
       font-size: 0.75rem;
     }
 
-    .btn-icon {
-      width: 38px;
-      height: 38px;
-      border-radius: 10px;
-      border: 1px solid var(--neutral-200);
-      background: var(--white);
-      color: var(--neutral-600);
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      cursor: pointer;
-      transition: all 0.2s;
-    }
-
-    .btn-icon:hover {
-      background: var(--primary-soft);
-      color: var(--primary);
-      border-color: var(--primary-light);
-    }
-
-    .btn-primary {
-      background: var(--primary);
-      color: white;
-      border: none;
-      padding: 0.6rem 1.25rem;
-      border-radius: 10px;
-      font-weight: 500;
-      font-size: 0.875rem;
-      display: inline-flex;
-      align-items: center;
-      gap: 0.5rem;
-      cursor: pointer;
-      transition: all 0.2s;
-      box-shadow: 0 2px 8px rgba(11,43,74,0.25);
-    }
-
-    .btn-primary:hover {
-      background: var(--primary-light);
-      transform: translateY(-1px);
-      box-shadow: 0 4px 12px rgba(11,43,74,0.3);
-    }
-
-    .btn-outline {
+    .theme-btn, .small-btn {
       background: transparent;
       border: 1px solid var(--neutral-200);
       color: var(--neutral-600);
@@ -201,44 +153,41 @@
       gap: 0.5rem;
       cursor: pointer;
       transition: all 0.2s;
+      text-decoration: none;
     }
 
-    .btn-outline:hover {
+    .theme-btn:hover, .small-btn:hover {
       background: var(--neutral-100);
       border-color: var(--neutral-300);
       color: var(--primary);
     }
 
-    .btn-danger {
+    #logoutBtn {
       background: var(--danger);
       color: white;
       border: none;
-      padding: 0.6rem 1.25rem;
-      border-radius: 10px;
-      font-weight: 500;
-      display: inline-flex;
-      align-items: center;
-      gap: 0.5rem;
-      cursor: pointer;
-      transition: all 0.2s;
     }
 
-    .btn-danger:hover {
+    #logoutBtn:hover {
       background: #9f3a3a;
-      transform: translateY(-1px);
     }
 
-    /* KPI Cards */
-    .kpi-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-      gap: 1.25rem;
-      padding: 1.5rem 2rem;
+    /* KPI Cards (replaces #universalBar) */
+    #universalBar {
       background: var(--white);
       border-bottom: 1px solid var(--neutral-200);
     }
 
-    .kpi-card {
+    .uni-row {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 1.25rem;
+      padding: 1.5rem 2rem;
+      max-width: 1600px;
+      margin: 0 auto;
+    }
+
+    .uni-card {
       background: var(--white);
       border: 1px solid var(--neutral-200);
       border-radius: var(--radius-lg);
@@ -248,34 +197,28 @@
       box-shadow: var(--shadow-sm);
     }
 
-    .kpi-card:hover {
+    .uni-card:hover {
       box-shadow: var(--shadow-md);
       border-color: var(--accent-light);
     }
 
-    .kpi-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: flex-start;
-      margin-bottom: 0.75rem;
-    }
-
-    .kpi-title {
+    .uni-title {
       font-size: 0.75rem;
       text-transform: uppercase;
       letter-spacing: 0.05em;
       color: var(--neutral-600);
       font-weight: 600;
+      margin-bottom: 0.5rem;
     }
 
-    .kpi-value {
+    .uni-value {
       font-size: 1.75rem;
       font-weight: 700;
       color: var(--primary);
       line-height: 1.2;
     }
 
-    .kpi-footer {
+    .uni-sub {
       margin-top: 0.75rem;
       display: flex;
       gap: 1rem;
@@ -283,12 +226,12 @@
       color: var(--neutral-600);
     }
 
-    .kpi-footer span {
+    .uni-sub span {
       font-weight: 600;
       color: var(--neutral-800);
     }
 
-    .collect-badge {
+    .collect-btn {
       position: absolute;
       top: 1rem;
       right: 1rem;
@@ -303,13 +246,13 @@
       transition: all 0.2s;
     }
 
-    .collect-badge:hover {
+    .collect-btn:hover {
       background: var(--success);
       color: white;
     }
 
     /* Navigation Tabs */
-    .nav-tabs {
+    .tabs {
       background: var(--white);
       padding: 0.5rem 2rem;
       border-bottom: 1px solid var(--neutral-200);
@@ -319,7 +262,7 @@
       scrollbar-width: thin;
     }
 
-    .nav-tab {
+    .tab {
       padding: 0.6rem 1.25rem;
       border-radius: 30px;
       font-size: 0.875rem;
@@ -331,26 +274,23 @@
       border: 1px solid transparent;
     }
 
-    .nav-tab:hover {
+    .tab:hover {
       background: var(--neutral-100);
       color: var(--primary);
     }
 
-    .nav-tab.active {
+    .tab.active {
       background: var(--primary);
       color: white;
       box-shadow: 0 4px 12px rgba(11,43,74,0.25);
     }
 
-    /* Main Content */
-    .main-content {
+    /* Sections */
+    .section {
+      display: none;
       padding: 2rem;
       max-width: 1600px;
       margin: 0 auto;
-    }
-
-    .section {
-      display: none;
       animation: fadeIn 0.3s ease;
     }
 
@@ -363,35 +303,18 @@
       to { opacity: 1; transform: translateY(0); }
     }
 
-    .section-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 1.5rem;
-    }
-
-    .section-header h2 {
+    h3 {
       font-size: 1.5rem;
       font-weight: 600;
       color: var(--primary);
+      margin-bottom: 1.5rem;
       display: flex;
       align-items: center;
       gap: 0.75rem;
     }
 
-    .section-header h2 i {
-      color: var(--accent);
-    }
-
-    .action-bar {
-      display: flex;
-      gap: 0.75rem;
-      flex-wrap: wrap;
-      align-items: center;
-    }
-
-    /* Form Elements */
-    .form-grid {
+    /* Form rows */
+    .row-inline {
       display: flex;
       gap: 1rem;
       flex-wrap: wrap;
@@ -403,24 +326,27 @@
       margin-bottom: 1.5rem;
     }
 
-    .form-control {
+    input, select, button {
+      font-family: inherit;
+    }
+
+    input, select {
       padding: 0.6rem 1rem;
       border: 1px solid var(--neutral-200);
       border-radius: 10px;
-      font-family: inherit;
       font-size: 0.875rem;
       background: var(--white);
       min-width: 140px;
       transition: all 0.2s;
     }
 
-    .form-control:focus {
+    input:focus, select:focus {
       outline: none;
       border-color: var(--accent);
       box-shadow: 0 0 0 3px rgba(43,108,148,0.1);
     }
 
-    select.form-control {
+    select {
       cursor: pointer;
       background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23475569' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
       background-repeat: no-repeat;
@@ -429,20 +355,45 @@
       padding-right: 2.5rem;
     }
 
-    /* Tables */
-    .table-container {
+    button.small-btn {
       background: var(--white);
-      border-radius: var(--radius-lg);
       border: 1px solid var(--neutral-200);
-      overflow-x: auto;
-      box-shadow: var(--shadow-sm);
-      margin-top: 1rem;
+      color: var(--neutral-600);
+      padding: 0.6rem 1.25rem;
+      border-radius: 10px;
+      font-weight: 500;
+      font-size: 0.875rem;
+      cursor: pointer;
+      transition: all 0.2s;
     }
 
+    button.small-btn:hover {
+      background: var(--neutral-100);
+      border-color: var(--neutral-300);
+      color: var(--primary);
+    }
+
+    /* Special buttons */
+    #clearStockBtn, #clearSalesBtn, #clearWantBtn, #clearServiceBtn, #clearExpensesBtn, #clearCollectionBtn {
+      background: var(--danger-light);
+      color: var(--danger);
+      border-color: #fecaca;
+    }
+
+    #clearStockBtn:hover, #clearSalesBtn:hover, #clearWantBtn:hover, #clearServiceBtn:hover, #clearExpensesBtn:hover, #clearCollectionBtn:hover {
+      background: #fecaca;
+    }
+
+    /* Tables */
     table {
       width: 100%;
       border-collapse: collapse;
-      font-size: 0.875rem;
+      background: var(--white);
+      border-radius: var(--radius-lg);
+      border: 1px solid var(--neutral-200);
+      overflow: hidden;
+      box-shadow: var(--shadow-sm);
+      margin-top: 1rem;
     }
 
     th {
@@ -463,884 +414,692 @@
       color: var(--neutral-800);
     }
 
-    tr:last-child td {
-      border-bottom: none;
-    }
-
     tfoot td {
       background: var(--neutral-50);
       font-weight: 600;
       border-top: 2px solid var(--neutral-200);
     }
 
-    /* Cards */
-    .stats-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-      gap: 1.25rem;
-      margin-bottom: 2rem;
-    }
-
-    .stat-card {
-      background: var(--white);
+    /* Stock investment box */
+    #stockInvBox {
+      background: #fefce8;
+      border: 1px solid #facc15;
       border-radius: var(--radius-lg);
-      padding: 1.5rem;
-      border: 1px solid var(--neutral-200);
-      box-shadow: var(--shadow-sm);
-    }
-
-    .stat-card h4 {
-      font-size: 0.75rem;
-      text-transform: uppercase;
-      color: var(--neutral-600);
-      margin-bottom: 0.5rem;
-    }
-
-    .stat-number {
-      font-size: 2rem;
-      font-weight: 700;
-      color: var(--primary);
-    }
-
-    /* Badges */
-    .badge {
-      display: inline-flex;
-      align-items: center;
-      padding: 0.25rem 0.75rem;
-      border-radius: 100px;
-      font-size: 0.75rem;
+      padding: 1rem;
+      max-width: 300px;
+      margin-left: auto;
       font-weight: 600;
-    }
-
-    .badge-success {
-      background: var(--success-light);
-      color: var(--success);
-    }
-
-    .badge-warning {
-      background: var(--warning-light);
-      color: var(--warning);
-    }
-
-    .badge-danger {
-      background: var(--danger-light);
-      color: var(--danger);
-    }
-
-    /* Danger Zone */
-    .danger-zone {
-      background: var(--danger-light);
-      border: 1px solid #fecaca;
-      border-radius: var(--radius-lg);
-      padding: 1.5rem;
-      max-width: 600px;
-    }
-
-    .danger-zone h3 {
-      color: var(--danger);
-      margin-bottom: 0.5rem;
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
-    }
-
-    /* Filter Row */
-    .filter-row {
-      display: flex;
-      gap: 1rem;
-      flex-wrap: wrap;
-      align-items: center;
-      margin: 1rem 0;
+      font-size: 0.875rem;
+      box-shadow: var(--shadow-sm);
     }
 
     /* Responsive */
     @media (max-width: 768px) {
-      .app-bar {
+      .topbar {
         padding: 0.75rem 1rem;
         flex-direction: column;
         gap: 0.75rem;
       }
-      
-      .kpi-grid {
+      .uni-row {
         padding: 1rem;
       }
-      
-      .main-content {
+      .section {
         padding: 1rem;
       }
-      
-      .form-grid {
+      .row-inline {
         flex-direction: column;
         align-items: stretch;
       }
-      
-      .user-area {
+      .topbar-right {
         width: 100%;
         justify-content: space-between;
-      }
-      
-      .filter-row {
-        flex-direction: column;
-        align-items: stretch;
       }
     }
   </style>
 </head>
 <body>
-  <script>
-    const qs = s => document.querySelector(s);
-    const qsa = s => Array.from(document.querySelectorAll(s));
-  </script>
+<script>
+  const qs = s => document.querySelector(s);
+  const qsa = s => Array.from(document.querySelectorAll(s));
+</script>
 
-  <!-- App Bar -->
-  <header class="app-bar">
-    <div class="logo-area">
-      <div class="logo-icon">₹</div>
-      <div class="logo-text">Kharcha<span>Saathi</span></div>
+<!-- ==================== TOP BAR ==================== -->
+<div class="topbar">
+  <h1>
+    <div class="topbar-logo"><span>₹</span></div>
+    KHARCHASAATHI
+  </h1>
+  <div class="topbar-right">
+    <span id="emailTag">Checking login…</span>
+    <div class="simple-clock">
+      <span id="clockTime" class="clock-line">--:--:--</span>
+      <span id="clockDate" class="clock-line small">--</span>
     </div>
-    
-    <div class="user-area">
-      <div class="user-badge">
-        <i class="fas fa-envelope"></i>
-        <span id="emailTag">demo@business.com</span>
-      </div>
-      
-      <div class="clock-widget">
-        <i class="far fa-clock" style="color: var(--accent);"></i>
-        <span class="clock-time" id="clockTime">--:--:--</span>
-        <span class="clock-date" id="clockDate">---</span>
-      </div>
-      
-      <button class="btn-icon" id="themeBtn" title="Theme">
-        <i class="fas fa-palette"></i>
-      </button>
-      
-      <button class="btn-icon" onclick="window.location.href='/index.html'">
-        <i class="fas fa-home"></i>
-      </button>
-      
-      <button class="btn-danger" id="logoutBtn">
-        <i class="fas fa-sign-out-alt"></i>
-        <span>Logout</span>
-      </button>
-    </div>
-  </header>
+    <button id="themeBtn" class="theme-btn" title="Theme (disabled)">🎨</button>
+    <a class="small-btn" href="/index.html">🏠 Home</a>
+    <button id="logoutBtn" class="small-btn">🔓 Logout</button>
+  </div>
+</div>
 
-  <!-- KPI Dashboard -->
-  <div class="kpi-grid">
-    <div class="kpi-card">
-      <div class="kpi-header">
-        <span class="kpi-title">Net Profit</span>
-        <button class="collect-badge" data-collect="net">
-          <i class="fas fa-hand-holding-usd"></i> Collect
-        </button>
-      </div>
-      <div class="kpi-value" id="unNetProfit">₹0</div>
-      <div class="kpi-footer">
-        <span>Sale: <span id="unSaleProfit">₹0</span></span>
-        <span>Service: <span id="unServiceProfit">₹0</span></span>
-        <span>Exp: <span id="unExpenses">₹0</span></span>
+<!-- ==================== UNIVERSAL BAR (KPI CARDS) ==================== -->
+<div id="universalBar">
+  <div class="uni-row">
+    <div class="uni-card main">
+      <button class="collect-btn" data-collect="net">₹ Collect</button>
+      <div class="uni-title">Net Profit (Sale + Service − Expenses)</div>
+      <div class="uni-value" id="unNetProfit">₹0</div>
+      <div class="uni-sub">
+        <span>Sale:</span><span id="unSaleProfit">₹0</span>
+        <span>Service:</span><span id="unServiceProfit">₹0</span>
+        <span class="uni-exp-label">Exp:</span>
+        <span id="unExpenses" class="uni-exp-value">₹0</span>
       </div>
     </div>
-
-    <div class="kpi-card">
-      <div class="kpi-header">
-        <span class="kpi-title">Stock Investment</span>
-        <button class="collect-badge" data-collect="stock">
-          <i class="fas fa-hand-holding-usd"></i> Collect
-        </button>
+    <div class="uni-card">
+      <button class="collect-btn" data-collect="stock">₹ Collect</button>
+      <div class="uni-title">Stock Investment (Sold Items)</div>
+      <div class="uni-value small" id="unStockInv">₹0</div>
+      <div class="uni-sub">
+        <span class="uni-chip">Sold stock</span>
       </div>
-      <div class="kpi-value" id="unStockInv">₹0</div>
-      <div class="kpi-footer">Sold Items Value</div>
     </div>
-
-    <div class="kpi-card">
-      <div class="kpi-header">
-        <span class="kpi-title">Service Investment</span>
-        <button class="collect-badge" data-collect="service">
-          <i class="fas fa-hand-holding-usd"></i> Collect
-        </button>
+    <div class="uni-card">
+      <button class="collect-btn" data-collect="service">₹ Collect</button>
+      <div class="uni-title">Service Investment (Completed)</div>
+      <div class="uni-value small" id="unServiceInv">₹0</div>
+      <div class="uni-sub">
+        <span class="uni-chip">Closed jobs</span>
       </div>
-      <div class="kpi-value" id="unServiceInv">₹0</div>
-      <div class="kpi-footer">Completed Jobs</div>
     </div>
-
-    <div class="kpi-card">
-      <div class="kpi-header">
-        <span class="kpi-title">Pending Credit</span>
+    <div class="uni-card">
+      <div class="uni-title">Pending Credit Sales</div>
+      <div class="uni-value small" id="unCreditSales">₹0</div>
+      <div class="uni-sub">
+        <span class="uni-chip">To be collected</span>
       </div>
-      <div class="kpi-value" id="unCreditSales">₹0</div>
-      <div class="kpi-footer">To be collected</div>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== TAB SUMMARY (optional, kept for compatibility) ==================== -->
+<div id="tabSummaryBar">Profit: +₹0</div>
+
+<!-- ==================== NAVIGATION TABS ==================== -->
+<div class="tabs" role="tablist">
+  <div class="tab active" data-tab="types">📁 Types</div>
+  <div class="tab" data-tab="stock">📦 Stock</div>
+  <div class="tab" data-tab="sales">📈 Sales</div>
+  <div class="tab" data-tab="wanting">🛒 Wanting</div>
+  <div class="tab" data-tab="service">🛠 Service</div>
+  <div class="tab" data-tab="expenses">💸 Expenses</div>
+  <div class="tab" data-tab="dashboard">📊 Dashboard</div>
+  <div class="tab" data-tab="collection">🪙 Collection</div>
+</div>
+<!-- Extra reset tab (as in original) -->
+<div class="tab" data-tab="reset">🧨 Reset</div>
+
+<!-- ==================== TYPES SECTION ==================== -->
+<section id="types" class="section active">
+  <h3>🗂 Manage Item Types</h3>
+  <div class="row-inline" style="margin-top:8px;">
+    <input id="typeName" type="text" placeholder="Add new type" style="flex:1;">
+    <button id="addTypeBtn" class="small-btn">Add</button>
+    <button id="clearTypesBtn" class="small-btn">Clear All</button>
+    <button id="syncTypesBtn" class="small-btn" title="Save types to cloud">☁️ Sync</button>
+  </div>
+  <ul id="typeList" style="margin-top:10px; padding-left:18px; font-size:13px;"></ul>
+</section>
+
+<!-- ==================== STOCK SECTION ==================== -->
+<section id="stock" class="section">
+  <h3>📦 Current Stock</h3>
+  <div class="row-inline" style="margin-top:6px;">
+    <label>Low Stock:</label>
+    <input id="globalLimit" type="number" placeholder="2" style="width:90px;">
+    <button id="setLimitBtn" class="small-btn">Set</button>
+    <button id="clearStockBtn" class="small-btn" style="background:#fee2e2; border-color:#fecaca; color:#b91c1c;">Clear All</button>
+    <button id="syncStockBtn" class="small-btn" title="Save stock to cloud">☁️ Sync</button>
+  </div>
+
+  <div class="row-inline">
+    <input id="pdate" type="date">
+    <select id="ptype"></select>
+    <input id="pname" type="text" placeholder="Product" style="min-width:140px;">
+    <input id="pqty" type="number" placeholder="Qty" style="width:80px;">
+    <input id="pcost" type="number" placeholder="Cost ₹" style="width:100px;">
+    <button id="addStockBtn" class="small-btn">Add</button>
+  </div>
+
+  <div style="margin-top:12px; display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
+    <b>Filter Type:</b>
+    <select id="filterType">
+      <option value="all">All</option>
+    </select>
+    <input id="productSearch" placeholder="Search product..." style="min-width:160px;">
+  </div>
+
+  <div id="stockInvBox">
+    📦 Stock Investment (Before Sale):
+    <span id="stockInvValue" style="color:#ca8a04;">₹0</span>
+    <div style="margin-top:8px;">
+      <button id="exportStockBtn" class="small-btn">Export CSV</button>
+      <button id="importStockBtn" class="small-btn">Import</button>
     </div>
   </div>
 
-  <!-- Navigation Tabs -->
-  <nav class="nav-tabs">
-    <div class="nav-tab active" data-tab="types"><i class="fas fa-tags"></i> Types</div>
-    <div class="nav-tab" data-tab="stock"><i class="fas fa-boxes"></i> Stock</div>
-    <div class="nav-tab" data-tab="sales"><i class="fas fa-chart-line"></i> Sales</div>
-    <div class="nav-tab" data-tab="wanting"><i class="fas fa-cart-plus"></i> Wanting</div>
-    <div class="nav-tab" data-tab="service"><i class="fas fa-tools"></i> Service</div>
-    <div class="nav-tab" data-tab="expenses"><i class="fas fa-file-invoice"></i> Expenses</div>
-    <div class="nav-tab" data-tab="dashboard"><i class="fas fa-chart-pie"></i> Dashboard</div>
-    <div class="nav-tab" data-tab="collection"><i class="fas fa-coins"></i> Collection</div>
-    <div class="nav-tab" data-tab="reset"><i class="fas fa-exclamation-triangle"></i> Reset</div>
-  </nav>
+  <table id="stockTable">
+    <thead>
+      <tr>
+        <th>Date</th>
+        <th>Type</th>
+        <th>Product</th>
+        <th>Qty</th>
+        <th>Sold</th>
+        <th>Remain</th>
+        <th>Alert</th>
+        <th>Limit</th>
+        <th>Action</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+</section>
 
-  <!-- Main Content -->
-  <main class="main-content">
-    <!-- =============== TYPES SECTION =============== -->
-    <section id="types" class="section active">
-      <div class="section-header">
-        <h2><i class="fas fa-tags"></i> Manage Item Types</h2>
-        <div class="action-bar">
-          <button id="syncTypesBtn" class="btn-outline"><i class="fas fa-cloud-upload-alt"></i> Sync</button>
-        </div>
+<!-- ==================== SALES SECTION ==================== -->
+<section id="sales" class="section">
+  <h3>💰 Sales & Profit</h3>
+  <div class="row-inline" style="margin:10px 0;">
+    <label>Date:</label>
+    <input id="saleDate" type="date">
+    <label style="margin-left:4px">Filter Type:</label>
+    <select id="saleType">
+      <option value="all">All Types</option>
+    </select>
+    <label style="margin-left:4px">View:</label>
+    <select id="saleView">
+      <option value="all">All sales</option>
+      <option value="cash">Cash sales</option>
+      <option value="credit-pending">Credit (pending)</option>
+      <option value="credit-paid">Credit paid history</option>
+    </select>
+    <button id="filterSalesBtn" class="small-btn" style="margin-left:4px">Filter</button>
+    <button id="syncSalesBtn" class="small-btn" title="Save sales to cloud">☁️ Sync</button>
+    <button id="clearSalesBtn" class="small-btn" style="background:#fee2e2; color:#b91c1c; border-color:#fecaca; margin-left:8px">🗑️ Clear All</button>
+  </div>
+
+  <table id="salesTable">
+    <thead>
+      <tr>
+        <th>Date</th>
+        <th>Type</th>
+        <th>Product</th>
+        <th>Qty</th>
+        <th>Price</th>
+        <th>Total</th>
+        <th>Profit</th>
+        <th>Status</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+    <tfoot>
+      <tr>
+        <td colspan="5" style="text-align:right">Total:</td>
+        <td id="salesTotal">0</td>
+        <td id="profitTotal">0</td>
+        <td></td>
+      </tr>
+    </tfoot>
+  </table>
+</section>
+
+<!-- ==================== WANTING SECTION ==================== -->
+<section id="wanting" class="section">
+  <h3>🛒 Wanting List</h3>
+  <div class="want-form row-inline" style="margin-bottom:10px;">
+    <select id="wantType"></select>
+    <input id="wantName" type="text" placeholder="Product" style="min-width:140px;">
+    <input id="wantNote" type="text" placeholder="Note" style="min-width:160px;">
+    <button id="addWantBtn" class="small-btn">Add</button>
+    <button id="clearWantBtn" class="small-btn">Clear</button>
+    <button id="printWantBtn" class="small-btn">Print</button>
+    <button id="syncWantingBtn" class="small-btn" title="Save wanting list">☁️ Sync</button>
+  </div>
+
+  <table id="wantingTable">
+    <thead>
+      <tr>
+        <th>Date</th>
+        <th>Type</th>
+        <th>Product</th>
+        <th>Note</th>
+        <th>Action</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+</section>
+
+<!-- =============== END OF PART 1 =============== -->
+<!-- Part 2 will continue with Service, Expenses, Dashboard, Collection -->
+<!-- Part 3 will contain Reset section and all scripts -->
+  <!-- ==================== SERVICE SECTION ==================== -->
+<section id="service" class="section">
+  <h3>🛠 Service / Repair Manager</h3>
+
+  <!-- Add New Repair Job (details) -->
+  <details class="card" style="padding:14px; margin-bottom:14px; background:var(--white); border-radius:var(--radius-lg); border:1px solid var(--neutral-200);">
+    <summary style="cursor:pointer; font-weight:600; padding:6px 0; color:var(--primary);">
+      ➕ Add New Repair Job
+    </summary>
+    <div class="row-inline" style="margin-top:12px; gap:8px; flex-wrap:wrap;">
+      <input id="svcReceivedDate" type="date" style="width:160px;">
+      <input id="svcCustomer" type="text" placeholder="Customer name" style="min-width:160px;">
+      <input id="svcPhone" type="text" placeholder="Phone Number" style="width:140px;">
+      <select id="svcItemType" style="width:120px;">
+        <option value="Mobile">Mobile</option>
+        <option value="Laptop">Laptop</option>
+        <option value="Other">Other</option>
+      </select>
+      <input id="svcModel" type="text" placeholder="Model" style="min-width:130px;">
+      <input id="svcProblem" type="text" placeholder="Problem / Complaint" style="min-width:220px;">
+      <input id="svcAdvance" type="number" placeholder="Advance ₹ (0)" style="width:120px;">
+      <button id="addServiceBtn" class="small-btn">Add Job</button>
+      <button id="syncServiceBtn" class="small-btn" title="Save service jobs to cloud">☁️ Sync</button>
+    </div>
+  </details>
+
+  <!-- Summary Cards -->
+  <div class="flex-row" style="margin:10px 0; gap:10px; flex-wrap:wrap;">
+    <div class="card" style="flex:1; min-width:120px; padding:10px; background:var(--white); border-radius:var(--radius-lg); border:1px solid var(--neutral-200);">
+      <small>Pending</small>
+      <div id="svcPendingCount" style="font-size:20px; font-weight:700;">0</div>
+    </div>
+    <div class="card" style="flex:1; min-width:120px; padding:10px; background:#ecfdf5; border-radius:var(--radius-lg); border:1px solid #bbf7d0;">
+      <small>Completed</small>
+      <div id="svcCompletedCount" style="font-size:20px; font-weight:700; color:#16a34a;">0</div>
+    </div>
+    <div class="card" style="flex:1; min-width:150px; padding:10px; background:#fff7ed; border-radius:var(--radius-lg); border:1px solid #fed7aa;">
+      <small>Total Repair Profit</small>
+      <div id="svcTotalProfit" style="font-size:20px; font-weight:700; color:#c2410c;">₹0</div>
+    </div>
+  </div>
+
+  <!-- Active Jobs Table -->
+  <h4 style="margin-top:14px;">Active Jobs</h4>
+  <table id="svcTable">
+    <thead>
+      <tr>
+        <th>Job ID</th>
+        <th>Received</th>
+        <th>Customer</th>
+        <th>Phone</th>
+        <th>Item</th>
+        <th>Model</th>
+        <th>Problem</th>
+        <th>Status</th>
+        <th>Action</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+
+  <button id="clearServiceBtn" class="small-btn" style="background:#fee2e2; color:#b91c1c; margin:14px 0; border-color:#fecaca;">
+    🗑️ Clear All
+  </button>
+
+  <!-- History Section -->
+  <h4 style="margin-top:20px;">Completed / History</h4>
+  <div class="row-inline" style="gap:10px; margin:8px 0; flex-wrap:wrap;">
+    <select id="svcFilterStatus">
+      <option value="all">All Status</option>
+      <option value="pending">Pending</option>
+      <option value="completed">Cash Completed</option>
+      <option value="credit">Credit Pending</option>
+      <option value="credit-paid">Credit Paid</option>
+      <option value="failed">Failed / Returned</option>
+    </select>
+    <select id="svcFilterType">
+      <option value="all">All Types</option>
+      <option value="Mobile">Mobile</option>
+      <option value="Laptop">Laptop</option>
+      <option value="Other">Other</option>
+    </select>
+    <input id="svcFilterCalendar" type="date">
+  </div>
+
+  <table id="svcHistoryTable">
+    <thead>
+      <tr>
+        <th>Job ID</th>
+        <th>Received</th>
+        <th>Completed</th>
+        <th>Customer</th>
+        <th>Phone</th>
+        <th>Item</th>
+        <th>Investment</th>
+        <th>Paid</th>
+        <th>Profit</th>
+        <th>Status</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+
+  <!-- Split View (Pie + Money Box) -->
+  <div id="svcSplitView" style="display:flex; gap:20px; align-items:flex-start; margin-top:20px;">
+    <div class="card" style="flex:1; max-width:360px; padding:14px; background:var(--white); border-radius:var(--radius-lg); border:1px solid var(--neutral-200);">
+      <h4 style="text-align:center; margin-bottom:8px; font-size:14px;">Service Status Summary</h4>
+      <div style="height:260px;">
+        <canvas id="svcPieStatus"></canvas>
       </div>
+    </div>
+    <div id="svcMoneyBox" class="card" style="flex:1; padding:14px; background:var(--white); border-radius:var(--radius-lg); border:1px solid var(--neutral-200); border-left:1px dashed var(--ks-border-strong);">
+      <!-- filled by service.js -->
+    </div>
+  </div>
+</section>
 
-      <div class="form-grid">
-        <input type="text" id="typeName" class="form-control" placeholder="Enter new type name" style="flex: 1;">
-        <button id="addTypeBtn" class="btn-primary"><i class="fas fa-plus"></i> Add Type</button>
-        <button id="clearTypesBtn" class="btn-outline"><i class="fas fa-trash-alt"></i> Clear All</button>
-      </div>
+<!-- ==================== EXPENSES SECTION ==================== -->
+<section id="expenses" class="section">
+  <h3>🧾 Expenses</h3>
+  <div class="row-inline" style="margin-bottom:8px;">
+    <input id="expDate" type="date">
+    <input id="expCat" type="text" placeholder="Category" style="min-width:140px;">
+    <input id="expAmount" type="number" placeholder="Amount" style="width:120px;">
+    <input id="expNote" type="text" placeholder="Note" style="min-width:200px;">
+    <button id="addExpenseBtn" class="small-btn">Add Expense</button>
+    <button id="syncExpensesBtn" class="small-btn" title="Save expenses to cloud">☁️ Sync</button>
+    <button id="clearExpensesBtn" class="small-btn" style="background:#fee2e2; border-color:#fecaca; color:#b91c1c;">Clear All</button>
+  </div>
 
-      <div class="table-container">
-        <table>
-          <thead>
-            <tr>
-              <th>Type Name</th>
-              <th>Items Count</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
-          <tbody id="typeList"></tbody>
-        </table>
-      </div>
-    </section>
+  <table id="expensesTable">
+    <thead>
+      <tr>
+        <th>Date</th>
+        <th>Category</th>
+        <th>Amount</th>
+        <th>Note</th>
+        <th>Action</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+    <tfoot>
+      <tr>
+        <td colspan="2" style="text-align:right">Total:</td>
+        <td id="expTotal">0</td>
+        <td></td>
+        <td></td>
+      </tr>
+    </tfoot>
+  </table>
+</section>
 
-    <!-- =============== STOCK SECTION =============== -->
-    <section id="stock" class="section">
-      <div class="section-header">
-        <h2><i class="fas fa-boxes"></i> Current Stock</h2>
-        <div class="action-bar">
-          <span style="color: var(--neutral-600);">Low Stock Alert:</span>
-          <input type="number" id="globalLimit" class="form-control" placeholder="2" style="width: 80px;">
-          <button id="setLimitBtn" class="btn-outline">Set</button>
-          <button id="syncStockBtn" class="btn-outline"><i class="fas fa-cloud-upload-alt"></i> Sync</button>
-          <button id="clearStockBtn" class="btn-outline" style="background: var(--danger-light); color: var(--danger); border-color: #fecaca;">
-            <i class="fas fa-trash-alt"></i> Clear All
-          </button>
-        </div>
-      </div>
+<!-- ==================== DASHBOARD SECTION ==================== -->
+<section id="dashboard" class="section">
+  <h3>📊 Dashboard (Today + Total)</h3>
 
-      <div class="form-grid">
-        <input type="date" id="pdate" class="form-control">
-        <select id="ptype" class="form-control"></select>
-        <input type="text" id="pname" class="form-control" placeholder="Product name">
-        <input type="number" id="pqty" class="form-control" placeholder="Quantity" style="width: 100px;">
-        <input type="number" id="pcost" class="form-control" placeholder="Cost ₹" style="width: 120px;">
-        <button id="addStockBtn" class="btn-primary"><i class="fas fa-plus"></i> Add Stock</button>
-      </div>
+  <!-- Today Cards -->
+  <div id="summaryCards" class="flex-row" style="margin-top:10px; display:flex; gap:10px; flex-wrap:wrap;">
+    <div class="card" style="flex:1; min-width:140px; padding:10px; border-radius:14px; background:var(--white); border:1px solid var(--neutral-200);">
+      <div style="font-size:24px">💰</div>
+      <b id="todaySales" style="font-size:18px; color:var(--ks-accent);">₹0</b><br>
+      <small>Today's Sales</small>
+    </div>
+    <div class="card" style="flex:1; min-width:140px; padding:10px; border-radius:14px; background:var(--white); border:1px solid var(--neutral-200);">
+      <div style="font-size:24px">💳</div>
+      <b id="todayCredit" style="font-size:18px; color:var(--ks-accent);">₹0</b><br>
+      <small>Today's Credit</small>
+    </div>
+    <div class="card" style="flex:1; min-width:140px; padding:10px; border-radius:14px; background:#fff7ed; border-color:#fed7aa;">
+      <div style="font-size:24px">🧾</div>
+      <b id="todayExpenses" style="font-size:18px; color:#ea580c;">₹0</b><br>
+      <small>Today's Expenses</small>
+    </div>
+    <div class="card" style="flex:1; min-width:140px; padding:10px; border-radius:14px; background:#ecfdf5; border-color:#bbf7d0;">
+      <div style="font-size:24px">📈</div>
+      <b id="todayGross" style="font-size:18px; color:#16a34a;">₹0</b><br>
+      <small>Today's Gross Profit</small>
+    </div>
+    <div class="card" style="flex:1; min-width:140px; padding:10px; border-radius:14px; background:#ecfdf5; border-color:#bbf7d0;">
+      <div style="font-size:24px">💹</div>
+      <b id="todayNet" style="font-size:18px; color:#16a34a;">₹0</b><br>
+      <small>Today's NET Profit</small>
+    </div>
+  </div>
 
-      <div class="filter-row">
-        <div style="display: flex; gap: 1rem; align-items: center; flex-wrap: wrap;">
-          <select id="filterType" class="form-control" style="width: 200px;">
-            <option value="all">All Types</option>
-          </select>
-          <input type="text" id="productSearch" class="form-control" placeholder="Search products..." style="width: 250px;">
-        </div>
-        <div style="display: flex; gap: 0.5rem; align-items: center; margin-left: auto;">
-          <div class="badge badge-success" style="font-size: 0.875rem;">
-            <i class="fas fa-rupee-sign"></i> Investment: <span id="stockInvValue">₹0</span>
-          </div>
-          <button id="exportStockBtn" class="btn-outline"><i class="fas fa-download"></i> Export</button>
-          <button id="importStockBtn" class="btn-outline"><i class="fas fa-upload"></i> Import</button>
-        </div>
-      </div>
+  <hr style="margin:18px 0; border:none; border-top:1px dashed var(--ks-border-soft);">
 
-      <div class="table-container">
-        <table id="stockTable">
-          <thead>
-            <tr>
-              <th>Date</th>
-              <th>Type</th>
-              <th>Product</th>
-              <th>Qty</th>
-              <th>Sold</th>
-              <th>Remain</th>
-              <th>Status</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
-          <tbody></tbody>
-        </table>
-      </div>
-    </section>
+  <!-- Total Dashboard -->
+  <h4>Smart Dashboard (Total)</h4>
+  <!-- Dashboard clear button (SAFE) -->
+  <button onclick="clearDashboardView()" class="small-btn" style="background:#b91c1c; color:white; margin-bottom:10px;">
+    🗑️ Clear Dashboard History View
+  </button>
 
-    <!-- =============== SALES SECTION =============== -->
-    <section id="sales" class="section">
-      <div class="section-header">
-        <h2><i class="fas fa-chart-line"></i> Sales & Profit</h2>
-        <div class="action-bar">
-          <button id="filterSalesBtn" class="btn-outline"><i class="fas fa-filter"></i> Filter</button>
-          <button id="syncSalesBtn" class="btn-outline"><i class="fas fa-cloud-upload-alt"></i> Sync</button>
-          <button id="clearSalesBtn" class="btn-outline" style="background: var(--danger-light); color: var(--danger); border-color: #fecaca;">
-            <i class="fas fa-trash-alt"></i> Clear All
-          </button>
-        </div>
-      </div>
+  <div class="flex-row" style="margin-bottom:18px; display:flex; gap:10px; flex-wrap:wrap;">
+    <div class="card" style="flex:1; min-width:160px; padding:10px; border-radius:14px; background:#ecfdf5; border-color:#bbf7d0;">
+      <h4 style="margin:0 0 4px 0; font-size:13px;">Total Profit</h4>
+      <b id="dashProfit" style="font-size:22px; color:#16a34a;">₹0</b>
+      <small>Sale + Service (collected only)</small>
+    </div>
+    <div class="card" style="flex:1; min-width:160px; padding:10px; border-radius:14px; background:#fff7ed; border-color:#fed7aa;">
+      <h4 style="margin:0 0 4px 0; font-size:13px;">Total Expenses</h4>
+      <b id="dashExpenses" style="font-size:22px; color:#ea580c;">₹0</b>
+    </div>
+    <div class="card" style="flex:1; min-width:160px; padding:10px; border-radius:14px; background:var(--white); border:1px solid var(--neutral-200);">
+      <h4 style="margin:0 0 4px 0; font-size:13px;">Credit Sales (Pending)</h4>
+      <b id="dashCredit" style="font-size:22px; color:var(--ks-accent);">₹0</b>
+    </div>
+    <div class="card" style="flex:1; min-width:160px; padding:10px; border-radius:14px; background:#fefce8; border-color:#facc15;">
+      <h4 style="margin:0 0 4px 0; font-size:13px;">Total Investment (Sold Items)</h4>
+      <b id="dashInv" style="font-size:22px; color:#ca8a04;">₹0</b>
+      <small>Sold stock + Service invest</small>
+    </div>
+  </div>
 
-      <div class="form-grid">
-        <input type="date" id="saleDate" class="form-control">
-        <select id="saleType" class="form-control">
-          <option value="all">All Types</option>
-        </select>
-        <select id="saleView" class="form-control">
-          <option value="all">All Sales</option>
-          <option value="cash">Cash Sales</option>
-          <option value="credit-pending">Credit Pending</option>
-          <option value="credit-paid">Credit Paid</option>
-        </select>
-      </div>
+  <!-- Pie Chart -->
+  <div style="max-width:600px; margin:auto;">
+    <canvas id="cleanPie" height="150"></canvas>
+  </div>
+</section>
 
-      <div class="table-container">
-        <table id="salesTable">
-          <thead>
-            <tr>
-              <th>Date</th>
-              <th>Type</th>
-              <th>Product</th>
-              <th>Qty</th>
-              <th>Price</th>
-              <th>Total</th>
-              <th>Profit</th>
-              <th>Status</th>
-            </tr>
-          </thead>
-          <tbody></tbody>
-          <tfoot>
-            <tr>
-              <td colspan="5" style="text-align: right;">Total:</td>
-              <td id="salesTotal">0</td>
-              <td id="profitTotal">0</td>
-              <td></td>
-            </tr>
-          </tfoot>
-        </table>
-      </div>
-    </section>
+<!-- ==================== COLLECTION SECTION ==================== -->
+<section id="collection" class="section">
+  <h3>🪙 Collection Center</h3>
 
-    <!-- =============== WANTING SECTION =============== -->
-    <section id="wanting" class="section">
-      <div class="section-header">
-        <h2><i class="fas fa-cart-plus"></i> Wanting List</h2>
-        <div class="action-bar">
-          <button id="syncWantingBtn" class="btn-outline"><i class="fas fa-cloud-upload-alt"></i> Sync</button>
-          <button id="clearWantBtn" class="btn-outline"><i class="fas fa-trash-alt"></i> Clear</button>
-        </div>
-      </div>
+  <div class="flex-row" style="margin-bottom:14px; display:flex; gap:10px; flex-wrap:wrap;">
+    <div class="card" style="flex:1; min-width:160px; padding:10px; border-radius:14px; background:#ecfdf5; border-color:#bbf7d0;">
+      <h4 style="margin:0 0 4px 0; font-size:13px;">Sales Profit (Collected)</h4>
+      <b id="colSales" style="font-size:20px; color:#16a34a;">₹0</b>
+    </div>
+    <div class="card" style="flex:1; min-width:160px; padding:10px; border-radius:14px; background:var(--white); border:1px solid var(--neutral-200);">
+      <h4 style="margin:0 0 4px 0; font-size:13px;">Service Profit (Collected)</h4>
+      <b id="colService" style="font-size:20px; color:var(--ks-accent);">₹0</b>
+    </div>
+    <div class="card" style="flex:1; min-width:160px; padding:10px; border-radius:14px; background:#fff7ed; border-color:#fed7aa;">
+      <h4 style="margin:0 0 4px 0; font-size:13px;">Pending Credits</h4>
+      <b id="colCredit" style="font-size:20px; color:#ea580c;">₹0</b>
+    </div>
+    <div class="card" style="flex:1; min-width:160px; padding:10px; border-radius:14px; background:#fefce8; border-color:#facc15;">
+      <h4 style="margin:0 0 4px 0; font-size:13px;">Total Investment (Sold Items)</h4>
+      <b id="colInvRemain" style="font-size:20px; color:#ca8a04;">₹0</b>
+    </div>
+  </div>
 
-      <div class="form-grid">
-        <select id="wantType" class="form-control"></select>
-        <input type="text" id="wantName" class="form-control" placeholder="Product name">
-        <input type="text" id="wantNote" class="form-control" placeholder="Notes / Specifications">
-        <button id="addWantBtn" class="btn-primary"><i class="fas fa-plus"></i> Add</button>
-        <button id="printWantBtn" class="btn-outline"><i class="fas fa-print"></i> Print</button>
-      </div>
+  <h4 style="margin-top:10px">Collection History</h4>
+  <table id="collectionHistory">
+    <thead>
+      <tr>
+        <th>Date</th>
+        <th>Source</th>
+        <th>Details</th>
+        <th>Amount</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  </table>
 
-      <div class="table-container">
-        <table id="wantingTable">
-          <thead>
-            <tr>
-              <th>Date</th>
-              <th>Type</th>
-              <th>Product</th>
-              <th>Notes</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
-          <tbody></tbody>
-        </table>
-      </div>
-    </section>
+  <button id="clearCollectionBtn" class="small-btn" style="background:#fee2e2; color:#b91c1c; margin-top:10px; border-color:#fecaca;">
+    🗑 Clear Collection History
+  </button>
+</section>
+<!-- =============== END OF PART 2 =============== -->
+  <!-- ==================== RESET SECTION ==================== -->
+<section id="reset" class="section">
+  <h3>🧨 System Reset Center</h3>
+  <div class="card" style="padding:18px; background:#fff1f2; border:1px solid #fecdd3; max-width:520px; border-radius:var(--radius-lg);">
+    <h4 style="color:#b91c1c; margin-top:0;">⚠️ Danger Zone</h4>
+    <p style="font-size:13px; line-height:1.6;">
+      This will permanently delete ALL business data:
+      <br>
+      Types, Stock, Sales, Services, Expenses,
+      Collections, Wanting, Offsets.
+      <br><br>
+      Dashboard history will also reset.
+    </p>
+    <button id="resetAllDataBtn" class="small-btn" style="background:#b91c1c; color:white; border:none;">🗑️ Reset Entire System</button>
+  </div>
+</section>
 
-    <!-- =============== SERVICE SECTION (PART 1) =============== -->
-    <section id="service" class="section">
-      <div class="section-header">
-        <h2><i class="fas fa-tools"></i> Service & Repair</h2>
-        <div class="action-bar">
-          <button id="syncServiceBtn" class="btn-outline"><i class="fas fa-cloud-upload-alt"></i> Sync</button>
-        </div>
-      </div>
+<!-- ==================== LIBRARIES ==================== -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js/dist/chart.umd.min.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.6.11/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.6.11/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.6.11/firebase-firestore-compat.js"></script>
 
-      <details class="form-grid" style="padding: 1rem;">
-        <summary style="cursor: pointer; font-weight: 600; color: var(--primary);">
-          <i class="fas fa-plus-circle"></i> Add New Repair Job
-        </summary>
-        <div style="display: flex; gap: 0.75rem; flex-wrap: wrap; margin-top: 1rem; width: 100%;">
-          <input type="date" id="svcReceivedDate" class="form-control" style="flex: 1;">
-          <input type="text" id="svcCustomer" class="form-control" placeholder="Customer name" style="flex: 1;">
-          <input type="text" id="svcPhone" class="form-control" placeholder="Phone" style="flex: 1;">
-          <select id="svcItemType" class="form-control" style="width: 120px;">
-            <option value="Mobile">Mobile</option>
-            <option value="Laptop">Laptop</option>
-            <option value="Other">Other</option>
-          </select>
-          <input type="text" id="svcModel" class="form-control" placeholder="Model" style="flex: 1;">
-          <input type="text" id="svcProblem" class="form-control" placeholder="Problem" style="flex: 2;">
-          <input type="number" id="svcAdvance" class="form-control" placeholder="Advance ₹" style="width: 120px;">
-          <button id="addServiceBtn" class="btn-primary"><i class="fas fa-save"></i> Add Job</button>
-        </div>
-      </details>
+<!-- ==================== CORE SCRIPTS (EXTERNAL) ==================== -->
+<script src="/js/firebase.js"></script>
+<script src="/js/core.js"></script>
+<script src="/js/universalBar.js"></script>
+<script src="/js/firestore-listeners.js"></script>
+<script src="/js/types.js"></script>
+<script src="/js/stock.js"></script>
+<script src="/js/sales.js"></script>
+<script src="/js/service.js"></script>
+<script src="/js/wanting.js"></script>
+<script src="/js/expenses.js"></script>
+<script src="/js/collection.js"></script>
+<script src="/js/analytics.js"></script>
+<script src="/js/dashboard.js"></script>
+<script src="/js/accounting-audit.js"></script>
+<script src="/js/reset-engine.js"></script>
+<script src="/js/security.js"></script>
 
-      <div class="stats-grid">
-        <div class="stat-card">
-          <h4>Pending Jobs</h4>
-          <div class="stat-number" id="svcPendingCount">0</div>
-        </div>
-        <div class="stat-card" style="background: var(--success-light);">
-          <h4>Completed</h4>
-          <div class="stat-number" style="color: var(--success);" id="svcCompletedCount">0</div>
-        </div>
-        <div class="stat-card" style="background: var(--warning-light);">
-          <h4>Total Profit</h4>
-          <div class="stat-number" style="color: var(--warning);" id="svcTotalProfit">₹0</div>
-        </div>
-      </div>
+<!-- ==================== RESET ENGINE (INLINE) ==================== -->
+<script>
+document.addEventListener("click", async e => {
+  if (e.target.id !== "resetAllDataBtn") return;
+  if (!confirm("⚠️ This will DELETE entire business system.\n\nContinue?")) return;
+  if (!confirm("Final warning.\n\nAll data will be lost.\n\nProceed?")) return;
+  try {
+    /* LOCAL MEMORY RESET */
+    window.types = [];
+    window.stock = [];
+    window.sales = [];
+    window.services = [];
+    window.expenses = [];
+    window.collections = [];
+    window.wanting = [];
+    window.__dashboardOffset = 0;
+    window.__dashboardViewCleared = false;
 
-      <h3 style="margin: 1.5rem 0 1rem; font-size: 1.1rem; color: var(--primary);">Active Jobs</h3>
-      <div class="table-container">
-        <table id="svcTable">
-          <thead>
-            <tr>
-              <th>Job ID</th>
-              <th>Received</th>
-              <th>Customer</th>
-              <th>Phone</th>
-              <th>Item</th>
-              <th>Model</th>
-              <th>Problem</th>
-              <th>Status</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
-          <tbody></tbody>
-        </table>
-      </div>
-
-      <button id="clearServiceBtn" class="btn-outline" style="background: var(--danger-light); color: var(--danger); border-color: #fecaca; margin: 1rem 0;">
-        <i class="fas fa-trash-alt"></i> Clear All Service Jobs
-      </button>
-
-      <!-- =============== SERVICE SECTION CONTINUES IN PART 2 =============== -->
-            <!-- =============== SERVICE SECTION (PART 2 - CONTINUED) =============== -->
-      <h3 style="margin: 2rem 0 1rem; font-size: 1.1rem; color: var(--primary);">Service History & Analytics</h3>
-      
-      <!-- FILTERS -->
-      <div class="filter-row">
-        <select id="svcFilterStatus" class="form-control" style="width: 200px;">
-          <option value="all">All Status</option>
-          <option value="pending">Pending</option>
-          <option value="completed">Cash Completed</option>
-          <option value="credit">Credit Pending</option>
-          <option value="credit-paid">Credit Paid</option>
-          <option value="failed">Failed / Returned</option>
-        </select>
-
-        <select id="svcFilterType" class="form-control" style="width: 150px;">
-          <option value="all">All Types</option>
-          <option value="Mobile">Mobile</option>
-          <option value="Laptop">Laptop</option>
-          <option value="Other">Other</option>
-        </select>
-
-        <input id="svcFilterCalendar" type="date" class="form-control" style="width: 160px;">
-      </div>
-
-      <!-- HISTORY TABLE -->
-      <div class="table-container">
-        <table id="svcHistoryTable">
-          <thead>
-            <tr>
-              <th>Job ID</th>
-              <th>Received</th>
-              <th>Completed</th>
-              <th>Customer</th>
-              <th>Phone</th>
-              <th>Item</th>
-              <th>Investment</th>
-              <th>Paid</th>
-              <th>Profit</th>
-              <th>Status</th>
-            </tr>
-          </thead>
-          <tbody></tbody>
-        </table>
-      </div>
-
-      <!-- SPLIT VIEW FOR ANALYTICS -->
-      <div style="display: flex; gap: 20px; align-items: flex-start; margin-top: 2rem; flex-wrap: wrap;">
-        <!-- SERVICE PIE CHART -->
-        <div class="stat-card" style="flex: 1; min-width: 300px;">
-          <h4 style="text-align: center; margin-bottom: 1rem;">Service Status Summary</h4>
-          <div style="height: 260px; position: relative;">
-            <canvas id="svcPieStatus"></canvas>
-          </div>
-        </div>
-
-        <!-- MONEY BOX -->
-        <div id="svcMoneyBox" class="stat-card" style="flex: 1; min-width: 280px;">
-          <h4>Financial Summary</h4>
-          <div style="margin-top: 1rem;">
-            <div style="display: flex; justify-content: space-between; padding: 0.5rem 0; border-bottom: 1px dashed var(--neutral-200);">
-              <span>Total Investment:</span>
-              <span style="font-weight: 600;" id="svcTotalInvestment">₹0</span>
-            </div>
-            <div style="display: flex; justify-content: space-between; padding: 0.5rem 0; border-bottom: 1px dashed var(--neutral-200);">
-              <span>Total Collected:</span>
-              <span style="font-weight: 600; color: var(--success);" id="svcTotalCollected">₹0</span>
-            </div>
-            <div style="display: flex; justify-content: space-between; padding: 0.5rem 0; border-bottom: 1px dashed var(--neutral-200);">
-              <span>Pending Payments:</span>
-              <span style="font-weight: 600; color: var(--warning);" id="svcPendingPayments">₹0</span>
-            </div>
-            <div style="display: flex; justify-content: space-between; padding: 0.5rem 0; font-size: 1.1rem;">
-              <span>Net Profit:</span>
-              <span style="font-weight: 700; color: var(--success);" id="svcNetProfit">₹0</span>
-            </div>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- =============== EXPENSES SECTION =============== -->
-    <section id="expenses" class="section">
-      <div class="section-header">
-        <h2><i class="fas fa-file-invoice"></i> Expenses</h2>
-        <div class="action-bar">
-          <button id="syncExpensesBtn" class="btn-outline"><i class="fas fa-cloud-upload-alt"></i> Sync</button>
-          <button id="clearExpensesBtn" class="btn-outline" style="background: var(--danger-light); color: var(--danger); border-color: #fecaca;">
-            <i class="fas fa-trash-alt"></i> Clear All
-          </button>
-        </div>
-      </div>
-
-      <div class="form-grid">
-        <input type="date" id="expDate" class="form-control">
-        <input type="text" id="expCat" class="form-control" placeholder="Category">
-        <input type="number" id="expAmount" class="form-control" placeholder="Amount ₹">
-        <input type="text" id="expNote" class="form-control" placeholder="Notes" style="flex: 2;">
-        <button id="addExpenseBtn" class="btn-primary"><i class="fas fa-plus"></i> Add Expense</button>
-      </div>
-
-      <div class="table-container">
-        <table id="expensesTable">
-          <thead>
-            <tr>
-              <th>Date</th>
-              <th>Category</th>
-              <th>Amount</th>
-              <th>Notes</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
-          <tbody></tbody>
-          <tfoot>
-            <tr>
-              <td colspan="2" style="text-align: right;">Total Expenses:</td>
-              <td id="expTotal">₹0</td>
-              <td></td>
-              <td></td>
-            </tr>
-          </tfoot>
-        </table>
-      </div>
-    </section>
-
-    <!-- =============== DASHBOARD SECTION =============== -->
-    <section id="dashboard" class="section">
-      <div class="section-header">
-        <h2><i class="fas fa-chart-pie"></i> Business Dashboard</h2>
-        <button onclick="clearDashboardView()" class="btn-outline">
-          <i class="fas fa-trash-alt"></i> Clear History
-        </button>
-      </div>
-
-      <!-- TODAY'S STATS -->
-      <div class="stats-grid">
-        <div class="stat-card">
-          <h4><i class="fas fa-calendar-day"></i> Today's Sales</h4>
-          <div class="stat-number" id="todaySales">₹0</div>
-        </div>
-        <div class="stat-card">
-          <h4><i class="fas fa-credit-card"></i> Today's Credit</h4>
-          <div class="stat-number" id="todayCredit">₹0</div>
-        </div>
-        <div class="stat-card" style="background: var(--warning-light);">
-          <h4><i class="fas fa-receipt"></i> Today's Expenses</h4>
-          <div class="stat-number" style="color: var(--warning);" id="todayExpenses">₹0</div>
-        </div>
-        <div class="stat-card" style="background: var(--success-light);">
-          <h4><i class="fas fa-chart-line"></i> Today's Gross</h4>
-          <div class="stat-number" style="color: var(--success);" id="todayGross">₹0</div>
-        </div>
-        <div class="stat-card" style="background: var(--success-light);">
-          <h4><i class="fas fa-coins"></i> Today's Net</h4>
-          <div class="stat-number" style="color: var(--success);" id="todayNet">₹0</div>
-        </div>
-      </div>
-
-      <hr style="margin: 2rem 0; border: none; border-top: 1px dashed var(--neutral-200);">
-
-      <!-- OVERALL STATS -->
-      <h3 style="margin-bottom: 1.5rem; color: var(--primary);">Overall Performance</h3>
-      
-      <div class="stats-grid">
-        <div class="stat-card" style="background: var(--success-light);">
-          <h4>Total Profit</h4>
-          <div class="stat-number" style="color: var(--success);" id="dashProfit">₹0</div>
-          <small>Sale + Service (collected)</small>
-        </div>
-        <div class="stat-card" style="background: var(--warning-light);">
-          <h4>Total Expenses</h4>
-          <div class="stat-number" style="color: var(--warning);" id="dashExpenses">₹0</div>
-        </div>
-        <div class="stat-card">
-          <h4>Pending Credit</h4>
-          <div class="stat-number" id="dashCredit">₹0</div>
-        </div>
-        <div class="stat-card" style="background: #fefce8;">
-          <h4>Total Investment</h4>
-          <div class="stat-number" style="color: #ca8a04;" id="dashInv">₹0</div>
-          <small>Sold stock + Service</small>
-        </div>
-      </div>
-
-      <!-- PIE CHART -->
-      <div style="max-width: 600px; margin: 2rem auto;">
-        <canvas id="cleanPie" height="200"></canvas>
-      </div>
-    </section>
-
-    <!-- =============== COLLECTION SECTION =============== -->
-    <section id="collection" class="section">
-      <div class="section-header">
-        <h2><i class="fas fa-coins"></i> Collection Center</h2>
-      </div>
-
-      <div class="stats-grid">
-        <div class="stat-card" style="background: var(--success-light);">
-          <h4>Sales Collected</h4>
-          <div class="stat-number" style="color: var(--success);" id="colSales">₹0</div>
-        </div>
-        <div class="stat-card" style="background: var(--success-light);">
-          <h4>Service Collected</h4>
-          <div class="stat-number" style="color: var(--success);" id="colService">₹0</div>
-        </div>
-        <div class="stat-card" style="background: var(--warning-light);">
-          <h4>Pending Credits</h4>
-          <div class="stat-number" style="color: var(--warning);" id="colCredit">₹0</div>
-        </div>
-        <div class="stat-card" style="background: #fefce8;">
-          <h4>Investment Value</h4>
-          <div class="stat-number" style="color: #ca8a04;" id="colInvRemain">₹0</div>
-        </div>
-      </div>
-
-      <h3 style="margin: 2rem 0 1rem;">Collection History</h3>
-      
-      <div class="table-container">
-        <table id="collectionHistory">
-          <thead>
-            <tr>
-              <th>Date</th>
-              <th>Source</th>
-              <th>Details</th>
-              <th>Amount</th>
-            </tr>
-          </thead>
-          <tbody></tbody>
-        </table>
-      </div>
-
-      <button id="clearCollectionBtn" class="btn-outline" style="background: var(--danger-light); color: var(--danger); border-color: #fecaca; margin-top: 1rem;">
-        <i class="fas fa-trash-alt"></i> Clear Collection History
-      </button>
-    </section>
-
-    <!-- =============== RESET SECTION =============== -->
-    <section id="reset" class="section">
-      <div class="danger-zone">
-        <h3><i class="fas fa-exclamation-triangle"></i> Danger Zone</h3>
-        <p style="margin: 1rem 0; color: var(--neutral-600);">
-          This action will permanently delete ALL business data including:
-          Types, Stock, Sales, Services, Expenses, Collections, Wanting, and History.
-          <br><br>
-          <strong>This cannot be undone.</strong>
-        </p>
-        <button id="resetAllDataBtn" class="btn-danger">
-          <i class="fas fa-trash-alt"></i> Reset Entire System
-        </button>
-      </div>
-    </section>
-  </main>
-
-  <!-- Scripts -->
-  <script src="https://cdn.jsdelivr.net/npm/chart.js/dist/chart.umd.min.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.6.11/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.6.11/firebase-auth-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.6.11/firebase-firestore-compat.js"></script>
-
-  <!-- Core JavaScript -->
-  <script>
-    // =============== UTILITY FUNCTIONS ===============
-    const qs = s => document.querySelector(s);
-    const qsa = s => Array.from(document.querySelectorAll(s));
-
-    // =============== TAB SWITCHING ===============
-    function switchTab(id) {
-      qsa(".section").forEach(sec => sec.classList.remove("active"));
-      const target = qs("#" + id);
-      if (target) target.classList.add("active");
-
-      qsa(".nav-tab").forEach(t => t.classList.remove("active"));
-      const tab = qs(`.nav-tab[data-tab="${id}"]`);
-      if (tab) tab.classList.add("active");
-
-      // Trigger render functions if they exist
-      try { if (typeof renderStock === 'function') renderStock(); } catch {}
-      try { if (typeof renderSales === 'function') renderSales(); } catch {}
-      try { if (typeof renderWanting === 'function') renderWanting(); } catch {}
-      try { if (typeof renderExpenses === 'function') renderExpenses(); } catch {}
-      try { if (typeof window.__svcRefresh === 'function') window.__svcRefresh(); } catch {}
-      try { if (typeof renderCollection === 'function') renderCollection(); } catch {}
-      try { if (typeof updateUniversalBar === 'function') updateUniversalBar(); } catch {}
+    /* CLOUD RESET */
+    if (window.__cloudReady && typeof cloudSave === "function") {
+      await cloudSave("types", []);
+      await cloudSave("stock", []);
+      await cloudSave("sales", []);
+      await cloudSave("services", []);
+      await cloudSave("expenses", []);
+      await cloudSave("collections", []);
+      await cloudSave("wanting", []);
+      await cloudSave("dashboardOffset", 0);
     }
 
-    document.addEventListener("click", e => {
-      if (e.target.classList.contains("nav-tab")) {
-        switchTab(e.target.dataset.tab);
-      }
-    });
+    /* UI REFRESH */
+    renderStock?.();
+    renderSales?.();
+    renderWanting?.();
+    renderExpenses?.();
+    renderCollection?.();
+    window.__svcRefresh?.();
+    updateUniversalBar?.();
+    renderAnalytics?.();
+    updateSummaryCards?.();
 
-    // =============== CLOCK ===============
-    function updateClock() {
-      const d = new Date();
-      const t = qs("#clockTime");
-      const dt = qs("#clockDate");
-      if (t) t.textContent = d.toLocaleTimeString('en-IN', { hour12: false });
-      if (dt) dt.textContent = d.toLocaleDateString('en-IN', { 
-        day: 'numeric', month: 'short', year: 'numeric' 
-      });
+    alert("✅ System fully reset");
+    console.log("🧨 Full system reset completed");
+  } catch (err) {
+    console.error("❌ Reset failed", err);
+    alert("Reset failed — see console");
+  }
+});
+</script>
+
+<!-- ==================== TAB SWITCHER + HOOKS ==================== -->
+<script>
+function switchTab(id) {
+  qsa(".section").forEach(sec => sec.classList.remove("active"));
+  const target = qs("#" + id);
+  if (target) target.classList.add("active");
+
+  qsa(".tab").forEach(t => t.classList.remove("active"));
+  const tab = qs(`.tab[data-tab="${id}"]`);
+  if (tab) tab.classList.add("active");
+
+  // call renderers if present (CLEANED)
+  try { renderStock?.(); } catch {}
+  try { renderSales?.(); } catch {}
+  try { renderWanting?.(); } catch {}
+  try { renderExpenses?.(); } catch {}
+  try { window.__svcRefresh?.(); } catch {}
+  try { renderCollection?.(); } catch {}
+  try { updateSummaryCards?.(); } catch {}
+}
+
+document.addEventListener("click", e => {
+  if (e.target.classList.contains("tab")) {
+    switchTab(e.target.dataset.tab);
+  }
+});
+</script>
+
+<!-- ==================== CLOCK ==================== -->
+<script>
+function updateClock() {
+  const d = new Date();
+  const t = qs("#clockTime");
+  const dt = qs("#clockDate");
+  if (t) t.textContent = d.toLocaleTimeString();
+  if (dt) dt.textContent = d.toLocaleDateString();
+}
+setInterval(updateClock, 1000);
+updateClock();
+</script>
+
+<!-- ==================== THEME BUTTON (NO dark mode) ==================== -->
+<script>
+document.getElementById("themeBtn")?.addEventListener("click", () => {
+  const btn = document.getElementById("themeBtn");
+  btn.textContent = "🎨";
+  btn.title = "Theme disabled (online-only build)";
+});
+</script>
+
+<!-- ==================== LOGOUT BUTTON ==================== -->
+<script>
+document.getElementById("logoutBtn")?.addEventListener("click", async () => {
+  try {
+    if (window.fsLogout) {
+      await window.fsLogout();
+      return;
     }
-    setInterval(updateClock, 1000);
-    updateClock();
+  } catch (e) {
+    console.error("Logout error:", e);
+  }
+  try { localStorage.removeItem("ks-user-email"); } catch {}
+  window.location.href = "/login.html";
+});
+</script>
 
-    // =============== THEME BUTTON ===============
-    document.getElementById("themeBtn")?.addEventListener("click", () => {
-      alert("Theme customization coming soon!");
-    });
-
-    // =============== LOGOUT ===============
-    document.getElementById("logoutBtn")?.addEventListener("click", async () => {
-      if (confirm("Logout from KharchaSaathi?")) {
-        try {
-          if (window.fsLogout) {
-            await window.fsLogout();
-          } else {
-            localStorage.removeItem("ks-user-email");
-            window.location.href = "/login.html";
-          }
-        } catch (e) {
-          console.error("Logout error:", e);
-          window.location.href = "/login.html";
-        }
-      }
-    });
-
-    // =============== RESET FUNCTIONALITY ===============
-    document.getElementById("resetAllDataBtn")?.addEventListener("click", async () => {
-      if (!confirm("⚠️ This will DELETE ALL business data. Continue?")) return;
-      if (!confirm("FINAL WARNING. All data will be permanently lost. Proceed?")) return;
-
-      try {
-        // Local memory reset
-        window.types = [];
-        window.stock = [];
-        window.sales = [];
-        window.services = [];
-        window.expenses = [];
-        window.collections = [];
-        window.wanting = [];
-        window.__dashboardOffset = 0;
-        window.__dashboardViewCleared = false;
-
-        // Cloud reset (if available)
-        if (window.__cloudReady && typeof cloudSave === "function") {
-          await cloudSave("types", []);
-          await cloudSave("stock", []);
-          await cloudSave("sales", []);
-          await cloudSave("services", []);
-          await cloudSave("expenses", []);
-          await cloudSave("collections", []);
-          await cloudSave("wanting", []);
-          await cloudSave("dashboardOffset", 0);
-        }
-
-        // Refresh UI
-        if (typeof renderStock === 'function') renderStock();
-        if (typeof renderSales === 'function') renderSales();
-        if (typeof renderWanting === 'function') renderWanting();
-        if (typeof renderExpenses === 'function') renderExpenses();
-        if (typeof renderCollection === 'function') renderCollection();
-        if (typeof window.__svcRefresh === 'function') window.__svcRefresh();
-        if (typeof updateUniversalBar === 'function') updateUniversalBar();
-        if (typeof renderAnalytics === 'function') renderAnalytics();
-
-        alert("✅ System fully reset");
-      } catch (err) {
-        console.error("❌ Reset failed:", err);
-        alert("Reset failed - check console");
-      }
-    });
-
-    // =============== DASHBOARD CLEAR ===============
-    window.clearDashboardView = function() {
-      if (confirm("Clear dashboard history view?")) {
-        window.__dashboardViewCleared = true;
-        if (typeof updateSummaryCards === 'function') updateSummaryCards();
-        alert("Dashboard view cleared");
-      }
-    };
-
-    // =============== INIT ===============
-    document.addEventListener('DOMContentLoaded', () => {
-      // Set today's date as default for date inputs
-      const today = new Date().toISOString().split('T')[0];
-      const dateInputs = ['pdate', 'saleDate', 'expDate', 'svcReceivedDate'];
-      dateInputs.forEach(id => {
-        const el = document.getElementById(id);
-        if (el && !el.value) el.value = today;
-      });
-    });
-  </script>
-
-  <!-- External JS files (keep your existing paths) -->
-  <script src="/js/firebase.js"></script>
-  <script src="/js/core.js"></script>
-  <script src="/js/universalBar.js"></script>
-  <script src="/js/firestore-listeners.js"></script>
-  <script src="/js/types.js"></script>
-  <script src="/js/stock.js"></script>
-  <script src="/js/sales.js"></script>
-  <script src="/js/service.js"></script>
-  <script src="/js/wanting.js"></script>
-  <script src="/js/expenses.js"></script>
-  <script src="/js/collection.js"></script>
-  <script src="/js/analytics.js"></script>
-  <script src="/js/dashboard.js"></script>
-  <script src="/js/accounting-audit.js"></script>
-  <script src="/js/reset-engine.js"></script>
-  <script src="/js/security.js"></script>
 </body>
 </html>
