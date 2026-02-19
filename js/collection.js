@@ -1,7 +1,8 @@
 /* ===========================================================
-   collection.js — FINAL v20 (AUTO UI + ANALYTICS CORE)
+   collection.js — FINAL v21 (AUTO UI + ANALYTICS + CHARTS)
 
    ✔ Auto inject dashboard UI
+   ✔ Charts engine added
    ✔ Cloud only
    ✔ Multi-device safe
    ✔ Source classified
@@ -14,36 +15,32 @@
 /* ----------------------------------------------------------
    HELPERS
 ---------------------------------------------------------- */
-function escLocal(x) {
-  return (x === undefined || x === null)
-    ? ""
-    : String(x);
+function escLocal(x){
+  return (x===undefined||x===null)?"":String(x);
 }
 
-function cNum(v) {
-  const n = Number(v || 0);
-  return isNaN(n) ? 0 : n;
+function cNum(v){
+  const n=Number(v||0);
+  return isNaN(n)?0:n;
 }
 
 
 /* ===========================================================
-   🧩 AUTO INSERT DASHBOARD (Correct Placement)
+   🧩 AUTO INSERT DASHBOARD
 =========================================================== */
-function injectCollectionDashboard() {
+function injectCollectionDashboard(){
 
-  if (document.querySelector(".collection-dashboard"))
-    return; // already exists
+  if(document.querySelector(".collection-dashboard"))
+    return;
 
-  const table =
-    document.getElementById("collectionHistory");
+  const table=document.getElementById(
+    "collectionHistory"
+  );
+  if(!table) return;
 
-  if (!table) return;
+  const wrapper=document.createElement("div");
 
-  const wrapper = document.createElement("div");
-  wrapper.innerHTML = `
-  <!-- ===============================
-       COLLECTION DASHBOARD SUMMARY
-  ================================= -->
+  wrapper.innerHTML=`
   <div class="collection-dashboard">
 
     <div class="coll-card">
@@ -69,47 +66,50 @@ function injectCollectionDashboard() {
   </div>
   `;
 
-  table.parentNode.insertBefore(wrapper, table);
+  table.parentNode.insertBefore(
+    wrapper,
+    table
+  );
 }
 
 
 /* ===========================================================
    ☁️ CLOUD SAVE
 =========================================================== */
-function saveCollections() {
+function saveCollections(){
 
-  if (!window.__cloudReady) {
-    console.warn("⛔ Collections save blocked — cloud not ready");
+  if(!window.__cloudReady){
+    console.warn(
+      "⛔ Collections save blocked — cloud not ready"
+    );
     return;
   }
 
-  if (typeof cloudSaveDebounced === "function") {
-    cloudSaveDebounced(
-      "collections",
-      window.collections || []
-    );
-  }
+  cloudSaveDebounced?.(
+    "collections",
+    window.collections||[]
+  );
 }
-window.saveCollections = saveCollections;
+window.saveCollections=saveCollections;
 
 
 /* ===========================================================
    SOURCE NORMALIZER
 =========================================================== */
-function normalizeSource(src = "") {
+function normalizeSource(src=""){
 
-  const s = String(src).toLowerCase();
+  const s=String(src).toLowerCase();
 
-  if (s.includes("credit") && s.includes("service"))
+  if(s.includes("credit")&&s.includes("service"))
     return "Service Credit Cleared";
 
-  if (s.includes("credit"))
+  if(s.includes("credit"))
     return "Sale Credit Cleared";
 
-  if (s.includes("service"))
+  if(s.includes("service"))
     return "Service Payment";
 
-  if (s.includes("history"))
+  if(s.includes("history"))
     return "Profit Preserved";
 
   return "Sale Collection";
@@ -119,25 +119,25 @@ function normalizeSource(src = "") {
 /* ===========================================================
    ADD COLLECTION ENTRY
 =========================================================== */
-window.addCollectionEntry = function (
+window.addCollectionEntry=function(
   source,
   details,
   amount,
-  paymentMode = "Cash"
-) {
+  paymentMode="Cash"
+){
 
-  const entry = {
-    id: uid("coll"),
-    date: todayDate(),
-    source: normalizeSource(source),
-    rawSource: escLocal(source),
-    details: escLocal(details),
-    amount: cNum(amount),
-    mode: paymentMode || "Cash"
+  const entry={
+    id:uid("coll"),
+    date:todayDate(),
+    source:normalizeSource(source),
+    rawSource:escLocal(source),
+    details:escLocal(details),
+    amount:cNum(amount),
+    mode:paymentMode||"Cash"
   };
 
-  window.collections =
-    window.collections || [];
+  window.collections=
+    window.collections||[];
 
   window.collections.push(entry);
 
@@ -155,37 +155,37 @@ window.addCollectionEntry = function (
 /* ===========================================================
    🔎 COLLECTION ANALYTICS CORE
 =========================================================== */
-window.runCollectionAnalytics = function () {
+window.runCollectionAnalytics=function(){
 
-  const list = window.collections || [];
+  const list=window.collections||[];
 
-  let total = 0;
-  let cash = 0;
-  let upi = 0;
-  let creditRecovered = 0;
+  let total=0;
+  let cash=0;
+  let upi=0;
+  let creditRecovered=0;
 
-  const sourceMap = {};
-  const dailyMap = {};
+  const sourceMap={};
+  const dailyMap={};
 
-  list.forEach(e => {
+  list.forEach(e=>{
 
-    const amt = cNum(e.amount);
-    total += amt;
+    const amt=cNum(e.amount);
+    total+=amt;
 
-    if (e.mode === "Cash") cash += amt;
-    if (e.mode === "UPI") upi += amt;
+    if(e.mode==="Cash") cash+=amt;
+    if(e.mode==="UPI") upi+=amt;
 
-    if (e.source.includes("Credit"))
-      creditRecovered += amt;
+    if(e.source.includes("Credit"))
+      creditRecovered+=amt;
 
-    sourceMap[e.source] =
-      (sourceMap[e.source] || 0) + amt;
+    sourceMap[e.source]=
+      (sourceMap[e.source]||0)+amt;
 
-    dailyMap[e.date] =
-      (dailyMap[e.date] || 0) + amt;
+    dailyMap[e.date]=
+      (dailyMap[e.date]||0)+amt;
   });
 
-  window.__collectionAnalytics = {
+  window.__collectionAnalytics={
     total,
     cash,
     upi,
@@ -195,44 +195,142 @@ window.runCollectionAnalytics = function () {
   };
 
   updateCollectionSummaryUI();
+
+  /* 🔥 CHARTS CALL ADDED */
+  renderCollectionCharts();
 };
 
 
 /* ===========================================================
    UPDATE SUMMARY UI
 =========================================================== */
-function updateCollectionSummaryUI() {
+function updateCollectionSummaryUI(){
 
-  const a = window.__collectionAnalytics;
-  if (!a) return;
+  const a=window.__collectionAnalytics;
+  if(!a) return;
 
-  const set = (id, val) => {
-    const el = document.getElementById(id);
-    if (el) el.textContent = "₹" + val;
+  const set=(id,val)=>{
+    const el=document.getElementById(id);
+    if(el) el.textContent="₹"+val;
   };
 
-  set("collTotal", a.total);
-  set("collCash", a.cash);
-  set("collUPI", a.upi);
-  set("collCreditRecovered", a.creditRecovered);
+  set("collTotal",a.total);
+  set("collCash",a.cash);
+  set("collUPI",a.upi);
+  set(
+    "collCreditRecovered",
+    a.creditRecovered
+  );
 }
 
 
 /* ===========================================================
-   RENDER COLLECTION TABLE
+   COLLECTION CHART ENGINE
 =========================================================== */
-window.renderCollection = function () {
+let collModeChart=null;
+let collSourceChart=null;
+let collDailyChart=null;
 
-  const tbody =
-    document.querySelector("#collectionHistory tbody");
+function renderCollectionCharts(){
 
-  if (!tbody) return;
+  const a=window.__collectionAnalytics;
+  if(!a) return;
 
-  const list = window.collections || [];
+  /* MODE PIE */
+  const modeCtx=
+    document.getElementById("collModeChart");
 
-  if (!list.length) {
+  if(modeCtx&&typeof Chart!=="undefined"){
 
-    tbody.innerHTML = `
+    collModeChart?.destroy();
+
+    collModeChart=new Chart(modeCtx,{
+      type:"pie",
+      data:{
+        labels:["Cash","UPI"],
+        datasets:[{
+          data:[a.cash,a.upi]
+        }]
+      },
+      options:{
+        responsive:true,
+        maintainAspectRatio:false
+      }
+    });
+  }
+
+  /* SOURCE BAR */
+  const sourceCtx=
+    document.getElementById(
+      "collSourceChart"
+    );
+
+  if(sourceCtx&&typeof Chart!=="undefined"){
+
+    collSourceChart?.destroy();
+
+    collSourceChart=new Chart(sourceCtx,{
+      type:"bar",
+      data:{
+        labels:Object.keys(a.sourceMap),
+        datasets:[{
+          data:Object.values(a.sourceMap)
+        }]
+      },
+      options:{
+        responsive:true,
+        maintainAspectRatio:false
+      }
+    });
+  }
+
+  /* DAILY LINE */
+  const dailyCtx=
+    document.getElementById(
+      "collDailyChart"
+    );
+
+  if(dailyCtx&&typeof Chart!=="undefined"){
+
+    collDailyChart?.destroy();
+
+    const sortedDates=
+      Object.keys(a.dailyMap).sort();
+
+    collDailyChart=new Chart(dailyCtx,{
+      type:"line",
+      data:{
+        labels:sortedDates,
+        datasets:[{
+          data:sortedDates.map(
+            d=>a.dailyMap[d]
+          )
+        }]
+      },
+      options:{
+        responsive:true,
+        maintainAspectRatio:false
+      }
+    });
+  }
+}
+
+
+/* ===========================================================
+   RENDER TABLE
+=========================================================== */
+window.renderCollection=function(){
+
+  const tbody=
+    document.querySelector(
+      "#collectionHistory tbody"
+    );
+  if(!tbody) return;
+
+  const list=window.collections||[];
+
+  if(!list.length){
+    tbody.innerHTML=`
       <tr>
         <td colspan="5"
             style="text-align:center;opacity:0.6;">
@@ -242,12 +340,12 @@ window.renderCollection = function () {
     return;
   }
 
-  tbody.innerHTML = list.map(e => `
+  tbody.innerHTML=list.map(e=>`
     <tr>
       <td>${
-        typeof toDisplay === "function"
-          ? toDisplay(e.date)
-          : e.date
+        typeof toDisplay==="function"
+        ?toDisplay(e.date)
+        :e.date
       }</td>
       <td>${escLocal(e.source)}</td>
       <td>${escLocal(e.details)}</td>
@@ -259,16 +357,17 @@ window.renderCollection = function () {
 
 
 /* ===========================================================
-   CLEAR COLLECTION HISTORY
+   CLEAR HISTORY
 =========================================================== */
-document.addEventListener("click", e => {
+document.addEventListener("click",e=>{
 
-  if (e.target.id === "clearCollectionBtn") {
+  if(e.target.id==="clearCollectionBtn"){
 
-    if (!confirm("Clear entire collection history?"))
-      return;
+    if(!confirm(
+      "Clear entire collection history?"
+    )) return;
 
-    window.collections = [];
+    window.collections=[];
 
     saveCollections();
 
@@ -283,19 +382,23 @@ document.addEventListener("click", e => {
 
 
 /* ===========================================================
-   INIT + CLOUD SYNC
+   INIT
 =========================================================== */
-window.addEventListener("cloud-data-loaded", () => {
+window.addEventListener(
+  "cloud-data-loaded",
+  ()=>{
 
-  injectCollectionDashboard();
-  renderCollection();
-  runCollectionAnalytics();
+    injectCollectionDashboard();
+    renderCollection();
+    runCollectionAnalytics();
 
-  window.updateUniversalBar?.();
-  window.renderAnalytics?.();
-  window.updateSummaryCards?.();
-});
+    window.updateUniversalBar?.();
+    window.renderAnalytics?.();
+    window.updateSummaryCards?.();
+  }
+);
 
-window.addEventListener("DOMContentLoaded", () => {
-  injectCollectionDashboard();
-});
+window.addEventListener(
+  "DOMContentLoaded",
+  ()=>injectCollectionDashboard()
+);
