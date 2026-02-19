@@ -1,16 +1,6 @@
 /* ==========================================================
-   stock.js — FINAL v15 (FULL HYBRID SAFE MERGE)
-
-   ✔ Cloud only
-   ✔ Logout/Login safe
-   ✔ Multi-device sync safe
-   ✔ Purchase history
-   ✔ Quick sale
-   ✔ Wanting auto add (HOOK + FALLBACK)
-   ✔ Credit flag safe
-   ✔ Universal sync safe
-   ✔ Filters restored
-   ✔ Global limit
+   stock.js — FINAL v16
+   ID SAFE + CASH/UPI MODE + ATOMIC STOCK/SALES UPDATE
 ========================================================== */
 
 const $  = s => document.querySelector(s);
@@ -30,7 +20,6 @@ window.saveStock = function () {
     cloudSaveDebounced("stock", window.stock || []);
   }
 
-  /* 🔄 Global sync */
   window.dispatchEvent(
     new Event("cloud-data-loaded")
   );
@@ -38,7 +27,7 @@ window.saveStock = function () {
 
 
 /* ==========================================================
-   ADD STOCK (WITH HISTORY)
+   ADD STOCK
 ========================================================== */
 $("#addStockBtn")?.addEventListener("click", () => {
 
@@ -84,7 +73,6 @@ $("#addStockBtn")?.addEventListener("click", () => {
   }
 
   window.saveStock();
-
   renderStock();
   window.updateUniversalBar?.();
 
@@ -95,48 +83,11 @@ $("#addStockBtn")?.addEventListener("click", () => {
 
 
 /* ==========================================================
-   PURCHASE HISTORY
+   QUICK SALE — ID SAFE + PAYMENT MODE
 ========================================================== */
-function showStockHistory(id) {
+function stockQuickSale(id, mode) {
 
-  const p = (window.stock || []).find(x => x.id === id);
-
-  if (!p || !p.history?.length)
-    return alert("No history available.");
-
-  let msg = `Purchase History — ${p.name}\n\n`;
-  let totalCost = 0, totalQty = 0;
-
-  p.history.forEach(h => {
-
-    const q = num(h.qty);
-    const c = num(h.cost);
-    const dt = h.date ? toDisp(h.date) : "-";
-
-    totalCost += q * c;
-    totalQty  += q;
-
-    msg += `${dt} — ${q} qty × ₹${c} = ₹${q*c}\n`;
-  });
-
-  const avg = totalQty
-    ? (totalCost / totalQty).toFixed(2)
-    : 0;
-
-  msg += `\nTotal Purchased Qty: ${totalQty}`;
-  msg += `\nAverage Cost: ₹${avg}`;
-
-  alert(msg);
-}
-window.showStockHistory = showStockHistory;
-
-
-/* ==========================================================
-   QUICK SALE (FULL SAFE)
-========================================================== */
-function stockQuickSale(i, mode) {
-
-  const p = window.stock[i];
+  const p = window.stock.find(x => x.id === id);
   if (!p) return;
 
   const remain = num(p.qty) - num(p.sold);
@@ -153,30 +104,44 @@ function stockQuickSale(i, mode) {
   );
   if (!price) return;
 
+  /* ================= PAYMENT MODE ================= */
+  let paymentMode = "Cash";
+  let creditMode  = null;
+
+  const payChoice = prompt(
+    "Select Payment Mode:\n1 - Cash\n2 - UPI"
+  );
+
+  if (payChoice === "2") {
+    paymentMode = "UPI";
+  }
+
   let customer="", phone="";
-  if (mode==="Credit") {
+  const isPaid = mode === "Paid";
+
+  if (mode === "Credit") {
+
     customer = prompt("Customer Name:") || "";
     phone    = prompt("Phone Number:") || "";
+
+    creditMode = paymentMode; // store how credit was created
   }
 
   const cost   = num(p.cost);
   const total  = qty * price;
   const profit = total - qty * cost;
 
-  const isPaid = mode === "Paid";
-
   /* ---------- STOCK REDUCE ---------- */
   p.sold += qty;
   window.saveStock();
 
   /* ==================================================
-     🔥 WANTING AUTO ADD (HOOK + FALLBACK)
+     WANTING AUTO ADD
   ================================================== */
   if (p.sold >= p.qty) {
 
     if (window.autoAddWanting) {
 
-      /* ERP Hook */
       window.autoAddWanting(
         p.type,
         p.name,
@@ -185,7 +150,6 @@ function stockQuickSale(i, mode) {
 
     } else {
 
-      /* Fallback Manual */
       window.wanting =
         window.wanting || [];
 
@@ -211,7 +175,7 @@ function stockQuickSale(i, mode) {
   }
 
   /* ==================================================
-     SALES ENTRY
+     SALES ENTRY (UPDATED STRUCTURE)
   ================================================== */
   window.sales.push({
     id: uid("sale"),
@@ -230,6 +194,9 @@ function stockQuickSale(i, mode) {
 
     status: isPaid ? "Paid" : "Credit",
     fromCredit: !isPaid,
+
+    paymentMode: isPaid ? paymentMode : null,
+    creditMode:  !isPaid ? creditMode  : null,
 
     customer,
     phone
@@ -306,7 +273,7 @@ function renderStock() {
       p.type.toLowerCase().includes(searchTxt)
     );
 
-  tbody.innerHTML = data.map((p,i)=>{
+  tbody.innerHTML = data.map((p)=>{
 
     const remain =
       num(p.qty) - num(p.sold);
@@ -326,8 +293,8 @@ function renderStock() {
       <td>${p.limit}</td>
       <td>
         <button onclick="showStockHistory('${p.id}')">📜</button>
-        <button onclick="stockQuickSale(${i},'Paid')">Cash</button>
-        <button onclick="stockQuickSale(${i},'Credit')">Credit</button>
+        <button onclick="stockQuickSale('${p.id}','Paid')">Cash</button>
+        <button onclick="stockQuickSale('${p.id}','Credit')">Credit</button>
       </td>
     </tr>`;
   }).join("");
