@@ -1,13 +1,13 @@
 /* ===========================================================
-   firestore-listeners.js — FINAL SAFE v13
-   ERROR-FREE RESTORE BUILD
+   firestore-listeners.js — FINAL SAFE v14
+   REALTIME + MULTI-DEVICE + OFFSET SYNC FIXED
 
    ✔ Realtime cloud sync
    ✔ No baseline filtering
    ✔ No settlement math
-   ✔ Console error fixed
+   ✔ Console error safe
    ✔ Main tab instant update
-   ✔ Offset hydration safe
+   ✔ Offset realtime sync FIXED
    ✔ Collection write-lock safe
    ✔ Logout/Login safe
    ✔ Multi-device safe
@@ -88,19 +88,16 @@
   }
 
   /* --------------------------------------------------
-     SAFE UI REFRESH  (ERROR-FREE)
+     SAFE UI REFRESH
   -------------------------------------------------- */
   function safeRefresh() {
 
-    /* ---- DATA ---- */
     renderSales?.();
     renderCollection?.();
 
-    /* ---- ANALYTICS ---- */
     renderAnalytics?.();
     updateSummaryCards?.();
 
-    /* ---- UNIVERSAL ---- */
     setTimeout(() => {
       updateUniversalBar?.();
     }, 50);
@@ -200,7 +197,7 @@
     });
 
     /* ==================================================
-       OFFSETS — HYDRATION SAFE
+       OFFSETS — REALTIME SYNC FIXED
     ================================================== */
     ref.doc("offsets").onSnapshot(snap => {
 
@@ -208,24 +205,17 @@
 
       const incoming = snap.data().value || {};
 
-      if (window.__offsetsHydrated) {
-        console.log(
-          "⏭ Offsets already hydrated — skip overwrite"
-        );
-        return;
-      }
+      /* SAFE INIT */
+      if (!window.__offsets)
+        window.__offsets = {};
 
-      window.__offsetsHydrated = true;
-
-      Object.assign(
-        window.__offsets,
-        incoming
-      );
+      /* ALWAYS MERGE (NO HYDRATION LOCK) */
+      Object.assign(window.__offsets, incoming);
 
       updateUniversalBar?.();
 
       console.log(
-        "%c🔄 Offsets hydrated",
+        "%c🔄 Offsets realtime synced",
         "color:#4caf50;font-weight:bold;"
       );
     });
