@@ -1,13 +1,14 @@
 /* ===========================================================
-   collection.js — FINAL v17 (OPTION-2 CLOUD SAFE)
+   collection.js — FINAL v18 (ERP COLLECTION ENGINE)
 
-   ✔ No localStorage
-   ✔ Logout/Login safe
-   ✔ Multi-device sync safe
-   ✔ Stores ONLY collected amounts
-   ✔ UniversalBar compatible
-   ✔ Analytics compatible
-   ✔ Cloud-ready guarded
+   ✔ Cloud only
+   ✔ Multi-device safe
+   ✔ Credit cleared tagging
+   ✔ Service credit tagging
+   ✔ Profit preserve tagging
+   ✔ Payment mode ready
+   ✔ Universal compatible
+   ✔ Analytics ready
 =========================================================== */
 
 
@@ -27,11 +28,10 @@ function cNum(v) {
 
 
 /* ===========================================================
-   ☁️ CLOUD SAVE (SAFE)
+   ☁️ CLOUD SAVE
 =========================================================== */
 function saveCollections() {
 
-  /* Cloud ready guard */
   if (!window.__cloudReady) {
     console.warn(
       "⛔ Collections save blocked — cloud not ready"
@@ -46,26 +46,59 @@ function saveCollections() {
     );
   }
 }
-
 window.saveCollections = saveCollections;
 
 
 /* ===========================================================
+   SOURCE NORMALIZER
+   (Auto classify collection types)
+=========================================================== */
+function normalizeSource(src = "") {
+
+  const s = String(src).toLowerCase();
+
+  if (s.includes("credit") &&
+      s.includes("service"))
+    return "Service Credit Cleared";
+
+  if (s.includes("credit"))
+    return "Sale Credit Cleared";
+
+  if (s.includes("service"))
+    return "Service Payment";
+
+  if (s.includes("history"))
+    return "Profit Preserved";
+
+  return "Sale Collection";
+}
+
+
+/* ===========================================================
    ADD COLLECTION ENTRY
-   (Called from Universal / Sales / Services)
 =========================================================== */
 window.addCollectionEntry = function (
   source,
   details,
-  amount
+  amount,
+  paymentMode = "Cash"   // future ready
 ) {
 
   const entry = {
     id: uid("coll"),
     date: todayDate(),
-    source: escLocal(source),
+
+    /* Auto classified source */
+    source: normalizeSource(source),
+
+    rawSource: escLocal(source),
+
     details: escLocal(details),
-    amount: cNum(amount)
+
+    amount: cNum(amount),
+
+    /* Mode tagging */
+    mode: paymentMode || "Cash"
   };
 
   window.collections =
@@ -75,7 +108,6 @@ window.addCollectionEntry = function (
 
   saveCollections();
 
-  /* UI refresh */
   renderCollection();
   window.updateUniversalBar?.();
   window.renderAnalytics?.();
@@ -84,7 +116,7 @@ window.addCollectionEntry = function (
 
 
 /* ===========================================================
-   RENDER COLLECTION HISTORY
+   RENDER COLLECTION TABLE
 =========================================================== */
 window.renderCollection = function () {
 
@@ -102,7 +134,7 @@ window.renderCollection = function () {
 
     tbody.innerHTML = `
       <tr>
-        <td colspan="4"
+        <td colspan="5"
             style="text-align:center;opacity:0.6;">
           No collection history yet
         </td>
@@ -126,6 +158,8 @@ window.renderCollection = function () {
 
       <td>${escLocal(e.details)}</td>
 
+      <td>${escLocal(e.mode)}</td>
+
       <td>₹${cNum(e.amount)}</td>
 
     </tr>
@@ -135,7 +169,6 @@ window.renderCollection = function () {
 
 /* ===========================================================
    CLEAR COLLECTION HISTORY
-   (Only this tab)
 =========================================================== */
 document.addEventListener("click", e => {
 
