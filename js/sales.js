@@ -1,13 +1,14 @@
 /* ===========================================================
-   sales.js — FINAL v26 (FULL MERGED ERP ENGINE)
+   sales.js — FINAL v27 (CASH + UPI + CREDIT MODE SAFE)
 
    ✔ Cloud only
    ✔ Universal sync safe
    ✔ Net collect safe
    ✔ Wanting auto add
    ✔ Credit-safe accounting
+   ✔ Cash + UPI supported
+   ✔ Credit mode stored
    ✔ Filters restored
-   ✔ Filter button restored
    ✔ Smart clear guard
    ✔ Multi-device safe
 =========================================================== */
@@ -53,7 +54,6 @@ window.saveSales = function () {
     cloudSaveDebounced("sales", window.sales || []);
   }
 
-  /* Global refresh */
   window.dispatchEvent(
     new Event("cloud-data-loaded")
   );
@@ -70,6 +70,8 @@ function addSaleEntry({
   qty,
   price,
   status,
+  paymentMode,   // NEW
+  creditMode,    // NEW
   customer,
   phone
 }) {
@@ -99,7 +101,7 @@ function addSaleEntry({
   /* ---------- STOCK REDUCE ---------- */
   p.sold = Number(p.sold) + qty;
 
-  /* ---------- AUTO WANTING ENGINE ---------- */
+  /* ---------- AUTO WANTING ---------- */
   const remaining =
     Number(p.qty) - Number(p.sold);
 
@@ -148,6 +150,8 @@ function addSaleEntry({
     cost,
     status: isPaid ? "Paid" : "Credit",
     fromCredit: !isPaid,
+    paymentMode: isPaid ? (paymentMode || "Cash") : null,
+    creditMode: !isPaid ? (creditMode || "Cash") : null,
     customer: customer || "",
     phone: phone || ""
   });
@@ -160,6 +164,7 @@ function addSaleEntry({
   window.updateSummaryCards?.();
   window.updateUniversalBar?.();
 }
+window.addSaleEntry = addSaleEntry;
 
 
 /* ===========================================================
@@ -173,23 +178,24 @@ function collectCreditSale(id) {
   if (String(s.status).toLowerCase() !== "credit")
     return alert("Already Paid.");
 
-  const msg = [
-    `Product: ${s.product} (${s.type})`,
-    `Qty: ${s.qty}`,
-    `Rate: ₹${s.price}`,
-    `Total: ₹${s.total}`,
-    s.customer ? `Customer: ${s.customer}` : "",
-    s.phone ? `Phone: ${s.phone}` : ""
-  ].filter(Boolean);
+  const payMode =
+    prompt("Payment Mode? (Cash / UPI)", "Cash");
 
-  if (!confirm(msg.join("\n") +
-      "\n\nMark as PAID & Collect?"))
-    return;
+  if (!payMode) return;
+
+  const mode =
+    payMode.toLowerCase() === "upi"
+      ? "UPI"
+      : "Cash";
+
+  if (!confirm(
+    `Collect ₹${s.total} via ${mode}?`
+  )) return;
 
   /* PROFIT UNLOCK */
   s.status = "Paid";
   s.fromCredit = true;
-
+  s.paymentMode = mode;
   s.profit =
     Number(s.total) -
     Number(s.qty * s.cost);
@@ -199,9 +205,8 @@ function collectCreditSale(id) {
   /* COLLECTION LOG */
   const details =
     `${s.product} — Qty ${s.qty} × ₹${s.price} = ₹${s.total}` +
-    ` (Credit Cleared)` +
-    (s.customer ? ` — ${s.customer}` : "") +
-    (s.phone ? ` — ${s.phone}` : "");
+    ` (Credit Cleared — ${mode})` +
+    (s.customer ? ` — ${s.customer}` : "");
 
   window.addCollectionEntry?.(
     "Sale (Credit cleared)",
@@ -284,16 +289,21 @@ function renderSales() {
       profitSum += Number(s.profit || 0);
     }
 
+    const modeDisplay =
+      s.status === "Paid"
+      ? (s.paymentMode || "")
+      : (s.creditMode || "");
+
     const statusHTML =
       String(s.status).toLowerCase()
       === "credit"
-      ? `<span class="status-credit">Credit</span>
+      ? `<span class="status-credit">Credit (${modeDisplay})</span>
          <button class="small-btn"
            style="background:#16a34a;color:white;padding:3px 8px;font-size:11px"
            onclick="collectCreditSale('${s.id}')">
            Collect
          </button>`
-      : `<span class="status-paid">Paid</span>`;
+      : `<span class="status-paid">Paid (${modeDisplay})</span>`;
 
     return `
       <tr>
@@ -332,7 +342,6 @@ document.getElementById("saleDate")
 document.getElementById("saleView")
   ?.addEventListener("change", renderSales);
 
-/* 🔥 RESTORED */
 document.getElementById("filterSalesBtn")
   ?.addEventListener("click", renderSales);
 
