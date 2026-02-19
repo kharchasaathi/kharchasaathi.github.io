@@ -1,12 +1,12 @@
 /* ===========================================================
-   collection.js — FINAL v19 (ERP ANALYTICS CORE)
+   collection.js — FINAL v20 (AUTO UI + ANALYTICS CORE)
 
+   ✔ Auto inject dashboard UI
    ✔ Cloud only
    ✔ Multi-device safe
    ✔ Source classified
    ✔ Payment mode supported
    ✔ Analytics engine added
-   ✔ Daily summary engine
    ✔ Universal compatible
 =========================================================== */
 
@@ -23,6 +23,53 @@ function escLocal(x) {
 function cNum(v) {
   const n = Number(v || 0);
   return isNaN(n) ? 0 : n;
+}
+
+
+/* ===========================================================
+   🧩 AUTO INSERT DASHBOARD (Correct Placement)
+=========================================================== */
+function injectCollectionDashboard() {
+
+  if (document.querySelector(".collection-dashboard"))
+    return; // already exists
+
+  const table =
+    document.getElementById("collectionHistory");
+
+  if (!table) return;
+
+  const wrapper = document.createElement("div");
+  wrapper.innerHTML = `
+  <!-- ===============================
+       COLLECTION DASHBOARD SUMMARY
+  ================================= -->
+  <div class="collection-dashboard">
+
+    <div class="coll-card">
+      <h4>Total Collection</h4>
+      <h2 id="collTotal">₹0</h2>
+    </div>
+
+    <div class="coll-card">
+      <h4>Cash</h4>
+      <h2 id="collCash">₹0</h2>
+    </div>
+
+    <div class="coll-card">
+      <h4>UPI</h4>
+      <h2 id="collUPI">₹0</h2>
+    </div>
+
+    <div class="coll-card">
+      <h4>Credit Recovered</h4>
+      <h2 id="collCreditRecovered">₹0</h2>
+    </div>
+
+  </div>
+  `;
+
+  table.parentNode.insertBefore(wrapper, table);
 }
 
 
@@ -125,19 +172,15 @@ window.runCollectionAnalytics = function () {
     const amt = cNum(e.amount);
     total += amt;
 
-    /* Mode Split */
     if (e.mode === "Cash") cash += amt;
     if (e.mode === "UPI") upi += amt;
 
-    /* Credit Recovery */
     if (e.source.includes("Credit"))
       creditRecovered += amt;
 
-    /* Source Summary */
     sourceMap[e.source] =
       (sourceMap[e.source] || 0) + amt;
 
-    /* Daily Summary */
     dailyMap[e.date] =
       (dailyMap[e.date] || 0) + amt;
   });
@@ -156,7 +199,7 @@ window.runCollectionAnalytics = function () {
 
 
 /* ===========================================================
-   UPDATE SUMMARY UI (If Elements Exist)
+   UPDATE SUMMARY UI
 =========================================================== */
 function updateCollectionSummaryUI() {
 
@@ -240,14 +283,19 @@ document.addEventListener("click", e => {
 
 
 /* ===========================================================
-   ☁️ CLOUD SYNC LISTENER
+   INIT + CLOUD SYNC
 =========================================================== */
 window.addEventListener("cloud-data-loaded", () => {
 
+  injectCollectionDashboard();
   renderCollection();
   runCollectionAnalytics();
 
   window.updateUniversalBar?.();
   window.renderAnalytics?.();
   window.updateSummaryCards?.();
+});
+
+window.addEventListener("DOMContentLoaded", () => {
+  injectCollectionDashboard();
 });
