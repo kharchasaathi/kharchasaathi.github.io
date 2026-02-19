@@ -1,5 +1,6 @@
 /* ===========================================================
-firebase.js — FINAL V22 (OFFSET BULLETPROOF + DASHBOARD SAFE)
+firebase.js — FINAL V23
+REAL DEBOUNCE + WRITE SAFE + OFFSET BULLETPROOF
 
 ✔ Pulls ALL business data
 ✔ Prevents empty overwrite
@@ -9,6 +10,8 @@ firebase.js — FINAL V22 (OFFSET BULLETPROOF + DASHBOARD SAFE)
 ✔ Dashboard clear persistent
 ✔ Multi-device data safe
 ✔ Settlement aligned
+✔ REAL Debounced cloud save
+✔ Write error safe
 =========================================================== */
 
 console.log("%c🔥 firebase.js loaded","color:#ff9800;font-weight:bold;");
@@ -51,6 +54,12 @@ CLOUD ENGINE FLAGS
 window.__cloudReady=false;
 window.__cloudPulled=false;
 
+/* ===========================================================
+🧠 DEBOUNCE ENGINE (NEW)
+=========================================================== */
+
+const __debounceTimers = {};
+
 /* ---------------- LOAD ONE ---------------- */
 async function cloudLoad(key){
 
@@ -77,7 +86,9 @@ async function cloudLoad(key){
 }
 window.cloudLoad=cloudLoad;
 
-/* ---------------- SAVE ---------------- */
+/* ===========================================================
+💾 REAL DEBOUNCED SAVE (FIXED)
+=========================================================== */
 function cloudSaveDebounced(key,value){
 
   if(!window.__cloudReady){
@@ -88,14 +99,46 @@ function cloudSaveDebounced(key,value){
   const user=auth.currentUser;
   if(!user) return;
 
-  db.collection("users")
-    .doc(user.uid)
-    .collection("data")
-    .doc(key)
-    .set({
-      value,
-      updated:Date.now()
-    });
+  /* CLEAR OLD TIMER */
+  if(__debounceTimers[key])
+    clearTimeout(__debounceTimers[key]);
+
+  /* NEW TIMER */
+  __debounceTimers[key] = setTimeout(async ()=>{
+
+    try{
+
+      await db
+        .collection("users")
+        .doc(user.uid)
+        .collection("data")
+        .doc(key)
+        .set({
+          value,
+          updated:Date.now()
+        });
+
+      console.log(
+        "%c☁️ Cloud saved:",
+        "color:#4caf50;font-weight:bold;",
+        key
+      );
+
+    }catch(e){
+
+      console.error(
+        "❌ Cloud save failed:",
+        key,
+        e
+      );
+
+    }finally{
+
+      delete __debounceTimers[key];
+
+    }
+
+  },500); // ⏱ Debounce delay
 }
 window.cloudSaveDebounced=cloudSaveDebounced;
 
@@ -155,7 +198,7 @@ async function cloudPullAll(){
     service:0,
     stock:0,
     servInv:0,
-    expenses:0   // 🔥 ADDED (FINAL FIX)
+    expenses:0
 
   }, offsets || {});
 
