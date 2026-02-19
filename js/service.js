@@ -1,7 +1,6 @@
 /* ===========================================================
-   service.js — FINAL MERGED RESTORE BUILD
-   LOCAL + CLOUD + SETTLEMENT SAFE + UNIVERSAL ALIGNED
-   FILTERS + HELPERS RESTORED
+   service.js — FINAL ERP BUILD (PART 1)
+   FULL RESTORE + CREDIT SAFE + FILTERS RESTORED
 =========================================================== */
 
 (function () {
@@ -49,7 +48,7 @@ function saveServices(){
     window.services
   );
 
-  /* CLOUD PULL */
+  /* SAFE CLOUD SYNC */
   if(typeof cloudPullAllIfAvailable==="function"){
     setTimeout(
       ()=>cloudPullAllIfAvailable(),
@@ -57,7 +56,6 @@ function saveServices(){
     );
   }
 
-  /* LIVE EVENT */
   window.dispatchEvent(
     new Event("services-updated")
   );
@@ -94,7 +92,7 @@ function buildDateFilter(){
     if(j.date_out) set.add(j.date_out);
   });
 
-  sel.innerHTML=
+  sel.innerHTML =
     `<option value="">All Dates</option>`+
     [...set]
       .sort((a,b)=>b.localeCompare(a))
@@ -105,7 +103,7 @@ function buildDateFilter(){
       ).join("");
 }
 
-/* -------------------------------------------------- FILTER HELPERS (RESTORED) */
+/* -------------------------------------------------- FILTER HELPERS */
 function clearCalendar(){
   qs("#svcFilterCalendar") &&
   (qs("#svcFilterCalendar").value="");
@@ -250,7 +248,7 @@ function renderTables(){
       : `<tr><td colspan="10">No history</td></tr>`;
 }
 
-/* -------------------------------------------------- PIE */
+/* -------------------------------------------------- PIE CHART */
 let pieStatus=null;
 
 function drawPieStatus(){
@@ -287,7 +285,7 @@ function drawPieStatus(){
   });
 }
 
-/* -------------------------------------------------- MONEY */
+/* -------------------------------------------------- MONEY SUMMARY */
 function renderMoneyList(){
 
   const box=qs("#svcMoneyBox");
@@ -318,8 +316,7 @@ function renderMoneyList(){
       <li>📈 Total Profit: <b>₹${profit}</b></li>
     </ul>`;
 }
-
-/* -------------------------------------------------- ADD JOB */
+   /* -------------------------------------------------- ADD JOB */
 function addJob(){
 
   const list=ensureServices();
@@ -370,11 +367,14 @@ function completeJob(id,mode){
   j.date_out=today();
 
   if(mode==="paid"){
+
     j.status="paid";
     j.paid=total;
     j.remaining=0;
     j.profit=total-invest;
+
   }else{
+
     j.status="credit";
     j.paid=j.advance;
     j.remaining=total-j.advance;
@@ -418,7 +418,10 @@ function failJob(id){
 
   j.status="failed";
   j.date_out=today();
-  j.invest=j.paid=j.remaining=j.profit=0;
+  j.invest=0;
+  j.paid=0;
+  j.remaining=0;
+  j.profit=0;
 
   saveServices();
   refresh();
@@ -438,7 +441,7 @@ function refresh(){
 
 window.__svcRefresh=refresh;
 
-/* -------------------------------------------------- EVENTS (RESTORED) */
+/* -------------------------------------------------- EVENTS */
 document.addEventListener("click",e=>{
 
   const btn=e.target.closest(".svc-view");
@@ -455,10 +458,11 @@ document.addEventListener("click",e=>{
   else if(ch==="3") failJob(id);
 });
 
+/* ADD BTN */
 qs("#addServiceBtn")
 ?.addEventListener("click",addJob);
 
-/* FILTER EVENTS RESTORED */
+/* FILTER EVENTS */
 qs("#svcFilterStatus")
 ?.addEventListener("change",refresh);
 
@@ -476,8 +480,10 @@ qs("#svcFilterCalendar")
   clearDropdown();
   refresh();
 });
+
 /* --------------------------------------------------
    CLEAR ALL — HISTORY ONLY + PROFIT SAFE
+   🔥 FINAL FIX — NO DOUBLE PROFIT
 -------------------------------------------------- */
 qs("#clearServiceBtn")
 ?.addEventListener("click", () => {
@@ -487,7 +493,7 @@ qs("#clearServiceBtn")
   if (!list.length)
     return alert("No service history.");
 
-  /* ---------- Earned profit ---------- */
+  /* Earned profit (display only) */
   const earnedProfit =
     list
       .filter(j => j.status === "paid")
@@ -498,45 +504,24 @@ qs("#clearServiceBtn")
 
 Earned Profit: ₹${earnedProfit}
 
-This profit will be preserved
-in Profit Tab.
+Profit already counted in Net.
+Clearing will NOT change ledger.
 
 Continue?`
   )) return;
 
-  /* ==================================================
-     PROFIT PRESERVE → NET LEDGER
-  ================================================== */
+  /* ❌ DO NOT TOUCH OFFSETS
+     Profit already included in universal net
+     Clearing history should not add/subtract
+  */
 
-  if (earnedProfit > 0) {
-
-    if (!window.__offsets)
-      window.__offsets = {};
-
-    /* 🔥 FIX — move to NET */
-    window.__offsets.net =
-      (window.__offsets.net || 0)
-      + earnedProfit;
-
-    cloudSaveDebounced?.(
-      "offsets",
-      window.__offsets
-    );
-
-    window.addCollectionEntry?.(
-      "Service History Cleared",
-      "Profit Preserved",
-      earnedProfit
-    );
-  }
-
-  /* ---------- Clear history ---------- */
   window.services = [];
 
   saveServices();
   buildDateFilter();
   refresh();
 });
+
 /* -------------------------------------------------- INIT */
 window.addEventListener("load",()=>{
   buildDateFilter();
