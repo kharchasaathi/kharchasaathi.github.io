@@ -1,6 +1,6 @@
 /* ===========================================================
-   universal-bar.js — BACKUP LOGIC RESTORE FINAL v2
-   PURE NET OFFSET SETTLEMENT + SAFETY GUARDS RESTORED
+   universal-bar.js — COMMERCIAL SNAPSHOT ENGINE v3
+   PART 1 — OFFSET + COLLECTION REMOVAL BASE
 =========================================================== */
 
 (function () {
@@ -9,57 +9,8 @@
   const num = v => (isNaN(v = Number(v))) ? 0 : Number(v);
   const money = v => "₹" + Math.round(num(v));
 
-  const OFFSET_KEY = "offsets";
-
-  /* ---------------- OFFSETS ---------------- */
-  window.__offsets = window.__offsets || {
-    net: 0,
-    sale: 0,
-    service: 0,
-    stock: 0,
-    servInv: 0,
-    expenses: 0
-  };
-
-  window.__offsetSaveLock = false;
-
-  /* ---------------- CLOUD ---------------- */
-  async function loadCloud(key) {
-    if (typeof cloudLoad !== "function") return null;
-    try { return await cloudLoad(key); }
-    catch { return null; }
-  }
-
-  async function saveCloud(key, value) {
-
-    if (!window.__cloudReady) return;
-
-    if (typeof cloudSaveDebounced === "function") {
-      cloudSaveDebounced(key, value);
-    }
-  }
-
-  async function initCloud() {
-
-    if (!window.__cloudReady) return;
-
-    const offsets = await loadCloud(OFFSET_KEY);
-    if (!offsets) return;
-
-    Object.assign(window.__offsets, {
-      net:     num(offsets.net),
-      sale:    num(offsets.sale),
-      service: num(offsets.service),
-      stock:   num(offsets.stock),
-      servInv: num(offsets.servInv),
-      expenses:num(offsets.expenses)
-    });
-
-    updateUniversalBar();
-  }
-
   /* ==========================================================
-     METRICS ENGINE
+     METRICS ENGINE (PURE — NO OFFSETS)
   ========================================================== */
   function computeMetrics() {
 
@@ -87,7 +38,7 @@
     let serviceInvestAll = 0;
     let pendingCredit = 0;
 
-    /* SALES */
+    /* ---------------- SALES ---------------- */
     sales.forEach(s => {
 
       const st = String(s.status).toLowerCase();
@@ -101,7 +52,7 @@
       }
     });
 
-    /* SERVICES */
+    /* ---------------- SERVICES ---------------- */
     services.forEach(j => {
 
       const st = String(j.status).toLowerCase();
@@ -121,187 +72,87 @@
       }
     });
 
-    /* EXPENSES */
+    /* ---------------- EXPENSES ---------------- */
     expenses.forEach(e => {
       expensesAll += num(e.amount);
     });
 
-    /* OFFSET APPLY */
-
-    const saleLive =
-      Math.max(0,
-        saleProfitAll - window.__offsets.sale
-      );
-
-    const serviceLive =
-      Math.max(0,
-        serviceProfitAll - window.__offsets.service
-      );
-
-    const expenseLive =
-      Math.max(0,
-        expensesAll - window.__offsets.expenses
-      );
+    /* ======================================================
+       PURE ACCOUNTING (NO OFFSETS — DIRECT METRICS)
+    ====================================================== */
 
     const netLive =
-      Math.max(0,
-        saleLive +
-        serviceLive -
-        expenseLive -
-        window.__offsets.net
+      Math.max(
+        0,
+        saleProfitAll +
+        serviceProfitAll -
+        expensesAll
       );
 
     return {
 
-      saleProfitCollected: saleLive,
-      serviceProfitCollected: serviceLive,
+      saleProfitCollected: saleProfitAll,
+      serviceProfitCollected: serviceProfitAll,
 
-      stockInvestSold:
-        Math.max(0,
-          stockInvestAll -
-          window.__offsets.stock
-        ),
+      stockInvestSold: stockInvestAll,
+      serviceInvestCompleted: serviceInvestAll,
 
-      serviceInvestCompleted:
-        Math.max(0,
-          serviceInvestAll -
-          window.__offsets.servInv
-        ),
-
-      expensesLive: expenseLive,
+      expensesLive: expensesAll,
       pendingCreditTotal: pendingCredit,
       netProfit: netLive
     };
   }
+   /* ---------------- UI ---------------- */
+function updateUniversalBar() {
 
-  /* ---------------- UI ---------------- */
-  function updateUniversalBar() {
+  const m = computeMetrics();
+  window.__unMetrics = m;
 
-    const m = computeMetrics();
-    window.__unMetrics = m;
+  const set = (id, v) => {
+    const el = document.getElementById(id);
+    if (el) el.textContent = money(v);
+  };
 
-    const set = (id, v) => {
-      const el = document.getElementById(id);
-      if (el) el.textContent = money(v);
-    };
+  set("unSaleProfit", m.saleProfitCollected);
+  set("unServiceProfit", m.serviceProfitCollected);
+  set("unStockInv", m.stockInvestSold);
+  set("unServiceInv", m.serviceInvestCompleted);
+  set("unExpenses", m.expensesLive);
+  set("unCreditSales", m.pendingCreditTotal);
+  set("unNetProfit", m.netProfit);
+}
 
-    set("unSaleProfit", m.saleProfitCollected);
-    set("unServiceProfit", m.serviceProfitCollected);
-    set("unStockInv", m.stockInvestSold);
-    set("unServiceInv", m.serviceInvestCompleted);
-    set("unExpenses", m.expensesLive);
-    set("unCreditSales", m.pendingCreditTotal);
-    set("unNetProfit", m.netProfit);
-  }
+window.updateUniversalBar = updateUniversalBar;
 
-  window.updateUniversalBar = updateUniversalBar;
 
-  /* ==========================================================
-     COLLECT ENGINE
-  ========================================================== */
-  async function collect(kind) {
+/* ==========================================================
+   🔄 AUTO REFRESH EVENTS
+========================================================== */
 
-    const m = window.__unMetrics || {};
-
-    /* -------- NET -------- */
-    if (kind === "net") {
-
-      if (m.netProfit <= 0)
-        return alert("Nothing to collect.");
-
-      if (!confirm(
-        `Collect Net Profit ₹${m.netProfit} ?`
-      )) return;
-
-      window.addCollectionEntry?.(
-        "Net Profit",
-        "",
-        m.netProfit
-      );
-
-      window.__offsets.net += m.netProfit;
-    }
-
-    /* -------- STOCK -------- */
-    if (kind === "stock") {
-
-      if (m.stockInvestSold <= 0)
-        return alert("No stock investment to collect.");
-
-      window.addCollectionEntry?.(
-        "Stock Investment",
-        "Sold Items",
-        m.stockInvestSold
-      );
-
-      window.__offsets.stock +=
-        m.stockInvestSold;
-    }
-
-    /* -------- SERVICE -------- */
-    if (kind === "service") {
-
-      if (m.serviceInvestCompleted <= 0)
-        return alert("No service investment to collect.");
-
-      window.addCollectionEntry?.(
-        "Service Investment",
-        "Completed Jobs",
-        m.serviceInvestCompleted
-      );
-
-      window.__offsets.servInv +=
-        m.serviceInvestCompleted;
-    }
-
-    /* -------- SAVE CLOUD -------- */
-    if (!window.__offsetSaveLock) {
-
-      window.__offsetSaveLock = true;
-
-      await saveCloud(
-        OFFSET_KEY,
-        window.__offsets
-      );
-
-      setTimeout(() => {
-        window.__offsetSaveLock = false;
-      }, 600);
-    }
-
+/* Cloud load refresh */
+window.addEventListener(
+  "cloud-data-loaded",
+  () => {
     updateUniversalBar();
-    renderCollection?.();
-    renderAnalytics?.();
   }
+);
 
-  window.handleCollect = collect;
-
-  /* ---------------- EVENTS ---------------- */
-
-  document.addEventListener("click", e => {
-    const b = e.target.closest(".collect-btn");
-    if (!b) return;
-    collect(b.dataset.collect);
-  });
-
+/* Business data refresh */
+[
+  "sales-updated",
+  "services-updated",
+  "expenses-updated",
+  "collection-updated"
+].forEach(ev => {
   window.addEventListener(
-    "cloud-data-loaded",
-    () => {
-      initCloud();
-      updateUniversalBar();
-    }
+    ev,
+    updateUniversalBar
   );
+});
 
-  [
-    "sales-updated",
-    "services-updated",
-    "expenses-updated",
-    "collection-updated"
-  ].forEach(ev => {
-    window.addEventListener(ev, updateUniversalBar);
-  });
 
-  setTimeout(updateUniversalBar, 500);
-  setTimeout(updateUniversalBar, 1500);
+/* Safety delayed refresh */
+setTimeout(updateUniversalBar, 500);
+setTimeout(updateUniversalBar, 1500);
 
 })();
