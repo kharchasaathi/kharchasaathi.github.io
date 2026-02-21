@@ -1,16 +1,12 @@
 /* ===========================================================
-   sales.js — FINAL v27 (CASH + UPI + CREDIT MODE SAFE)
+   sales.js — COMMERCIAL REBUILD v28 (PART 1)
 
-   ✔ Cloud only
-   ✔ Universal sync safe
-   ✔ Net collect safe
-   ✔ Wanting auto add
-   ✔ Credit-safe accounting
-   ✔ Cash + UPI supported
-   ✔ Credit mode stored
-   ✔ Filters restored
-   ✔ Smart clear guard
-   ✔ Multi-device safe
+   ✔ Pure commercial behavior
+   ✔ Paid → Auto collection entry
+   ✔ Credit → Collection only when cleared
+   ✔ Duplicate collection guard
+   ✔ Auto wanting restored
+   ✔ Universal safe
 =========================================================== */
 
 
@@ -61,7 +57,7 @@ window.saveSales = function () {
 
 
 /* ===========================================================
-   ADD SALE ENTRY
+   ADD SALE ENTRY — COMMERCIAL + WANTING SAFE
 =========================================================== */
 function addSaleEntry({
   date,
@@ -70,8 +66,8 @@ function addSaleEntry({
   qty,
   price,
   status,
-  paymentMode,   // NEW
-  creditMode,    // NEW
+  paymentMode,
+  creditMode,
   customer,
   phone
 }) {
@@ -97,11 +93,18 @@ function addSaleEntry({
 
   const cost  = Number(p.cost);
   const total = qty * price;
+  const isPaid = status === "paid";
 
-  /* ---------- STOCK REDUCE ---------- */
+
+  /* =======================================================
+     📦 STOCK REDUCE
+  ======================================================= */
   p.sold = Number(p.sold) + qty;
 
-  /* ---------- AUTO WANTING ---------- */
+
+  /* =======================================================
+     🔁 AUTO WANTING (RESTORED)
+  ======================================================= */
   const remaining =
     Number(p.qty) - Number(p.sold);
 
@@ -132,10 +135,15 @@ function addSaleEntry({
 
   window.saveStock?.();
 
-  /* ---------- PROFIT ---------- */
-  const isPaid = status === "paid";
 
-  window.sales.push({
+  /* =======================================================
+     💰 PROFIT
+  ======================================================= */
+  const profitValue =
+    isPaid ? (total - qty * cost) : 0;
+
+
+  const saleObj = {
     id: uid("sale"),
     date: date || todayDate(),
     time: getCurrentTime12hr(),
@@ -144,19 +152,44 @@ function addSaleEntry({
     qty,
     price,
     total,
-    profit: isPaid
-      ? (total - qty * cost)
-      : 0,
+    profit: profitValue,
     cost,
     status: isPaid ? "Paid" : "Credit",
     fromCredit: !isPaid,
     paymentMode: isPaid ? (paymentMode || "Cash") : null,
     creditMode: !isPaid ? (creditMode || "Cash") : null,
     customer: customer || "",
-    phone: phone || ""
-  });
+    phone: phone || "",
+    collectionLogged: false
+  };
+
+
+  window.sales = window.sales || [];
+  window.sales.push(saleObj);
 
   window.saveSales();
+
+
+  /* =======================================================
+     💵 AUTO COLLECTION (PAID ONLY)
+  ======================================================= */
+  if (isPaid) {
+
+    const details =
+      `${product} — Qty ${qty} × ₹${price} = ₹${total}` +
+      ` (${saleObj.paymentMode})` +
+      (customer ? ` — ${customer}` : "");
+
+    window.addCollectionEntry?.(
+      "Sale Collection",
+      details,
+      total,
+      saleObj.paymentMode
+    );
+
+    saleObj.collectionLogged = true;
+  }
+
 
   renderSales();
   renderCollection?.();
@@ -167,8 +200,9 @@ function addSaleEntry({
 window.addSaleEntry = addSaleEntry;
 
 
+
 /* ===========================================================
-   CREDIT → PAID COLLECTION
+   CREDIT → PAID COLLECTION (SAFE)
 =========================================================== */
 function collectCreditSale(id) {
 
@@ -192,6 +226,7 @@ function collectCreditSale(id) {
     `Collect ₹${s.total} via ${mode}?`
   )) return;
 
+
   /* PROFIT UNLOCK */
   s.status = "Paid";
   s.fromCredit = true;
@@ -202,17 +237,25 @@ function collectCreditSale(id) {
 
   window.saveSales();
 
-  /* COLLECTION LOG */
-  const details =
-    `${s.product} — Qty ${s.qty} × ₹${s.price} = ₹${s.total}` +
-    ` (Credit Cleared — ${mode})` +
-    (s.customer ? ` — ${s.customer}` : "");
 
-  window.addCollectionEntry?.(
-    "Sale (Credit cleared)",
-    details,
-    s.total
-  );
+  /* COLLECTION LOG (NO DUPLICATE) */
+  if (!s.collectionLogged) {
+
+    const details =
+      `${s.product} — Qty ${s.qty} × ₹${s.price} = ₹${s.total}` +
+      ` (Credit Cleared — ${mode})` +
+      (s.customer ? ` — ${s.customer}` : "");
+
+    window.addCollectionEntry?.(
+      "Sale Credit Cleared",
+      details,
+      s.total,
+      mode
+    );
+
+    s.collectionLogged = true;
+  }
+
 
   renderSales();
   renderCollection?.();
@@ -223,10 +266,8 @@ function collectCreditSale(id) {
   alert("Credit Collected Successfully!");
 }
 window.collectCreditSale = collectCreditSale;
-
-
 /* ===========================================================
-   RENDER SALES TABLE
+   RENDER SALES TABLE — COMMERCIAL SAFE
 =========================================================== */
 function renderSales() {
 
@@ -245,6 +286,9 @@ function renderSales() {
     document.getElementById("saleView")?.value || "all";
 
   let list = [...(window.sales || [])];
+
+
+  /* ---------------- FILTERS ---------------- */
 
   if (filterType !== "all")
     list = list.filter(s => s.type === filterType);
@@ -275,8 +319,12 @@ function renderSales() {
     });
   }
 
+
+  /* ---------------- TOTALS ---------------- */
+
   let totalSum  = 0;
   let profitSum = 0;
+
 
   tbody.innerHTML = list.map(s => {
 
@@ -289,26 +337,39 @@ function renderSales() {
       profitSum += Number(s.profit || 0);
     }
 
+
     const modeDisplay =
       s.status === "Paid"
       ? (s.paymentMode || "")
       : (s.creditMode || "");
 
+
     const statusHTML =
       String(s.status).toLowerCase()
       === "credit"
-      ? `<span class="status-credit">Credit (${modeDisplay})</span>
+      ? `<span class="status-credit">
+           Credit (${modeDisplay})
+         </span>
          <button class="small-btn"
-           style="background:#16a34a;color:white;padding:3px 8px;font-size:11px"
+           style="
+             background:#16a34a;
+             color:white;
+             padding:3px 8px;
+             font-size:11px"
            onclick="collectCreditSale('${s.id}')">
            Collect
          </button>`
-      : `<span class="status-paid">Paid (${modeDisplay})</span>`;
+      : `<span class="status-paid">
+           Paid (${modeDisplay})
+         </span>`;
+
 
     return `
       <tr>
-        <td>${s.date}<br>
-            <small>${s.time || ""}</small></td>
+        <td>
+          ${s.date}<br>
+          <small>${s.time || ""}</small>
+        </td>
         <td>${s.type}</td>
         <td>${s.product}</td>
         <td>${s.qty}</td>
@@ -319,20 +380,24 @@ function renderSales() {
       </tr>`;
   }).join("");
 
+
   document.getElementById("salesTotal")
     .textContent = totalSum;
 
   document.getElementById("profitTotal")
     .textContent = profitSum;
 
+
   window.updateUniversalBar?.();
 }
 window.renderSales = renderSales;
 
 
+
 /* ===========================================================
-   FILTER EVENTS
+   FILTER EVENTS — SAFE REFRESH
 =========================================================== */
+
 document.getElementById("saleType")
   ?.addEventListener("change", renderSales);
 
@@ -346,17 +411,25 @@ document.getElementById("filterSalesBtn")
   ?.addEventListener("click", renderSales);
 
 
+
+
 /* ===========================================================
-   CLEAR SALES — SMART CREDIT SAFE
+   CLEAR SALES — LEDGER SAFE DELETE
 =========================================================== */
+
 document.getElementById("clearSalesBtn")
 ?.addEventListener("click", () => {
 
   const view =
     document.getElementById("saleView")?.value || "all";
 
+  const salesList = window.sales || [];
+
+
+  /* 🔒 CREDIT GUARD */
+
   const hasPendingCredit =
-    (window.sales || []).some(s =>
+    salesList.some(s =>
       String(s.status).toLowerCase() === "credit"
     );
 
@@ -364,33 +437,96 @@ document.getElementById("clearSalesBtn")
      view !== "credit-pending")
   {
     return alert(
-      "❌ Cannot clear while Credit Pending exists!"
+      "❌ Cannot clear while Pending Credit exists!"
     );
   }
 
-  if (!confirm("Clear ALL records in this view?"))
-    return;
 
-  window.sales =
-    window.sales.filter(s => {
+  if (!confirm(
+    "Clear ALL records in this filtered view?"
+  )) return;
 
-      const st =
-        String(s.status).toLowerCase();
 
-      const fc =
-        Boolean(s.fromCredit);
 
-      if (view === "cash")
-        return !(st === "paid" && !fc);
+  /* ======================================================
+     🧠 LEDGER SAFE FILTER DELETE
+  ====================================================== */
 
-      if (view === "credit-paid")
-        return !(st === "paid" && fc);
+  const removedSales = [];
 
-      if (view === "credit-pending")
-        return st !== "credit";
 
+  window.sales = salesList.filter(s => {
+
+    const st =
+      String(s.status).toLowerCase();
+
+    const fc =
+      Boolean(s.fromCredit);
+
+
+    /* ---------- CASH PAID ---------- */
+    if (view === "cash") {
+
+      if (st === "paid" && !fc) {
+        removedSales.push(s);
+        return false;
+      }
+      return true;
+    }
+
+
+    /* ---------- CREDIT CLEARED ---------- */
+    if (view === "credit-paid") {
+
+      if (st === "paid" && fc) {
+        removedSales.push(s);
+        return false;
+      }
+      return true;
+    }
+
+
+    /* ---------- CREDIT PENDING ---------- */
+    if (view === "credit-pending") {
+
+      if (st === "credit") {
+        removedSales.push(s);
+        return false;
+      }
+      return true;
+    }
+
+
+    /* ---------- ALL ---------- */
+    if (view === "all") {
+      removedSales.push(s);
       return false;
-    });
+    }
+
+    return true;
+  });
+
+
+
+  /* ======================================================
+     🔄 COLLECTION ADJUST TRIGGER
+  ====================================================== */
+
+  if (removedSales.length > 0) {
+
+    window.dispatchEvent(
+      new CustomEvent(
+        "sales-deleted",
+        { detail: removedSales }
+      )
+    );
+  }
+
+
+
+  /* ======================================================
+     SAVE + REFRESH
+  ====================================================== */
 
   window.saveSales();
 
@@ -399,4 +535,6 @@ document.getElementById("clearSalesBtn")
   window.renderAnalytics?.();
   window.updateSummaryCards?.();
   window.updateUniversalBar?.();
+
+  alert("Sales records cleared safely.");
 });
