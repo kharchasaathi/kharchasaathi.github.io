@@ -247,8 +247,7 @@ function renderTables(){
         </tr>`).join("")
       : `<tr><td colspan="10">No history</td></tr>`;
 }
-
-/* -------------------------------------------------- PIE CHART */
+  /* -------------------------------------------------- PIE CHART */
 let pieStatus=null;
 
 function drawPieStatus(){
@@ -285,6 +284,7 @@ function drawPieStatus(){
   });
 }
 
+
 /* -------------------------------------------------- MONEY SUMMARY */
 function renderMoneyList(){
 
@@ -316,7 +316,9 @@ function renderMoneyList(){
       <li>📈 Total Profit: <b>₹${profit}</b></li>
     </ul>`;
 }
-   /* -------------------------------------------------- ADD JOB */
+
+
+/* -------------------------------------------------- ADD JOB */
 function addJob(){
 
   const list=ensureServices();
@@ -353,6 +355,7 @@ function addJob(){
   refresh();
 }
 
+
 /* -------------------------------------------------- COMPLETE */
 function completeJob(id,mode){
 
@@ -386,6 +389,7 @@ function completeJob(id,mode){
   refresh();
 }
 
+
 /* -------------------------------------------------- CREDIT COLLECT */
 window.collectServiceCredit=function(id){
 
@@ -394,6 +398,7 @@ window.collectServiceCredit=function(id){
 
   if(!confirm(`Collect ₹${j.remaining}?`)) return;
 
+  /* COLLECTION LEDGER ENTRY */
   window.addCollectionEntry?.(
     "Service Credit Cleared",
     `${j.customer} — ${j.item}`,
@@ -409,6 +414,7 @@ window.collectServiceCredit=function(id){
   saveServices();
   refresh();
 };
+
 
 /* -------------------------------------------------- FAIL */
 function failJob(id){
@@ -427,6 +433,7 @@ function failJob(id){
   refresh();
 }
 
+
 /* -------------------------------------------------- REFRESH */
 function refresh(){
 
@@ -440,6 +447,7 @@ function refresh(){
 }
 
 window.__svcRefresh=refresh;
+
 
 /* -------------------------------------------------- EVENTS */
 document.addEventListener("click",e=>{
@@ -458,9 +466,11 @@ document.addEventListener("click",e=>{
   else if(ch==="3") failJob(id);
 });
 
+
 /* ADD BTN */
 qs("#addServiceBtn")
 ?.addEventListener("click",addJob);
+
 
 /* FILTER EVENTS */
 qs("#svcFilterStatus")
@@ -481,9 +491,9 @@ qs("#svcFilterCalendar")
   refresh();
 });
 
+
 /* --------------------------------------------------
    CLEAR ALL — HISTORY ONLY + PROFIT SAFE
-   🔥 FINAL FIX — NO DOUBLE PROFIT
 -------------------------------------------------- */
 qs("#clearServiceBtn")
 ?.addEventListener("click", () => {
@@ -493,7 +503,6 @@ qs("#clearServiceBtn")
   if (!list.length)
     return alert("No service history.");
 
-  /* Earned profit (display only) */
   const earnedProfit =
     list
       .filter(j => j.status === "paid")
@@ -510,11 +519,6 @@ Clearing will NOT change ledger.
 Continue?`
   )) return;
 
-  /* ❌ DO NOT TOUCH OFFSETS
-     Profit already included in universal net
-     Clearing history should not add/subtract
-  */
-
   window.services = [];
 
   saveServices();
@@ -522,10 +526,11 @@ Continue?`
   refresh();
 });
 
+
 /* -------------------------------------------------- INIT */
 window.addEventListener("load",()=>{
   buildDateFilter();
   refresh();
 });
 
-})();
+})(); 
