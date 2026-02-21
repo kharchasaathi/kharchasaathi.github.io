@@ -2,6 +2,12 @@
    core.js — FINAL v21 (FULL RESTORED + CLOUD SAFE)
    PART 1 — HELPERS + BUSINESS BASE
 =========================================================== */
+/* ===============================
+   DOM HELPERS — GLOBAL SAFE
+=============================== */
+
+window.qs = s => document.querySelector(s);
+window.qsa = s => Array.from(document.querySelectorAll(s));
 
 /* CLOUD KEYS */
 const KEY_TYPES="types";
