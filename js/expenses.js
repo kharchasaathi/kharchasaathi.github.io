@@ -1,266 +1,242 @@
 /* ===========================================================
-   expenses.js — FINAL v15
-   SETTLEMENT SAFE + UNIVERSAL v36 ALIGNED
+   expenses.js — COMMERCIAL REBUILD v16
+   DASHBOARD v31 + OFFSET UNIFIED + LEDGER SAFE
 
-   ✔ Expense reversal fixed
-   ✔ Settlement isolated to expenses offset
-   ✔ Cloud race lock added
+   ✔ Unified __offsets system
+   ✔ Settlement isolated
+   ✔ Negative offset guard
+   ✔ Cloud race safe
    ✔ Multi-device safe
-   ✔ Net profit safe
-   ✔ Universal sync safe
+   ✔ Analytics v31 aligned
 =========================================================== */
 
+(function () {
 
-/* ===========================================================
-   ☁️ CLOUD SAVE
-=========================================================== */
-function saveExpenses() {
+  /* ===========================================================
+     HELPERS (SAFE LOCAL)
+  =========================================================== */
 
-  if (typeof cloudSaveDebounced === "function") {
-    cloudSaveDebounced(
-      "expenses",
-      window.expenses || []
+  const qs  = s => document.querySelector(s);
+  const num = v => isNaN(v = Number(v)) ? 0 : v;
+  const esc = v => (v == null ? "" : String(v));
+  const today =
+    () => new Date().toISOString().slice(0, 10);
+
+  const toInternal =
+    window.toInternalIfNeeded || (d => d);
+
+  const toDisplay =
+    window.toDisplay || (d => d);
+
+
+  /* ===========================================================
+     ENSURE GLOBAL STRUCTURES
+  =========================================================== */
+
+  window.expenses = window.expenses || [];
+  window.__offsets = window.__offsets || {
+    net: 0,
+    sale: 0,
+    service: 0,
+    expenses: 0
+  };
+
+
+  /* ===========================================================
+     CLOUD SAVE (SAFE)
+  =========================================================== */
+
+  function saveExpenses() {
+
+    if (typeof cloudSaveDebounced === "function") {
+      cloudSaveDebounced(
+        "expenses",
+        window.expenses
+      );
+    }
+
+    window.dispatchEvent(
+      new Event("expenses-updated")
+    );
+
+    window.dispatchEvent(
+      new Event("cloud-data-loaded")
     );
   }
 
-  /* 🔄 Global realtime refresh */
-  window.dispatchEvent(
-    new Event("cloud-data-loaded")
-  );
 
-  window.dispatchEvent(
-    new Event("expenses-updated")
-  );
-}
+  /* ===========================================================
+     OFFSET SAVE (UNIFIED + RACE SAFE)
+  =========================================================== */
 
+  async function saveOffsetsSafe() {
 
-/* ===========================================================
-   ENSURE DOM
-=========================================================== */
-function ensureExpenseDOM() {
+    if (window.__offsetSaveLock) return;
 
-  const section = qs("#expenses");
-  if (!section) return;
+    window.__offsetSaveLock = true;
 
-  if (!qs("#expensesTable")) {
+    if (typeof cloudSaveDebounced === "function") {
+      cloudSaveDebounced(
+        "offsets",
+        window.__offsets
+      );
+    }
 
-    const table = document.createElement("table");
-
-    table.id = "expensesTable";
-
-    table.innerHTML = `
-      <thead>
-        <tr>
-          <th>Date</th>
-          <th>Category</th>
-          <th>Amount</th>
-          <th>Note</th>
-          <th>Action</th>
-        </tr>
-      </thead>
-      <tbody></tbody>
-    `;
-
-    section.appendChild(table);
+    setTimeout(() => {
+      window.__offsetSaveLock = false;
+    }, 600);
   }
 
-  if (!qs("#expTotal")) {
 
-    const box = document.createElement("div");
+  /* ===========================================================
+     ADD EXPENSE
+  =========================================================== */
 
-    box.style.marginTop = "8px";
+  function addExpenseEntry() {
 
-    box.innerHTML =
-      `<b>Total: ₹<span id="expTotal">0</span></b>`;
+    let date =
+      qs("#expDate")?.value || today();
 
-    section.appendChild(box);
+    const category =
+      qs("#expCat")?.value?.trim();
+
+    const amount =
+      num(qs("#expAmount")?.value);
+
+    const note =
+      qs("#expNote")?.value?.trim();
+
+    if (!category || amount <= 0)
+      return alert("Enter category and valid amount!");
+
+    date = toInternal(date);
+
+    window.expenses.push({
+      id: uid("exp"),
+      date,
+      category,
+      amount,
+      note
+    });
+
+    saveExpenses();
+
+    renderExpenses();
+    window.renderAnalytics?.();
+    window.updateSummaryCards?.();
+    window.updateUniversalBar?.();
+
+    if (qs("#expAmount")) qs("#expAmount").value = "";
+    if (qs("#expNote")) qs("#expNote").value = "";
   }
-}
 
 
-/* ===========================================================
-   ADD EXPENSE
-=========================================================== */
-function addExpenseEntry() {
+  /* ===========================================================
+     DELETE EXPENSE (SETTLEMENT SAFE)
+  =========================================================== */
 
-  let date =
-    qs("#expDate")?.value ||
-    todayDate();
+  function deleteExpense(id) {
 
-  const category =
-    qs("#expCat")?.value?.trim();
+    const exp =
+      window.expenses.find(e => e.id === id);
 
-  const amount =
-    Number(qs("#expAmount")?.value || 0);
+    if (!exp) return;
 
-  const note =
-    qs("#expNote")?.value?.trim();
-
-  if (!category || amount <= 0)
-    return alert(
-      "Enter category and valid amount!"
+    const addBack = confirm(
+      `Expense Amount: ₹${exp.amount}\n\nAdd back to Profit?`
     );
 
-  date = toInternalIfNeeded(date);
+    window.expenses =
+      window.expenses.filter(
+        e => e.id !== id
+      );
 
-  window.expenses =
-    window.expenses || [];
+    /* Settlement reversal */
+    if (addBack) {
 
-  window.expenses.push({
-    id: uid("exp"),
-    date,
-    category,
-    amount,
-    note
-  });
+      window.__offsets.expenses =
+        Math.max(
+          0,
+          num(window.__offsets.expenses)
+          - num(exp.amount)
+        );
 
-  saveExpenses();
+      saveOffsetsSafe();
+    }
 
-  renderExpenses();
-  renderAnalytics?.();
-  updateSummaryCards?.();
-  updateUniversalBar?.();
+    saveExpenses();
 
-  qs("#expAmount").value = "";
-  qs("#expNote").value = "";
-}
-
-
-/* ===========================================================
-   DELETE EXPENSE — SETTLEMENT SAFE
-=========================================================== */
-function deleteExpense(id) {
-
-  const exp =
-    (window.expenses || [])
-      .find(e => e.id === id);
-
-  if (!exp) return;
-
-  const addBack = confirm(
-    `Expense Amount: ₹${exp.amount}\n\n` +
-    `Add this amount back to Profit?`
-  );
-
-  /* Remove history */
-  window.expenses =
-    window.expenses.filter(
-      e => e.id !== id
-    );
-
-  /* 🔥 Settlement reversal FIXED */
-  if (addBack && window.__offsets) {
-
-    window.__offsets.expenses =
-      Number(window.__offsets.expenses || 0) -
-      Number(exp.amount || 0);
-
-    if (window.__offsets.expenses < 0)
-      window.__offsets.expenses = 0;
-
-    saveOffsetsSafe();
+    renderExpenses();
+    window.renderAnalytics?.();
+    window.updateSummaryCards?.();
+    window.updateUniversalBar?.();
   }
 
-  saveExpenses();
-
-  renderExpenses();
-  renderAnalytics?.();
-  updateSummaryCards?.();
-  updateUniversalBar?.();
-}
-window.deleteExpense = deleteExpense;
+  window.deleteExpense = deleteExpense;
 
 
-/* ===========================================================
-   CLEAR ALL EXPENSES — SETTLEMENT SAFE
-=========================================================== */
-qs("#clearExpensesBtn")
-?.addEventListener("click", () => {
+  /* ===========================================================
+     CLEAR ALL (SETTLEMENT SAFE)
+  =========================================================== */
 
-  if (!(window.expenses || []).length)
-    return;
+  function clearAllExpenses() {
 
-  const total =
-    window.expenses.reduce(
-      (a, e) =>
-        a + Number(e.amount || 0),
-      0
+    if (!window.expenses.length)
+      return;
+
+    const total =
+      window.expenses.reduce(
+        (a, e) => a + num(e.amount),
+        0
+      );
+
+    const addBack = confirm(
+      `Total Expenses: ₹${total}\n\nAdd back to Profit?`
     );
 
-  const addBack = confirm(
-    `Total Expenses: ₹${total}\n\n` +
-    `Add back to Profit?`
-  );
+    window.expenses = [];
 
-  window.expenses = [];
+    if (addBack) {
 
-  /* 🔥 Settlement reversal FIXED */
-  if (addBack && window.__offsets) {
+      window.__offsets.expenses =
+        Math.max(
+          0,
+          num(window.__offsets.expenses)
+          - total
+        );
 
-    window.__offsets.expenses =
-      Number(window.__offsets.expenses || 0) -
-      total;
+      saveOffsetsSafe();
+    }
 
-    if (window.__offsets.expenses < 0)
-      window.__offsets.expenses = 0;
+    saveExpenses();
 
-    saveOffsetsSafe();
+    renderExpenses();
+    window.renderAnalytics?.();
+    window.updateSummaryCards?.();
+    window.updateUniversalBar?.();
   }
 
-  saveExpenses();
 
-  renderExpenses();
-  renderAnalytics?.();
-  updateSummaryCards?.();
-  updateUniversalBar?.();
-});
+  /* ===========================================================
+     RENDER ENGINE
+  =========================================================== */
 
+  function renderExpenses() {
 
-/* ===========================================================
-   🔐 OFFSET SAVE (RACE SAFE)
-=========================================================== */
-async function saveOffsetsSafe() {
+    const tbody =
+      qs("#expensesTable tbody");
 
-  if (window.__offsetSaveLock) return;
+    const totalBox =
+      qs("#expTotal");
 
-  window.__offsetSaveLock = true;
+    if (!tbody) return;
 
-  if (typeof cloudSaveDebounced === "function") {
-    cloudSaveDebounced(
-      "offsets",
-      window.__offsets
-    );
-  }
+    let total = 0;
 
-  setTimeout(() => {
-    window.__offsetSaveLock = false;
-  }, 600);
-}
+    tbody.innerHTML =
+      window.expenses.map(e => {
 
-
-/* ===========================================================
-   RENDER
-=========================================================== */
-function renderExpenses() {
-
-  ensureExpenseDOM();
-
-  const tbody =
-    qs("#expensesTable tbody");
-
-  const totalBox =
-    qs("#expTotal");
-
-  if (!tbody) return;
-
-  let total = 0;
-
-  tbody.innerHTML =
-    (window.expenses || [])
-      .map(e => {
-
-        total +=
-          Number(e.amount || 0);
+        total += num(e.amount);
 
         return `
           <tr>
@@ -278,45 +254,71 @@ function renderExpenses() {
             </td>
           </tr>
         `;
-      })
-      .join("");
+      }).join("");
 
-  if (totalBox)
-    totalBox.textContent = total || 0;
-}
+    if (totalBox)
+      totalBox.textContent = total;
+  }
+   /* ===========================================================
+     BUTTON EVENTS (SAFE BIND)
+  =========================================================== */
 
+  const addBtn = qs("#addExpenseBtn");
+  if (addBtn && !addBtn.__bound) {
+    addBtn.addEventListener("click", addExpenseEntry);
+    addBtn.__bound = true;
+  }
 
-/* ===========================================================
-   EVENTS
-=========================================================== */
-qs("#addExpenseBtn")
-?.addEventListener(
-  "click",
-  addExpenseEntry
-);
-
-
-/* ===========================================================
-   CLOUD SYNC
-=========================================================== */
-window.addEventListener(
-  "cloud-data-loaded",
-  renderExpenses
-);
+  const clearBtn = qs("#clearExpensesBtn");
+  if (clearBtn && !clearBtn.__bound) {
+    clearBtn.addEventListener("click", clearAllExpenses);
+    clearBtn.__bound = true;
+  }
 
 
-/* ===========================================================
-   INIT
-=========================================================== */
-window.addEventListener("load", () => {
+  /* ===========================================================
+     CLOUD SYNC (SAFE)
+  =========================================================== */
 
-  renderExpenses();
-  updateUniversalBar?.();
+  window.addEventListener(
+    "cloud-data-loaded",
+    () => {
 
-});
+      if (!Array.isArray(window.expenses))
+        window.expenses = [];
+
+      renderExpenses();
+      window.updateUniversalBar?.();
+    }
+  );
 
 
-/* ===========================================================
-   EXPORT
-=========================================================== */
-window.renderExpenses = renderExpenses;
+  /* ===========================================================
+     SAFE INITIAL LOAD
+  =========================================================== */
+
+  window.addEventListener("load", () => {
+
+    const safeInit = () => {
+
+      if (!Array.isArray(window.expenses))
+        window.expenses = [];
+
+      renderExpenses();
+      window.updateUniversalBar?.();
+    };
+
+    safeInit();
+    setTimeout(safeInit, 500);
+  });
+
+
+  /* ===========================================================
+     EXPORTS
+  =========================================================== */
+
+  window.renderExpenses   = renderExpenses;
+  window.addExpenseEntry  = addExpenseEntry;
+  window.clearAllExpenses = clearAllExpenses;
+
+})();
