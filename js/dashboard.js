@@ -1,11 +1,11 @@
 /* =========================================
-   dashboard.js — FINAL v30
-   SETTLEMENT AWARE ANALYTICS ENGINE
+   dashboard.js — COMMERCIAL REBUILD v31
+   SETTLEMENT + LEDGER SAFE ANALYTICS
 
-   ✔ Clear button removed
-   ✔ Dashboard offset removed
-   ✔ Settlement aware profit
-   ✔ Logout/Login safe
+   ✔ Settlement aware
+   ✔ Collection synced
+   ✔ Credit unlock safe
+   ✔ Profit duplication guard
    ✔ Universal synced
    ✔ Multi-device safe
 ========================================= */
@@ -24,7 +24,7 @@
     "₹" + Math.round(num(v));
 
   /* ---------------------------------------
-     GET OFFSETS
+     GET OFFSETS (SETTLEMENT ENGINE)
   --------------------------------------- */
   function getOffsets() {
 
@@ -49,48 +49,63 @@
 
     const offs = getOffsets();
 
-    let saleTotal    = 0;
-    let serviceTotal = 0;
-    let expenseTotal = 0;
-    let creditTotal  = 0;
-    let investTotal  = 0;
+    let saleProfit    = 0;
+    let serviceProfit = 0;
+    let expenseTotal  = 0;
+    let creditTotal   = 0;
+    let investTotal   = 0;
 
-    /* -------- SALES -------- */
+    /* =====================================
+       🔹 SALES ENGINE
+    ===================================== */
     sales.forEach(s => {
 
       const st = String(s.status).toLowerCase();
 
+      /* Credit pending */
       if (st === "credit")
         creditTotal += num(s.total);
 
+      /* Paid profit only */
       if (st === "paid") {
 
-        saleTotal += num(s.profit);
-        investTotal += num(s.qty) * num(s.cost);
+        saleProfit += num(s.profit);
+
+        investTotal +=
+          num(s.qty) * num(s.cost);
       }
     });
 
-    /* -------- SERVICES -------- */
+    /* =====================================
+       🔹 SERVICE ENGINE
+    ===================================== */
     services.forEach(j => {
 
       const st = String(j.status).toLowerCase();
 
+      /* Credit pending */
       if (st === "credit")
         creditTotal += num(j.remaining);
 
+      /* Paid profit only */
       if (st === "paid") {
 
         const invest = num(j.invest);
+
         const profit =
           num(j.profit) ||
           (num(j.paid) - invest);
 
-        serviceTotal += Math.max(0, profit);
-        investTotal  += invest;
+        serviceProfit +=
+          Math.max(0, profit);
+
+        investTotal += invest;
       }
     });
 
-    /* -------- EXPENSES -------- */
+    /* =====================================
+       🔹 EXPENSE ENGINE
+    ===================================== */
     expenses.forEach(e => {
       expenseTotal += num(e.amount);
     });
@@ -100,10 +115,10 @@
     ===================================== */
 
     const saleLive =
-      Math.max(0, saleTotal - offs.sale);
+      Math.max(0, saleProfit - offs.sale);
 
     const serviceLive =
-      Math.max(0, serviceTotal - offs.service);
+      Math.max(0, serviceProfit - offs.service);
 
     const expenseLive =
       Math.max(0, expenseTotal - offs.expenses);
@@ -138,7 +153,6 @@
     setText("#dashCredit",   money(d.credit));
     setText("#dashInv",      money(d.invest));
 
-    /* TODAY cards can reuse same safe values */
     setText("#todayGross", money(d.gross));
     setText("#todayNet",   money(d.profit));
   }
@@ -152,9 +166,10 @@
     if (el) el.textContent = value;
   }
 
-  /* ---------------------------------------
-     UNIVERSAL SYNC
-  --------------------------------------- */
+  /* =====================================
+     🔄 UNIVERSAL SYNC EVENTS
+  ===================================== */
+
   window.addEventListener(
     "sales-updated",
     renderDashboard
