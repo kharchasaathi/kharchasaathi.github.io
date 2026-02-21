@@ -699,26 +699,95 @@ body{
 </section>
 <!-- =============== COLLECTION TAB =============== -->
 <section id="collection" class="section">
+
   <h3>🪙 Collection Center</h3>
-  <div class="flex-row" style="margin-bottom:14px;display:flex;gap:10px;flex-wrap:wrap;">
-    <div class="card" style="flex:1;min-width:160px;padding:10px;border-radius:14px;background:#ecfdf5;border-color:#bbf7d0;">
-      <h4 style="margin:0 0 4px 0;font-size:13px;">Sales Profit (Collected)</h4>
-      <b id="colSales" style="font-size:20px;color:#16a34a;">₹0</b>
+
+  <!-- ================= EXISTING PROFIT CARDS ================= -->
+  <div class="flex-row"
+       style="margin-bottom:14px;
+              display:flex;
+              gap:10px;
+              flex-wrap:wrap;">
+
+    <div class="card" style="flex:1;min-width:160px;
+         padding:10px;border-radius:14px;
+         background:#ecfdf5;border-color:#bbf7d0;">
+      <h4>Sales Profit (Collected)</h4>
+      <b id="colSales">₹0</b>
     </div>
-    <div class="card" style="flex:1;min-width:160px;padding:10px;border-radius:14px;">
-      <h4 style="margin:0 0 4px 0;font-size:13px;">Service Profit (Collected)</h4>
-      <b id="colService" style="font-size:20px;color:var(--ks-accent);">₹0</b>
+
+    <div class="card" style="flex:1;min-width:160px;
+         padding:10px;border-radius:14px;">
+      <h4>Service Profit (Collected)</h4>
+      <b id="colService">₹0</b>
     </div>
-    <div class="card" style="flex:1;min-width:160px;padding:10px;border-radius:14px;background:#fff7ed;border-color:#fed7aa;">
-      <h4 style="margin:0 0 4px 0;font-size:13px;">Pending Credits</h4>
-      <b id="colCredit" style="font-size:20px;color:#ea580c;">₹0</b>
+
+    <div class="card" style="flex:1;min-width:160px;
+         padding:10px;border-radius:14px;
+         background:#fff7ed;border-color:#fed7aa;">
+      <h4>Pending Credits</h4>
+      <b id="colCredit">₹0</b>
     </div>
-    <div class="card" style="flex:1;min-width:160px;padding:10px;border-radius:14px;background:#fefce8;border-color:#facc15;">
-      <h4 style="margin:0 0 4px 0;font-size:13px;">Total Investment (Sold Items)</h4>
-      <b id="colInvRemain" style="font-size:20px;color:#ca8a04;">₹0</b>
+
+    <div class="card" style="flex:1;min-width:160px;
+         padding:10px;border-radius:14px;
+         background:#fefce8;border-color:#facc15;">
+      <h4>Total Investment (Sold Items)</h4>
+      <b id="colInvRemain">₹0</b>
     </div>
+
   </div>
-  <h4 style="margin-top:10px">Collection History</h4>
+
+
+  <!-- 🔥 COLLECTION ANALYTICS DASHBOARD -->
+  <div class="collection-dashboard">
+
+    <div class="coll-card">
+      <h4>Total Collection</h4>
+      <h2 id="collTotal">₹0</h2>
+    </div>
+
+    <div class="coll-card">
+      <h4>Cash</h4>
+      <h2 id="collCash">₹0</h2>
+    </div>
+
+    <div class="coll-card">
+      <h4>UPI</h4>
+      <h2 id="collUPI">₹0</h2>
+    </div>
+
+    <div class="coll-card">
+      <h4>Credit Recovered</h4>
+      <h2 id="collCreditRecovered">₹0</h2>
+    </div>
+
+  </div>
+
+
+  <!-- 📊 COLLECTION CHARTS -->
+  <div class="collection-charts">
+
+    <div class="chart-box">
+      <canvas id="collModeChart"></canvas>
+    </div>
+
+    <div class="chart-box">
+      <canvas id="collSourceChart"></canvas>
+    </div>
+
+    <div class="chart-box">
+      <canvas id="collDailyChart"></canvas>
+    </div>
+
+  </div>
+
+
+  <!-- ================= HISTORY TABLE ================= -->
+  <h4 style="margin-top:10px">
+    Collection History
+  </h4>
+
   <table id="collectionHistory">
     <thead>
       <tr>
@@ -730,11 +799,17 @@ body{
     </thead>
     <tbody></tbody>
   </table>
+
+
   <button id="clearCollectionBtn"
     class="small-btn"
-    style="background:#fee2e2;color:#b91c1c;margin-top:10px;border-color:#fecaca;">
+    style="background:#fee2e2;
+           color:#b91c1c;
+           margin-top:10px;
+           border-color:#fecaca;">
     🗑 Clear Collection History
   </button>
+
 </section>
   <!-- =============== RESET TAB =============== -->
 <section id="reset" class="section">
