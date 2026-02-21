@@ -219,7 +219,7 @@ body{
   </style>
 </head>
 <body>
-<script>const qs = s => document.querySelector(s); const qsa = s => Array.from(document.querySelectorAll(s));</script>
+
 <div class="topbar">
   <h1>
     <div class="topbar-logo"><span>₹</span></div>
@@ -930,29 +930,109 @@ document.addEventListener("click", async e => {
 });
 </script>
   
-<!-- =============== TAB SWITCHER + HOOKS =============== -->
+<!-- =============== TAB SWITCHER + SMART HOOKS =============== -->
 <script>
+
+/* ==========================================================
+   SMART TAB SWITCHER — ERP SAFE BUILD
+   ✔ No duplicate renders
+   ✔ Module-based refresh
+   ✔ Chart safe
+   ✔ Collection safe
+   ✔ Analytics synced
+========================================================== */
+
 function switchTab(id) {
-  qsa(".section").forEach(sec => sec.classList.remove("active"));
-  const target = qs("#" + id);
-  if (target) target.classList.add("active");
-  qsa(".tab").forEach(t => t.classList.remove("active"));
-  const tab = qs(`.tab[data-tab="${id}"]`);
-  if (tab) tab.classList.add("active");
-  // call renderers if present (CLEANED)
-  try { renderStock?.(); } catch {}
-  try { renderSales?.(); } catch {}
-  try { renderWanting?.(); } catch {}
-  try { renderExpenses?.(); } catch {}
-  try { window.__svcRefresh?.(); } catch {}
-  try { renderCollection?.(); } catch {}
-  try { updateSummaryCards?.(); } catch {}
-}
-document.addEventListener("click", e => {
-  if (e.target.classList.contains("tab")) {
-    switchTab(e.target.dataset.tab);
+
+  /* -------------------------------
+     SECTION VISIBILITY
+  ------------------------------- */
+  document
+    .querySelectorAll(".section")
+    .forEach(sec =>
+      sec.classList.remove("active")
+    );
+
+  document
+    .querySelector("#" + id)
+    ?.classList.add("active");
+
+
+  /* -------------------------------
+     TAB ACTIVE STATE
+  ------------------------------- */
+  document
+    .querySelectorAll(".tab")
+    .forEach(t =>
+      t.classList.remove("active")
+    );
+
+  document
+    .querySelector(`.tab[data-tab="${id}"]`)
+    ?.classList.add("active");
+
+
+  /* ==========================================================
+     🎯 SMART MODULE RENDER ROUTING
+     Only render active module
+  ========================================================== */
+
+  try {
+
+    if (id === "stock")
+      window.renderStock?.();
+
+    if (id === "sales")
+      window.renderSales?.();
+
+    if (id === "wanting")
+      window.renderWanting?.();
+
+    if (id === "expenses")
+      window.renderExpenses?.();
+
+    if (id === "service")
+      window.__svcRefresh?.();
+
+    if (id === "collection")
+      window.renderCollection?.();
+
+    if (id === "dashboard") {
+
+      window.renderAnalytics?.();
+      window.updateSummaryCards?.();
+
+    }
+
+  } catch (err) {
+
+    console.warn(
+      "Tab render safe-fail:",
+      err
+    );
   }
+}
+
+
+/* ==========================================================
+   TAB CLICK LISTENER
+========================================================== */
+
+document.addEventListener("click", e => {
+
+  const tab =
+    e.target.closest(".tab");
+
+  if (!tab) return;
+
+  const id =
+    tab.dataset.tab;
+
+  if (!id) return;
+
+  switchTab(id);
 });
+
 </script>
 <!-- =============== CLOCK =============== -->
 <script>
