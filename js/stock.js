@@ -1,6 +1,11 @@
 /* ==========================================================
-   stock.js — FINAL v16
-   ID SAFE + CASH/UPI MODE + ATOMIC STOCK/SALES UPDATE
+   stock.js — COMMERCIAL REBUILD v17 (PART 1)
+
+   ✔ Auto collection (Paid)
+   ✔ Credit safe ledger
+   ✔ Auto wanting
+   ✔ Sales.js v28 compatible
+   ✔ Universal sync safe
 ========================================================== */
 
 const $  = s => document.querySelector(s);
@@ -83,7 +88,7 @@ $("#addStockBtn")?.addEventListener("click", () => {
 
 
 /* ==========================================================
-   QUICK SALE — ID SAFE + PAYMENT MODE
+   QUICK SALE — COMMERCIAL SAFE ENGINE
 ========================================================== */
 function stockQuickSale(id, mode) {
 
@@ -104,7 +109,9 @@ function stockQuickSale(id, mode) {
   );
   if (!price) return;
 
+
   /* ================= PAYMENT MODE ================= */
+
   let paymentMode = "Cash";
   let creditMode  = null;
 
@@ -116,68 +123,71 @@ function stockQuickSale(id, mode) {
     paymentMode = "UPI";
   }
 
+
+  /* ================= CREDIT DETAILS ================= */
+
   let customer="", phone="";
   const isPaid = mode === "Paid";
 
-  if (mode === "Credit") {
+  if (!isPaid) {
 
     customer = prompt("Customer Name:") || "";
     phone    = prompt("Phone Number:") || "";
 
-    creditMode = paymentMode; // store how credit was created
+    creditMode = paymentMode;
   }
+
 
   const cost   = num(p.cost);
   const total  = qty * price;
-  const profit = total - qty * cost;
+  const profit = isPaid
+    ? total - qty * cost
+    : 0;
 
-  /* ---------- STOCK REDUCE ---------- */
+
+  /* ==================================================
+     📦 STOCK REDUCE
+  ================================================== */
+
   p.sold += qty;
   window.saveStock();
 
+
   /* ==================================================
-     WANTING AUTO ADD
+     🔁 AUTO WANTING (RESTORED)
   ================================================== */
+
   if (p.sold >= p.qty) {
 
-    if (window.autoAddWanting) {
+    window.wanting =
+      window.wanting || [];
 
-      window.autoAddWanting(
-        p.type,
-        p.name,
-        "Finished"
+    const exists =
+      window.wanting.find(
+        w => w.type === p.type &&
+             w.name === p.name
       );
 
-    } else {
+    if (!exists) {
 
-      window.wanting =
-        window.wanting || [];
+      window.wanting.push({
+        id: uid("want"),
+        type: p.type,
+        name: p.name,
+        qty: p.reorderQty || 1,
+        date: todayDate()
+      });
 
-      const exists =
-        window.wanting.find(
-          w => w.type === p.type &&
-               w.name === p.name
-        );
-
-      if (!exists) {
-
-        window.wanting.push({
-          id: uid("want"),
-          type: p.type,
-          name: p.name,
-          qty: p.reorderQty || 1,
-          date: todayDate()
-        });
-
-        window.saveWanting?.();
-      }
+      window.saveWanting?.();
     }
   }
 
+
   /* ==================================================
-     SALES ENTRY (UPDATED STRUCTURE)
+     🧾 SALES ENTRY (v28 STRUCTURE)
   ================================================== */
-  window.sales.push({
+
+  const saleObj = {
     id: uid("sale"),
     date: todayDate(),
     time: new Date()
@@ -199,10 +209,43 @@ function stockQuickSale(id, mode) {
     creditMode:  !isPaid ? creditMode  : null,
 
     customer,
-    phone
-  });
+    phone,
+
+    /* 🔒 Duplicate guard */
+    collectionLogged: false
+  };
+
+  window.sales = window.sales || [];
+  window.sales.push(saleObj);
 
   window.saveSales?.();
+
+
+  /* ==================================================
+     💵 AUTO COLLECTION (PAID ONLY)
+  ================================================== */
+
+  if (isPaid) {
+
+    const details =
+      `${p.name} — Qty ${qty} × ₹${price} = ₹${total}` +
+      ` (${paymentMode})` +
+      (customer ? ` — ${customer}` : "");
+
+    window.addCollectionEntry?.(
+      "Stock Sale Collection",
+      details,
+      total,
+      paymentMode
+    );
+
+    saleObj.collectionLogged = true;
+  }
+
+
+  /* ==================================================
+     REFRESH
+  ================================================== */
 
   renderStock();
   window.renderSales?.();
@@ -210,14 +253,17 @@ function stockQuickSale(id, mode) {
   window.updateUniversalBar?.();
 }
 window.stockQuickSale = stockQuickSale;
-
-
 /* ==========================================================
-   CLEAR STOCK
+   CLEAR STOCK — COMMERCIAL SAFE
 ========================================================== */
 $("#clearStockBtn")?.addEventListener("click", () => {
 
   if (!confirm("Delete ALL stock?")) return;
+
+  /* ⚠️ Note:
+     Stock clear only removes inventory.
+     Sales + Collection ledger untouched.
+  */
 
   window.stock = [];
   window.saveStock();
@@ -227,8 +273,9 @@ $("#clearStockBtn")?.addEventListener("click", () => {
 });
 
 
+
 /* ==========================================================
-   GLOBAL LIMIT
+   GLOBAL LIMIT — SAFE
 ========================================================== */
 $("#setLimitBtn")?.addEventListener("click", () => {
 
@@ -244,8 +291,9 @@ $("#setLimitBtn")?.addEventListener("click", () => {
 });
 
 
+
 /* ==========================================================
-   RENDER TABLE
+   RENDER TABLE — COMMERCIAL SAFE
 ========================================================== */
 function renderStock() {
 
@@ -262,6 +310,9 @@ function renderStock() {
 
   let data = window.stock || [];
 
+
+  /* ---------------- FILTERS ---------------- */
+
   if (filterType !== "all")
     data = data.filter(
       p => p.type === filterType
@@ -272,6 +323,9 @@ function renderStock() {
       p.name.toLowerCase().includes(searchTxt) ||
       p.type.toLowerCase().includes(searchTxt)
     );
+
+
+  /* ---------------- TABLE BUILD ---------------- */
 
   tbody.innerHTML = data.map((p)=>{
 
@@ -303,8 +357,9 @@ function renderStock() {
 }
 
 
+
 /* ==========================================================
-   INVESTMENT
+   INVESTMENT ENGINE — LIVE STOCK VALUE
 ========================================================== */
 function updateStockInvestment(){
 
@@ -321,6 +376,7 @@ function updateStockInvestment(){
 }
 
 
+
 /* ==========================================================
    FILTER EVENTS
 ========================================================== */
@@ -331,8 +387,9 @@ $("#filterType")
   ?.addEventListener("change",renderStock);
 
 
+
 /* ==========================================================
-   INIT
+   INIT — LOAD SAFE
 ========================================================== */
 window.addEventListener("load",()=>{
 
