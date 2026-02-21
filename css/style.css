@@ -60,8 +60,9 @@ h1, h2, h3, h4 {
 .center { text-align: center; }
 .hidden { display: none !important; }
 /* ===============================
-   COLLECTION DASHBOARD
+   COLLECTION DASHBOARD (LIGHT FIX)
 =============================== */
+
 .collection-dashboard {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(160px,1fr));
@@ -70,28 +71,32 @@ h1, h2, h3, h4 {
 }
 
 .coll-card {
-  background: #111827;
-  padding: 15px;
-  border-radius: 10px;
+  background: var(--ks-bg-card);
+  border: 1px solid var(--ks-border-soft);
+  box-shadow: var(--ks-shadow-soft);
+  padding: 16px;
+  border-radius: var(--ks-radius-card);
   text-align: center;
 }
 
 .coll-card h4 {
   font-size: 13px;
-  opacity: 0.7;
+  color: var(--ks-text-soft);
   margin-bottom: 8px;
+  font-weight: 600;
 }
 
 .coll-card h2 {
   font-size: 20px;
   margin: 0;
-  color: #22c55e;
+  color: var(--ks-accent-green);
 }
 
 
 /* ===============================
-   COLLECTION CHARTS
+   COLLECTION CHARTS (LIGHT FIX)
 =============================== */
+
 .collection-charts {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(280px,1fr));
@@ -100,8 +105,10 @@ h1, h2, h3, h4 {
 }
 
 .chart-box {
-  background: #111827;
-  padding: 15px;
-  border-radius: 10px;
+  background: var(--ks-bg-card);
+  border: 1px solid var(--ks-border-soft);
+  box-shadow: var(--ks-shadow-soft);
+  padding: 16px;
+  border-radius: var(--ks-radius-card);
   height: 280px;
 }
