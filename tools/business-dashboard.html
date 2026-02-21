@@ -1059,13 +1059,28 @@ document.addEventListener("click", e => {
 <!-- =============== CLOCK =============== -->
 <script>
 function updateClock() {
-  const d = new Date();
-  const t = qs("#clockTime");
-  const dt = qs("#clockDate");
-  if (t) t.textContent = d.toLocaleTimeString();
-  if (dt) dt.textContent = d.toLocaleDateString();
+
+  const now = new Date();
+
+  const timeEl =
+    document.getElementById("clockTime");
+
+  const dateEl =
+    document.getElementById("clockDate");
+
+  if (timeEl)
+    timeEl.textContent =
+      now.toLocaleTimeString();
+
+  if (dateEl)
+    dateEl.textContent =
+      now.toLocaleDateString();
 }
+
+/* run every second */
 setInterval(updateClock, 1000);
+
+/* initial render */
 updateClock();
 </script>
 
