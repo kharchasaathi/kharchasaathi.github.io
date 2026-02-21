@@ -231,8 +231,6 @@ body{
       <span id="clockTime" class="clock-line">--:--:--</span>
       <span id="clockDate" class="clock-line small">--</span>
     </div>
-    <!-- theme button kept as decorative (no dark mode) -->
-    <button id="themeBtn" class="theme-btn" title="Theme (disabled)">🎨</button>
     <a class="small-btn" href="/index.html">🏠 Home</a>
     <button id="logoutBtn" class="small-btn">🔓 Logout</button>
   </div>
@@ -968,14 +966,7 @@ function updateClock() {
 setInterval(updateClock, 1000);
 updateClock();
 </script>
-<!-- =============== THEME BUTTON (NO dark mode) — noop =============== -->
-<script>
-document.getElementById("themeBtn")?.addEventListener("click", () => {
-  const btn = document.getElementById("themeBtn");
-  btn.textContent = "🎨";
-  btn.title = "Theme disabled (online-only build)";
-});
-</script>
+
 <!-- =============== LOGOUT BUTTON =============== -->
 <script>
 document.getElementById("logoutBtn")?.addEventListener("click", async () => {
