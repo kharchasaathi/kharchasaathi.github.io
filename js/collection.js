@@ -158,30 +158,32 @@ window.runCollectionAnalytics = function(){
 
   const list = window.collections || [];
 
-  let total = 0;
-  let cash  = 0;
-  let upi   = 0;
-  let creditRecovered = 0;
+  /* FIX OLD DATA */
+  list.forEach(e=>{
+    if(!e.date)
+      e.date = todayDate();
+  });
 
-  const sourceMap = {};
-  const dailyMap  = {};
+  let total=0;
+  let cash=0;
+  let upi=0;
+  let creditRecovered=0;
+
+  const sourceMap={};
+  const dailyMap={};
 
   list.forEach(e=>{
+    const amt=cNum(e.amount);
+    total+=amt;
 
-    const amt = cNum(e.amount);
-    total += amt;
-
-    if(e.mode === "Cash") cash += amt;
-    if(e.mode === "UPI")  upi  += amt;
+    if(e.mode==="Cash") cash+=amt;
+    if(e.mode==="UPI") upi+=amt;
 
     if(e.source.includes("Credit"))
-      creditRecovered += amt;
+      creditRecovered+=amt;
 
-    sourceMap[e.source] =
-      (sourceMap[e.source] || 0) + amt;
-
-    dailyMap[e.date] =
-      (dailyMap[e.date] || 0) + amt;
+    sourceMap[e.source]=(sourceMap[e.source]||0)+amt;
+    dailyMap[e.date]=(dailyMap[e.date]||0)+amt;
   });
 
 
