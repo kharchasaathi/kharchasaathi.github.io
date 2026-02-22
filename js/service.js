@@ -375,6 +375,11 @@ function completeJob(id,mode){
     j.paid=total;
     j.remaining=0;
     j.profit=total-invest;
+     window.addCollectionEntry?.(
+  "Service Payment",
+  `${j.customer} — ${j.item}`,
+  total
+);
 
   }else{
 
