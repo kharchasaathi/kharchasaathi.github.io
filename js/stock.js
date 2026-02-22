@@ -254,6 +254,54 @@ function stockQuickSale(id, mode) {
 }
 window.stockQuickSale = stockQuickSale;
 /* ==========================================================
+   📜 SHOW PURCHASE HISTORY — RESTORED
+========================================================== */
+function showStockHistory(id){
+
+  const p =
+    (window.stock||[])
+    .find(x=>x.id===id);
+
+  if(!p || !p.history?.length){
+    alert("No purchase history available.");
+    return;
+  }
+
+  let msg =
+    `📜 Purchase History — ${p.name}\n\n`;
+
+  let totalQty  = 0;
+  let totalCost = 0;
+
+  p.history.forEach(h=>{
+
+    const qty  = Number(h.qty)||0;
+    const cost = Number(h.cost)||0;
+
+    totalQty  += qty;
+    totalCost += qty*cost;
+
+    msg +=
+      `${toDisp(h.date)} — ` +
+      `${qty} × ₹${cost} = ₹${qty*cost}\n`;
+  });
+
+  const avg =
+    totalQty
+      ? (totalCost/totalQty).toFixed(2)
+      : 0;
+
+  msg +=
+    `\nTotal Purchased Qty: ${totalQty}` +
+    `\nAverage Cost: ₹${avg}`;
+
+  alert(msg);
+}
+
+/* GLOBAL EXPORT */
+window.showStockHistory =
+  showStockHistory;
+/* ==========================================================
    CLEAR STOCK — COMMERCIAL SAFE
 ========================================================== */
 $("#clearStockBtn")?.addEventListener("click", () => {
