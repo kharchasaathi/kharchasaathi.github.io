@@ -1,10 +1,12 @@
 /* ===========================================================
-   accounting-audit.js — FINAL AUDIT GUARD v1
-   ✔ Profit integrity check
+   accounting-audit.js — FINAL AUDIT GUARD v2 (ERP SAFE)
+
+   ✔ Profit integrity check (Collected only)
+   ✔ Sales + Service settlement aligned
    ✔ Credit mismatch detection
-   ✔ Settlement verification
    ✔ Offset corruption guard
-   ✔ Investment alignment audit
+   ✔ Expense ledger verification
+   ✔ Investment alignment ready
 =========================================================== */
 
 (function(){
@@ -27,6 +29,7 @@ function logFail(msg,data){
   );
 }
 
+
 /* ===========================================================
    MAIN AUDIT ENGINE
 =========================================================== */
@@ -38,25 +41,48 @@ function runAudit(){
   const offsets  = window.__offsets || {};
   const metrics  = window.__unMetrics || {};
 
-  /* ---------------- PROFIT CHECK ---------------- */
+
+  /* =========================================================
+     💰 PROFIT SETTLEMENT CHECK
+     Only collected profit should count
+  ========================================================= */
+
   let salesProfit = 0;
+
   sales.forEach(s=>{
-    if(s.status==="paid")
+
+    if(
+      String(s.status).toLowerCase() === "paid" &&
+      s.collectionLogged === true
+    ){
       salesProfit += num(s.profit);
+    }
+
   });
 
+
   let serviceProfit = 0;
+
   services.forEach(j=>{
-    if(j.status==="paid")
+
+    if(
+      String(j.status).toLowerCase() === "completed" &&
+      j.collectionLogged === true
+    ){
       serviceProfit += num(j.profit);
+    }
+
   });
+
 
   const expectedProfit =
     salesProfit + serviceProfit;
 
+
   const universalProfit =
-    num(metrics.saleProfitCollected)
-    + num(metrics.serviceProfitCollected);
+    num(metrics.saleProfitCollected) +
+    num(metrics.serviceProfitCollected);
+
 
   if(expectedProfit !== universalProfit){
 
@@ -72,24 +98,47 @@ function runAudit(){
     logPass("Profit settlement correct");
   }
 
-  /* ---------------- CREDIT CHECK ---------------- */
+
+
+  /* =========================================================
+     🧾 CREDIT LEDGER CHECK
+  ========================================================= */
+
   let creditSales = 0;
+
   sales.forEach(s=>{
-    if(s.status==="credit")
-      creditSales += num(s.remaining);
+
+    if(
+      String(s.status).toLowerCase() === "credit"
+    ){
+      creditSales +=
+        num(s.remaining || s.total);
+    }
+
   });
 
+
   let creditService = 0;
+
   services.forEach(j=>{
-    if(j.status==="credit")
-      creditService += num(j.remaining);
+
+    if(
+      String(j.status).toLowerCase() === "credit"
+    ){
+      creditService +=
+        num(j.remaining || j.total);
+    }
+
   });
+
 
   const expectedCredit =
     creditSales + creditService;
 
+
   const dashboardCredit =
     num(metrics.pendingCreditTotal);
+
 
   if(expectedCredit !== dashboardCredit){
 
@@ -105,24 +154,41 @@ function runAudit(){
     logPass("Credit ledger correct");
   }
 
-  /* ---------------- OFFSET CHECK ---------------- */
+
+
+  /* =========================================================
+     🔁 OFFSET CORRUPTION CHECK
+  ========================================================= */
+
   Object.entries(offsets)
     .forEach(([k,v])=>{
+
       if(num(v) < 0){
+
         logFail(
           "Negative offset detected",
           { key:k, value:v }
         );
+
       }
+
     });
 
-  /* ---------------- EXPENSE CHECK ---------------- */
+
+
+  /* =========================================================
+     💸 EXPENSE LEDGER CHECK
+  ========================================================= */
+
   let totalExpenses = 0;
+
   expenses.forEach(e=>{
     totalExpenses += num(e.amount);
   });
 
+
   if(totalExpenses !== num(metrics.expensesLive)){
+
     logFail(
       "Expense mismatch",
       {
@@ -130,15 +196,25 @@ function runAudit(){
         metrics: metrics.expensesLive
       }
     );
+
   }else{
     logPass("Expense ledger correct");
   }
+
+
+
+  /* =========================================================
+     🧠 FINAL LOG
+  ========================================================= */
 
   console.log(
     "%c🧠 Accounting audit completed",
     "color:#3b82f6;font-weight:bold"
   );
+
 }
+
+
 
 /* ===========================================================
    AUTO TRIGGERS
@@ -146,11 +222,14 @@ function runAudit(){
 
 window.runAccountingAudit = runAudit;
 
+
+/* CLOUD LOAD */
 window.addEventListener(
   "cloud-data-loaded",
   runAudit
 );
 
+/* MODULE EVENTS */
 window.addEventListener(
   "services-updated",
   runAudit
@@ -166,6 +245,8 @@ window.addEventListener(
   runAudit
 );
 
+
+/* SAFETY DELAY RUN */
 setTimeout(runAudit,1500);
 
 })();
