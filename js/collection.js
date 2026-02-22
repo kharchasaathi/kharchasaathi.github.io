@@ -383,24 +383,25 @@ function renderCollectionCharts(){
 
     const sortedDates =
       Object.keys(a.dailyMap).sort();
-
-    collDailyChart = new Chart(dailyCtx,{
-      type:"line",
-      data:{
-        labels:sortedDates,
-        datasets:[{
-          data:sortedDates.map(
-            d=>a.dailyMap[d]
-          ),
-          tension:0.3,
-          fill:false
-        }]
-      },
-      options:{
-        responsive:true,
-        maintainAspectRatio:false
-      }
-    });
+  collDailyChart = new Chart(dailyCtx,{
+  type:"line",
+  data:{
+    labels:sortedDates,
+    datasets:[{
+      label:"Daily Collection",
+      data:sortedDates.map(
+        d=>a.dailyMap[d]
+      ),
+      tension:0.3,
+      fill:false
+    }]
+  },
+  options:{
+    responsive:true,
+    maintainAspectRatio:false
+  }
+});
+    
   }
 }
 
