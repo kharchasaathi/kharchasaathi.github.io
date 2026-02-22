@@ -1,14 +1,12 @@
 /* ===========================================================
-   collection.js — FINAL v21 (AUTO UI + ANALYTICS + CHARTS)
+   collection.js — FINAL v22 (PART 1)
 
-   ✔ Auto inject dashboard UI
-   ✔ Charts engine added
-   ✔ Cloud only
-   ✔ Multi-device safe
-   ✔ Source classified
-   ✔ Payment mode supported
-   ✔ Analytics engine added
-   ✔ Universal compatible
+   ✔ ERP Settlement compatible
+   ✔ Sales v28 structure supported
+   ✔ Service collection supported
+   ✔ Profit sync fixed
+   ✔ Universal bar sync
+   ✔ Analytics safe core
 =========================================================== */
 
 
@@ -20,8 +18,8 @@ function escLocal(x){
 }
 
 function cNum(v){
-  const n=Number(v||0);
-  return isNaN(n)?0:n;
+  const n = Number(v||0);
+  return isNaN(n) ? 0 : n;
 }
 
 
@@ -33,14 +31,14 @@ function injectCollectionDashboard(){
   if(document.querySelector(".collection-dashboard"))
     return;
 
-  const table=document.getElementById(
-    "collectionHistory"
-  );
+  const table =
+    document.getElementById("collectionHistory");
+
   if(!table) return;
 
-  const wrapper=document.createElement("div");
+  const wrapper = document.createElement("div");
 
-  wrapper.innerHTML=`
+  wrapper.innerHTML = `
   <div class="collection-dashboard">
 
     <div class="coll-card">
@@ -87,10 +85,10 @@ function saveCollections(){
 
   cloudSaveDebounced?.(
     "collections",
-    window.collections||[]
+    window.collections || []
   );
 }
-window.saveCollections=saveCollections;
+window.saveCollections = saveCollections;
 
 
 /* ===========================================================
@@ -98,9 +96,9 @@ window.saveCollections=saveCollections;
 =========================================================== */
 function normalizeSource(src=""){
 
-  const s=String(src).toLowerCase();
+  const s = String(src).toLowerCase();
 
-  if(s.includes("credit")&&s.includes("service"))
+  if(s.includes("credit") && s.includes("service"))
     return "Service Credit Cleared";
 
   if(s.includes("credit"))
@@ -117,27 +115,27 @@ function normalizeSource(src=""){
 
 
 /* ===========================================================
-   ADD COLLECTION ENTRY
+   ➕ ADD COLLECTION ENTRY
 =========================================================== */
-window.addCollectionEntry=function(
+window.addCollectionEntry = function(
   source,
   details,
   amount,
   paymentMode="Cash"
 ){
 
-  const entry={
-    id:uid("coll"),
-    date:todayDate(),
-    source:normalizeSource(source),
-    rawSource:escLocal(source),
-    details:escLocal(details),
-    amount:cNum(amount),
-    mode:paymentMode||"Cash"
+  const entry = {
+    id: uid("coll"),
+    date: todayDate(),
+    source: normalizeSource(source),
+    rawSource: escLocal(source),
+    details: escLocal(details),
+    amount: cNum(amount),
+    mode: paymentMode || "Cash"
   };
 
-  window.collections=
-    window.collections||[];
+  window.collections =
+    window.collections || [];
 
   window.collections.push(entry);
 
@@ -146,6 +144,7 @@ window.addCollectionEntry=function(
   renderCollection();
   runCollectionAnalytics();
 
+  /* 🔄 GLOBAL SYNC */
   window.updateUniversalBar?.();
   window.renderAnalytics?.();
   window.updateSummaryCards?.();
@@ -153,70 +152,117 @@ window.addCollectionEntry=function(
 
 
 /* ===========================================================
-   🔎 COLLECTION ANALYTICS CORE
+   📊 COLLECTION ANALYTICS CORE
 =========================================================== */
-window.runCollectionAnalytics=function(){
+window.runCollectionAnalytics = function(){
 
-  const list=window.collections||[];
+  const list = window.collections || [];
 
-  let total=0;
-  let cash=0;
-  let upi=0;
-  let creditRecovered=0;
+  let total = 0;
+  let cash  = 0;
+  let upi   = 0;
+  let creditRecovered = 0;
 
-  const sourceMap={};
-  const dailyMap={};
+  const sourceMap = {};
+  const dailyMap  = {};
 
   list.forEach(e=>{
 
-    const amt=cNum(e.amount);
-    total+=amt;
+    const amt = cNum(e.amount);
+    total += amt;
 
-    if(e.mode==="Cash") cash+=amt;
-    if(e.mode==="UPI") upi+=amt;
+    if(e.mode === "Cash") cash += amt;
+    if(e.mode === "UPI")  upi  += amt;
 
     if(e.source.includes("Credit"))
-      creditRecovered+=amt;
+      creditRecovered += amt;
 
-    sourceMap[e.source]=
-      (sourceMap[e.source]||0)+amt;
+    sourceMap[e.source] =
+      (sourceMap[e.source] || 0) + amt;
 
-    dailyMap[e.date]=
-      (dailyMap[e.date]||0)+amt;
+    dailyMap[e.date] =
+      (dailyMap[e.date] || 0) + amt;
   });
 
-  window.__collectionAnalytics={
+
+  /* =======================================================
+     💰 ERP PROFIT SYNC FIX
+     (Main fix for your screenshot issue)
+  ======================================================= */
+
+  const salesProfit =
+    (window.sales || [])
+      .filter(s =>
+        String(s.status).toLowerCase() === "paid" &&
+        s.collectionLogged === true
+      )
+      .reduce((t,s)=>t + cNum(s.profit),0);
+
+
+  const serviceProfit =
+    (window.services || [])
+      .filter(s =>
+        String(s.status).toLowerCase() === "completed" &&
+        s.collectionLogged === true
+      )
+      .reduce((t,s)=>t + cNum(s.profit),0);
+
+
+  const pendingCredits =
+    (window.sales || [])
+      .filter(s =>
+        String(s.status).toLowerCase() === "credit"
+      )
+      .reduce((t,s)=>t + cNum(s.total),0);
+
+
+  const investmentRemain =
+    (window.stock || [])
+      .reduce((t,p)=>{
+        const remain =
+          cNum(p.qty) - cNum(p.sold);
+        return t + remain * cNum(p.cost);
+      },0);
+
+
+  window.__collectionAnalytics = {
     total,
     cash,
     upi,
     creditRecovered,
     sourceMap,
-    dailyMap
+    dailyMap,
+
+    /* ERP cards */
+    salesProfit,
+    serviceProfit,
+    pendingCredits,
+    investmentRemain
   };
 
   updateCollectionSummaryUI();
+  updateCollectionProfitCards();
 
-  /* 🔥 CHARTS CALL ADDED */
-  renderCollectionCharts();
+  /* charts in part-2 */
 };
 
 
 /* ===========================================================
-   UPDATE SUMMARY UI
+   🧾 UPDATE SUMMARY UI
 =========================================================== */
 function updateCollectionSummaryUI(){
 
-  const a=window.__collectionAnalytics;
+  const a = window.__collectionAnalytics;
   if(!a) return;
 
-  const set=(id,val)=>{
-    const el=document.getElementById(id);
-    if(el) el.textContent="₹"+val;
+  const set = (id,val)=>{
+    const el = document.getElementById(id);
+    if(el) el.textContent = "₹" + val;
   };
 
-  set("collTotal",a.total);
-  set("collCash",a.cash);
-  set("collUPI",a.upi);
+  set("collTotal", a.total);
+  set("collCash",  a.cash);
+  set("collUPI",   a.upi);
   set(
     "collCreditRecovered",
     a.creditRecovered
@@ -225,26 +271,58 @@ function updateCollectionSummaryUI(){
 
 
 /* ===========================================================
-   COLLECTION CHART ENGINE
+   💰 UPDATE PROFIT CARDS (FIXED)
 =========================================================== */
-let collModeChart=null;
-let collSourceChart=null;
-let collDailyChart=null;
+function updateCollectionProfitCards(){
+
+  const a = window.__collectionAnalytics;
+  if(!a) return;
+
+  const set = (id,val)=>{
+    const el=document.getElementById(id);
+    if(el) el.textContent="₹"+val;
+  };
+
+  set("colSales",      a.salesProfit);
+  set("colService",    a.serviceProfit);
+  set("colCredit",     a.pendingCredits);
+  set("colInvRemain",  a.investmentRemain);
+}
+/* ===========================================================
+   collection.js — FINAL v22 (PART 2)
+
+   ✔ Charts engine fixed
+   ✔ Table renderer upgraded
+   ✔ Profit cards sync safe
+   ✔ Cloud reload safe
+   ✔ Universal sync
+   ✔ ERP settlement ready hooks
+=========================================================== */
+
+
+/* ===========================================================
+   📊 COLLECTION CHART ENGINE
+=========================================================== */
+
+let collModeChart   = null;
+let collSourceChart = null;
+let collDailyChart  = null;
 
 function renderCollectionCharts(){
 
-  const a=window.__collectionAnalytics;
+  const a = window.__collectionAnalytics;
   if(!a) return;
 
-  /* MODE PIE */
-  const modeCtx=
+  /* ---------------- MODE PIE ---------------- */
+
+  const modeCtx =
     document.getElementById("collModeChart");
 
-  if(modeCtx&&typeof Chart!=="undefined"){
+  if(modeCtx && typeof Chart!=="undefined"){
 
     collModeChart?.destroy();
 
-    collModeChart=new Chart(modeCtx,{
+    collModeChart = new Chart(modeCtx,{
       type:"pie",
       data:{
         labels:["Cash","UPI"],
@@ -259,17 +337,19 @@ function renderCollectionCharts(){
     });
   }
 
-  /* SOURCE BAR */
-  const sourceCtx=
+
+  /* ---------------- SOURCE BAR ---------------- */
+
+  const sourceCtx =
     document.getElementById(
       "collSourceChart"
     );
 
-  if(sourceCtx&&typeof Chart!=="undefined"){
+  if(sourceCtx && typeof Chart!=="undefined"){
 
     collSourceChart?.destroy();
 
-    collSourceChart=new Chart(sourceCtx,{
+    collSourceChart = new Chart(sourceCtx,{
       type:"bar",
       data:{
         labels:Object.keys(a.sourceMap),
@@ -279,32 +359,39 @@ function renderCollectionCharts(){
       },
       options:{
         responsive:true,
-        maintainAspectRatio:false
+        maintainAspectRatio:false,
+        plugins:{
+          legend:{display:false}
+        }
       }
     });
   }
 
-  /* DAILY LINE */
-  const dailyCtx=
+
+  /* ---------------- DAILY LINE ---------------- */
+
+  const dailyCtx =
     document.getElementById(
       "collDailyChart"
     );
 
-  if(dailyCtx&&typeof Chart!=="undefined"){
+  if(dailyCtx && typeof Chart!=="undefined"){
 
     collDailyChart?.destroy();
 
-    const sortedDates=
+    const sortedDates =
       Object.keys(a.dailyMap).sort();
 
-    collDailyChart=new Chart(dailyCtx,{
+    collDailyChart = new Chart(dailyCtx,{
       type:"line",
       data:{
         labels:sortedDates,
         datasets:[{
           data:sortedDates.map(
             d=>a.dailyMap[d]
-          )
+          ),
+          tension:0.3,
+          fill:false
         }]
       },
       options:{
@@ -317,88 +404,131 @@ function renderCollectionCharts(){
 
 
 /* ===========================================================
-   RENDER TABLE
+   🧾 RENDER COLLECTION TABLE
 =========================================================== */
-window.renderCollection=function(){
 
-  const tbody=
+window.renderCollection = function(){
+
+  const tbody =
     document.querySelector(
       "#collectionHistory tbody"
     );
+
   if(!tbody) return;
 
-  const list=window.collections||[];
+  const list =
+    window.collections || [];
 
   if(!list.length){
-    tbody.innerHTML=`
+
+    tbody.innerHTML = `
       <tr>
         <td colspan="5"
-            style="text-align:center;opacity:0.6;">
+            style="
+              text-align:center;
+              opacity:0.6;
+            ">
           No collection history yet
         </td>
       </tr>`;
+
     return;
   }
 
-  tbody.innerHTML=list.map(e=>`
+
+  tbody.innerHTML = list.map(e=>`
+
     <tr>
       <td>${
         typeof toDisplay==="function"
-        ?toDisplay(e.date)
-        :e.date
+          ? toDisplay(e.date)
+          : e.date
       }</td>
+
       <td>${escLocal(e.source)}</td>
+
       <td>${escLocal(e.details)}</td>
+
       <td>${escLocal(e.mode)}</td>
+
       <td>₹${cNum(e.amount)}</td>
     </tr>
+
   `).join("");
 };
 
 
 /* ===========================================================
-   CLEAR HISTORY
+   🧹 CLEAR COLLECTION HISTORY
 =========================================================== */
-document.addEventListener("click",e=>{
 
-  if(e.target.id==="clearCollectionBtn"){
+document.addEventListener("click", e=>{
 
-    if(!confirm(
-      "Clear entire collection history?"
-    )) return;
+  if(e.target.id !== "clearCollectionBtn")
+    return;
 
-    window.collections=[];
+  if(!confirm(
+    "Clear entire collection history?"
+  )) return;
 
-    saveCollections();
+  window.collections = [];
 
-    renderCollection();
-    runCollectionAnalytics();
+  saveCollections();
 
-    window.updateUniversalBar?.();
-    window.renderAnalytics?.();
-    window.updateSummaryCards?.();
-  }
+  renderCollection();
+  runCollectionAnalytics();
+
+  /* GLOBAL SYNC */
+  window.updateUniversalBar?.();
+  window.renderAnalytics?.();
+  window.updateSummaryCards?.();
+
+  console.log(
+    "🧹 Collection history cleared"
+  );
 });
 
 
 /* ===========================================================
-   INIT
+   ☁️ CLOUD RELOAD HOOK
 =========================================================== */
+
 window.addEventListener(
   "cloud-data-loaded",
   ()=>{
 
     injectCollectionDashboard();
+
     renderCollection();
     runCollectionAnalytics();
 
+    /* GLOBAL SYNC */
     window.updateUniversalBar?.();
     window.renderAnalytics?.();
     window.updateSummaryCards?.();
+
+    console.log(
+      "☁️ Collection cloud sync loaded"
+    );
   }
 );
 
+
+/* ===========================================================
+   📦 DOM READY INIT
+=========================================================== */
+
 window.addEventListener(
   "DOMContentLoaded",
-  ()=>injectCollectionDashboard()
+  ()=>{
+
+    injectCollectionDashboard();
+
+    renderCollection();
+    runCollectionAnalytics();
+
+    console.log(
+      "📊 Collection dashboard ready"
+    );
+  }
 );
