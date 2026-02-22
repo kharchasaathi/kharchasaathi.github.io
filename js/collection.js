@@ -200,12 +200,11 @@ window.runCollectionAnalytics = function(){
 
 
   const serviceProfit =
-    (window.services || [])
-      .filter(s =>
-        String(s.status).toLowerCase() === "completed" &&
-        s.collectionLogged === true
-      )
-      .reduce((t,s)=>t + cNum(s.profit),0);
+  (window.services || [])
+    .filter(s =>
+      String(s.status).toLowerCase() === "paid"
+    )
+    .reduce((t,s)=>t + cNum(s.profit),0);
 
 
   const pendingCredits =
@@ -241,7 +240,8 @@ window.runCollectionAnalytics = function(){
   };
 
   updateCollectionSummaryUI();
-  updateCollectionProfitCards();
+updateCollectionProfitCards();
+renderCollectionCharts();   // 🔥 
 
   /* charts in part-2 */
 };
