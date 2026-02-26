@@ -1,12 +1,13 @@
 /* ===========================================================
-   accounting-audit.js — FINAL AUDIT GUARD v2 (ERP SAFE)
+   accounting-audit.js — FINAL AUDIT GUARD v3 (ERP SAFE)
 
    ✔ Profit integrity check (Collected only)
    ✔ Sales + Service settlement aligned
    ✔ Credit mismatch detection
    ✔ Offset corruption guard
-   ✔ Expense ledger verification
-   ✔ Investment alignment ready
+   ✔ Expense settlement aware verification
+   ✔ Withdraw compatible
+   ✔ Universal aligned
 =========================================================== */
 
 (function(){
@@ -65,8 +66,11 @@ function runAudit(){
 
   services.forEach(j=>{
 
+    const st =
+      String(j.status).toLowerCase();
+
     if(
-      String(j.status).toLowerCase() === "completed" &&
+      ["paid","completed"].includes(st) &&
       j.collectionLogged === true
     ){
       serviceProfit += num(j.profit);
@@ -177,7 +181,7 @@ function runAudit(){
 
 
   /* =========================================================
-     💸 EXPENSE LEDGER CHECK
+     💸 EXPENSE LEDGER CHECK (SETTLEMENT AWARE)
   ========================================================= */
 
   let totalExpenses = 0;
@@ -187,12 +191,27 @@ function runAudit(){
   });
 
 
-  if(totalExpenses !== num(metrics.expensesLive)){
+  const settledOffset =
+    num(offsets.expensesSettled);
+
+  const expectedLiveExpenses =
+    Math.max(
+      0,
+      totalExpenses - settledOffset
+    );
+
+
+  if(
+    expectedLiveExpenses !==
+    num(metrics.expensesLive)
+  ){
 
     logFail(
       "Expense mismatch",
       {
         ledger: totalExpenses,
+        settled: settledOffset,
+        expectedLive: expectedLiveExpenses,
         metrics: metrics.expensesLive
       }
     );
