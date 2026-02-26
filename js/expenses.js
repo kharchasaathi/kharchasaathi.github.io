@@ -1,15 +1,6 @@
 /* ===========================================================
-   expenses.js — FINAL v18
-   SETTLEMENT LOCK + LEDGER SAFE + CLOUD SAFE
-
-   ✔ Double deduction fixed
-   ✔ Settlement isolated
-   ✔ Live vs Settled split
-   ✔ Race lock safe
-   ✔ Cloud sync safe
-   ✔ Delete confirm restore
-   ✔ Clear all restore
-   ✔ UI totals restore
+   expenses.js — FINAL v19
+   LEDGER SAFE + SETTLEMENT CORRECT + PROFIT LOCK SAFE
 =========================================================== */
 
 (function () {
@@ -52,7 +43,6 @@ function saveExpenses(){
     window.expenses
   );
 
-  /* 🔁 Sync triggers restore */
   window.dispatchEvent(
     new Event("expenses-updated")
   );
@@ -63,7 +53,7 @@ function saveExpenses(){
 }
 
 
-/* ---------------- OFFSET SAVE (RACE SAFE) ---------------- */
+/* ---------------- OFFSET SAVE ---------------- */
 
 async function saveOffsetsSafe(){
 
@@ -83,7 +73,7 @@ async function saveOffsetsSafe(){
 
 
 /* ===========================================================
-   ➕ ADD EXPENSE
+   ➕ ADD
 =========================================================== */
 
 function addExpenseEntry(){
@@ -116,7 +106,7 @@ function addExpenseEntry(){
 
   window.expenses.push(entry);
 
-  /* LIVE OFFSET ADD */
+  /* Live offset */
   window.__offsets.expensesLive += amount;
 
   saveOffsetsSafe();
@@ -124,17 +114,13 @@ function addExpenseEntry(){
 
   renderExpenses();
   syncAll();
-
-  /* Clear inputs */
-  if(qs("#expAmount")) qs("#expAmount").value="";
-  if(qs("#expNote")) qs("#expNote").value="";
 }
 
 window.addExpenseEntry = addExpenseEntry;
 
 
 /* ===========================================================
-   💰 SETTLE EXPENSE
+   💰 SETTLE
 =========================================================== */
 
 function settleExpense(id){
@@ -165,8 +151,9 @@ function settleExpense(id){
 
 window.settleExpense = settleExpense;
 
+
 /* ===========================================================
-   🗑 DELETE EXPENSE — FINANCIAL SAFE
+   🗑 DELETE — LEDGER SAFE
 =========================================================== */
 
 function deleteExpense(id){
@@ -180,35 +167,21 @@ function deleteExpense(id){
     `Delete expense ₹${exp.amount}?`
   )) return;
 
-  /* -----------------------------------------
-     FINANCIAL SAFE OFFSET REVERSAL
-  ----------------------------------------- */
+  /* Ledger reversal */
 
   if(exp.settled){
 
-    /* 🔒 Settled = Locked ledger
-       Profit must NOT change */
-
-    console.log(
-      "🔒 Settled expense deleted — profit locked"
-    );
-
-    /* Only ledger remove — no offset reversal */
+    window.__offsets.expensesSettled -=
+      num(exp.amount);
 
   }else{
-
-    /* Live expense restore profit */
 
     window.__offsets.expensesLive -=
       num(exp.amount);
   }
 
-  /* ----------------------------------------- */
-
   window.expenses =
-    window.expenses.filter(
-      e=>e.id!==id
-    );
+    window.expenses.filter(e=>e.id!==id);
 
   saveOffsetsSafe();
   saveExpenses();
@@ -221,7 +194,7 @@ window.deleteExpense = deleteExpense;
 
 
 /* ===========================================================
-   🧹 CLEAR ALL — FINANCIAL SAFE
+   🧹 CLEAR ALL — LEDGER SAFE
 =========================================================== */
 
 function clearAllExpenses(){
@@ -238,26 +211,20 @@ function clearAllExpenses(){
     `Clear all expenses?\nTotal ₹${total}`
   )) return;
 
-  /* -----------------------------------------
-     FINANCIAL SAFE OFFSET REVERSAL
-  ----------------------------------------- */
-
   window.expenses.forEach(e=>{
 
-    if(!e.settled){
+    if(e.settled){
 
-      /* Restore only LIVE expenses */
+      window.__offsets.expensesSettled -=
+        num(e.amount);
+
+    }else{
 
       window.__offsets.expensesLive -=
         num(e.amount);
-
     }
 
-    /* Settled → Locked → No reversal */
-
   });
-
-  /* ----------------------------------------- */
 
   window.expenses = [];
 
@@ -340,30 +307,7 @@ function syncAll(){
 
 
 /* ===========================================================
-   BUTTON SAFE BIND
-=========================================================== */
-
-const addBtn = qs("#addExpenseBtn");
-if(addBtn && !addBtn.__bound){
-  addBtn.addEventListener(
-    "click",
-    addExpenseEntry
-  );
-  addBtn.__bound = true;
-}
-
-const clearBtn = qs("#clearExpensesBtn");
-if(clearBtn && !clearBtn.__bound){
-  clearBtn.addEventListener(
-    "click",
-    clearAllExpenses
-  );
-  clearBtn.__bound = true;
-}
-
-
-/* ===========================================================
-   CLOUD SYNC LOAD
+   CLOUD SYNC
 =========================================================== */
 
 window.addEventListener(
@@ -374,22 +318,5 @@ window.addEventListener(
     renderExpenses();
   }
 );
-
-
-/* ===========================================================
-   SAFE INITIAL LOAD
-=========================================================== */
-
-window.addEventListener("load",()=>{
-
-  const init=()=>{
-    if(!Array.isArray(window.expenses))
-      window.expenses=[];
-    renderExpenses();
-  };
-
-  init();
-  setTimeout(init,500);
-});
 
 })();
