@@ -1,16 +1,28 @@
 /* ===========================================================
-   universal-bar.js — COMMERCIAL SNAPSHOT ENGINE v4
-   WITH PROFIT WITHDRAW DEDUCTION + METRIC PRESERVE
+   universal-bar.js — FINAL v5
+   SETTLEMENT + WITHDRAW + LEDGER SAFE
+
+   ✔ Settlement aware expenses
+   ✔ Withdraw deduction safe
+   ✔ Profit integrity safe
+   ✔ Dashboard aligned
+   ✔ Analytics aligned
+   ✔ Audit ready
 =========================================================== */
 
 (function () {
 
   /* ---------------- HELPERS ---------------- */
-  const num = v => (isNaN(v = Number(v))) ? 0 : Number(v);
-  const money = v => "₹" + Math.round(num(v));
+
+  const num = v =>
+    (isNaN(v = Number(v))) ? 0 : Number(v);
+
+  const money = v =>
+    "₹" + Math.round(num(v));
+
 
   /* ==========================================================
-     METRICS ENGINE (PURE — WITH WITHDRAW SUPPORT)
+     METRICS ENGINE
   ========================================================== */
   function computeMetrics() {
 
@@ -28,63 +40,94 @@
       };
     }
 
-    const sales    = window.sales || [];
+    const sales    = window.sales    || [];
     const services = window.services || [];
     const expenses = window.expenses || [];
+    const offs     = window.__offsets || {};
 
-    let saleProfitAll = 0;
-    let serviceProfitAll = 0;
-    let expensesAll = 0;
-    let stockInvestAll = 0;
-    let serviceInvestAll = 0;
-    let pendingCredit = 0;
+    let saleProfitAll     = 0;
+    let serviceProfitAll  = 0;
+    let expensesAll       = 0;
+    let stockInvestAll    = 0;
+    let serviceInvestAll  = 0;
+    let pendingCredit     = 0;
 
     /* ---------------- SALES ---------------- */
+
     sales.forEach(s => {
 
-      const st = String(s.status).toLowerCase();
+      const st =
+        String(s.status).toLowerCase();
 
       if (st === "credit")
         pendingCredit += num(s.total);
 
       if (st === "paid") {
+
         saleProfitAll += num(s.profit);
-        stockInvestAll += num(s.qty) * num(s.cost);
+
+        stockInvestAll +=
+          num(s.qty) * num(s.cost);
       }
     });
 
+
     /* ---------------- SERVICES ---------------- */
+
     services.forEach(j => {
 
-      const st = String(j.status).toLowerCase();
+      const st =
+        String(j.status).toLowerCase();
 
       if (st === "credit")
         pendingCredit += num(j.remaining);
 
       if (st === "paid") {
 
-        const invest = num(j.invest);
+        const invest =
+          num(j.invest);
 
         const profit =
           num(j.profit) ||
           (num(j.paid) - invest);
 
-        serviceProfitAll += Math.max(0, profit);
+        serviceProfitAll +=
+          Math.max(0, profit);
+
         serviceInvestAll += invest;
       }
     });
 
-    /* ---------------- EXPENSES ---------------- */
+
+    /* ---------------- EXPENSES (LEDGER TOTAL) ---------------- */
+
     expenses.forEach(e => {
       expensesAll += num(e.amount);
     });
 
+
     /* ======================================================
-       💰 WITHDRAW LEDGER SUPPORT
+       💰 SETTLEMENT ADJUSTMENT
+       Remove settled expenses from live impact
+    ====================================================== */
+
+    const settledOffset =
+      num(offs.expensesSettled);
+
+    const expensesLive =
+      Math.max(
+        0,
+        expensesAll - settledOffset
+      );
+
+
+    /* ======================================================
+       💸 WITHDRAW LEDGER
     ====================================================== */
 
     const withdrawn =
       num(window.__unMetrics?.profitWithdrawn);
+
 
     /* ======================================================
        FINAL NET PROFIT
@@ -95,9 +138,10 @@
         0,
         saleProfitAll +
         serviceProfitAll -
-        expensesAll -
+        expensesLive -
         withdrawn
       );
+
 
     return {
 
@@ -107,13 +151,14 @@
       stockInvestSold: stockInvestAll,
       serviceInvestCompleted: serviceInvestAll,
 
-      expensesLive: expensesAll,
+      expensesLive,
       pendingCreditTotal: pendingCredit,
 
       profitWithdrawn: withdrawn,
       netProfit: netLive
     };
   }
+
 
   /* ==========================================================
      UI RENDER
@@ -122,52 +167,57 @@
 
     const m = computeMetrics();
 
-    /* 🔒 PRESERVE WITHDRAW LEDGER */
+    /* 🔒 Preserve withdraw ledger */
     m.profitWithdrawn =
       num(window.__unMetrics?.profitWithdrawn);
 
     window.__unMetrics = m;
 
     const set = (id, v) => {
-      const el = document.getElementById(id);
+      const el =
+        document.getElementById(id);
       if (el) el.textContent = money(v);
     };
 
-    set("unSaleProfit",   m.saleProfitCollected);
-    set("unServiceProfit",m.serviceProfitCollected);
-    set("unStockInv",     m.stockInvestSold);
-    set("unServiceInv",   m.serviceInvestCompleted);
-    set("unExpenses",     m.expensesLive);
-    set("unCreditSales",  m.pendingCreditTotal);
-    set("unNetProfit",    m.netProfit);
+    set("unSaleProfit",    m.saleProfitCollected);
+    set("unServiceProfit", m.serviceProfitCollected);
+    set("unStockInv",      m.stockInvestSold);
+    set("unServiceInv",    m.serviceInvestCompleted);
+    set("unExpenses",      m.expensesLive);
+    set("unCreditSales",   m.pendingCreditTotal);
+    set("unNetProfit",     m.netProfit);
   }
 
-  window.updateUniversalBar = updateUniversalBar;
+  window.updateUniversalBar =
+    updateUniversalBar;
+
 
   /* ==========================================================
      🔄 AUTO REFRESH EVENTS
   ========================================================== */
 
-  /* Cloud load refresh */
   window.addEventListener(
     "cloud-data-loaded",
     updateUniversalBar
   );
 
-  /* Business data refresh */
   [
     "sales-updated",
     "services-updated",
     "expenses-updated",
     "collection-updated"
   ].forEach(ev => {
+
     window.addEventListener(
       ev,
       updateUniversalBar
     );
+
   });
 
+
   /* Safety delayed refresh */
+
   setTimeout(updateUniversalBar, 500);
   setTimeout(updateUniversalBar, 1500);
 
