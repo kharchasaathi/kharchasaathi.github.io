@@ -165,9 +165,8 @@ function settleExpense(id){
 
 window.settleExpense = settleExpense;
 
-
 /* ===========================================================
-   🗑 DELETE EXPENSE
+   🗑 DELETE EXPENSE — FINANCIAL SAFE
 =========================================================== */
 
 function deleteExpense(id){
@@ -181,19 +180,35 @@ function deleteExpense(id){
     `Delete expense ₹${exp.amount}?`
   )) return;
 
+  /* -----------------------------------------
+     FINANCIAL SAFE OFFSET REVERSAL
+  ----------------------------------------- */
+
   if(exp.settled){
 
-    window.__offsets.expensesSettled -=
-      num(exp.amount);
+    /* 🔒 Settled = Locked ledger
+       Profit must NOT change */
+
+    console.log(
+      "🔒 Settled expense deleted — profit locked"
+    );
+
+    /* Only ledger remove — no offset reversal */
 
   }else{
+
+    /* Live expense restore profit */
 
     window.__offsets.expensesLive -=
       num(exp.amount);
   }
 
+  /* ----------------------------------------- */
+
   window.expenses =
-    window.expenses.filter(e=>e.id!==id);
+    window.expenses.filter(
+      e=>e.id!==id
+    );
 
   saveOffsetsSafe();
   saveExpenses();
