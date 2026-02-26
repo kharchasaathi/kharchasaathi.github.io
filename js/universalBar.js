@@ -1,6 +1,6 @@
 /* ===========================================================
-   universal-bar.js — COMMERCIAL SNAPSHOT ENGINE v3
-   PART 1 — OFFSET + COLLECTION REMOVAL BASE
+   universal-bar.js — COMMERCIAL SNAPSHOT ENGINE v4
+   WITH PROFIT WITHDRAW DEDUCTION + METRIC PRESERVE
 =========================================================== */
 
 (function () {
@@ -10,7 +10,7 @@
   const money = v => "₹" + Math.round(num(v));
 
   /* ==========================================================
-     METRICS ENGINE (PURE — NO OFFSETS)
+     METRICS ENGINE (PURE — WITH WITHDRAW SUPPORT)
   ========================================================== */
   function computeMetrics() {
 
@@ -23,6 +23,7 @@
         serviceInvestCompleted: 0,
         expensesLive: 0,
         pendingCreditTotal: 0,
+        profitWithdrawn: 0,
         netProfit: 0
       };
     }
@@ -63,6 +64,7 @@
       if (st === "paid") {
 
         const invest = num(j.invest);
+
         const profit =
           num(j.profit) ||
           (num(j.paid) - invest);
@@ -78,7 +80,14 @@
     });
 
     /* ======================================================
-       PURE ACCOUNTING (NO OFFSETS — DIRECT METRICS)
+       💰 WITHDRAW LEDGER SUPPORT
+    ====================================================== */
+
+    const withdrawn =
+      num(window.__unMetrics?.profitWithdrawn);
+
+    /* ======================================================
+       FINAL NET PROFIT
     ====================================================== */
 
     const netLive =
@@ -86,7 +95,8 @@
         0,
         saleProfitAll +
         serviceProfitAll -
-        expensesAll
+        expensesAll -
+        withdrawn
       );
 
     return {
@@ -99,60 +109,66 @@
 
       expensesLive: expensesAll,
       pendingCreditTotal: pendingCredit,
+
+      profitWithdrawn: withdrawn,
       netProfit: netLive
     };
   }
-   /* ---------------- UI ---------------- */
-function updateUniversalBar() {
 
-  const m = computeMetrics();
-  window.__unMetrics = m;
+  /* ==========================================================
+     UI RENDER
+  ========================================================== */
+  function updateUniversalBar() {
 
-  const set = (id, v) => {
-    const el = document.getElementById(id);
-    if (el) el.textContent = money(v);
-  };
+    const m = computeMetrics();
 
-  set("unSaleProfit", m.saleProfitCollected);
-  set("unServiceProfit", m.serviceProfitCollected);
-  set("unStockInv", m.stockInvestSold);
-  set("unServiceInv", m.serviceInvestCompleted);
-  set("unExpenses", m.expensesLive);
-  set("unCreditSales", m.pendingCreditTotal);
-  set("unNetProfit", m.netProfit);
-}
+    /* 🔒 PRESERVE WITHDRAW LEDGER */
+    m.profitWithdrawn =
+      num(window.__unMetrics?.profitWithdrawn);
 
-window.updateUniversalBar = updateUniversalBar;
+    window.__unMetrics = m;
 
+    const set = (id, v) => {
+      const el = document.getElementById(id);
+      if (el) el.textContent = money(v);
+    };
 
-/* ==========================================================
-   🔄 AUTO REFRESH EVENTS
-========================================================== */
-
-/* Cloud load refresh */
-window.addEventListener(
-  "cloud-data-loaded",
-  () => {
-    updateUniversalBar();
+    set("unSaleProfit",   m.saleProfitCollected);
+    set("unServiceProfit",m.serviceProfitCollected);
+    set("unStockInv",     m.stockInvestSold);
+    set("unServiceInv",   m.serviceInvestCompleted);
+    set("unExpenses",     m.expensesLive);
+    set("unCreditSales",  m.pendingCreditTotal);
+    set("unNetProfit",    m.netProfit);
   }
-);
 
-/* Business data refresh */
-[
-  "sales-updated",
-  "services-updated",
-  "expenses-updated",
-  "collection-updated"
-].forEach(ev => {
+  window.updateUniversalBar = updateUniversalBar;
+
+  /* ==========================================================
+     🔄 AUTO REFRESH EVENTS
+  ========================================================== */
+
+  /* Cloud load refresh */
   window.addEventListener(
-    ev,
+    "cloud-data-loaded",
     updateUniversalBar
   );
-});
 
+  /* Business data refresh */
+  [
+    "sales-updated",
+    "services-updated",
+    "expenses-updated",
+    "collection-updated"
+  ].forEach(ev => {
+    window.addEventListener(
+      ev,
+      updateUniversalBar
+    );
+  });
 
-/* Safety delayed refresh */
-setTimeout(updateUniversalBar, 500);
-setTimeout(updateUniversalBar, 1500);
+  /* Safety delayed refresh */
+  setTimeout(updateUniversalBar, 500);
+  setTimeout(updateUniversalBar, 1500);
 
 })();
