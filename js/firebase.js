@@ -1,17 +1,14 @@
 /* ===========================================================
-firebase.js — FINAL V23
-REAL DEBOUNCE + WRITE SAFE + OFFSET BULLETPROOF
+firebase.js — HARDENED V24
+REAL DEBOUNCE + LEDGER SAFE + OFFSET STRUCTURE FIXED
 
-✔ Pulls ALL business data
-✔ Prevents empty overwrite
-✔ Duplicate pull blocked
-✔ Offsets cloud synced
-✔ Expenses offset added
-✔ Dashboard clear persistent
-✔ Multi-device data safe
-✔ Settlement aligned
-✔ REAL Debounced cloud save
-✔ Write error safe
+✔ Settlement ledger safe
+✔ Withdraw safe
+✔ Offset structure upgraded
+✔ Backward compatible
+✔ No profit corruption after refresh
+✔ Multi-device safe
+✔ Real debounce save
 =========================================================== */
 
 console.log("%c🔥 firebase.js loaded","color:#ff9800;font-weight:bold;");
@@ -50,24 +47,20 @@ console.log("%c☁️ Firebase connected!","color:#4caf50;font-weight:bold;");
 /* ===========================================================
 CLOUD ENGINE FLAGS
 =========================================================== */
-
 window.__cloudReady=false;
 window.__cloudPulled=false;
 
 /* ===========================================================
-🧠 DEBOUNCE ENGINE (NEW)
+DEBOUNCE ENGINE
 =========================================================== */
-
 const __debounceTimers = {};
 
 /* ---------------- LOAD ONE ---------------- */
 async function cloudLoad(key){
-
   const user=auth.currentUser;
   if(!user) return null;
 
   try{
-
     const snap=await db
       .collection("users")
       .doc(user.uid)
@@ -75,10 +68,7 @@ async function cloudLoad(key){
       .doc(key)
       .get();
 
-    return snap.exists
-      ? snap.data().value
-      : null;
-
+    return snap.exists ? snap.data().value : null;
   }catch(e){
     console.warn("Cloud load failed:",key,e);
     return null;
@@ -87,7 +77,7 @@ async function cloudLoad(key){
 window.cloudLoad=cloudLoad;
 
 /* ===========================================================
-💾 REAL DEBOUNCED SAVE (FIXED)
+REAL DEBOUNCED SAVE
 =========================================================== */
 function cloudSaveDebounced(key,value){
 
@@ -99,15 +89,12 @@ function cloudSaveDebounced(key,value){
   const user=auth.currentUser;
   if(!user) return;
 
-  /* CLEAR OLD TIMER */
   if(__debounceTimers[key])
     clearTimeout(__debounceTimers[key]);
 
-  /* NEW TIMER */
   __debounceTimers[key] = setTimeout(async ()=>{
 
     try{
-
       await db
         .collection("users")
         .doc(user.uid)
@@ -118,32 +105,20 @@ function cloudSaveDebounced(key,value){
           updated:Date.now()
         });
 
-      console.log(
-        "%c☁️ Cloud saved:",
-        "color:#4caf50;font-weight:bold;",
-        key
-      );
+      console.log("%c☁️ Cloud saved:","color:#4caf50;font-weight:bold;",key);
 
     }catch(e){
-
-      console.error(
-        "❌ Cloud save failed:",
-        key,
-        e
-      );
-
+      console.error("❌ Cloud save failed:",key,e);
     }finally{
-
       delete __debounceTimers[key];
-
     }
 
-  },500); // ⏱ Debounce delay
+  },500);
 }
 window.cloudSaveDebounced=cloudSaveDebounced;
 
 /* ===========================================================
-🌍 FULL CLOUD PULL (OFFSET BULLETPROOF)
+FULL CLOUD PULL (LEDGER SAFE INIT)
 =========================================================== */
 async function cloudPullAll(){
 
@@ -161,7 +136,9 @@ async function cloudPullAll(){
     "services",
     "collections",
     "offsets",
-    "dashboardOffset"
+    "dashboardOffset",
+    "unMetrics",
+    "withdrawals"
   ];
 
   const results=await Promise.all(
@@ -177,7 +154,9 @@ async function cloudPullAll(){
     services,
     collections,
     offsets,
-    dashboardOffset
+    dashboardOffset,
+    unMetrics,
+    withdrawals
   ]=results;
 
   if(types!==null)        window.types=types;
@@ -186,19 +165,26 @@ async function cloudPullAll(){
   if(wanting!==null)      window.wanting=wanting;
   if(expenses!==null)     window.expenses=expenses;
   if(services!==null)     window.services=services;
-  if(collections!==null) window.collections=collections;
+  if(collections!==null)  window.collections=collections;
+  if(unMetrics!==null)    window.__unMetrics=unMetrics;
+  if(withdrawals!==null)  window.__withdrawals=withdrawals;
 
   /* =======================================================
-     🧠 OFFSETS — BULLETPROOF INIT
+     🧠 OFFSETS — FULL LEDGER SAFE STRUCTURE
   ======================================================= */
   window.__offsets = Object.assign({
 
     net:0,
     sale:0,
     service:0,
+
+    /* Investments */
     stock:0,
     servInv:0,
-    expenses:0
+
+    /* Expense ledgers */
+    expensesLive:0,
+    expensesSettled:0
 
   }, offsets || {});
 
@@ -211,10 +197,7 @@ async function cloudPullAll(){
   window.__cloudPulled=true;
   window.__cloudReady=true;
 
-  console.log(
-    "%c☁️ Cloud fully loaded ✔",
-    "color:#4caf50;font-weight:bold;"
-  );
+  console.log("%c☁️ Cloud fully loaded ✔","color:#4caf50;font-weight:bold;");
 
   window.dispatchEvent(
     new Event("cloud-data-loaded")
@@ -273,26 +256,17 @@ auth.onAuthStateChanged(async user=>{
 
   if(user){
 
-    console.log(
-      "%c🔐 Logged in:",
-      "color:#03a9f4;font-weight:bold;",
-      user.email
-    );
+    console.log("%c🔐 Logged in:","color:#03a9f4;font-weight:bold;",user.email);
 
     await cloudPullAll();
 
     if(AUTH_PAGES.some(x=>p.endsWith(x))){
-      location.replace(
-        "/tools/business-dashboard.html"
-      );
+      location.replace("/tools/business-dashboard.html");
     }
 
   }else{
 
-    console.log(
-      "%c🔓 Logged out",
-      "color:#f44336;font-weight:bold;"
-    );
+    console.log("%c🔓 Logged out","color:#f44336;font-weight:bold;");
 
     if(PROTECTED.some(x=>p.endsWith(x))){
       location.replace("/login.html");
@@ -300,7 +274,4 @@ auth.onAuthStateChanged(async user=>{
   }
 });
 
-console.log(
-  "%c⚙️ firebase.js READY ✔",
-  "color:#03a9f4;font-weight:bold;"
-);
+console.log("%c⚙️ firebase.js READY ✔","color:#03a9f4;font-weight:bold;");
