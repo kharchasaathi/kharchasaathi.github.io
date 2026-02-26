@@ -86,37 +86,48 @@
     const serviceProfit = num(m.serviceProfitCollected);
     const totalProfitRaw =
       salesProfit + serviceProfit;
+const withdrawn =
+  num(m.profitWithdrawn);
 
-    const totalExpenses =
-      num(m.expensesLive);
+const totalProfitRaw =
+  salesProfit + serviceProfit;
 
-    const offset =
-      Number(window.__dashboardOffset || 0);
+const totalExpenses =
+  num(m.expensesLive);
 
-    return {
+return {
 
-      salesProfit,
-      serviceProfit,
+  salesProfit,
+  serviceProfit,
 
-      totalProfit:
-        Math.max(0, totalProfitRaw - offset),
+  totalProfit:
+    Math.max(
+      0,
+      totalProfitRaw
+      - withdrawn
+      - offset
+    ),
 
-      totalExpenses,
+  totalExpenses,
 
-      netProfit:
-        Math.max(
-          0,
-          (totalProfitRaw - totalExpenses)
-          - offset
-        ),
+  netProfit:
+    Math.max(
+      0,
+      (totalProfitRaw
+        - totalExpenses
+        - withdrawn)
+      - offset
+    ),
 
-      creditTotal:
-        num(m.pendingCreditTotal),
+  creditTotal:
+    num(m.pendingCreditTotal),
 
-      totalInvestment:
-        num(m.stockInvestSold)
-        + num(m.serviceInvestCompleted)
-    };
+  totalInvestment:
+    num(m.stockInvestSold)
+    + num(m.serviceInvestCompleted)
+};
+    
+      
   };
 
   /* ======================================================
