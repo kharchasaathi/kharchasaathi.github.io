@@ -1,10 +1,10 @@
 /* =========================================
-   dashboard.js — COMMERCIAL REBUILD v31
-   SETTLEMENT + LEDGER SAFE ANALYTICS
+   dashboard.js — FINAL v32
+   WITHDRAW + SETTLEMENT + LEDGER SAFE
 
    ✔ Settlement aware
-   ✔ Collection synced
-   ✔ Credit unlock safe
+   ✔ Withdraw aware
+   ✔ Expense live lock safe
    ✔ Profit duplication guard
    ✔ Universal synced
    ✔ Multi-device safe
@@ -62,11 +62,9 @@
 
       const st = String(s.status).toLowerCase();
 
-      /* Credit pending */
       if (st === "credit")
         creditTotal += num(s.total);
 
-      /* Paid profit only */
       if (st === "paid") {
 
         saleProfit += num(s.profit);
@@ -83,11 +81,9 @@
 
       const st = String(j.status).toLowerCase();
 
-      /* Credit pending */
       if (st === "credit")
         creditTotal += num(j.remaining);
 
-      /* Paid profit only */
       if (st === "paid") {
 
         const invest = num(j.invest);
@@ -111,30 +107,45 @@
     });
 
     /* =====================================
-       🔥 APPLY SETTLEMENT OFFSETS
+       🔥 APPLY SETTLEMENT + WITHDRAW
     ===================================== */
 
+    const withdrawn =
+      num(window.__unMetrics?.profitWithdrawn);
+
+    /* Sale settlement */
     const saleLive =
-      Math.max(0, saleProfit - offs.sale);
+      Math.max(0, saleProfit - num(offs.sale));
 
+    /* Service settlement */
     const serviceLive =
-      Math.max(0, serviceProfit - offs.service);
+      Math.max(0, serviceProfit - num(offs.service));
 
+    /* Expense settlement */
     const expenseLive =
-      Math.max(0, expenseTotal - offs.expenses);
+      Math.max(0, expenseTotal - num(offs.expenses));
 
-    const netRaw =
-      saleLive +
-      serviceLive -
-      expenseLive;
+    /* Gross live */
+    const grossLive =
+      saleLive + serviceLive;
 
+    /* Net after expenses */
+    const netAfterExpense =
+      grossLive - expenseLive;
+
+    /* Final net after withdraw + net offset */
     const netLive =
-      Math.max(0, netRaw - offs.net);
+      Math.max(
+        0,
+        netAfterExpense
+        - withdrawn
+        - num(offs.net)
+      );
 
     return {
 
       profit:   netLive,
-      gross:    saleLive + serviceLive,
+      gross:    grossLive,
       expenses: expenseLive,
       credit:   creditTotal,
       invest:   investTotal
