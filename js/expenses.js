@@ -221,7 +221,7 @@ window.deleteExpense = deleteExpense;
 
 
 /* ===========================================================
-   🧹 CLEAR ALL
+   🧹 CLEAR ALL — FINANCIAL SAFE
 =========================================================== */
 
 function clearAllExpenses(){
@@ -238,17 +238,26 @@ function clearAllExpenses(){
     `Clear all expenses?\nTotal ₹${total}`
   )) return;
 
-  /* Reverse offsets */
+  /* -----------------------------------------
+     FINANCIAL SAFE OFFSET REVERSAL
+  ----------------------------------------- */
+
   window.expenses.forEach(e=>{
 
-    if(e.settled)
-      window.__offsets.expensesSettled -=
-        num(e.amount);
-    else
+    if(!e.settled){
+
+      /* Restore only LIVE expenses */
+
       window.__offsets.expensesLive -=
         num(e.amount);
 
+    }
+
+    /* Settled → Locked → No reversal */
+
   });
+
+  /* ----------------------------------------- */
 
   window.expenses = [];
 
