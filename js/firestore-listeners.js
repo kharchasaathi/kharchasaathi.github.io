@@ -1,15 +1,11 @@
 /* ===========================================================
-   firestore-listeners.js — FINAL SAFE v14
-   REALTIME + MULTI-DEVICE + OFFSET SYNC FIXED
+   firestore-listeners.js — FINAL SAFE v15
+   REALTIME + MULTI-DEVICE + WITHDRAW SYNC ADDED
 
    ✔ Realtime cloud sync
-   ✔ No baseline filtering
-   ✔ No settlement math
-   ✔ Console error safe
-   ✔ Main tab instant update
-   ✔ Offset realtime sync FIXED
-   ✔ Collection write-lock safe
-   ✔ Logout/Login safe
+   ✔ Withdraw persistence fixed
+   ✔ Universal metrics sync fixed
+   ✔ Offset realtime sync
    ✔ Multi-device safe
 =========================================================== */
 
@@ -197,7 +193,45 @@
     });
 
     /* ==================================================
-       OFFSETS — REALTIME SYNC FIXED
+       💰 WITHDRAWALS — NEW LISTENER
+    ================================================== */
+    ref.doc("withdrawals").onSnapshot(snap => {
+
+      if (!snap.exists) return;
+
+      window.__withdrawals =
+        snap.data().value || [];
+
+      window.renderWithdraw?.();
+
+      console.log("🔄 Withdrawals synced");
+    });
+
+    /* ==================================================
+       🧠 UNIVERSAL METRICS — NEW LISTENER
+    ================================================== */
+    ref.doc("unMetrics").onSnapshot(snap => {
+
+      if (!snap.exists) return;
+
+      const incoming = snap.data().value || {};
+
+      window.__unMetrics =
+        window.__unMetrics || {};
+
+      Object.assign(
+        window.__unMetrics,
+        incoming
+      );
+
+      updateUniversalBar?.();
+      renderDashboard?.();
+
+      console.log("🔄 Universal metrics synced");
+    });
+
+    /* ==================================================
+       OFFSETS — REALTIME SYNC
     ================================================== */
     ref.doc("offsets").onSnapshot(snap => {
 
@@ -205,11 +239,9 @@
 
       const incoming = snap.data().value || {};
 
-      /* SAFE INIT */
       if (!window.__offsets)
         window.__offsets = {};
 
-      /* ALWAYS MERGE (NO HYDRATION LOCK) */
       Object.assign(window.__offsets, incoming);
 
       updateUniversalBar?.();
