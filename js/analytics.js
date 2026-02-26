@@ -1,5 +1,6 @@
 /* ======================================================
-   analytics.js — FINAL v30 (EXECUTION + UNIVERSAL FIX)
+   analytics.js — FINAL v31
+   WITHDRAW + SETTLEMENT + UNIVERSAL SAFE
 ====================================================== */
 
 (function () {
@@ -28,7 +29,8 @@
     let todayExpenses = 0;
     let todayProfit   = 0;
 
-    /* SALES */
+    /* ---------------- SALES ---------------- */
+
     sales.forEach(s => {
 
       if (s.date !== today) return;
@@ -45,7 +47,8 @@
       }
     });
 
-    /* SERVICES */
+    /* ---------------- SERVICES ---------------- */
+
     services.forEach(j => {
 
       if (j.date_out !== today) return;
@@ -60,7 +63,8 @@
         todayCredit += num(j.remaining);
     });
 
-    /* EXPENSES */
+    /* ---------------- EXPENSES ---------------- */
+
     expenses.forEach(e => {
 
       if (e.date === today)
@@ -75,60 +79,77 @@
       netProfit: todayProfit - todayExpenses
     };
   };
-   /* ======================================================
-        TOTAL SUMMARY (UNIVERSAL LINKED + OFFSET SAFE)
+
+
+  /* ======================================================
+        TOTAL SUMMARY
+        (WITHDRAW + OFFSET SAFE)
   ====================================================== */
   window.getSummaryTotals = function () {
 
     const m = window.__unMetrics || {};
 
-    const salesProfit   = num(m.saleProfitCollected);
-    const serviceProfit = num(m.serviceProfitCollected);
+    const salesProfit   =
+      num(m.saleProfitCollected);
+
+    const serviceProfit =
+      num(m.serviceProfitCollected);
+
+    const withdrawn =
+      num(m.profitWithdrawn);   // 🔥 NEW
+
     const totalProfitRaw =
       salesProfit + serviceProfit;
-const withdrawn =
-  num(m.profitWithdrawn);
 
-const totalProfitRaw =
-  salesProfit + serviceProfit;
+    const totalExpenses =
+      num(m.expensesLive);
 
-const totalExpenses =
-  num(m.expensesLive);
+    const offset =
+      Number(window.__dashboardOffset || 0);
 
-return {
+    return {
 
-  salesProfit,
-  serviceProfit,
+      salesProfit,
+      serviceProfit,
 
-  totalProfit:
-    Math.max(
-      0,
-      totalProfitRaw
-      - withdrawn
-      - offset
-    ),
+      /* ---------------- PROFIT ---------------- */
 
-  totalExpenses,
+      totalProfit:
+        Math.max(
+          0,
+          totalProfitRaw
+          - withdrawn
+          - offset
+        ),
 
-  netProfit:
-    Math.max(
-      0,
-      (totalProfitRaw
-        - totalExpenses
-        - withdrawn)
-      - offset
-    ),
+      /* ---------------- EXPENSE ---------------- */
 
-  creditTotal:
-    num(m.pendingCreditTotal),
+      totalExpenses,
 
-  totalInvestment:
-    num(m.stockInvestSold)
-    + num(m.serviceInvestCompleted)
-};
-    
-      
+      /* ---------------- NET ---------------- */
+
+      netProfit:
+        Math.max(
+          0,
+          totalProfitRaw
+          - totalExpenses
+          - withdrawn
+          - offset
+        ),
+
+      /* ---------------- CREDIT ---------------- */
+
+      creditTotal:
+        num(m.pendingCreditTotal),
+
+      /* ---------------- INVESTMENT ---------------- */
+
+      totalInvestment:
+        num(m.stockInvestSold)
+        + num(m.serviceInvestCompleted)
+    };
   };
+
 
   /* ======================================================
         RENDER DASHBOARD
@@ -156,7 +177,11 @@ return {
       (qs("#dashInv").textContent =
         "₹" + Math.round(t.totalInvestment));
 
-    /* PIE */
+
+    /* ======================================================
+          PIE CHART
+    ====================================================== */
+
     const canvas = qs("#cleanPie");
     if (!canvas || typeof Chart === "undefined")
       return;
@@ -203,6 +228,7 @@ return {
     });
   };
 
+
   /* ======================================================
         TODAY SUMMARY CARDS
   ====================================================== */
@@ -234,6 +260,7 @@ return {
         "₹" + Math.round(d.netProfit));
   };
 
+
   /* ======================================================
         CLOUD SYNC
   ====================================================== */
@@ -249,6 +276,7 @@ return {
       updateUniversalBar?.();
     }
   );
+
 
   /* ======================================================
         SAFE LOAD
