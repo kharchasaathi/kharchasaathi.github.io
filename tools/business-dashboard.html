@@ -714,6 +714,40 @@ body{
     <canvas id="cleanPie" height="150"></canvas>
   </div>
 </section>
+  <!-- =============== PROFIT WITHDRAW =============== -->
+<section id="profitWithdraw" class="section">
+  <h3>💰 Profit Withdraw</h3>
+
+  <div class="row-inline"
+       style="margin-bottom:8px;display:flex;gap:8px;flex-wrap:wrap;">
+
+    <input id="wdAmount" type="number" placeholder="Withdraw Amount"
+      style="width:160px;padding:6px 8px;border-radius:10px;
+      border:1px solid var(--ks-border-soft);
+      background:var(--ks-bg-card);color:var(--ks-text-main);">
+
+    <input id="wdNote" type="text" placeholder="Note"
+      style="min-width:200px;padding:6px 8px;border-radius:10px;
+      border:1px solid var(--ks-border-soft);
+      background:var(--ks-bg-card);color:var(--ks-text-main);">
+
+    <button id="withdrawBtn" class="small-btn"
+      style="background:#16a34a;color:#fff;">
+      Withdraw
+    </button>
+  </div>
+
+  <table id="withdrawTable">
+    <thead>
+      <tr>
+        <th>Date</th>
+        <th>Amount</th>
+        <th>Note</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+</section>
 <!-- =============== COLLECTION TAB =============== -->
 <section id="collection" class="section">
 
