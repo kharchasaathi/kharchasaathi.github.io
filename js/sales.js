@@ -1,11 +1,12 @@
 /* ===========================================================
-   sales.js — COMMERCIAL REBUILD v28 (PART 1)
+   sales.js — COMMERCIAL REBUILD v30 (PART 1 — API SAFE FIFO)
 
-   ✔ Pure commercial behavior
-   ✔ Paid → Auto collection entry
-   ✔ Credit → Collection only when cleared
-   ✔ Duplicate collection guard
-   ✔ Auto wanting restored
+   ✔ FIFO Compatible
+   ✔ API Safe (No prompt dependency)
+   ✔ No direct UI dependency
+   ✔ Paid → Auto collection
+   ✔ Credit → Profit unlock on collect
+   ✔ Duplicate guard
    ✔ Universal safe
 =========================================================== */
 
@@ -56,8 +57,71 @@ window.saveSales = function () {
 };
 
 
+
 /* ===========================================================
-   ADD SALE ENTRY — COMMERCIAL + WANTING SAFE
+   🔥 INTERNAL FIFO DEDUCT ENGINE (NO PROMPTS)
+   Used by API + UI safely
+=========================================================== */
+function deductStockFIFO(type, product, qty) {
+
+  qty = Number(qty);
+
+  const batches = (window.stock || [])
+    .filter(p => p.type === type && p.name === product)
+    .sort((a,b)=> {
+      return Number((a.batch||"B0").replace("B","")) -
+             Number((b.batch||"B0").replace("B",""));
+    });
+
+  if (!batches.length)
+    return { error: "Product not found in stock." };
+
+  const totalRemain = batches.reduce(
+    (sum,p)=>sum+(Number(p.qty)-Number(p.sold)),0
+  );
+
+  if (totalRemain < qty)
+    return { error: "Not enough stock!" };
+
+  let remainingQty = qty;
+  let totalCostUsed = 0;
+
+  for (let p of batches) {
+
+    const available =
+      Number(p.qty) - Number(p.sold);
+
+    if (available <= 0) continue;
+
+    const deduct =
+      Math.min(available, remainingQty);
+
+    p.sold += deduct;
+
+    totalCostUsed += deduct * Number(p.cost);
+
+    remainingQty -= deduct;
+
+    if (remainingQty <= 0) break;
+  }
+
+  window.saveStock?.();
+
+  /* Wanting handled centrally */
+  if (typeof checkProductWanting === "function") {
+    const sample = batches[0];
+    checkProductWanting(sample.productId);
+  }
+
+  return {
+    costUsed: totalCostUsed
+  };
+}
+
+
+
+/* ===========================================================
+   ADD SALE ENTRY — API SAFE FIFO
 =========================================================== */
 function addSaleEntry({
   date,
@@ -79,68 +143,20 @@ function addSaleEntry({
   if (!type || !product || qty <= 0 || price <= 0)
     return;
 
-  const p = (window.stock || [])
-    .find(x => x.type === type && x.name === product);
+  /* FIFO Deduct */
+  const deductResult =
+    deductStockFIFO(type, product, qty);
 
-  if (!p)
-    return alert("Product not found in stock.");
+  if (deductResult?.error)
+    return alert(deductResult.error);
 
-  const remain =
-    Number(p.qty) - Number(p.sold);
-
-  if (remain < qty)
-    return alert("Not enough stock!");
-
-  const cost  = Number(p.cost);
   const total = qty * price;
   const isPaid = status === "paid";
 
-
-  /* =======================================================
-     📦 STOCK REDUCE
-  ======================================================= */
-  p.sold = Number(p.sold) + qty;
-
-
-  /* =======================================================
-     🔁 AUTO WANTING (RESTORED)
-  ======================================================= */
-  const remaining =
-    Number(p.qty) - Number(p.sold);
-
-  if (remaining <= 0) {
-
-    window.wanting =
-      window.wanting || [];
-
-    const exists =
-      window.wanting.find(
-        w => w.type === p.type &&
-             w.name === p.name
-      );
-
-    if (!exists) {
-
-      window.wanting.push({
-        id: uid("want"),
-        type: p.type,
-        name: p.name,
-        qty: p.reorderQty || 1,
-        date: todayDate()
-      });
-
-      window.saveWanting?.();
-    }
-  }
-
-  window.saveStock?.();
-
-
-  /* =======================================================
-     💰 PROFIT
-  ======================================================= */
   const profitValue =
-    isPaid ? (total - qty * cost) : 0;
+    isPaid
+      ? (total - Number(deductResult.costUsed))
+      : 0;
 
 
   const saleObj = {
@@ -153,7 +169,7 @@ function addSaleEntry({
     price,
     total,
     profit: profitValue,
-    cost,
+    cost: deductResult.costUsed,
     status: isPaid ? "Paid" : "Credit",
     fromCredit: !isPaid,
     paymentMode: isPaid ? (paymentMode || "Cash") : null,
@@ -163,7 +179,6 @@ function addSaleEntry({
     collectionLogged: false
   };
 
-
   window.sales = window.sales || [];
   window.sales.push(saleObj);
 
@@ -171,7 +186,7 @@ function addSaleEntry({
 
 
   /* =======================================================
-     💵 AUTO COLLECTION (PAID ONLY)
+     AUTO COLLECTION (PAID ONLY)
   ======================================================= */
   if (isPaid) {
 
@@ -191,18 +206,15 @@ function addSaleEntry({
   }
 
 
-  renderSales();
+  renderSales?.();
   renderCollection?.();
   window.renderAnalytics?.();
   window.updateSummaryCards?.();
   window.updateUniversalBar?.();
 }
 window.addSaleEntry = addSaleEntry;
-
-
-
 /* ===========================================================
-   CREDIT → PAID COLLECTION (SAFE)
+   CREDIT → PAID COLLECTION (API SAFE + FIFO SAFE)
 =========================================================== */
 function collectCreditSale(id) {
 
@@ -227,18 +239,22 @@ function collectCreditSale(id) {
   )) return;
 
 
-  /* PROFIT UNLOCK */
+  /* ================= PROFIT UNLOCK ================= */
+
   s.status = "Paid";
   s.fromCredit = true;
   s.paymentMode = mode;
+
+  // FIFO version stores full costUsed already
   s.profit =
     Number(s.total) -
-    Number(s.qty * s.cost);
+    Number(s.cost);
 
   window.saveSales();
 
 
-  /* COLLECTION LOG (NO DUPLICATE) */
+  /* ================= COLLECTION LOG (NO DUPLICATE) ================= */
+
   if (!s.collectionLogged) {
 
     const details =
@@ -257,7 +273,7 @@ function collectCreditSale(id) {
   }
 
 
-  renderSales();
+  renderSales?.();
   renderCollection?.();
   window.renderAnalytics?.();
   window.updateSummaryCards?.();
@@ -266,8 +282,11 @@ function collectCreditSale(id) {
   alert("Credit Collected Successfully!");
 }
 window.collectCreditSale = collectCreditSale;
+
+
+
 /* ===========================================================
-   RENDER SALES TABLE — COMMERCIAL SAFE
+   RENDER SALES TABLE — FIFO SAFE + LEDGER SAFE
 =========================================================== */
 function renderSales() {
 
@@ -330,39 +349,28 @@ function renderSales() {
 
     totalSum += Number(s.total || 0);
 
-    if (
-      String(s.status).toLowerCase()
-      === "paid"
-    ){
+    if (String(s.status).toLowerCase() === "paid") {
       profitSum += Number(s.profit || 0);
     }
 
-
     const modeDisplay =
       s.status === "Paid"
-      ? (s.paymentMode || "")
-      : (s.creditMode || "");
-
+        ? (s.paymentMode || "")
+        : (s.creditMode || "");
 
     const statusHTML =
-      String(s.status).toLowerCase()
-      === "credit"
+      String(s.status).toLowerCase() === "credit"
       ? `<span class="status-credit">
            Credit (${modeDisplay})
          </span>
          <button class="small-btn"
-           style="
-             background:#16a34a;
-             color:white;
-             padding:3px 8px;
-             font-size:11px"
+           style="background:#16a34a;color:white;padding:3px 8px;font-size:11px"
            onclick="collectCreditSale('${s.id}')">
            Collect
          </button>`
       : `<span class="status-paid">
            Paid (${modeDisplay})
          </span>`;
-
 
     return `
       <tr>
@@ -381,12 +389,8 @@ function renderSales() {
   }).join("");
 
 
-  document.getElementById("salesTotal")
-    .textContent = totalSum;
-
-  document.getElementById("profitTotal")
-    .textContent = profitSum;
-
+  document.getElementById("salesTotal").textContent = totalSum;
+  document.getElementById("profitTotal").textContent = profitSum;
 
   window.updateUniversalBar?.();
 }
@@ -412,9 +416,9 @@ document.getElementById("filterSalesBtn")
 
 
 
-
 /* ===========================================================
-   CLEAR SALES — LEDGER SAFE DELETE
+   CLEAR SALES — LEDGER SAFE DELETE (FIFO SAFE)
+   ⚠️ STOCK REVERSAL INTENTIONALLY NOT DONE
 =========================================================== */
 
 document.getElementById("clearSalesBtn")
@@ -434,7 +438,7 @@ document.getElementById("clearSalesBtn")
     );
 
   if (hasPendingCredit &&
-     view !== "credit-pending")
+      view !== "credit-pending")
   {
     return alert(
       "❌ Cannot clear while Pending Credit exists!"
@@ -447,11 +451,6 @@ document.getElementById("clearSalesBtn")
   )) return;
 
 
-
-  /* ======================================================
-     🧠 LEDGER SAFE FILTER DELETE
-  ====================================================== */
-
   const removedSales = [];
 
 
@@ -463,10 +462,7 @@ document.getElementById("clearSalesBtn")
     const fc =
       Boolean(s.fromCredit);
 
-
-    /* ---------- CASH PAID ---------- */
     if (view === "cash") {
-
       if (st === "paid" && !fc) {
         removedSales.push(s);
         return false;
@@ -474,10 +470,7 @@ document.getElementById("clearSalesBtn")
       return true;
     }
 
-
-    /* ---------- CREDIT CLEARED ---------- */
     if (view === "credit-paid") {
-
       if (st === "paid" && fc) {
         removedSales.push(s);
         return false;
@@ -485,10 +478,7 @@ document.getElementById("clearSalesBtn")
       return true;
     }
 
-
-    /* ---------- CREDIT PENDING ---------- */
     if (view === "credit-pending") {
-
       if (st === "credit") {
         removedSales.push(s);
         return false;
@@ -496,8 +486,6 @@ document.getElementById("clearSalesBtn")
       return true;
     }
 
-
-    /* ---------- ALL ---------- */
     if (view === "all") {
       removedSales.push(s);
       return false;
@@ -507,10 +495,7 @@ document.getElementById("clearSalesBtn")
   });
 
 
-
-  /* ======================================================
-     🔄 COLLECTION ADJUST TRIGGER
-  ====================================================== */
+  /* COLLECTION ADJUST TRIGGER */
 
   if (removedSales.length > 0) {
 
@@ -523,14 +508,9 @@ document.getElementById("clearSalesBtn")
   }
 
 
-
-  /* ======================================================
-     SAVE + REFRESH
-  ====================================================== */
-
   window.saveSales();
 
-  renderSales();
+  renderSales?.();
   renderCollection?.();
   window.renderAnalytics?.();
   window.updateSummaryCards?.();
