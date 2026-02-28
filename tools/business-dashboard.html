@@ -187,94 +187,82 @@ body{
 </div>
 <div id="universalBar" class="universal-bar">
 
-  <!-- ================= OPENING SECTION ================= -->
-  <div class="ub-section ub-opening">
+  <div class="ub-grid">
 
-    <div class="ub-row">
-      <span class="ub-label">Opening Balance</span>
-      <span id="ubOpening" class="ub-value">₹0</span>
-      <button class="small-btn" onclick="withdrawOpening()">Withdraw</button>
+    <!-- OPENING CARD -->
+    <div class="ub-card">
+      <div class="ub-title">Opening Balance</div>
+      <div class="ub-amount" id="ubOpening">₹0</div>
+
+      <div class="ub-sub">Cash: <span id="ubCash">₹0</span></div>
+      <div class="ub-sub">UPI: <span id="ubUPI">₹0</span></div>
+
+      <button class="small-btn ub-btn" onclick="withdrawOpening()">Withdraw</button>
     </div>
 
-    <!-- NEW: Cash Display -->
-    <div class="ub-row">
-      <span class="ub-label">Cash Available</span>
-      <span id="ubCash" class="ub-value">₹0</span>
+    <!-- SALES PROFIT -->
+    <div class="ub-card income">
+      <div class="ub-title">Sales Profit</div>
+      <div class="ub-amount" id="ubSaleProfit">₹0</div>
+      <button class="small-btn ub-btn" onclick="withdrawSaleProfit()">Withdraw</button>
     </div>
 
-    <!-- NEW: UPI Display -->
-    <div class="ub-row">
-      <span class="ub-label">UPI Available</span>
-      <span id="ubUPI" class="ub-value">₹0</span>
+    <!-- SERVICE PROFIT -->
+    <div class="ub-card income">
+      <div class="ub-title">Service Profit</div>
+      <div class="ub-amount" id="ubServiceProfit">₹0</div>
+      <button class="small-btn ub-btn" onclick="withdrawServiceProfit()">Withdraw</button>
     </div>
 
-  </div>
-
-
-  <!-- ================= INCOME SECTION (+) ================= -->
-  <div class="ub-section ub-income">
-
-    <div class="ub-row">
-      <span class="ub-label">Sales Profit</span>
-      <span id="ubSaleProfit" class="ub-value">₹0</span>
-      <button class="small-btn" onclick="withdrawSaleProfit()">Withdraw</button>
+    <!-- SALES INVESTMENT -->
+    <div class="ub-card income">
+      <div class="ub-title">Sales Investment</div>
+      <div class="ub-amount" id="ubSaleInv">₹0</div>
+      <button class="small-btn ub-btn" onclick="withdrawSaleInv()">Withdraw</button>
     </div>
 
-    <div class="ub-row">
-      <span class="ub-label">Service Profit</span>
-      <span id="ubServiceProfit" class="ub-value">₹0</span>
-      <button class="small-btn" onclick="withdrawServiceProfit()">Withdraw</button>
+    <!-- SERVICE INVESTMENT -->
+    <div class="ub-card income">
+      <div class="ub-title">Service Investment</div>
+      <div class="ub-amount" id="ubServiceInv">₹0</div>
+      <button class="small-btn ub-btn" onclick="withdrawServiceInv()">Withdraw</button>
     </div>
 
-    <div class="ub-row">
-      <span class="ub-label">Sales Investment</span>
-      <span id="ubSaleInv" class="ub-value">₹0</span>
-      <button class="small-btn" onclick="withdrawSaleInv()">Withdraw</button>
+    <!-- GST -->
+    <div class="ub-card income">
+      <div class="ub-title">GST Collected</div>
+      <div class="ub-amount" id="ubGST">₹0</div>
+      <button class="small-btn ub-btn" onclick="payGST()">Pay GST</button>
     </div>
 
-    <div class="ub-row">
-      <span class="ub-label">Service Investment</span>
-      <span id="ubServiceInv" class="ub-value">₹0</span>
-      <button class="small-btn" onclick="withdrawServiceInv()">Withdraw</button>
+    <!-- EXPENSES -->
+    <div class="ub-card expense">
+      <div class="ub-title">Expenses</div>
+      <div class="ub-amount" id="ubExpenses">₹0</div>
     </div>
 
-    <div class="ub-row gst-row">
-      <span class="ub-label">GST Collected</span>
-      <span id="ubGST" class="ub-value">₹0</span>
-      <button class="small-btn" onclick="payGST()">Pay GST</button>
+    <!-- PROFIT WITHDRAW -->
+    <div class="ub-card expense">
+      <div class="ub-title">Profit Withdraw</div>
+      <div class="ub-amount" id="ubProfitWithdraw">₹0</div>
     </div>
 
-  </div>
-
-
-  <!-- ================= EXPENSE SECTION (-) ================= -->
-  <div class="ub-section ub-expense">
-
-    <div class="ub-row">
-      <span class="ub-label">Expenses</span>
-      <span id="ubExpenses" class="ub-value">₹0</span>
+    <!-- STOCK WITHDRAW -->
+    <div class="ub-card expense">
+      <div class="ub-title">Stock Withdraw</div>
+      <div class="ub-amount" id="ubStockWithdraw">₹0</div>
     </div>
 
-    <div class="ub-row">
-      <span class="ub-label">Profit Withdraw</span>
-      <span id="ubProfitWithdraw" class="ub-value">₹0</span>
-    </div>
-
-    <div class="ub-row">
-      <span class="ub-label">Stock Withdraw</span>
-      <span id="ubStockWithdraw" class="ub-value">₹0</span>
-    </div>
-
-    <div class="ub-row">
-      <span class="ub-label">GST Paid</span>
-      <span id="ubGSTPaid" class="ub-value">₹0</span>
+    <!-- GST PAID -->
+    <div class="ub-card expense">
+      <div class="ub-title">GST Paid</div>
+      <div class="ub-amount" id="ubGSTPaid">₹0</div>
     </div>
 
   </div>
 
-
-  <!-- ================= NET FLOW ================= -->
-  <div class="ub-netflow">
+  <!-- NET FLOW BIG BOX -->
+  <div class="ub-netflow-box">
     Net Flow: <span id="ubNetFlow">₹0</span>
   </div>
 
