@@ -1,13 +1,12 @@
 /* ==========================================================
-   stock.js — COMMERCIAL REBUILD v18.1 (PART 1 — STABLE)
+   stock.js — PRO FIFO REBUILD (PART 1 — CORE ENGINE SAFE)
 
-   ✔ FIFO Batch System
-   ✔ Auto collection (Paid)
-   ✔ Credit safe ledger
-   ✔ Auto wanting (FIXED)
-   ✔ reorderQty preserved
-   ✔ Sales.js compatible
-   ✔ Universal sync safe
+   ✔ Safe Data Migration
+   ✔ Stable ProductId (No Random Timestamp)
+   ✔ True Batch Increment (No Merge)
+   ✔ Strict FIFO Deduct Engine
+   ✔ Old Data Compatible
+   ✔ Zero Feature Loss
 ========================================================== */
 
 const $  = s => document.querySelector(s);
@@ -19,39 +18,90 @@ const toDisp = d =>
 
 
 /* ==========================================================
-   INTERNAL PRODUCT ID GENERATOR
+   🔄 SAFE DATA MIGRATION (VERY IMPORTANT)
 ========================================================== */
-function generateProductId(name){
-  const base = name.replace(/\s+/g,"")
-                   .toUpperCase()
-                   .slice(0,6);
-  return base + "-" + Date.now().toString().slice(-5);
+function migrateStockStructure(){
+
+  window.stock = window.stock || [];
+
+  window.stock.forEach(p => {
+
+    /* Stable ProductId Fix */
+    if(!p.productId){
+      p.productId =
+        p.type.replace(/\s+/g,"").toUpperCase() +
+        "-" +
+        p.name.replace(/\s+/g,"").toUpperCase();
+    }
+
+    /* Batch Fix */
+    if(!p.batch){
+      p.batch = "B01";
+    }
+
+    /* Sold Fix */
+    if(typeof p.sold !== "number"){
+      p.sold = 0;
+    }
+
+    /* History Fix */
+    if(!Array.isArray(p.history)){
+      p.history = [{
+        date: p.date || todayDate(),
+        qty: p.qty,
+        cost: p.cost
+      }];
+    }
+
+  });
+
+}
+
+window.addEventListener("load", migrateStockStructure);
+
+
+/* ==========================================================
+   🆔 STABLE PRODUCT ID (NO RANDOM ID)
+========================================================== */
+function generateProductId(type,name){
+
+  return (
+    type.replace(/\s+/g,"").toUpperCase() +
+    "-" +
+    name.replace(/\s+/g,"").toUpperCase()
+  );
 }
 
 
 /* ==========================================================
-   BATCH GENERATOR
+   📦 TRUE BATCH GENERATOR (NO MERGE ISSUE)
 ========================================================== */
 function generateBatch(productId){
 
-  const batches = (window.stock||[])
-    .filter(p=>p.productId===productId)
-    .map(p=>Number(p.batch?.replace("B","")||0));
+  const existing =
+    (window.stock||[])
+      .filter(p=>p.productId===productId);
 
-  const next = batches.length
-    ? Math.max(...batches)+1
-    : 1;
+  if(!existing.length) return "B01";
+
+  const numbers =
+    existing.map(p =>
+      Number((p.batch||"B01").replace("B",""))
+    );
+
+  const next =
+    Math.max(...numbers)+1;
 
   return "B"+String(next).padStart(2,"0");
 }
 
 
 /* ==========================================================
-   SAVE STOCK — CLOUD ONLY
+   💾 SAVE STOCK — CLOUD SAFE
 ========================================================== */
-window.saveStock = function () {
+window.saveStock = function(){
 
-  if (typeof cloudSaveDebounced === "function") {
+  if(typeof cloudSaveDebounced === "function"){
     cloudSaveDebounced("stock", window.stock || []);
   }
 
@@ -62,9 +112,9 @@ window.saveStock = function () {
 
 
 /* ==========================================================
-   ADD STOCK (NEW BATCH ENTRY)
+   ➕ ADD STOCK (ALWAYS NEW BATCH)
 ========================================================== */
-$("#addStockBtn")?.addEventListener("click", () => {
+$("#addStockBtn")?.addEventListener("click",()=>{
 
   let date = $("#pdate").value || todayDate();
   date = toInternalIfNeeded(date);
@@ -74,26 +124,13 @@ $("#addStockBtn")?.addEventListener("click", () => {
   const qty  = num($("#pqty").value);
   const cost = num($("#pcost").value);
 
-  if (!type || !name || qty <= 0 || cost <= 0)
+  if(!type || !name || qty<=0 || cost<=0)
     return alert("Enter valid product details.");
 
   window.stock = window.stock || [];
 
-  let existingProduct =
-    window.stock.find(
-      x => x.type===type &&
-           x.name.toLowerCase()===name.toLowerCase()
-    );
-
-  let productId;
-
-  if (!existingProduct) {
-    productId = generateProductId(name);
-  } else {
-    productId = existingProduct.productId;
-  }
-
-  const batch = generateBatch(productId);
+  const productId = generateProductId(type,name);
+  const batch     = generateBatch(productId);
 
   window.stock.push({
 
@@ -112,11 +149,16 @@ $("#addStockBtn")?.addEventListener("click", () => {
     limit: num($("#globalLimit").value || 2),
     reorderQty: 1,
 
-    history: [{ date, qty, cost }]
+    history: [{
+      date,
+      qty,
+      cost
+    }]
+
   });
 
   window.saveStock();
-  renderStock();
+  renderStock?.();
   window.updateUniversalBar?.();
 
   $("#pname").value="";
@@ -126,17 +168,60 @@ $("#addStockBtn")?.addEventListener("click", () => {
 
 
 /* ==========================================================
-   FIFO HELPER
+   🔁 FIFO HELPER (RESTORED — IMPORTANT)
 ========================================================== */
 function getFifoBatches(productId){
 
   return (window.stock||[])
     .filter(p=>p.productId===productId)
-    .sort((a,b)=>{
-      return Number(a.batch.replace("B","")) -
-             Number(b.batch.replace("B",""));
-    });
+    .sort((a,b)=>
+      Number(a.batch.replace("B","")) -
+      Number(b.batch.replace("B",""))
+    );
 }
+
+
+/* ==========================================================
+   🧠 STRICT FIFO DEDUCT ENGINE (ISOLATED)
+========================================================== */
+function deductFIFO(productId, qty){
+
+  const fifoList = getFifoBatches(productId);
+
+  let remaining = qty;
+  let totalCostUsed = 0;
+
+  for(let batch of fifoList){
+
+    const available =
+      num(batch.qty) - num(batch.sold);
+
+    if(available<=0) continue;
+
+    const deduct =
+      Math.min(available, remaining);
+
+    batch.sold += deduct;
+    totalCostUsed += deduct * num(batch.cost);
+
+    remaining -= deduct;
+
+    if(remaining<=0) break;
+  }
+
+  if(remaining>0){
+    return { error:"Not enough stock." };
+  }
+
+  window.saveStock?.();
+
+  return {
+    costUsed: totalCostUsed
+  };
+}
+/* ==========================================================
+   PART 2 — UI + SALES + WANTING + RENDER
+========================================================== */
 
 
 /* ==========================================================
@@ -144,9 +229,7 @@ function getFifoBatches(productId){
 ========================================================== */
 function checkProductWanting(productId){
 
-  const batches =
-    (window.stock||[])
-    .filter(p=>p.productId===productId);
+  const batches = getFifoBatches(productId);
 
   const totalRemain =
     batches.reduce(
@@ -159,8 +242,7 @@ function checkProductWanting(productId){
   const sample = batches[0];
   if(!sample) return;
 
-  window.wanting =
-    window.wanting || [];
+  window.wanting = window.wanting || [];
 
   const exists =
     window.wanting.find(
@@ -184,7 +266,7 @@ function checkProductWanting(productId){
 
 
 /* ==========================================================
-   QUICK SALE — FIFO SAFE ENGINE
+   QUICK SALE — USES STRICT FIFO ENGINE
 ========================================================== */
 function stockQuickSale(id, mode) {
 
@@ -215,8 +297,7 @@ function stockQuickSale(id, mode) {
   if (!price) return;
 
 
-  /* ================= PAYMENT MODE ================= */
-
+  /* PAYMENT MODE */
   let paymentMode = "Cash";
   let creditMode  = null;
 
@@ -238,36 +319,19 @@ function stockQuickSale(id, mode) {
   }
 
 
-  /* ==================================================
-     FIFO DEDUCT ENGINE
-  ================================================== */
+  /* 🔥 STRICT FIFO DEDUCT */
+  const deductResult = deductFIFO(productId, qty);
 
-  let remainingQty = qty;
-  let totalCostUsed = 0;
-
-  for (let p of fifoList){
-
-    const available =
-      num(p.qty) - num(p.sold);
-
-    if (available <= 0) continue;
-
-    const deduct =
-      Math.min(available, remainingQty);
-
-    p.sold += deduct;
-
-    totalCostUsed += deduct * num(p.cost);
-
-    remainingQty -= deduct;
-
-    if (remainingQty <= 0) break;
+  if (deductResult?.error) {
+    return alert(deductResult.error);
   }
 
-  window.saveStock();
+  const totalCostUsed = deductResult.costUsed;
 
-  /* 🔥 WANTING FIXED */
+
+  /* WANTING CHECK */
   checkProductWanting(productId);
+
 
   const total  = qty * price;
   const profit = isPaid
@@ -275,10 +339,7 @@ function stockQuickSale(id, mode) {
     : 0;
 
 
-  /* ==================================================
-     SALES ENTRY
-  ================================================== */
-
+  /* SALES ENTRY */
   const saleObj = {
 
     id: uid("sale"),
@@ -314,6 +375,7 @@ function stockQuickSale(id, mode) {
   window.saveSales?.();
 
 
+  /* COLLECTION AUTO */
   if (isPaid) {
 
     const details =
@@ -338,19 +400,10 @@ function stockQuickSale(id, mode) {
 }
 
 window.stockQuickSale = stockQuickSale;
-/* ==========================================================
-   PART 2 — FIFO BATCH EXTENSIONS (STABLE)
-
-   ✔ Sold-out batch auto hide
-   ✔ Batch column visible
-   ✔ Wanting already handled in Part 1
-   ✔ Investment accurate
-   ✔ History per batch
-========================================================== */
 
 
 /* ==========================================================
-   📜 SHOW PURCHASE HISTORY (BATCH SAFE)
+   SHOW PURCHASE HISTORY (PER BATCH)
 ========================================================== */
 function showStockHistory(id){
 
@@ -398,7 +451,7 @@ window.showStockHistory = showStockHistory;
 
 
 /* ==========================================================
-   RENDER TABLE — FIFO SAFE
+   RENDER STOCK TABLE (FIFO DISPLAY SAFE)
 ========================================================== */
 function renderStock() {
 
@@ -416,13 +469,13 @@ function renderStock() {
   let data = window.stock || [];
 
 
-  /* ---------------- HIDE SOLD OUT BATCHES ---------------- */
+  /* HIDE SOLD OUT */
   data = data.filter(p =>
     (num(p.qty) - num(p.sold)) > 0
   );
 
 
-  /* ---------------- FILTERS ---------------- */
+  /* FILTERS */
   if (filterType !== "all")
     data = data.filter(
       p => p.type === filterType
@@ -436,7 +489,7 @@ function renderStock() {
     );
 
 
-  /* ---------------- SORT FIFO DISPLAY ---------------- */
+  /* FIFO SORT */
   data.sort((a,b)=>{
 
     if(a.productId === b.productId){
@@ -448,7 +501,7 @@ function renderStock() {
   });
 
 
-  /* ---------------- TABLE BUILD ---------------- */
+  /* BUILD TABLE */
   tbody.innerHTML = data.map((p)=>{
 
     const remain =
@@ -480,9 +533,8 @@ function renderStock() {
 }
 
 
-
 /* ==========================================================
-   INVESTMENT ENGINE — FIFO LIVE VALUE
+   LIVE STOCK INVESTMENT
 ========================================================== */
 function updateStockInvestment(){
 
@@ -504,7 +556,6 @@ function updateStockInvestment(){
 }
 
 
-
 /* ==========================================================
    FILTER EVENTS
 ========================================================== */
@@ -515,9 +566,8 @@ $("#filterType")
   ?.addEventListener("change",renderStock);
 
 
-
 /* ==========================================================
-   INIT SAFE LOAD
+   INIT LOAD
 ========================================================== */
 window.addEventListener("load",()=>{
 
