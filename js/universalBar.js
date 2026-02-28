@@ -1,12 +1,9 @@
 /* ===========================================================
-   universal-bar.js — FINAL v6
-   SETTLEMENT + WITHDRAW + LEDGER SAFE
-   + Dynamic Net Flow Color
+   universal-bar.js — LEDGER DRIVEN v8
+   Ledger Based + Global Pending Credit
 =========================================================== */
 
 (function () {
-
-  /* ---------------- HELPERS ---------------- */
 
   const num = v =>
     (isNaN(v = Number(v))) ? 0 : Number(v);
@@ -16,135 +13,51 @@
 
 
   /* ==========================================================
-     METRICS ENGINE
+     RENDER FROM LEDGER + GLOBAL PENDING
   ========================================================== */
-  function computeMetrics() {
+  function renderUniversalBar() {
 
-    if (window.__dashboardViewCleared) {
-      return {
-        saleProfitCollected: 0,
-        serviceProfitCollected: 0,
-        stockInvestSold: 0,
-        serviceInvestCompleted: 0,
-        expensesLive: 0,
-        pendingCreditTotal: 0,
-        profitWithdrawn: 0,
-        netProfit: 0
-      };
-    }
-
-    const sales    = window.sales    || [];
-    const services = window.services || [];
-    const expenses = window.expenses || [];
-    const offs     = window.__offsets || {};
-
-    let saleProfitAll     = 0;
-    let serviceProfitAll  = 0;
-    let expensesAll       = 0;
-    let stockInvestAll    = 0;
-    let serviceInvestAll  = 0;
-    let pendingCredit     = 0;
-
-    /* ---------------- SALES ---------------- */
-
-    sales.forEach(s => {
-
-      const st = String(s.status).toLowerCase();
-
-      if (st === "credit")
-        pendingCredit += num(s.total);
-
-      if (st === "paid") {
-        saleProfitAll += num(s.profit);
-        stockInvestAll += num(s.qty) * num(s.cost);
-      }
-    });
-
-
-    /* ---------------- SERVICES ---------------- */
-
-    services.forEach(j => {
-
-      const st = String(j.status).toLowerCase();
-
-      if (st === "credit")
-        pendingCredit += num(j.remaining);
-
-      if (st === "paid") {
-
-        const invest = num(j.invest);
-        const profit =
-          num(j.profit) ||
-          (num(j.paid) - invest);
-
-        serviceProfitAll += Math.max(0, profit);
-        serviceInvestAll += invest;
-      }
-    });
-
-
-    /* ---------------- EXPENSES ---------------- */
-
-    expenses.forEach(e => {
-      expensesAll += num(e.amount);
-    });
-
-    const settledOffset = num(offs.expensesSettled);
-    const expensesLive =
-      Math.max(0, expensesAll - settledOffset);
-
-    const withdrawn =
-      num(window.__unMetrics?.profitWithdrawn);
-
-    const netLive =
-      saleProfitAll +
-      serviceProfitAll -
-      expensesLive -
-      withdrawn;
-
-    return {
-      saleProfitCollected: saleProfitAll,
-      serviceProfitCollected: serviceProfitAll,
-      stockInvestSold: stockInvestAll,
-      serviceInvestCompleted: serviceInvestAll,
-      expensesLive,
-      pendingCreditTotal: pendingCredit,
-      profitWithdrawn: withdrawn,
-      netProfit: netLive
-    };
-  }
-
-
-  /* ==========================================================
-     UI RENDER
-  ========================================================== */
-  function updateUniversalBar() {
-
-    const m = computeMetrics();
-
-    m.profitWithdrawn =
-      num(window.__unMetrics?.profitWithdrawn);
-
-    window.__unMetrics = m;
+    const L = window.currentLedger;
+    if (!L) return;
 
     const set = (id, v) => {
       const el = document.getElementById(id);
       if (el) el.textContent = money(v);
     };
 
-    /* Update Cards */
-    set("ubSaleProfit",    m.saleProfitCollected);
-    set("ubServiceProfit", m.serviceProfitCollected);
-    set("ubSaleInv",       m.stockInvestSold);
-    set("ubServiceInv",    m.serviceInvestCompleted);
-    set("ubExpenses",      m.expensesLive);
-    set("ubProfitWithdraw",m.profitWithdrawn);
-    set("ubNetFlow",       m.netProfit);
+    /* ---------------- INCOME (+) ---------------- */
+
+    set("ubOpening",       L.openingBalance);
+    set("ubSaleProfit",    L.salesProfit);
+    set("ubServiceProfit", L.serviceProfit);
+    set("ubSaleInv",       L.salesInvestmentReturn);
+    set("ubServiceInv",    L.serviceInvestmentReturn);
+    set("ubGstCollected",  L.gstCollected);
+
+    /* ---------------- EXPENSE (-) ---------------- */
+
+    set("ubExpenses",  L.expenses);
+    set("ubWithdraw",  L.withdrawals);
+    set("ubGstPaid",   L.gstPaid);
 
 
-    /* ======================================================
-       🔥 Dynamic Net Flow Color
-    ====================================================== */
+    /* ---------------- NET FLOW (Ledger Only) ---------------- */
+
+    const totalIncome =
+        num(L.salesProfit)
+      + num(L.serviceProfit)
+      + num(L.salesInvestmentReturn)
+      + num(L.serviceInvestmentReturn)
+      + num(L.gstCollected);
+
+    const totalExpense =
+        num(L.expenses)
+      + num(L.withdrawals)
+      + num(L.gstPaid);
+
+    const netFlow = totalIncome - totalExpense;
+
+    set("ubNetFlow", netFlow);
 
     const box = document.querySelector(".ub-netflow-box");
 
@@ -155,41 +68,41 @@
         "ub-netflow-negative"
       );
 
-      if (m.netProfit >= 0) {
+      if (netFlow >= 0) {
         box.classList.add("ub-netflow-positive");
       } else {
         box.classList.add("ub-netflow-negative");
       }
     }
+
+
+    /* ---------------- PENDING CREDIT (GLOBAL) ---------------- */
+
+    let pending = 0;
+
+    (window.sales || []).forEach(s => {
+      if (String(s.status).toLowerCase() === "credit")
+        pending += num(s.total);
+    });
+
+    (window.services || []).forEach(j => {
+      if (String(j.status).toLowerCase() === "credit")
+        pending += num(j.remaining);
+    });
+
+    set("ubPendingCredit", pending);
   }
 
-  window.updateUniversalBar = updateUniversalBar;
+  window.renderUniversalBar = renderUniversalBar;
 
 
   /* ==========================================================
-     AUTO REFRESH EVENTS
+     AUTO REFRESH
   ========================================================== */
 
   window.addEventListener(
-    "cloud-data-loaded",
-    updateUniversalBar
+    "ledger-updated",
+    renderUniversalBar
   );
-
-  [
-    "sales-updated",
-    "services-updated",
-    "expenses-updated",
-    "collection-updated"
-  ].forEach(ev => {
-
-    window.addEventListener(
-      ev,
-      updateUniversalBar
-    );
-
-  });
-
-  setTimeout(updateUniversalBar, 500);
-  setTimeout(updateUniversalBar, 1500);
 
 })();
