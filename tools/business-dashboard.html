@@ -235,43 +235,99 @@ body{
     <button id="logoutBtn" class="small-btn">🔓 Logout</button>
   </div>
 </div>
-<div id="universalBar">
-  <div class="uni-row">
-    <div class="uni-card main">
-      
-      <div class="uni-title">Net Profit (Sale + Service − Expenses)</div>
-      <div class="uni-value" id="unNetProfit">₹0</div>
-      <div class="uni-sub">
-        <span>Sale:</span><span id="unSaleProfit">₹0</span>
-        <span>Service:</span><span id="unServiceProfit">₹0</span>
-        <span class="uni-exp-label">Expenses:</span>
-        <span id="unExpenses" class="uni-exp-value">₹0</span>
-      </div>
+<div id="universalBar" class="universal-bar">
+
+  <!-- ================= OPENING SECTION ================= -->
+  <div class="ub-section ub-opening">
+
+    <div class="ub-row">
+      <span class="ub-label">Opening Balance</span>
+      <span id="ubOpening" class="ub-value">₹0</span>
+      <button class="small-btn" onclick="withdrawOpening()">Withdraw</button>
     </div>
-    <div class="uni-card">
-      
-      <div class="uni-title">Stock Investment (Sold Items)</div>
-      <div class="uni-value small" id="unStockInv">₹0</div>
-      <div class="uni-sub">
-        <span class="uni-chip">Sold stock</span>
-      </div>
+
+    <!-- NEW: Cash Display -->
+    <div class="ub-row">
+      <span class="ub-label">Cash Available</span>
+      <span id="ubCash" class="ub-value">₹0</span>
     </div>
-    <div class="uni-card">
-      
-      <div class="uni-title">Service Investment (Completed)</div>
-      <div class="uni-value small" id="unServiceInv">₹0</div>
-      <div class="uni-sub">
-        <span class="uni-chip">Closed jobs</span>
-      </div>
+
+    <!-- NEW: UPI Display -->
+    <div class="ub-row">
+      <span class="ub-label">UPI Available</span>
+      <span id="ubUPI" class="ub-value">₹0</span>
     </div>
-    <div class="uni-card">
-      <div class="uni-title">Pending Credit Sales</div>
-      <div class="uni-value small" id="unCreditSales">₹0</div>
-      <div class="uni-sub">
-        <span class="uni-chip">To be collected</span>
-      </div>
-    </div>
+
   </div>
+
+
+  <!-- ================= INCOME SECTION (+) ================= -->
+  <div class="ub-section ub-income">
+
+    <div class="ub-row">
+      <span class="ub-label">Sales Profit</span>
+      <span id="ubSaleProfit" class="ub-value">₹0</span>
+      <button class="small-btn" onclick="withdrawSaleProfit()">Withdraw</button>
+    </div>
+
+    <div class="ub-row">
+      <span class="ub-label">Service Profit</span>
+      <span id="ubServiceProfit" class="ub-value">₹0</span>
+      <button class="small-btn" onclick="withdrawServiceProfit()">Withdraw</button>
+    </div>
+
+    <div class="ub-row">
+      <span class="ub-label">Sales Investment</span>
+      <span id="ubSaleInv" class="ub-value">₹0</span>
+      <button class="small-btn" onclick="withdrawSaleInv()">Withdraw</button>
+    </div>
+
+    <div class="ub-row">
+      <span class="ub-label">Service Investment</span>
+      <span id="ubServiceInv" class="ub-value">₹0</span>
+      <button class="small-btn" onclick="withdrawServiceInv()">Withdraw</button>
+    </div>
+
+    <div class="ub-row gst-row">
+      <span class="ub-label">GST Collected</span>
+      <span id="ubGST" class="ub-value">₹0</span>
+      <button class="small-btn" onclick="payGST()">Pay GST</button>
+    </div>
+
+  </div>
+
+
+  <!-- ================= EXPENSE SECTION (-) ================= -->
+  <div class="ub-section ub-expense">
+
+    <div class="ub-row">
+      <span class="ub-label">Expenses</span>
+      <span id="ubExpenses" class="ub-value">₹0</span>
+    </div>
+
+    <div class="ub-row">
+      <span class="ub-label">Profit Withdraw</span>
+      <span id="ubProfitWithdraw" class="ub-value">₹0</span>
+    </div>
+
+    <div class="ub-row">
+      <span class="ub-label">Stock Withdraw</span>
+      <span id="ubStockWithdraw" class="ub-value">₹0</span>
+    </div>
+
+    <div class="ub-row">
+      <span class="ub-label">GST Paid</span>
+      <span id="ubGSTPaid" class="ub-value">₹0</span>
+    </div>
+
+  </div>
+
+
+  <!-- ================= NET FLOW ================= -->
+  <div class="ub-netflow">
+    Net Flow: <span id="ubNetFlow">₹0</span>
+  </div>
+
 </div>
 
 <div class="tabs" role="tablist">
