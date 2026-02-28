@@ -1,13 +1,7 @@
 /* ===========================================================
-   universal-bar.js — FINAL v5
+   universal-bar.js — FINAL v6
    SETTLEMENT + WITHDRAW + LEDGER SAFE
-
-   ✔ Settlement aware expenses
-   ✔ Withdraw deduction safe
-   ✔ Profit integrity safe
-   ✔ Dashboard aligned
-   ✔ Analytics aligned
-   ✔ Audit ready
+   + Dynamic Net Flow Color
 =========================================================== */
 
 (function () {
@@ -26,7 +20,6 @@
   ========================================================== */
   function computeMetrics() {
 
-    /* 🔒 DASHBOARD CLEAR GUARD */
     if (window.__dashboardViewCleared) {
       return {
         saleProfitCollected: 0,
@@ -56,18 +49,14 @@
 
     sales.forEach(s => {
 
-      const st =
-        String(s.status).toLowerCase();
+      const st = String(s.status).toLowerCase();
 
       if (st === "credit")
         pendingCredit += num(s.total);
 
       if (st === "paid") {
-
         saleProfitAll += num(s.profit);
-
-        stockInvestAll +=
-          num(s.qty) * num(s.cost);
+        stockInvestAll += num(s.qty) * num(s.cost);
       }
     });
 
@@ -76,84 +65,50 @@
 
     services.forEach(j => {
 
-      const st =
-        String(j.status).toLowerCase();
+      const st = String(j.status).toLowerCase();
 
       if (st === "credit")
         pendingCredit += num(j.remaining);
 
       if (st === "paid") {
 
-        const invest =
-          num(j.invest);
-
+        const invest = num(j.invest);
         const profit =
           num(j.profit) ||
           (num(j.paid) - invest);
 
-        serviceProfitAll +=
-          Math.max(0, profit);
-
+        serviceProfitAll += Math.max(0, profit);
         serviceInvestAll += invest;
       }
     });
 
 
-    /* ---------------- EXPENSES (LEDGER TOTAL) ---------------- */
+    /* ---------------- EXPENSES ---------------- */
 
     expenses.forEach(e => {
       expensesAll += num(e.amount);
     });
 
-
-    /* ======================================================
-       💰 SETTLEMENT ADJUSTMENT
-       Remove settled expenses from live impact
-    ====================================================== */
-
-    const settledOffset =
-      num(offs.expensesSettled);
-
+    const settledOffset = num(offs.expensesSettled);
     const expensesLive =
-      Math.max(
-        0,
-        expensesAll - settledOffset
-      );
-
-
-    /* ======================================================
-       💸 WITHDRAW LEDGER
-    ====================================================== */
+      Math.max(0, expensesAll - settledOffset);
 
     const withdrawn =
       num(window.__unMetrics?.profitWithdrawn);
 
-
-    /* ======================================================
-       FINAL NET PROFIT
-    ====================================================== */
-
     const netLive =
-      Math.max(
-        0,
-        saleProfitAll +
-        serviceProfitAll -
-        expensesLive -
-        withdrawn
-      );
-
+      saleProfitAll +
+      serviceProfitAll -
+      expensesLive -
+      withdrawn;
 
     return {
-
       saleProfitCollected: saleProfitAll,
       serviceProfitCollected: serviceProfitAll,
-
       stockInvestSold: stockInvestAll,
       serviceInvestCompleted: serviceInvestAll,
-
       expensesLive,
       pendingCreditTotal: pendingCredit,
-
       profitWithdrawn: withdrawn,
       netProfit: netLive
     };
@@ -167,33 +122,52 @@
 
     const m = computeMetrics();
 
-    /* 🔒 Preserve withdraw ledger */
     m.profitWithdrawn =
       num(window.__unMetrics?.profitWithdrawn);
 
     window.__unMetrics = m;
 
     const set = (id, v) => {
-      const el =
-        document.getElementById(id);
+      const el = document.getElementById(id);
       if (el) el.textContent = money(v);
     };
 
-    set("unSaleProfit",    m.saleProfitCollected);
-    set("unServiceProfit", m.serviceProfitCollected);
-    set("unStockInv",      m.stockInvestSold);
-    set("unServiceInv",    m.serviceInvestCompleted);
-    set("unExpenses",      m.expensesLive);
-    set("unCreditSales",   m.pendingCreditTotal);
-    set("unNetProfit",     m.netProfit);
+    /* Update Cards */
+    set("ubSaleProfit",    m.saleProfitCollected);
+    set("ubServiceProfit", m.serviceProfitCollected);
+    set("ubSaleInv",       m.stockInvestSold);
+    set("ubServiceInv",    m.serviceInvestCompleted);
+    set("ubExpenses",      m.expensesLive);
+    set("ubProfitWithdraw",m.profitWithdrawn);
+    set("ubNetFlow",       m.netProfit);
+
+
+    /* ======================================================
+       🔥 Dynamic Net Flow Color
+    ====================================================== */
+
+    const box = document.querySelector(".ub-netflow-box");
+
+    if (box) {
+
+      box.classList.remove(
+        "ub-netflow-positive",
+        "ub-netflow-negative"
+      );
+
+      if (m.netProfit >= 0) {
+        box.classList.add("ub-netflow-positive");
+      } else {
+        box.classList.add("ub-netflow-negative");
+      }
+    }
   }
 
-  window.updateUniversalBar =
-    updateUniversalBar;
+  window.updateUniversalBar = updateUniversalBar;
 
 
   /* ==========================================================
-     🔄 AUTO REFRESH EVENTS
+     AUTO REFRESH EVENTS
   ========================================================== */
 
   window.addEventListener(
@@ -214,9 +188,6 @@
     );
 
   });
-
-
-  /* Safety delayed refresh */
 
   setTimeout(updateUniversalBar, 500);
   setTimeout(updateUniversalBar, 1500);
