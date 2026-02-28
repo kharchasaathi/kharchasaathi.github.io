@@ -42,7 +42,7 @@ textarea {
 }
 
 
-/* ================= CARDS ================= */
+/* ================= GENERIC CARDS ================= */
 
 .card {
   border-radius: var(--ks-radius-card);
@@ -84,7 +84,7 @@ textarea {
 
 
 /* ======================================================
-   UNIVERSAL BAR — PROFESSIONAL GRID LAYOUT
+   UNIVERSAL BAR — PREMIUM LIGHT GRID
 ====================================================== */
 
 .universal-bar{
@@ -95,54 +95,98 @@ textarea {
 .ub-grid{
   display:grid;
   grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
-  gap:16px;
+  gap:18px;
 }
 
+/* Base Card */
 .ub-card{
-  background:var(--ks-bg-card);
-  border:1px solid var(--ks-border-soft);
   border-radius:var(--ks-radius-card);
-  padding:16px;
+  padding:18px;
   box-shadow:var(--ks-shadow-soft);
   display:flex;
   flex-direction:column;
   justify-content:space-between;
-  min-height:120px;
+  min-height:130px;
+  transition:.18s ease;
 }
 
+/* Slight hover lift */
+.ub-card:hover{
+  transform:translateY(-2px);
+}
+
+/* Opening Card (brand blue tint) */
+.ub-card.opening{
+  background:linear-gradient(145deg,#f0f6ff,#ffffff);
+  border:1px solid #dbeafe;
+}
+
+/* Income Cards (light green tint) */
+.ub-card.income{
+  background:linear-gradient(145deg,#f0fdf4,#ffffff);
+  border:1px solid #bbf7d0;
+}
+
+/* Expense Cards (light red tint) */
+.ub-card.expense{
+  background:linear-gradient(145deg,#fff7f7,#ffffff);
+  border:1px solid #fecaca;
+}
+
+/* Titles */
 .ub-title{
   font-size:12px;
   letter-spacing:.1em;
   color:var(--ks-text-soft);
   text-transform:uppercase;
-  margin-bottom:6px;
+  margin-bottom:8px;
+  font-weight:600;
 }
 
+/* Amount */
 .ub-amount{
-  font-size:22px;
+  font-size:24px;
   font-weight:700;
-  margin-bottom:10px;
+  margin-bottom:12px;
 }
 
+/* Sub values (cash / upi) */
 .ub-sub{
   font-size:12px;
   color:var(--ks-text-soft);
+  margin-bottom:4px;
 }
 
+/* Button alignment */
 .ub-btn{
   margin-top:auto;
   align-self:flex-end;
 }
 
-/* Net Flow Big Box */
+
+/* ================= NET FLOW ================= */
+
 .ub-netflow-box{
-  margin-top:20px;
-  padding:20px;
+  margin-top:24px;
+  padding:22px;
   border-radius:var(--ks-radius-card);
-  background:var(--ks-bg-card);
-  border:1px solid var(--ks-border-soft);
   text-align:center;
-  font-size:22px;
+  font-size:24px;
   font-weight:700;
   box-shadow:var(--ks-shadow-soft);
+  transition:.2s ease;
+}
+
+/* Positive */
+.ub-netflow-positive{
+  background:linear-gradient(145deg,#ecfdf5,#ffffff);
+  border:1px solid #86efac;
+  color:#16a34a;
+}
+
+/* Negative */
+.ub-netflow-negative{
+  background:linear-gradient(145deg,#fff1f2,#ffffff);
+  border:1px solid #fca5a5;
+  color:#dc2626;
 }
