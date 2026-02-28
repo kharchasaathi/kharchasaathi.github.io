@@ -13,19 +13,37 @@
   background: var(--ks-bg-card);
   color: var(--ks-text-main);
   box-shadow: var(--ks-shadow-soft);
-  transition: .16s;
+  transition: .18s ease;
+  cursor: pointer;
 }
 
 .small-btn {
-  padding: 6px 12px;
+  padding: 6px 14px;
   font-size: 12px;
 }
 
+/* Hover */
 .btn:hover,
 .small-btn:hover {
   background: var(--ks-bg-soft);
   transform: translateY(-1px);
 }
+
+/* BLUE ACTION BUTTONS (Withdraw / Pay GST) */
+.ub-btn {
+  margin-top: auto;
+  align-self: flex-end;
+  background: linear-gradient(135deg,#3b82f6,#2563eb);
+  border: none;
+  color: #fff;
+  box-shadow: 0 6px 14px rgba(37,99,235,.35);
+}
+
+.ub-btn:hover {
+  background: linear-gradient(135deg,#2563eb,#1d4ed8);
+  transform: translateY(-1px);
+}
+
 
 
 /* ================= INPUTS ================= */
@@ -42,6 +60,7 @@ textarea {
 }
 
 
+
 /* ================= GENERIC CARDS ================= */
 
 .card {
@@ -51,6 +70,7 @@ textarea {
   padding: 12px;
   box-shadow: var(--ks-shadow-soft);
 }
+
 
 
 /* ================= TABS ================= */
@@ -70,6 +90,7 @@ textarea {
   cursor: pointer;
   border: 1px solid transparent;
   font-weight: 600;
+  transition:.18s;
 }
 
 .tab:hover {
@@ -78,115 +99,133 @@ textarea {
 }
 
 .tab.active {
-  background: var(--ks-accent);
+  background: linear-gradient(135deg,#3b82f6,#2563eb);
   color: white;
+  box-shadow: 0 8px 18px rgba(37,99,235,.35);
 }
+
 
 
 /* ======================================================
-   UNIVERSAL BAR — PREMIUM LIGHT GRID
+   UNIVERSAL BAR — FIXED 2 ROW GRID
 ====================================================== */
 
 .universal-bar{
-  margin:20px auto;
-  max-width:1200px;
+  margin: 24px auto;
+  max-width: 1200px;
 }
 
+/* FIXED 6 COLUMN DESKTOP */
 .ub-grid{
-  display:grid;
-  grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
-  gap:18px;
+  display: grid;
+  grid-template-columns: repeat(6,1fr);
+  gap: 18px;
 }
 
-/* Base Card */
+/* CARD BASE */
 .ub-card{
-  border-radius:var(--ks-radius-card);
-  padding:18px;
-  box-shadow:var(--ks-shadow-soft);
-  display:flex;
-  flex-direction:column;
-  justify-content:space-between;
-  min-height:130px;
-  transition:.18s ease;
+  border-radius: var(--ks-radius-card);
+  padding: 18px;
+  box-shadow: var(--ks-shadow-soft);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  height: 155px;
+  transition: .2s ease;
 }
 
-/* Slight hover lift */
 .ub-card:hover{
-  transform:translateY(-2px);
+  transform: translateY(-2px);
 }
 
-/* Opening Card (brand blue tint) */
+/* OPENING (Blue Tint) */
 .ub-card.opening{
-  background:linear-gradient(145deg,#f0f6ff,#ffffff);
-  border:1px solid #dbeafe;
+  background: linear-gradient(145deg,#f0f6ff,#ffffff);
+  border: 1px solid #dbeafe;
 }
 
-/* Income Cards (light green tint) */
+/* INCOME (Green Tint) */
 .ub-card.income{
-  background:linear-gradient(145deg,#f0fdf4,#ffffff);
-  border:1px solid #bbf7d0;
+  background: linear-gradient(145deg,#f0fdf4,#ffffff);
+  border: 1px solid #bbf7d0;
 }
 
-/* Expense Cards (light red tint) */
+/* EXPENSE (Red Tint) */
 .ub-card.expense{
-  background:linear-gradient(145deg,#fff7f7,#ffffff);
-  border:1px solid #fecaca;
+  background: linear-gradient(145deg,#fff7f7,#ffffff);
+  border: 1px solid #fecaca;
 }
 
-/* Titles */
+/* TITLE */
 .ub-title{
-  font-size:12px;
-  letter-spacing:.1em;
-  color:var(--ks-text-soft);
-  text-transform:uppercase;
-  margin-bottom:8px;
-  font-weight:600;
+  font-size: 12px;
+  letter-spacing: .1em;
+  color: var(--ks-text-soft);
+  text-transform: uppercase;
+  margin-bottom: 8px;
+  font-weight: 600;
 }
 
-/* Amount */
+/* AMOUNT */
 .ub-amount{
-  font-size:24px;
-  font-weight:700;
-  margin-bottom:12px;
+  font-size: 24px;
+  font-weight: 700;
+  margin-bottom: 10px;
 }
 
-/* Sub values (cash / upi) */
+/* SUB TEXT */
 .ub-sub{
-  font-size:12px;
-  color:var(--ks-text-soft);
-  margin-bottom:4px;
+  font-size: 12px;
+  color: var(--ks-text-soft);
 }
 
-/* Button alignment */
-.ub-btn{
-  margin-top:auto;
-  align-self:flex-end;
-}
 
 
 /* ================= NET FLOW ================= */
 
 .ub-netflow-box{
-  margin-top:24px;
-  padding:22px;
-  border-radius:var(--ks-radius-card);
-  text-align:center;
-  font-size:24px;
-  font-weight:700;
-  box-shadow:var(--ks-shadow-soft);
-  transition:.2s ease;
+  margin-top: 26px;
+  padding: 24px;
+  border-radius: var(--ks-radius-card);
+  text-align: center;
+  font-size: 26px;
+  font-weight: 700;
+  box-shadow: var(--ks-shadow-soft);
+  transition: .2s ease;
 }
 
 /* Positive */
 .ub-netflow-positive{
-  background:linear-gradient(145deg,#ecfdf5,#ffffff);
-  border:1px solid #86efac;
-  color:#16a34a;
+  background: linear-gradient(145deg,#ecfdf5,#ffffff);
+  border: 1px solid #86efac;
+  color: #16a34a;
 }
 
 /* Negative */
 .ub-netflow-negative{
-  background:linear-gradient(145deg,#fff1f2,#ffffff);
-  border:1px solid #fca5a5;
-  color:#dc2626;
+  background: linear-gradient(145deg,#fff1f2,#ffffff);
+  border: 1px solid #fca5a5;
+  color: #dc2626;
+}
+
+
+
+/* ================= RESPONSIVE ================= */
+
+@media(max-width:1100px){
+  .ub-grid{
+    grid-template-columns: repeat(3,1fr);
+  }
+}
+
+@media(max-width:700px){
+  .ub-grid{
+    grid-template-columns: repeat(2,1fr);
+  }
+}
+
+@media(max-width:480px){
+  .ub-grid{
+    grid-template-columns: 1fr;
+  }
 }
