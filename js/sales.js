@@ -1,13 +1,12 @@
 /* ===========================================================
-   sales.js — COMMERCIAL REBUILD v30 (PART 1 — API SAFE FIFO)
+   sales.js — LEDGER INTEGRATED v31
 
    ✔ FIFO Compatible
-   ✔ API Safe (No prompt dependency)
-   ✔ No direct UI dependency
-   ✔ Paid → Auto collection
-   ✔ Credit → Profit unlock on collect
-   ✔ Duplicate guard
-   ✔ Universal safe
+   ✔ Paid → Ledger Update
+   ✔ Credit → No Ledger Impact
+   ✔ Credit Collection → Ledger Update
+   ✔ Universal Bar Ledger Driven
+   ✔ Clear Disabled (Owner Safety)
 =========================================================== */
 
 
@@ -26,7 +25,6 @@ function getCurrentTime12hr() {
    REFRESH TYPE SELECTOR
 ----------------------------------------------------------- */
 function refreshSaleTypeSelector() {
-
   const sel = document.getElementById("saleType");
   if (!sel) return;
 
@@ -59,8 +57,7 @@ window.saveSales = function () {
 
 
 /* ===========================================================
-   🔥 INTERNAL FIFO DEDUCT ENGINE (NO PROMPTS)
-   Used by API + UI safely
+   FIFO DEDUCT ENGINE
 =========================================================== */
 function deductStockFIFO(type, product, qty) {
 
@@ -97,7 +94,6 @@ function deductStockFIFO(type, product, qty) {
       Math.min(available, remainingQty);
 
     p.sold += deduct;
-
     totalCostUsed += deduct * Number(p.cost);
 
     remainingQty -= deduct;
@@ -107,21 +103,18 @@ function deductStockFIFO(type, product, qty) {
 
   window.saveStock?.();
 
-  /* Wanting handled centrally */
   if (typeof checkProductWanting === "function") {
     const sample = batches[0];
     checkProductWanting(sample.productId);
   }
 
-  return {
-    costUsed: totalCostUsed
-  };
+  return { costUsed: totalCostUsed };
 }
 
 
 
 /* ===========================================================
-   ADD SALE ENTRY — API SAFE FIFO
+   ADD SALE ENTRY
 =========================================================== */
 function addSaleEntry({
   date,
@@ -143,7 +136,6 @@ function addSaleEntry({
   if (!type || !product || qty <= 0 || price <= 0)
     return;
 
-  /* FIFO Deduct */
   const deductResult =
     deductStockFIFO(type, product, qty);
 
@@ -181,8 +173,23 @@ function addSaleEntry({
 
   window.sales = window.sales || [];
   window.sales.push(saleObj);
-
   window.saveSales();
+
+
+  /* =======================================================
+     🔥 LEDGER UPDATE (PAID SALES ONLY)
+  ======================================================= */
+  if (isPaid && typeof updateLedgerField === "function") {
+
+    const profit = Number(profitValue);
+    const investmentReturn = Number(deductResult.costUsed);
+
+    if (profit > 0)
+      updateLedgerField("salesProfit", profit);
+
+    if (investmentReturn > 0)
+      updateLedgerField("salesInvestmentReturn", investmentReturn);
+  }
 
 
   /* =======================================================
@@ -205,16 +212,15 @@ function addSaleEntry({
     saleObj.collectionLogged = true;
   }
 
-
   renderSales?.();
   renderCollection?.();
-  window.renderAnalytics?.();
-  window.updateSummaryCards?.();
-  window.updateUniversalBar?.();
 }
 window.addSaleEntry = addSaleEntry;
+
+
+
 /* ===========================================================
-   CREDIT → PAID COLLECTION (API SAFE + FIFO SAFE)
+   CREDIT COLLECTION
 =========================================================== */
 function collectCreditSale(id) {
 
@@ -234,33 +240,36 @@ function collectCreditSale(id) {
       ? "UPI"
       : "Cash";
 
-  if (!confirm(
-    `Collect ₹${s.total} via ${mode}?`
-  )) return;
-
-
-  /* ================= PROFIT UNLOCK ================= */
+  if (!confirm(`Collect ₹${s.total} via ${mode}?`))
+    return;
 
   s.status = "Paid";
   s.fromCredit = true;
   s.paymentMode = mode;
-
-  // FIFO version stores full costUsed already
-  s.profit =
-    Number(s.total) -
-    Number(s.cost);
+  s.profit = Number(s.total) - Number(s.cost);
 
   window.saveSales();
 
 
-  /* ================= COLLECTION LOG (NO DUPLICATE) ================= */
+  /* 🔥 LEDGER UPDATE (ON COLLECTION DAY) */
+  if (typeof updateLedgerField === "function") {
+
+    const profit = Number(s.profit);
+    const investmentReturn = Number(s.cost);
+
+    if (profit > 0)
+      updateLedgerField("salesProfit", profit);
+
+    if (investmentReturn > 0)
+      updateLedgerField("salesInvestmentReturn", investmentReturn);
+  }
+
 
   if (!s.collectionLogged) {
 
     const details =
       `${s.product} — Qty ${s.qty} × ₹${s.price} = ₹${s.total}` +
-      ` (Credit Cleared — ${mode})` +
-      (s.customer ? ` — ${s.customer}` : "");
+      ` (Credit Cleared — ${mode})`;
 
     window.addCollectionEntry?.(
       "Sale Credit Cleared",
@@ -272,12 +281,8 @@ function collectCreditSale(id) {
     s.collectionLogged = true;
   }
 
-
   renderSales?.();
   renderCollection?.();
-  window.renderAnalytics?.();
-  window.updateSummaryCards?.();
-  window.updateUniversalBar?.();
 
   alert("Credit Collected Successfully!");
 }
@@ -286,7 +291,7 @@ window.collectCreditSale = collectCreditSale;
 
 
 /* ===========================================================
-   RENDER SALES TABLE — FIFO SAFE + LEDGER SAFE
+   RENDER SALES TABLE
 =========================================================== */
 function renderSales() {
 
@@ -306,215 +311,51 @@ function renderSales() {
 
   let list = [...(window.sales || [])];
 
-
-  /* ---------------- FILTERS ---------------- */
-
   if (filterType !== "all")
     list = list.filter(s => s.type === filterType);
 
   if (filterDate)
     list = list.filter(s => s.date === filterDate);
 
-  if (view !== "all") {
+  if (view === "credit-pending")
+    list = list.filter(s => s.status === "Credit");
 
-    list = list.filter(s => {
-
-      const st =
-        String(s.status).toLowerCase();
-
-      const fc =
-        Boolean(s.fromCredit);
-
-      if (view === "cash")
-        return st === "paid" && !fc;
-
-      if (view === "credit-pending")
-        return st === "credit";
-
-      if (view === "credit-paid")
-        return st === "paid" && fc;
-
-      return true;
-    });
-  }
-
-
-  /* ---------------- TOTALS ---------------- */
+  if (view === "credit-paid")
+    list = list.filter(s =>
+      s.status === "Paid" && s.fromCredit
+    );
 
   let totalSum  = 0;
   let profitSum = 0;
-
 
   tbody.innerHTML = list.map(s => {
 
     totalSum += Number(s.total || 0);
 
-    if (String(s.status).toLowerCase() === "paid") {
+    if (String(s.status).toLowerCase() === "paid")
       profitSum += Number(s.profit || 0);
-    }
-
-    const modeDisplay =
-      s.status === "Paid"
-        ? (s.paymentMode || "")
-        : (s.creditMode || "");
-
-    const statusHTML =
-      String(s.status).toLowerCase() === "credit"
-      ? `<span class="status-credit">
-           Credit (${modeDisplay})
-         </span>
-         <button class="small-btn"
-           style="background:#16a34a;color:white;padding:3px 8px;font-size:11px"
-           onclick="collectCreditSale('${s.id}')">
-           Collect
-         </button>`
-      : `<span class="status-paid">
-           Paid (${modeDisplay})
-         </span>`;
 
     return `
       <tr>
-        <td>
-          ${s.date}<br>
-          <small>${s.time || ""}</small>
-        </td>
+        <td>${s.date}<br><small>${s.time||""}</small></td>
         <td>${s.type}</td>
         <td>${s.product}</td>
         <td>${s.qty}</td>
         <td>₹${s.price}</td>
         <td>₹${s.total}</td>
         <td>₹${s.profit}</td>
-        <td>${statusHTML}</td>
+        <td>${s.status}</td>
       </tr>`;
   }).join("");
 
-
   document.getElementById("salesTotal").textContent = totalSum;
   document.getElementById("profitTotal").textContent = profitSum;
-
-  window.updateUniversalBar?.();
 }
 window.renderSales = renderSales;
 
 
 
 /* ===========================================================
-   FILTER EVENTS — SAFE REFRESH
+   🔒 CLEAR SALES DISABLED (OWNER CONTROL)
 =========================================================== */
-
-document.getElementById("saleType")
-  ?.addEventListener("change", renderSales);
-
-document.getElementById("saleDate")
-  ?.addEventListener("change", renderSales);
-
-document.getElementById("saleView")
-  ?.addEventListener("change", renderSales);
-
-document.getElementById("filterSalesBtn")
-  ?.addEventListener("click", renderSales);
-
-
-
-/* ===========================================================
-   CLEAR SALES — LEDGER SAFE DELETE (FIFO SAFE)
-   ⚠️ STOCK REVERSAL INTENTIONALLY NOT DONE
-=========================================================== */
-
-document.getElementById("clearSalesBtn")
-?.addEventListener("click", () => {
-
-  const view =
-    document.getElementById("saleView")?.value || "all";
-
-  const salesList = window.sales || [];
-
-
-  /* 🔒 CREDIT GUARD */
-
-  const hasPendingCredit =
-    salesList.some(s =>
-      String(s.status).toLowerCase() === "credit"
-    );
-
-  if (hasPendingCredit &&
-      view !== "credit-pending")
-  {
-    return alert(
-      "❌ Cannot clear while Pending Credit exists!"
-    );
-  }
-
-
-  if (!confirm(
-    "Clear ALL records in this filtered view?"
-  )) return;
-
-
-  const removedSales = [];
-
-
-  window.sales = salesList.filter(s => {
-
-    const st =
-      String(s.status).toLowerCase();
-
-    const fc =
-      Boolean(s.fromCredit);
-
-    if (view === "cash") {
-      if (st === "paid" && !fc) {
-        removedSales.push(s);
-        return false;
-      }
-      return true;
-    }
-
-    if (view === "credit-paid") {
-      if (st === "paid" && fc) {
-        removedSales.push(s);
-        return false;
-      }
-      return true;
-    }
-
-    if (view === "credit-pending") {
-      if (st === "credit") {
-        removedSales.push(s);
-        return false;
-      }
-      return true;
-    }
-
-    if (view === "all") {
-      removedSales.push(s);
-      return false;
-    }
-
-    return true;
-  });
-
-
-  /* COLLECTION ADJUST TRIGGER */
-
-  if (removedSales.length > 0) {
-
-    window.dispatchEvent(
-      new CustomEvent(
-        "sales-deleted",
-        { detail: removedSales }
-      )
-    );
-  }
-
-
-  window.saveSales();
-
-  renderSales?.();
-  renderCollection?.();
-  window.renderAnalytics?.();
-  window.updateSummaryCards?.();
-  window.updateUniversalBar?.();
-
-  alert("Sales records cleared safely.");
-});
+// Clear functionality intentionally removed for ledger safety
