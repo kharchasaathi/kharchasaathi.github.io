@@ -1,11 +1,12 @@
 /* ===========================================================
-   sales.js — LEDGER INTEGRATED v31
+   sales.js — LEDGER INTEGRATED v32 (PROFESSIONAL STABLE)
 
    ✔ FIFO Compatible
-   ✔ Paid → Ledger Update
-   ✔ Credit → No Ledger Impact
-   ✔ Credit Collection → Ledger Update
-   ✔ Universal Bar Ledger Driven
+   ✔ Ledger Connected
+   ✔ Cash Filter Restored
+   ✔ Credit Pending / Paid Safe
+   ✔ Inline Collect Button
+   ✔ Payment Mode Visible
    ✔ Clear Disabled (Owner Safety)
 =========================================================== */
 
@@ -22,24 +23,8 @@ function getCurrentTime12hr() {
 
 
 /* -----------------------------------------------------------
-   REFRESH TYPE SELECTOR
------------------------------------------------------------ */
-function refreshSaleTypeSelector() {
-  const sel = document.getElementById("saleType");
-  if (!sel) return;
-
-  sel.innerHTML = `<option value="all">All Types</option>`;
-
-  (window.types || []).forEach(t => {
-    sel.innerHTML +=
-      `<option value="${t.name}">${t.name}</option>`;
-  });
-}
-
-
-/* ===========================================================
    SAVE SALES — CLOUD ONLY
-=========================================================== */
+----------------------------------------------------------- */
 window.saveSales = function () {
 
   if (
@@ -55,7 +40,6 @@ window.saveSales = function () {
 };
 
 
-
 /* ===========================================================
    FIFO DEDUCT ENGINE
 =========================================================== */
@@ -65,10 +49,10 @@ function deductStockFIFO(type, product, qty) {
 
   const batches = (window.stock || [])
     .filter(p => p.type === type && p.name === product)
-    .sort((a,b)=> {
-      return Number((a.batch||"B0").replace("B","")) -
-             Number((b.batch||"B0").replace("B",""));
-    });
+    .sort((a,b)=>
+      Number((a.batch||"B0").replace("B","")) -
+      Number((b.batch||"B0").replace("B",""))
+    );
 
   if (!batches.length)
     return { error: "Product not found in stock." };
@@ -150,7 +134,6 @@ function addSaleEntry({
       ? (total - Number(deductResult.costUsed))
       : 0;
 
-
   const saleObj = {
     id: uid("sale"),
     date: date || todayDate(),
@@ -176,9 +159,7 @@ function addSaleEntry({
   window.saveSales();
 
 
-  /* =======================================================
-     🔥 LEDGER UPDATE (PAID SALES ONLY)
-  ======================================================= */
+  /* 🔥 LEDGER UPDATE (PAID ONLY) */
   if (isPaid && typeof updateLedgerField === "function") {
 
     const profit = Number(profitValue);
@@ -192,9 +173,7 @@ function addSaleEntry({
   }
 
 
-  /* =======================================================
-     AUTO COLLECTION (PAID ONLY)
-  ======================================================= */
+  /* AUTO COLLECTION (PAID ONLY) */
   if (isPaid) {
 
     const details =
@@ -250,20 +229,15 @@ function collectCreditSale(id) {
 
   window.saveSales();
 
-
-  /* 🔥 LEDGER UPDATE (ON COLLECTION DAY) */
+  /* 🔥 LEDGER UPDATE */
   if (typeof updateLedgerField === "function") {
 
-    const profit = Number(s.profit);
-    const investmentReturn = Number(s.cost);
+    if (s.profit > 0)
+      updateLedgerField("salesProfit", s.profit);
 
-    if (profit > 0)
-      updateLedgerField("salesProfit", profit);
-
-    if (investmentReturn > 0)
-      updateLedgerField("salesInvestmentReturn", investmentReturn);
+    if (s.cost > 0)
+      updateLedgerField("salesInvestmentReturn", s.cost);
   }
-
 
   if (!s.collectionLogged) {
 
@@ -291,7 +265,7 @@ window.collectCreditSale = collectCreditSale;
 
 
 /* ===========================================================
-   RENDER SALES TABLE
+   PROFESSIONAL RENDER SALES
 =========================================================== */
 function renderSales() {
 
@@ -311,14 +285,24 @@ function renderSales() {
 
   let list = [...(window.sales || [])];
 
+  /* FILTER TYPE */
   if (filterType !== "all")
     list = list.filter(s => s.type === filterType);
 
+  /* FILTER DATE */
   if (filterDate)
     list = list.filter(s => s.date === filterDate);
 
+  /* VIEW FILTER */
+  if (view === "cash")
+    list = list.filter(s =>
+      s.status === "Paid" && !s.fromCredit
+    );
+
   if (view === "credit-pending")
-    list = list.filter(s => s.status === "Credit");
+    list = list.filter(s =>
+      s.status === "Credit"
+    );
 
   if (view === "credit-paid")
     list = list.filter(s =>
@@ -332,8 +316,27 @@ function renderSales() {
 
     totalSum += Number(s.total || 0);
 
-    if (String(s.status).toLowerCase() === "paid")
+    if (s.status === "Paid")
       profitSum += Number(s.profit || 0);
+
+    const mode =
+      s.status === "Paid"
+        ? (s.paymentMode || "")
+        : (s.creditMode || "");
+
+    const statusHTML =
+      s.status === "Credit"
+        ? `<span class="status-credit">
+             Credit (${mode})
+           </span>
+           <button class="small-btn"
+             style="background:#16a34a;color:white;padding:3px 8px;font-size:11px"
+             onclick="collectCreditSale('${s.id}')">
+             Collect
+           </button>`
+        : `<span class="status-paid">
+             Paid (${mode})
+           </span>`;
 
     return `
       <tr>
@@ -344,7 +347,7 @@ function renderSales() {
         <td>₹${s.price}</td>
         <td>₹${s.total}</td>
         <td>₹${s.profit}</td>
-        <td>${s.status}</td>
+        <td>${statusHTML}</td>
       </tr>`;
   }).join("");
 
@@ -356,6 +359,26 @@ window.renderSales = renderSales;
 
 
 /* ===========================================================
-   🔒 CLEAR SALES DISABLED (OWNER CONTROL)
+   FILTER EVENTS
 =========================================================== */
-// Clear functionality intentionally removed for ledger safety
+document.getElementById("saleType")
+  ?.addEventListener("change", renderSales);
+
+document.getElementById("saleDate")
+  ?.addEventListener("change", renderSales);
+
+document.getElementById("saleView")
+  ?.addEventListener("change", renderSales);
+
+document.getElementById("filterSalesBtn")
+  ?.addEventListener("click", renderSales);
+
+
+
+/* ===========================================================
+   CLEAR SALES DISABLED
+=========================================================== */
+document.getElementById("clearSalesBtn")
+  ?.addEventListener("click", () => {
+    alert("⚠️ Sales deletion disabled. Ledger controlled system.");
+  });
