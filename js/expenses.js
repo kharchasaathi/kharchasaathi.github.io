@@ -1,6 +1,6 @@
 /* ===========================================================
-   expenses.js — FINAL v20
-   LEDGER SAFE + SETTLEMENT CORRECT + UI RESTORED
+   expenses.js — LEDGER INTEGRATED v21
+   PURE LEDGER MODEL (NO OFFSETS)
 =========================================================== */
 
 (function () {
@@ -17,17 +17,9 @@ const toInternal = window.toInternalIfNeeded || (d => d);
 const toDisplay  = window.toDisplay || (d => d);
 
 
-/* ---------------- GLOBAL STRUCTURES ---------------- */
+/* ---------------- GLOBAL ---------------- */
 
 window.expenses = window.expenses || [];
-
-window.__offsets = window.__offsets || {
-  net: 0,
-  sale: 0,
-  service: 0,
-  expensesLive: 0,
-  expensesSettled: 0
-};
 
 
 /* ---------------- CLOUD SAVE ---------------- */
@@ -41,24 +33,8 @@ function saveExpenses(){
 }
 
 
-/* ---------------- OFFSET SAVE ---------------- */
-
-async function saveOffsetsSafe(){
-
-  if (window.__offsetSaveLock) return;
-
-  window.__offsetSaveLock = true;
-
-  cloudSaveDebounced?.("offsets", window.__offsets);
-
-  setTimeout(()=>{
-    window.__offsetSaveLock = false;
-  },600);
-}
-
-
 /* ===========================================================
-   ➕ ADD EXPENSE
+   ➕ ADD EXPENSE (LEDGER +)
 =========================================================== */
 
 function addExpenseEntry(){
@@ -84,15 +60,16 @@ function addExpenseEntry(){
 
   window.expenses.push(entry);
 
-  window.__offsets.expensesLive += amount;
+  /* 🔥 LEDGER UPDATE */
+  if (typeof updateLedgerField === "function") {
+    updateLedgerField("expenses", amount);
+  }
 
-  saveOffsetsSafe();
   saveExpenses();
 
   renderExpenses();
   syncAll();
 
-  /* Clear inputs */
   if(qs("#expAmount")) qs("#expAmount").value="";
   if(qs("#expNote"))   qs("#expNote").value="";
 }
@@ -101,7 +78,7 @@ window.addExpenseEntry = addExpenseEntry;
 
 
 /* ===========================================================
-   💰 SETTLE EXPENSE
+   💰 SETTLE EXPENSE (NO LEDGER CHANGE)
 =========================================================== */
 
 function settleExpense(id){
@@ -113,12 +90,7 @@ function settleExpense(id){
 
   exp.settled = true;
 
-  window.__offsets.expensesLive    -= num(exp.amount);
-  window.__offsets.expensesSettled += num(exp.amount);
-
-  saveOffsetsSafe();
   saveExpenses();
-
   renderExpenses();
   syncAll();
 }
@@ -127,7 +99,7 @@ window.settleExpense = settleExpense;
 
 
 /* ===========================================================
-   🗑 DELETE EXPENSE — LEDGER SAFE
+   🗑 DELETE EXPENSE (LEDGER −)
 =========================================================== */
 
 function deleteExpense(id){
@@ -137,18 +109,15 @@ function deleteExpense(id){
 
   if(!confirm(`Delete expense ₹${exp.amount}?`)) return;
 
-  if(exp.settled){
-    window.__offsets.expensesSettled -= num(exp.amount);
-  }else{
-    window.__offsets.expensesLive -= num(exp.amount);
+  /* 🔥 REVERSE LEDGER */
+  if (typeof updateLedgerField === "function") {
+    updateLedgerField("expenses", -num(exp.amount));
   }
 
   window.expenses =
     window.expenses.filter(e=>e.id!==id);
 
-  saveOffsetsSafe();
   saveExpenses();
-
   renderExpenses();
   syncAll();
 }
@@ -157,7 +126,7 @@ window.deleteExpense = deleteExpense;
 
 
 /* ===========================================================
-   🧹 CLEAR ALL — LEDGER SAFE
+   🧹 CLEAR ALL (LEDGER − TOTAL)
 =========================================================== */
 
 function clearAllExpenses(){
@@ -170,21 +139,14 @@ function clearAllExpenses(){
   if(!confirm(`Clear all expenses?\nTotal ₹${total}`))
     return;
 
-  window.expenses.forEach(e=>{
-
-    if(e.settled){
-      window.__offsets.expensesSettled -= num(e.amount);
-    }else{
-      window.__offsets.expensesLive -= num(e.amount);
-    }
-
-  });
+  /* 🔥 REVERSE TOTAL FROM LEDGER */
+  if (typeof updateLedgerField === "function") {
+    updateLedgerField("expenses", -total);
+  }
 
   window.expenses = [];
 
-  saveOffsetsSafe();
   saveExpenses();
-
   renderExpenses();
   syncAll();
 }
