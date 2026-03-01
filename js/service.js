@@ -375,6 +375,15 @@ function completeJob(id,mode){
     j.paid=total;
     j.remaining=0;
     j.profit=total-invest;
+     /* 🔥 LEDGER UPDATE ADD HERE */
+if(typeof updateLedgerField==="function"){
+
+  if(j.profit>0)
+    updateLedgerField("serviceProfit", j.profit);
+
+  if(invest>0)
+    updateLedgerField("serviceInvestmentReturn", invest);
+}
      window.addCollectionEntry?.(
   "Service Payment",
   `${j.customer} — ${j.item}`,
@@ -415,6 +424,15 @@ window.collectServiceCredit=function(id){
   j.status="paid";
   j.fromCredit=true;
   j.profit=j.paid-j.invest;
+   /* 🔥 LEDGER UPDATE ON CREDIT COLLECTION */
+if(typeof updateLedgerField==="function"){
+
+  if(j.profit>0)
+    updateLedgerField("serviceProfit", j.profit);
+
+  if(j.invest>0)
+    updateLedgerField("serviceInvestmentReturn", j.invest);
+}
 
   saveServices();
   refresh();
@@ -539,3 +557,22 @@ window.addEventListener("load",()=>{
 });
 
 })(); 
+/* ===========================================================
+   🔒 DAILY CLOSE AUTO CLEAR (SAFE)
+=========================================================== */
+
+window.clearServicesAfterClose = function(){
+
+  if(!Array.isArray(window.services) || !window.services.length)
+    return;
+
+  /* DO NOT reverse ledger — already counted */
+
+  window.services = [];
+
+  try{
+    localStorage.removeItem("service-data");
+  }catch{}
+
+  cloudSaveDebounced?.("services", []);
+};
