@@ -643,39 +643,36 @@ body{
   <h3>🧾 Expenses</h3>
 
   <div class="row-inline"
-       style="margin-bottom:8px;display:flex;gap:8px;flex-wrap:wrap;">
+       style="margin-bottom:8px;display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
 
     <input id="expDate" type="date"
       style="padding:6px 8px;border-radius:10px;
       border:1px solid var(--ks-border-soft);
-      background:var(--ks-bg-card);color:var(--ks-text-main);">
+      background:var(--ks-bg-card);
+      color:var(--ks-text-main);">
 
     <input id="expCat" type="text" placeholder="Category"
       style="min-width:140px;padding:6px 8px;border-radius:10px;
       border:1px solid var(--ks-border-soft);
-      background:var(--ks-bg-card);color:var(--ks-text-main);">
+      background:var(--ks-bg-card);
+      color:var(--ks-text-main);">
 
     <input id="expAmount" type="number" placeholder="Amount"
       style="width:120px;padding:6px 8px;border-radius:10px;
       border:1px solid var(--ks-border-soft);
-      background:var(--ks-bg-card);color:var(--ks-text-main);">
+      background:var(--ks-bg-card);
+      color:var(--ks-text-main);">
 
     <input id="expNote" type="text" placeholder="Note"
       style="min-width:200px;padding:6px 8px;border-radius:10px;
       border:1px solid var(--ks-border-soft);
-      background:var(--ks-bg-card);color:var(--ks-text-main);">
+      background:var(--ks-bg-card);
+      color:var(--ks-text-main);">
 
     <button id="addExpenseBtn" class="small-btn">
       Add Expense
     </button>
 
-    <!-- Removed syncExpensesBtn (not used in v18 JS) -->
-
-    <button id="clearExpensesBtn"
-      class="small-btn"
-      style="background:#fee2e2;border-color:#fecaca;color:#b91c1c;">
-      Clear All
-    </button>
   </div>
 
   <table id="expensesTable">
@@ -685,13 +682,15 @@ body{
         <th>Category</th>
         <th>Amount</th>
         <th>Note</th>
-        <th>Settlement / Action</th>
+        <th>Action</th>
       </tr>
     </thead>
+
     <tbody></tbody>
+
     <tfoot>
       <tr>
-        <td colspan="2" style="text-align:right">Total:</td>
+        <td colspan="2" style="text-align:right;">Total:</td>
         <td id="expTotal">0</td>
         <td></td>
         <td></td>
