@@ -1,6 +1,11 @@
 /* ===========================================================
-   expenses.js — LEDGER INTEGRATED v21
-   PURE LEDGER MODEL (NO OFFSETS)
+   expenses.js — LEDGER DIRECT v22
+   PURE DAILY LEDGER MODEL
+   ✔ Add → Ledger +
+   ✔ Delete → Ledger −
+   ✔ No Settle
+   ✔ No Clear All
+   ✔ Daily Close Safe
 =========================================================== */
 
 (function () {
@@ -25,9 +30,7 @@ window.expenses = window.expenses || [];
 /* ---------------- CLOUD SAVE ---------------- */
 
 function saveExpenses(){
-
   cloudSaveDebounced?.("expenses", window.expenses);
-
   window.dispatchEvent(new Event("expenses-updated"));
   window.dispatchEvent(new Event("cloud-data-loaded"));
 }
@@ -54,8 +57,7 @@ function addExpenseEntry(){
     date,
     category,
     amount,
-    note,
-    settled:false
+    note
   };
 
   window.expenses.push(entry);
@@ -66,7 +68,6 @@ function addExpenseEntry(){
   }
 
   saveExpenses();
-
   renderExpenses();
   syncAll();
 
@@ -78,27 +79,6 @@ window.addExpenseEntry = addExpenseEntry;
 
 
 /* ===========================================================
-   💰 SETTLE EXPENSE (NO LEDGER CHANGE)
-=========================================================== */
-
-function settleExpense(id){
-
-  const exp = window.expenses.find(e=>e.id===id);
-  if(!exp || exp.settled) return;
-
-  if(!confirm(`Settle this expense?\n₹${exp.amount}`)) return;
-
-  exp.settled = true;
-
-  saveExpenses();
-  renderExpenses();
-  syncAll();
-}
-
-window.settleExpense = settleExpense;
-
-
-/* ===========================================================
    🗑 DELETE EXPENSE (LEDGER −)
 =========================================================== */
 
@@ -107,7 +87,8 @@ function deleteExpense(id){
   const exp = window.expenses.find(e=>e.id===id);
   if(!exp) return;
 
-  if(!confirm(`Delete expense ₹${exp.amount}?`)) return;
+  if(!confirm(`Delete expense ₹${exp.amount}?\nThis will be added back to profit.`))
+    return;
 
   /* 🔥 REVERSE LEDGER */
   if (typeof updateLedgerField === "function") {
@@ -120,38 +101,27 @@ function deleteExpense(id){
   saveExpenses();
   renderExpenses();
   syncAll();
+
+  alert("Expense removed. Amount added back to profit.");
 }
 
 window.deleteExpense = deleteExpense;
 
 
 /* ===========================================================
-   🧹 CLEAR ALL (LEDGER − TOTAL)
+   🔒 DAILY CLOSE CLEAR (AUTO CALL FROM LEDGER)
+   This should be triggered when account closes
 =========================================================== */
 
-function clearAllExpenses(){
+window.clearExpensesAfterClose = function(){
 
   if(!window.expenses.length) return;
-
-  const total =
-    window.expenses.reduce((a,e)=>a+num(e.amount),0);
-
-  if(!confirm(`Clear all expenses?\nTotal ₹${total}`))
-    return;
-
-  /* 🔥 REVERSE TOTAL FROM LEDGER */
-  if (typeof updateLedgerField === "function") {
-    updateLedgerField("expenses", -total);
-  }
 
   window.expenses = [];
 
   saveExpenses();
   renderExpenses();
-  syncAll();
-}
-
-window.clearAllExpenses = clearAllExpenses;
+};
 
 
 /* ===========================================================
@@ -179,17 +149,6 @@ function renderExpenses(){
         <td>₹${e.amount}</td>
         <td>${esc(e.note||"-")}</td>
         <td>
-          ${
-            !e.settled
-            ? `<button
-                onclick="settleExpense('${e.id}')"
-                class="small-btn">
-                ✔ Settle
-               </button>`
-            : `<span style="color:#16a34a;">
-                Settled
-               </span>`
-          }
           <button
             onclick="deleteExpense('${e.id}')"
             class="small-btn"
@@ -224,12 +183,6 @@ const addBtn = qs("#addExpenseBtn");
 if(addBtn && !addBtn.__bound){
   addBtn.addEventListener("click", addExpenseEntry);
   addBtn.__bound = true;
-}
-
-const clearBtn = qs("#clearExpensesBtn");
-if(clearBtn && !clearBtn.__bound){
-  clearBtn.addEventListener("click", clearAllExpenses);
-  clearBtn.__bound = true;
 }
 
 
