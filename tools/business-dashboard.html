@@ -376,16 +376,20 @@ body{
 <!-- =============== SALES =============== -->
 <section id="sales" class="section">
   <h3>💰 Sales & Profit</h3>
-  <div class="row-inline" style="margin:10px 0;display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
+
+  <div class="row-inline"
+       style="margin:10px 0;display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
+
     <label>Date:</label>
     <input id="saleDate" type="date"
       style="padding:6px 8px;border-radius:10px;border:1px solid var(--ks-border-soft);background:var(--ks-bg-card);color:var(--ks-text-main);">
+
     <label style="margin-left:4px">Filter Type:</label>
     <select id="saleType"
       style="padding:6px 8px;border-radius:10px;border:1px solid var(--ks-border-soft);background:var(--ks-bg-card);color:var(--ks-text-main);">
       <option value="all">All Types</option>
     </select>
-    <!-- ⭐ NEW: VIEW FILTER -->
+
     <label style="margin-left:4px">View:</label>
     <select id="saleView"
       style="padding:6px 8px;border-radius:10px;border:1px solid var(--ks-border-soft);background:var(--ks-bg-card);color:var(--ks-text-main);">
@@ -394,11 +398,25 @@ body{
       <option value="credit-pending">Credit (pending)</option>
       <option value="credit-paid">Credit paid history</option>
     </select>
-    <button id="filterSalesBtn" class="small-btn" style="margin-left:4px">Filter</button>
-    <button id="syncSalesBtn" class="small-btn" title="Save sales to cloud">☁️ Sync</button>
-    <button id="clearSalesBtn" class="small-btn"
-      style="background:#fee2e2;color:#b91c1c;border-color:#fecaca;margin-left:8px">🗑️ Clear All</button>
+
+    <button id="filterSalesBtn" class="small-btn" style="margin-left:4px">
+      Filter
+    </button>
+
+    <button id="syncSalesBtn" class="small-btn" title="Save sales to cloud">
+      ☁️ Sync
+    </button>
+
+    <!-- Disabled because ledger controlled -->
+    <button id="clearSalesBtn"
+      class="small-btn"
+      disabled
+      style="background:#f3f4f6;color:#9ca3af;border-color:#e5e7eb;margin-left:8px;cursor:not-allowed;">
+      🔒 Clear Locked
+    </button>
   </div>
+
+
   <table id="salesTable">
     <thead>
       <tr>
@@ -412,17 +430,44 @@ body{
         <th>Status</th>
       </tr>
     </thead>
+
     <tbody></tbody>
+
     <tfoot>
+      <!-- TOTAL SALES -->
       <tr>
-        <td colspan="5" style="text-align:right">Total:</td>
-        <td id="salesTotal">0</td>
-        <td id="profitTotal">0</td>
+        <td colspan="5" style="text-align:right;font-weight:600;">
+          Total Sales:
+        </td>
+        <td id="salesTotal" style="font-weight:600;">0</td>
+        <td></td>
+        <td></td>
+      </tr>
+
+      <!-- TOTAL PROFIT -->
+      <tr>
+        <td colspan="6" style="text-align:right;font-weight:600;">
+          Total Profit:
+        </td>
+        <td id="profitTotal" style="font-weight:600;">0</td>
+        <td></td>
+      </tr>
+
+      <!-- GLOBAL PENDING CREDIT -->
+      <tr>
+        <td colspan="6" style="text-align:right;color:#b91c1c;font-weight:600;">
+          Pending Credit (All Dates):
+        </td>
+        <td id="pendingCreditTotal"
+            style="color:#b91c1c;font-weight:600;">
+          0
+        </td>
         <td></td>
       </tr>
     </tfoot>
   </table>
 </section>
+
 <!-- =============== WANTING =============== -->
 <section id="wanting" class="section">
   <h3>🛒 Wanting List</h3>
