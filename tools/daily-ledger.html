@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Daily Ledger</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<link rel="stylesheet" href="/css/style.css">
+
+<style>
+.ledger-container{
+  max-width:900px;
+  margin:auto;
+  padding:20px;
+}
+
+.ledger-card{
+  background:#fff;
+  padding:15px;
+  border-radius:10px;
+  box-shadow:0 2px 8px rgba(0,0,0,0.08);
+  margin-bottom:20px;
+}
+
+.ledger-grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(200px,1fr));
+  gap:15px;
+}
+
+.ledger-box{
+  background:#f9fafb;
+  padding:12px;
+  border-radius:8px;
+}
+
+.ledger-box h4{
+  margin:0 0 5px;
+  font-size:14px;
+  opacity:0.7;
+}
+
+.ledger-box h2{
+  margin:0;
+  font-size:20px;
+}
+
+.ledger-actions{
+  display:flex;
+  gap:10px;
+  flex-wrap:wrap;
+}
+
+button{
+  padding:8px 14px;
+  border:none;
+  border-radius:6px;
+  cursor:pointer;
+}
+
+.btn-primary{ background:#2563eb; color:#fff; }
+.btn-danger{ background:#dc2626; color:#fff; }
+.btn-success{ background:#16a34a; color:#fff; }
+
+.ledger-closed{
+  background:#fee2e2;
+  color:#b91c1c;
+  padding:8px;
+  border-radius:6px;
+  margin-top:10px;
+}
+</style>
+</head>
+
+<body>
+
+<div class="ledger-container">
+
+  <h2>📒 Daily Ledger</h2>
+
+  <!-- DATE SELECTOR -->
+  <div class="ledger-card">
+    <label>Select Date:</label>
+    <input type="date" id="ledgerDate">
+    <button class="btn-primary" id="loadLedgerBtn">
+      Load Ledger
+    </button>
+  </div>
+
+  <!-- OPENING -->
+  <div class="ledger-card ledger-grid">
+    <div class="ledger-box">
+      <h4>Opening Balance</h4>
+      <h2 id="ldOpening">₹0</h2>
+    </div>
+  </div>
+
+  <!-- INCOME -->
+  <div class="ledger-card">
+    <h3>Income</h3>
+    <div class="ledger-grid">
+      <div class="ledger-box">
+        <h4>Sales Profit</h4>
+        <h2 id="ldSalesProfit">₹0</h2>
+      </div>
+      <div class="ledger-box">
+        <h4>Service Profit</h4>
+        <h2 id="ldServiceProfit">₹0</h2>
+      </div>
+      <div class="ledger-box">
+        <h4>Sales Investment Return</h4>
+        <h2 id="ldSalesInv">₹0</h2>
+      </div>
+      <div class="ledger-box">
+        <h4>Service Investment Return</h4>
+        <h2 id="ldServiceInv">₹0</h2>
+      </div>
+    </div>
+  </div>
+
+  <!-- EXPENSE -->
+  <div class="ledger-card">
+    <h3>Expenses</h3>
+    <div class="ledger-grid">
+      <div class="ledger-box">
+        <h4>Expenses</h4>
+        <h2 id="ldExpenses">₹0</h2>
+      </div>
+      <div class="ledger-box">
+        <h4>Withdrawals</h4>
+        <h2 id="ldWithdrawals">₹0</h2>
+      </div>
+      <div class="ledger-box">
+        <h4>GST Paid</h4>
+        <h2 id="ldGstPaid">₹0</h2>
+      </div>
+    </div>
+  </div>
+
+  <!-- CLOSING -->
+  <div class="ledger-card ledger-grid">
+    <div class="ledger-box">
+      <h4>Closing Balance</h4>
+      <h2 id="ldClosing">₹0</h2>
+    </div>
+  </div>
+
+  <!-- STATUS -->
+  <div id="ledgerStatus"></div>
+
+  <!-- ACTIONS -->
+  <div class="ledger-card ledger-actions">
+    <button class="btn-success" id="closeLedgerBtn">
+      Close Day
+    </button>
+    <button class="btn-primary" id="carryForwardBtn">
+      Carry Forward
+    </button>
+  </div>
+
+</div>
+
+<!-- SCRIPTS -->
+<script src="/js/firebase.js"></script>
+<script src="/js/ledger.js"></script>
+
+<script>
+const qs = s=>document.querySelector(s);
+
+function renderLedgerUI(){
+
+  const L = window.currentLedger;
+  if(!L) return;
+
+  const money = v=>"₹"+Math.round(v||0);
+
+  qs("#ldOpening").textContent       = money(L.openingBalance);
+  qs("#ldSalesProfit").textContent   = money(L.salesProfit);
+  qs("#ldServiceProfit").textContent = money(L.serviceProfit);
+  qs("#ldSalesInv").textContent      = money(L.salesInvestmentReturn);
+  qs("#ldServiceInv").textContent    = money(L.serviceInvestmentReturn);
+  qs("#ldExpenses").textContent      = money(L.expenses);
+  qs("#ldWithdrawals").textContent   = money(L.withdrawals);
+  qs("#ldGstPaid").textContent       = money(L.gstPaid);
+  qs("#ldClosing").textContent       = money(L.closingBalance);
+
+  const statusBox = qs("#ledgerStatus");
+  statusBox.innerHTML="";
+
+  if(L.isClosed){
+    statusBox.innerHTML=
+      `<div class="ledger-closed">
+        This day is CLOSED.
+      </div>`;
+  }
+}
+
+window.addEventListener("ledger-loaded", renderLedgerUI);
+window.addEventListener("ledger-updated", renderLedgerUI);
+
+qs("#loadLedgerBtn")
+  .addEventListener("click", ()=>{
+    const d = qs("#ledgerDate").value;
+    if(!d) return alert("Select date");
+    loadLedger(d);
+  });
+
+qs("#closeLedgerBtn")
+  .addEventListener("click", closeLedgerDay);
+
+qs("#carryForwardBtn")
+  .addEventListener("click", carryForwardNextDay);
+
+window.addEventListener("load", ()=>{
+  const today = new Date().toISOString().slice(0,10);
+  qs("#ledgerDate").value = today;
+  loadLedger(today);
+});
+</script>
+
+</body>
+</html>
