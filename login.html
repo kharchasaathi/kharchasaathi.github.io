@@ -17,7 +17,6 @@
   --radius:14px;
   --shadow:0 6px 18px rgba(0,0,0,0.08);
 }
-
 body{
   margin:0;
   padding:0;
@@ -28,7 +27,6 @@ body{
   align-items:center;
   justify-content:center;
 }
-
 .card{
   width:92%;
   max-width:420px;
@@ -38,7 +36,6 @@ body{
   box-shadow:var(--shadow);
   border:1px solid #e5e7eb;
 }
-
 h2{
   margin:0 0 14px;
   font-weight:700;
@@ -46,7 +43,6 @@ h2{
   text-align:center;
   color:var(--blue);
 }
-
 input{
   width:100%;
   padding:12px 14px;
@@ -59,7 +55,6 @@ input:focus{
   border-color:var(--blue);
   outline:none;
 }
-
 .pw-wrapper{
   position:relative;
 }
@@ -72,7 +67,6 @@ input:focus{
   cursor:pointer;
   color:#777;
 }
-
 button{
   padding:14px;
   width:100%;
@@ -89,25 +83,21 @@ button:hover{
   opacity:.95;
   transform:translateY(-2px);
 }
-
 .muted{
   margin-top:12px;
   font-size:13px;
   color:var(--text-soft);
   text-align:center;
 }
-
 a{
   color:var(--blue);
   text-decoration:none;
   font-weight:600;
 }
-
 #msg{
   font-size:13px;
   margin-top:6px;
   text-align:center;
-  color:#d32f2f;
   min-height:20px;
 }
 </style>
@@ -115,14 +105,14 @@ a{
 
 <body>
 
-<div class="card" role="main" aria-labelledby="loginTitle">
-  <h2 id="loginTitle">Login</h2>
+<div class="card">
+  <h2>Login</h2>
 
-  <form id="loginForm" autocomplete="on" novalidate>
-    <input id="email" type="email" placeholder="Email" required autocomplete="email">
+  <form id="loginForm" novalidate>
+    <input id="email" type="email" placeholder="Email" required>
 
     <div class="pw-wrapper">
-      <input id="password" type="password" placeholder="Password" required autocomplete="current-password">
+      <input id="password" type="password" placeholder="Password" required>
       <span class="pw-eye" id="togglePw">👁️</span>
     </div>
 
@@ -136,55 +126,16 @@ a{
   </div>
 </div>
 
-<!-- Firebase compat -->
+<!-- Firebase -->
 <script src="https://www.gstatic.com/firebasejs/9.6.11/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.6.11/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.6.11/firebase-firestore-compat.js"></script>
 
 <script src="/js/firebase.js"></script>
-<script src="/js/login-utils.js"></script>
 
-<!-- ======================================================
-     🔐 LOGIN PAGE GUARD
-     - Already logged in → dashboard
-====================================================== -->
-<script>
-(function () {
-  const DASHBOARD = "/tools/business-dashboard.html";
-  const KEY = "ks-user-email";
-
-  function localLoggedIn() {
-    const e = localStorage.getItem(KEY);
-    return e && e.includes("@");
-  }
-
-  // Fast redirect (local hint)
-  if (localLoggedIn()) {
-    window.location.replace(DASHBOARD);
-    return;
-  }
-
-  // Firebase authoritative check
-  function waitForAuth() {
-    if (!window.auth) return setTimeout(waitForAuth, 100);
-
-    window.auth.onAuthStateChanged(user => {
-      if (user) {
-        localStorage.setItem(KEY, user.email);
-        window.location.replace(DASHBOARD);
-      }
-    });
-  }
-
-  waitForAuth();
-})();
-</script>
-
-<!-- ======================================================
-     LOGIN LOGIC
-====================================================== -->
 <script>
 document.addEventListener("DOMContentLoaded", () => {
+
   const qs = s => document.querySelector(s);
   const form = qs("#loginForm");
   const emailEl = qs("#email");
@@ -197,30 +148,96 @@ document.addEventListener("DOMContentLoaded", () => {
   };
 
   form.addEventListener("submit", async e => {
+
     e.preventDefault();
-    msgEl.textContent = "Please wait…";
+    msgEl.style.color = "#444";
+    msgEl.textContent = "Please wait...";
 
     try {
-      const res = await loginUser(
+
+      /* 🔐 Firebase Login */
+      const cred = await auth.signInWithEmailAndPassword(
         emailEl.value.trim(),
         pwEl.value.trim()
       );
 
-      if (res.success) {
-        msgEl.style.color = "#1b5e20";
-        msgEl.textContent = "Login successful…";
-        setTimeout(() => {
-          window.location.href = "/tools/business-dashboard.html";
-        }, 200);
-      } else {
+      const user = cred.user;
+
+      /* 📧 Email Verification Check */
+      if (!user.emailVerified) {
+        await auth.signOut();
         msgEl.style.color = "#d32f2f";
-        msgEl.textContent = res.error || "Login failed";
+        msgEl.textContent = "Please verify your email before login.";
+        return;
       }
-    } catch (err) {
+
+      /* 📦 Load Subscription Data */
+      const snap = await db.collection("users").doc(user.uid).get();
+      const data = snap.data();
+
+      if (!data) {
+        await auth.signOut();
+        msgEl.style.color = "#d32f2f";
+        msgEl.textContent = "Account setup incomplete.";
+        return;
+      }
+
+      const now = Date.now();
+
+      /* 🎁 FREE TRIAL CHECK */
+      if (data.plan === "free_trial") {
+
+        if (now > data.trialEndsAt) {
+
+          await auth.signOut();
+          msgEl.style.color = "#d32f2f";
+          msgEl.textContent = "Free trial expired. Please subscribe.";
+
+          setTimeout(() => {
+            window.location.href = "/subscribe.html";
+          }, 1200);
+
+          return;
+        }
+
+        window.location.href = "/tools/business-dashboard.html";
+        return;
+      }
+
+      /* 💳 PAID PLAN CHECK */
+      if (data.subscriptionActive) {
+
+        if (now > data.subscriptionEndsAt) {
+
+          await auth.signOut();
+          msgEl.style.color = "#d32f2f";
+          msgEl.textContent = "Subscription expired. Please renew.";
+
+          setTimeout(() => {
+            window.location.href = "/subscribe.html";
+          }, 1200);
+
+          return;
+        }
+
+        window.location.href = "/tools/business-dashboard.html";
+        return;
+      }
+
+      /* ❌ No Active Plan */
+      await auth.signOut();
       msgEl.style.color = "#d32f2f";
-      msgEl.textContent = err.message || "Login error";
+      msgEl.textContent = "Subscription inactive.";
+
+    } catch (err) {
+
+      msgEl.style.color = "#d32f2f";
+      msgEl.textContent = err.message || "Login failed.";
+
     }
+
   });
+
 });
 </script>
 
