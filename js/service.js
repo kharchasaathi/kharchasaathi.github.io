@@ -490,8 +490,6 @@ qs("#svcFilterCalendar")
   clearDropdown();
   refresh();
 });
-
-
 /* --------------------------------------------------
    CLEAR ALL — HISTORY ONLY + PROFIT SAFE
 -------------------------------------------------- */
@@ -522,18 +520,18 @@ Continue?`
   window.services = [];
 
   saveServices();
-  buildDateFilter();
-  refresh();
+  refresh();   // 🔥 Only this is needed
 });
 
 
 /* -------------------------------------------------- INIT */
 window.addEventListener("load",()=>{
-  buildDateFilter();
-  refresh();
+  refresh();   // 🔥 Removed buildDateFilter()
 });
 
-})(); 
+})();
+
+
 /* ===========================================================
    🔒 DAILY CLOSE AUTO CLEAR (SAFE)
 =========================================================== */
