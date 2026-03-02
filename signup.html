@@ -9,104 +9,105 @@
   href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap">
 
 <style>
-  body{
-    margin:0;
-    padding:0;
-    font-family:'Poppins',sans-serif;
-    background:#eef2ff;
-    display:flex;
-    justify-content:center;
-    align-items:center;
-    min-height:100vh;
-  }
-
-  .card{
-    width:92%;
-    max-width:380px;
-    padding:28px;
-    border-radius:16px;
-    background:#fff;
-    box-shadow:0 8px 30px rgba(0,0,0,0.10);
-    border:1px solid #dbe1f0;
-  }
-
-  h2{
-    margin:0 0 16px;
-    text-align:center;
-    font-weight:700;
-    color:#2563eb;
-    font-size:26px;
-  }
-
-  input{
-    width:100%;
-    padding:12px 14px;
-    margin:10px 0;
-    border-radius:10px;
-    border:1px solid #c7cce1;
-    font-size:15px;
-  }
-  input:focus{
-    border-color:#2563eb;
-    outline:none;
-  }
-
-  .pass-wrap{
-    position:relative;
-  }
-
-  .eye{
-    position:absolute;
-    right:14px;
-    top:50%;
-    transform:translateY(-50%);
-    font-size:18px;
-    cursor:pointer;
-    color:#666;
-  }
-
-  button{
-    width:100%;
-    padding:14px;
-    border:none;
-    border-radius:12px;
-    background:linear-gradient(135deg,#3b82f6,#2563eb);
-    color:white;
-    font-size:16px;
-    font-weight:600;
-    cursor:pointer;
-    margin-top:6px;
-    transition:.2s;
-  }
-
-  button:disabled{
-    opacity:0.6;
-    cursor:not-allowed;
-  }
-
-  button:hover:not(:disabled){
-    transform:translateY(-2px);
-  }
-
-  #msg{
-    margin-top:10px;
-    min-height:18px;
-    text-align:center;
-    font-size:13px;
-    color:#444;
-  }
-
-  .login-link{
-    margin-top:14px;
-    font-size:14px;
-    text-align:center;
-  }
-
-  .login-link a{
-    color:#2563eb;
-    font-weight:600;
-    text-decoration:none;
-  }
+body{
+  margin:0;
+  padding:0;
+  font-family:'Poppins',sans-serif;
+  background:#eef2ff;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  min-height:100vh;
+}
+.card{
+  width:92%;
+  max-width:380px;
+  padding:28px;
+  border-radius:16px;
+  background:#fff;
+  box-shadow:0 8px 30px rgba(0,0,0,0.10);
+  border:1px solid #dbe1f0;
+}
+h2{
+  margin:0 0 16px;
+  text-align:center;
+  font-weight:700;
+  color:#2563eb;
+  font-size:26px;
+}
+.sub-text{
+  text-align:center;
+  font-size:13px;
+  color:#666;
+  margin-bottom:10px;
+}
+input{
+  width:100%;
+  padding:12px 14px;
+  margin:10px 0;
+  border-radius:10px;
+  border:1px solid #c7cce1;
+  font-size:15px;
+}
+input:focus{
+  border-color:#2563eb;
+  outline:none;
+}
+.pass-wrap{
+  position:relative;
+}
+.eye{
+  position:absolute;
+  right:14px;
+  top:50%;
+  transform:translateY(-50%);
+  font-size:18px;
+  cursor:pointer;
+  color:#666;
+}
+button{
+  width:100%;
+  padding:14px;
+  border:none;
+  border-radius:12px;
+  background:linear-gradient(135deg,#3b82f6,#2563eb);
+  color:white;
+  font-size:16px;
+  font-weight:600;
+  cursor:pointer;
+  margin-top:6px;
+  transition:.2s;
+}
+button:disabled{
+  opacity:0.6;
+  cursor:not-allowed;
+}
+button:hover:not(:disabled){
+  transform:translateY(-2px);
+}
+#msg{
+  margin-top:10px;
+  min-height:18px;
+  text-align:center;
+  font-size:13px;
+}
+.login-link{
+  margin-top:14px;
+  font-size:14px;
+  text-align:center;
+}
+.login-link a{
+  color:#2563eb;
+  font-weight:600;
+  text-decoration:none;
+}
+.plan-box{
+  background:#f1f5ff;
+  padding:10px;
+  border-radius:10px;
+  font-size:13px;
+  margin-bottom:10px;
+}
 </style>
 </head>
 
@@ -114,6 +115,11 @@
 
 <div class="card">
   <h2>Create Account</h2>
+
+  <div class="plan-box">
+    🎁 1 Month Free Trial<br>
+    💎 Then ₹49 / 3 Months
+  </div>
 
   <input id="email" type="email" placeholder="Email">
 
@@ -131,43 +137,23 @@
   </div>
 </div>
 
-<!-- Firebase compat scripts -->
+<!-- Firebase -->
 <script src="https://www.gstatic.com/firebasejs/9.6.11/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.6.11/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.6.11/firebase-firestore-compat.js"></script>
 
-<!-- Firebase Init -->
 <script src="/js/firebase.js"></script>
-
-<!-- Auth Utils -->
-<script src="/js/login-utils.js?v=20"></script>
-
-<script>
-/* =====================================================
-   🔐 LOGIN GUARD — BLOCK SIGNUP WHEN LOGGED IN
-===================================================== */
-document.addEventListener("DOMContentLoaded", () => {
-  setTimeout(() => {
-    try {
-      if (window.auth && window.auth.currentUser) {
-        window.location.replace("/tools/business-dashboard.html");
-      }
-    } catch (e) {
-      console.warn("Signup guard error:", e);
-    }
-  }, 200);
-});
-</script>
 
 <script>
 const qs = s => document.querySelector(s);
 
-// Show / hide password
+// password toggle
 qs("#pwEye").addEventListener("click", () => {
   const pw = qs("#password");
   pw.type = pw.type === "password" ? "text" : "password";
 });
 
-// SIGNUP
+// signup
 qs("#signupBtn").addEventListener("click", async () => {
 
   const email = qs("#email").value.trim();
@@ -190,24 +176,50 @@ qs("#signupBtn").addEventListener("click", async () => {
   }
 
   btn.disabled = true;
-  btn.textContent = "Creating…";
+  btn.textContent = "Creating...";
 
-  const res = await signupUser(email, pass);
+  try {
 
-  if (res.success){
+    const userCred = await auth.createUserWithEmailAndPassword(email, pass);
+    const user = userCred.user;
+
+    /* SEND EMAIL VERIFICATION */
+    await user.sendEmailVerification();
+
+    /* 1 MONTH FREE TRIAL */
+    const trialEnd = Date.now() + (30 * 24 * 60 * 60 * 1000);
+
+    await db.collection("users").doc(user.uid).set({
+      email: user.email,
+      role: "owner",
+      plan: "free_trial",
+      trialEndsAt: trialEnd,
+      subscriptionActive: false,
+      subscriptionPlan: null,
+      subscriptionPrice: 49,
+      subscriptionDurationMonths: 3,
+      subscriptionEndsAt: null,
+      razorpayCustomerId: null,
+      totalPayments: 0,
+      createdAt: Date.now()
+    });
+
+    await auth.signOut();
+
     msg.style.color = "green";
-    msg.textContent = "Account created! Redirecting…";
+    msg.textContent = "Verification email sent. Please verify before login.";
 
-    setTimeout(() => {
-      window.location.href = "/tools/business-dashboard.html";
-    }, 300);
+    btn.disabled = false;
+    btn.textContent = "Create Account";
 
-  } else {
+  } catch (err) {
+
     msg.style.color = "red";
-    msg.textContent = res.error;
+    msg.textContent = err.message;
     btn.disabled = false;
     btn.textContent = "Create Account";
   }
+
 });
 </script>
 
