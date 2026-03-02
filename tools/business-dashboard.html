@@ -294,6 +294,7 @@ body{
   <div class="tab" data-tab="expenses">💸 Expenses</div>
   <div class="tab" data-tab="dashboard">📊 Dashboard</div>
   <div class="tab" data-tab="collection">🪙 Collection</div>
+  <div class="tab" data-tab="ledger">📒 Ledger</div>
 
   <!-- ✅ NEW -->
   <div class="tab" data-tab="profitWithdraw">💰 Withdraw</div>
@@ -920,6 +921,45 @@ body{
   </button>
 
 </section>
+  <!-- =============== DAILY LEDGER =============== -->
+<section id="ledger" class="section">
+
+  <h3>📒 Daily Ledger</h3>
+
+  <div style="margin-bottom:10px;display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
+    <label>Date:</label>
+    <input type="date" id="ledgerDate"
+      style="padding:6px 8px;border-radius:10px;border:1px solid var(--ks-border-soft);">
+
+    <button class="small-btn" onclick="loadLedger()">
+      Load
+    </button>
+  </div>
+
+  <div class="card" style="padding:14px;margin-bottom:14px;">
+    <h4>Summary</h4>
+
+    <div style="display:flex;gap:16px;flex-wrap:wrap;">
+      <div>Sales: <b id="ledSales">₹0</b></div>
+      <div>Service: <b id="ledService">₹0</b></div>
+      <div>Collection: <b id="ledCollection">₹0</b></div>
+      <div>Expenses: <b id="ledExpenses">₹0</b></div>
+      <div>Net: <b id="ledNet">₹0</b></div>
+    </div>
+  </div>
+
+  <table>
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Description</th>
+        <th>Amount</th>
+      </tr>
+    </thead>
+    <tbody id="ledgerTableBody"></tbody>
+  </table>
+
+</section>
   <!-- =============== RESET TAB =============== -->
 <section id="reset" class="section">
 
@@ -997,6 +1037,7 @@ body{
 <script src="/js/analytics.js"></script>
 <script src="/js/dashboard.js"></script>
   <script src="/js/withdraw.js"></script>
+  <script src="/js/daily-ledger.js"></script>
 <!-- 🔍 AUDIT (AFTER ALL DATA ENGINES) -->
 <script src="/js/accounting-audit.js"></script>
 <!-- RESET -->
@@ -1135,6 +1176,9 @@ function switchTab(tabId){
       case "collection":
         renderCollection?.();
       break;
+        case "ledger":
+  loadLedger?.();
+break;
       case "profitWithdraw":   
   renderWithdraw?.();
 break;
