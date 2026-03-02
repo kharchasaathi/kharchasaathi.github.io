@@ -1,6 +1,7 @@
 /* ===========================================================
-   ledger.js — DAILY LEDGER ENGINE v2 (ERP SAFE)
+   ledger.js — DAILY LEDGER ENGINE v2.1 (ERP SAFE UI LOCK)
    ✔ Close Day = Lock + Auto Carry Forward
+   ✔ Auto Disable Close Button
    ✔ No Separate Carry Forward
    ✔ Multi-Device Safe
    ✔ Single Source of Truth
@@ -61,6 +62,8 @@ async function loadLedger(date){
   window.currentLedgerDate = date;
 
   recalculateClosingBalance();
+  updateCloseButtonState();
+
   window.dispatchEvent(new Event("ledger-loaded"));
 }
 
@@ -128,14 +131,12 @@ async function saveLedger(){
     .doc(window.currentLedgerDate)
     .set(window.currentLedger);
 
+  updateCloseButtonState();
   window.dispatchEvent(new Event("ledger-updated"));
 }
 
 /* ===========================================================
    CLOSE DAY (PRO ERP MODE)
-   ✔ Lock
-   ✔ Auto Carry Forward
-   ✔ Prevent Duplicate
 =========================================================== */
 async function closeLedgerDay(){
 
@@ -170,7 +171,6 @@ async function closeLedgerDay(){
 
   const nextSnap = await nextRef.get();
 
-  /* 3️⃣ Only create if NOT exists */
   if(!nextSnap.exists){
 
     const nextLedger = {
@@ -194,7 +194,20 @@ async function closeLedgerDay(){
     await nextRef.set(nextLedger);
   }
 
+  updateCloseButtonState();
+
   alert("✅ Day Closed & Balance Carried Forward");
+}
+
+/* ===========================================================
+   AUTO BUTTON CONTROL
+=========================================================== */
+function updateCloseButtonState(){
+
+  const btn = document.getElementById("closeLedgerBtn");
+  if(!btn || !window.currentLedger) return;
+
+  btn.disabled = window.currentLedger.isClosed;
 }
 
 /* ===========================================================
