@@ -234,7 +234,8 @@ window.getFirebaseUser=
 ROUTE GUARD
 =========================================================== */
 const PROTECTED=[
-  "/tools/business-dashboard.html"
+  "/tools/business-dashboard.html",
+  "/tools/daily-ledger.html"
 ];
 
 const AUTH_PAGES=[
