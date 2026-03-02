@@ -1,19 +1,24 @@
 /* ===========================================================
-   firestore-listeners.js — HARDENED v16
-   CRASH-PROOF + SETTLEMENT SAFE + WITHDRAW SAFE
+   firestore-listeners.js — HARDENED v18
+   FULL SAFE + UNSUBSCRIBE + CLOUD WAIT + WRITE LOCK
 
    ✔ Listener crash guard
+   ✔ Cloud-ready race safe
+   ✔ Collection write lock
+   ✔ Wanting restored
    ✔ Universal recompute safe
-   ✔ Settlement sync safe
-   ✔ Withdraw sync safe
+   ✔ Settlement safe
+   ✔ Withdraw safe
    ✔ Offset realtime safe
+   ✔ Cross-user safe
+   ✔ Memory leak safe
    ✔ Multi-device safe
 =========================================================== */
 
 (function () {
 
 /* --------------------------------------------------
-   DUPLICATE LISTENER BLOCK
+   DUPLICATE FILE LOAD BLOCK
 -------------------------------------------------- */
 if (window.__fsListenersAttached) {
   console.warn("🔥 Firestore listeners already attached");
@@ -21,9 +26,10 @@ if (window.__fsListenersAttached) {
 }
 
 window.__fsListenersAttached = true;
+window.__fsUnsubs = [];
 
 console.log(
-  "%c👂 Attaching Firestore listeners...",
+  "%c👂 Firestore listeners system booting...",
   "color:#03a9f4;font-weight:bold;"
 );
 
@@ -42,12 +48,26 @@ function safeCall(fnName){
     try{
       fn();
     }catch(err){
-      console.warn(
-        `⚠️ ${fnName} crashed`,
-        err
-      );
+      console.warn(`⚠️ ${fnName} crashed`, err);
     }
   }
+}
+
+
+/* ==================================================
+   SAFE UI REFRESH
+================================================== */
+function safeRefresh(){
+
+  safeCall("renderSales");
+  safeCall("renderCollection");
+  safeCall("renderAnalytics");
+  safeCall("renderDashboard");
+  safeCall("updateSummaryCards");
+
+  setTimeout(()=>{
+    safeCall("updateUniversalBar");
+  },50);
 }
 
 
@@ -86,9 +106,25 @@ function attachCollectionWriteGuard(){
 }
 
 
-/* --------------------------------------------------
+/* ==================================================
+   CLEAR OLD LISTENERS (Cross-user safe)
+================================================== */
+function clearAllListeners(){
+
+  if(!window.__fsUnsubs) return;
+
+  window.__fsUnsubs.forEach(unsub=>{
+    try{ unsub(); }catch{}
+  });
+
+  window.__fsUnsubs = [];
+  console.log("🧹 Old listeners cleared");
+}
+
+
+/* ==================================================
    WAIT FOR CLOUD READY
--------------------------------------------------- */
+================================================== */
 function waitForCloudReady(cb){
 
   if (window.__cloudReady && auth.currentUser){
@@ -107,26 +143,12 @@ function waitForCloudReady(cb){
 }
 
 
-/* --------------------------------------------------
-   SAFE UI REFRESH
--------------------------------------------------- */
-function safeRefresh(){
-
-  safeCall("renderSales");
-  safeCall("renderCollection");
-  safeCall("renderAnalytics");
-  safeCall("updateSummaryCards");
-
-  setTimeout(()=>{
-    safeCall("updateUniversalBar");
-  },50);
-}
-
-
-/* --------------------------------------------------
+/* ==================================================
    ATTACH LISTENERS
--------------------------------------------------- */
+================================================== */
 function attachListeners(){
+
+  clearAllListeners();
 
   const uid = auth.currentUser.uid;
 
@@ -137,126 +159,92 @@ function attachListeners(){
 
   attachCollectionWriteGuard();
 
+  function listen(docName, handler){
+
+    const unsub = ref.doc(docName)
+      .onSnapshot(snap=>{
+
+        if (!snap.exists) return;
+
+        handler(snap.data().value);
+
+      });
+
+    window.__fsUnsubs.push(unsub);
+  }
+
 
   /* ================= TYPES ================= */
-  ref.doc("types").onSnapshot(snap=>{
-
-    if (!snap.exists) return;
-
-    window.types = snap.data().value || [];
+  listen("types", v=>{
+    window.types = v || [];
     safeCall("renderTypes");
-
     console.log("🔄 Types synced");
   });
 
 
   /* ================= STOCK ================= */
-  ref.doc("stock").onSnapshot(snap=>{
-
-    if (!snap.exists) return;
-
-    window.stock = snap.data().value || [];
-
+  listen("stock", v=>{
+    window.stock = v || [];
     safeCall("renderStock");
     safeCall("updateUniversalBar");
-
     console.log("🔄 Stock synced");
   });
 
 
   /* ================= WANTING ================= */
-  ref.doc("wanting").onSnapshot(snap=>{
-
-    if (!snap.exists) return;
-
-    window.wanting = snap.data().value || [];
+  listen("wanting", v=>{
+    window.wanting = v || [];
     safeCall("renderWanting");
-
     console.log("🔄 Wanting synced");
   });
 
 
   /* ================= SALES ================= */
-  ref.doc("sales").onSnapshot(snap=>{
-
-    if (!snap.exists) return;
-
-    window.sales = snap.data().value || [];
+  listen("sales", v=>{
+    window.sales = v || [];
     safeRefresh();
-
     console.log("🔄 Sales synced");
   });
 
 
   /* ================= SERVICES ================= */
-  ref.doc("services").onSnapshot(snap=>{
-
-    if (!snap.exists) return;
-
-    window.services = snap.data().value || [];
+  listen("services", v=>{
+    window.services = v || [];
     safeRefresh();
-
     console.log("🔄 Services synced");
   });
 
 
   /* ================= EXPENSES ================= */
-  ref.doc("expenses").onSnapshot(snap=>{
-
-    if (!snap.exists) return;
-
-    window.expenses = snap.data().value || [];
+  listen("expenses", v=>{
+    window.expenses = v || [];
     safeRefresh();
-
     console.log("🔄 Expenses synced");
   });
 
 
   /* ================= COLLECTIONS ================= */
-  ref.doc("collections").onSnapshot(snap=>{
-
-    if (!snap.exists) return;
-
-    window.collections = snap.data().value || [];
+  listen("collections", v=>{
+    window.collections = v || [];
     safeRefresh();
-
     console.log("🔄 Collections synced");
   });
 
 
-  /* ==================================================
-     💰 WITHDRAWALS
-  ================================================== */
-  ref.doc("withdrawals").onSnapshot(snap=>{
-
-    if (!snap.exists) return;
-
-    window.__withdrawals =
-      snap.data().value || [];
-
+  /* ================= WITHDRAWALS ================= */
+  listen("withdrawals", v=>{
+    window.__withdrawals = v || [];
     safeCall("renderWithdraw");
     safeCall("updateUniversalBar");
-
     console.log("🔄 Withdrawals synced");
   });
 
 
-  /* ==================================================
-     🧠 UNIVERSAL METRICS
-  ================================================== */
-  ref.doc("unMetrics").onSnapshot(snap=>{
-
-    if (!snap.exists) return;
-
-    const incoming = snap.data().value || {};
+  /* ================= UNIVERSAL METRICS ================= */
+  listen("unMetrics", v=>{
 
     window.__unMetrics =
-      window.__unMetrics || {};
-
-    Object.assign(
-      window.__unMetrics,
-      incoming
-    );
+      Object.assign(window.__unMetrics || {}, v || {});
 
     safeCall("updateUniversalBar");
     safeCall("renderDashboard");
@@ -266,19 +254,11 @@ function attachListeners(){
   });
 
 
-  /* ==================================================
-     OFFSETS
-  ================================================== */
-  ref.doc("offsets").onSnapshot(snap=>{
+  /* ================= OFFSETS ================= */
+  listen("offsets", v=>{
 
-    if (!snap.exists) return;
-
-    const incoming = snap.data().value || {};
-
-    if (!window.__offsets)
-      window.__offsets = {};
-
-    Object.assign(window.__offsets, incoming);
+    window.__offsets =
+      Object.assign(window.__offsets || {}, v || {});
 
     safeCall("updateUniversalBar");
 
@@ -290,26 +270,43 @@ function attachListeners(){
 
 
   /* ================= DASHBOARD OFFSET ================= */
-  ref.doc("dashboardOffset")
-    .onSnapshot(snap=>{
+  listen("dashboardOffset", v=>{
 
-      if (!snap.exists) return;
+    window.__dashboardOffset =
+      Number(v || 0);
 
-      window.__dashboardOffset =
-        Number(snap.data().value || 0);
+    safeCall("renderAnalytics");
+    safeCall("updateSummaryCards");
 
-      safeCall("renderAnalytics");
-      safeCall("updateSummaryCards");
+    console.log("🔄 Dashboard offset synced");
+  });
 
-      console.log("🔄 Dashboard offset synced");
-    });
 
+  console.log(
+    "%c👂 Listeners attached for user:",
+    "color:#4caf50;font-weight:bold;",
+    uid
+  );
 }
 
 
-/* --------------------------------------------------
-   INIT
--------------------------------------------------- */
-waitForCloudReady(attachListeners);
+/* ==================================================
+   AUTH WATCHER
+================================================== */
+auth.onAuthStateChanged(user=>{
+
+  if(user){
+
+    waitForCloudReady(()=>{
+      attachListeners();
+    });
+
+  }else{
+
+    clearAllListeners();
+
+  }
+
+});
 
 })();
