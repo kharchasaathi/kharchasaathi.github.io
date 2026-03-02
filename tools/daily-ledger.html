@@ -153,9 +153,7 @@ button{
     <button class="btn-success" id="closeLedgerBtn">
       Close Day
     </button>
-    <button class="btn-primary" id="carryForwardBtn">
-      Carry Forward
-    </button>
+    
   </div>
 
 </div>
@@ -208,8 +206,7 @@ qs("#loadLedgerBtn")
 qs("#closeLedgerBtn")
   .addEventListener("click", closeLedgerDay);
 
-qs("#carryForwardBtn")
-  .addEventListener("click", carryForwardNextDay);
+
 
 window.addEventListener("load", ()=>{
   const today = new Date().toISOString().slice(0,10);
