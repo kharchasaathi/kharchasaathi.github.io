@@ -1,6 +1,9 @@
 /* ===========================================================
-   ledger.js — DAILY LEDGER ENGINE v1
-   SINGLE SOURCE OF TRUTH
+   ledger.js — DAILY LEDGER ENGINE v2 (ERP SAFE)
+   ✔ Close Day = Lock + Auto Carry Forward
+   ✔ No Separate Carry Forward
+   ✔ Multi-Device Safe
+   ✔ Single Source of Truth
 =========================================================== */
 
 (function(){
@@ -44,6 +47,7 @@ async function loadLedger(date){
       gstPaid: 0,
       closingBalance: 0,
       isClosed: false,
+      createdAt: Date.now(),
       lastUpdated: Date.now()
     };
 
@@ -56,6 +60,7 @@ async function loadLedger(date){
 
   window.currentLedgerDate = date;
 
+  recalculateClosingBalance();
   window.dispatchEvent(new Event("ledger-loaded"));
 }
 
@@ -67,7 +72,7 @@ async function updateLedgerField(field, amount){
   if(!window.currentLedger) return;
 
   if(window.currentLedger.isClosed){
-    alert("Ledger closed for this date.");
+    alert("⚠ Ledger already closed for this date.");
     return;
   }
 
@@ -76,7 +81,6 @@ async function updateLedgerField(field, amount){
   window.currentLedger[field] = value;
 
   recalculateClosingBalance();
-
   await saveLedger();
 }
 
@@ -128,42 +132,76 @@ async function saveLedger(){
 }
 
 /* ===========================================================
-   CLOSE DAY
+   CLOSE DAY (PRO ERP MODE)
+   ✔ Lock
+   ✔ Auto Carry Forward
+   ✔ Prevent Duplicate
 =========================================================== */
 async function closeLedgerDay(){
 
   if(!window.currentLedger) return;
 
+  if(window.currentLedger.isClosed){
+    alert("Day already closed.");
+    return;
+  }
+
+  const uid = window.auth.currentUser.uid;
+
+  recalculateClosingBalance();
+
+  /* 1️⃣ LOCK CURRENT DAY */
   window.currentLedger.isClosed = true;
+  window.currentLedger.closedAt = Date.now();
+
   await saveLedger();
 
-  alert("Day Closed Successfully");
-}
-
-/* ===========================================================
-   CARRY FORWARD
-=========================================================== */
-async function carryForwardNextDay(){
-
+  /* 2️⃣ CREATE NEXT DAY */
   const nextDate = new Date(window.currentLedgerDate);
   nextDate.setDate(nextDate.getDate()+1);
 
   const next = nextDate.toISOString().slice(0,10);
 
-  await loadLedger(next);
+  const nextRef = db
+    .collection("users")
+    .doc(uid)
+    .collection("ledger")
+    .doc(next);
 
-  window.currentLedger.openingBalance =
-    window.currentLedger.closingBalance;
+  const nextSnap = await nextRef.get();
 
-  await saveLedger();
+  /* 3️⃣ Only create if NOT exists */
+  if(!nextSnap.exists){
+
+    const nextLedger = {
+      date: next,
+      openingBalance: num(window.currentLedger.closingBalance),
+      salesProfit: 0,
+      serviceProfit: 0,
+      salesInvestmentReturn: 0,
+      serviceInvestmentReturn: 0,
+      gstCollected: 0,
+      expenses: 0,
+      withdrawals: 0,
+      gstPaid: 0,
+      closingBalance: num(window.currentLedger.closingBalance),
+      isClosed: false,
+      createdAt: Date.now(),
+      lastUpdated: Date.now(),
+      carriedForwardFrom: window.currentLedgerDate
+    };
+
+    await nextRef.set(nextLedger);
+  }
+
+  alert("✅ Day Closed & Balance Carried Forward");
 }
 
 /* ===========================================================
    EXPORT
 =========================================================== */
-window.loadLedger          = loadLedger;
-window.updateLedgerField   = updateLedgerField;
-window.closeLedgerDay      = closeLedgerDay;
-window.carryForwardNextDay = carryForwardNextDay;
+window.loadLedger        = loadLedger;
+window.updateLedgerField = updateLedgerField;
+window.closeLedgerDay    = closeLedgerDay;
 
 })();
