@@ -1,14 +1,16 @@
 // =======================================================
-// KharchaSaathi — Service Worker v7 (LOGIN SAFE ONLINE MODE)
+// KharchaSaathi — Service Worker v8 (ENTERPRISE SAFE)
 // -------------------------------------------------------
-// ⭐ ONLINE-FIRST
-// ⭐ Dashboard = NETWORK ONLY (no cache, no offline serve)
-// ⭐ Login / Reset / Signup cached
-// ⭐ Firebase & APIs NEVER cached
-// ⭐ Safe for SaaS + Payments (Razorpay ready)
+// ⭐ STRICT ONLINE-FIRST
+// ⭐ Dashboard = NETWORK ONLY
+// ⭐ Auth pages cached safely
+// ⭐ Firebase / Google / Razorpay NEVER cached
+// ⭐ Hostname-based API protection
+// ⭐ Smart offline fallback
+// ⭐ SaaS + Payments production safe
 // =======================================================
 
-const CACHE_NAME = "ks-cache-v7";
+const CACHE_NAME = "ks-cache-v8";
 
 /* -------------------------------------------------------
    STATIC FILES — SAFE BEFORE LOGIN
@@ -17,7 +19,7 @@ const CORE_ASSETS = [
   "/",
   "/index.html",
 
-  // Auth pages (allowed offline UI only)
+  // Auth pages (offline UI allowed)
   "/login.html",
   "/reset-password.html",
   "/signup.html",
@@ -40,12 +42,14 @@ const CORE_ASSETS = [
 self.addEventListener("install", event => {
   event.waitUntil(
     caches.open(CACHE_NAME).then(async cache => {
-      console.log("[SW] Installing v7…");
+      console.log("[SW] Installing v8…");
 
       for (const asset of CORE_ASSETS) {
         try {
           const res = await fetch(asset, { cache: "no-store" });
-          if (res.ok) cache.put(asset, res.clone());
+          if (res.ok) {
+            await cache.put(asset, res.clone());
+          }
         } catch {
           console.warn("[SW] Skipped:", asset);
         }
@@ -62,65 +66,89 @@ self.addEventListener("activate", event => {
   event.waitUntil(
     caches.keys().then(keys =>
       Promise.all(
-        keys.filter(k => k !== CACHE_NAME).map(k => caches.delete(k))
+        keys
+          .filter(k => k !== CACHE_NAME)
+          .map(k => caches.delete(k))
       )
     )
   );
   self.clients.claim();
-  console.log("[SW] Active v7");
+  console.log("[SW] Active v8");
 });
 
 /* -------------------------------------------------------
-   FETCH — LOGIN SAFE ONLINE FIRST
+   FETCH HANDLER
 ------------------------------------------------------- */
 self.addEventListener("fetch", event => {
-  const req = event.request;
-  const url = req.url;
 
+  const req = event.request;
+
+  // Only handle GET
   if (req.method !== "GET") return;
 
-  /* 🔥 HARD BLOCK — NEVER CACHE / SERVE DASHBOARD */
-  if (
-    url.includes("/tools/business-dashboard.html") ||
-    url.includes("/tools/")
-  ) {
-    event.respondWith(fetch(req)); // network only
+  const url = new URL(req.url);
+
+  /* ---------------------------------------------------
+     1️⃣ HARD NETWORK ONLY — DASHBOARD & TOOLS
+  --------------------------------------------------- */
+  if (url.pathname.startsWith("/tools/")) {
+    event.respondWith(fetch(req));
     return;
   }
 
-  /* 🔥 BLOCK ALL CLOUD / AUTH / PAYMENT APIs */
-  if (
-    url.includes("firebase") ||
-    url.includes("firestore") ||
-    url.includes("googleapis") ||
-    url.includes("auth") ||
-    url.includes("razorpay")
-  ) {
-    return; // browser handles network
+  /* ---------------------------------------------------
+     2️⃣ STRICT BLOCK — CLOUD / AUTH / PAYMENT HOSTS
+  --------------------------------------------------- */
+  const blockedHosts = [
+    "firebaseapp.com",
+    "firebaseio.com",
+    "googleapis.com",
+    "gstatic.com",
+    "razorpay.com"
+  ];
+
+  if (blockedHosts.some(host => url.hostname.includes(host))) {
+    event.respondWith(fetch(req));
+    return;
   }
 
   /* ---------------------------------------------------
-     ONLINE FIRST FOR SAFE STATIC FILES
+     3️⃣ ONLINE FIRST — SAFE STATIC FILES
   --------------------------------------------------- */
   event.respondWith(
     fetch(req)
       .then(res => {
-        if (res && res.ok) {
-          caches.open(CACHE_NAME).then(cache => {
-            cache.put(req, res.clone());
-          });
-        }
-        return res;
-      })
-      .catch(() =>
-        caches.match(req).then(cached => {
-          if (cached) return cached;
 
-          return new Response("Offline", {
-            status: 503,
-            headers: { "Content-Type": "text/plain" }
-          });
-        })
-      )
+        // Only cache successful same-origin responses
+        if (
+          res &&
+          res.ok &&
+          url.origin === self.location.origin
+        ) {
+          caches.open(CACHE_NAME)
+            .then(cache => cache.put(req, res.clone()));
+        }
+
+        return res;
+
+      })
+      .catch(async () => {
+
+        // Try cache
+        const cached = await caches.match(req);
+        if (cached) return cached;
+
+        // If navigation request → fallback to login page
+        if (req.mode === "navigate") {
+          const fallback = await caches.match("/login.html");
+          if (fallback) return fallback;
+        }
+
+        // Final fallback
+        return new Response("Offline", {
+          status: 503,
+          headers: { "Content-Type": "text/plain" }
+        });
+      })
   );
 });
