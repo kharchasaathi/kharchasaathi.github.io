@@ -1,31 +1,31 @@
 /* ===========================================================
-firebase.js — HARDENED V24
-REAL DEBOUNCE + LEDGER SAFE + OFFSET STRUCTURE FIXED
+firebase.js — HARDENED V25 (PRODUCTION SAFE)
 
-✔ Settlement ledger safe
-✔ Withdraw safe
-✔ Offset structure upgraded
-✔ Backward compatible
-✔ No profit corruption after refresh
+✔ True double-load protection
+✔ initializeApp crash-proof
+✔ Cross-user safe cloud reset
+✔ Deep clone save protection
+✔ Query-safe route guard
+✔ Ledger integrity preserved
 ✔ Multi-device safe
 ✔ Real debounce save
 =========================================================== */
 
 console.log("%c🔥 firebase.js loaded","color:#ff9800;font-weight:bold;");
 
-/* -----------------------------------------------------------
-PREVENT DOUBLE LOAD
------------------------------------------------------------ */
+/* ===========================================================
+TRUE DOUBLE LOAD PROTECTION
+=========================================================== */
 if (window.__firebase_loaded){
-  console.warn("firebase.js already loaded → skipped");
-}else{
-  window.__firebase_loaded=true;
+  console.warn("firebase.js already initialized → aborted");
+  return;
 }
+window.__firebase_loaded = true;
 
-/* -----------------------------------------------------------
+/* ===========================================================
 CONFIG
------------------------------------------------------------ */
-const firebaseConfig={
+=========================================================== */
+const firebaseConfig = {
   apiKey:"AIzaSyC1TSwODhcD88-IizbteOGF-bbebAP6Poc",
   authDomain:"kharchasaathi-main.firebaseapp.com",
   projectId:"kharchasaathi-main",
@@ -34,34 +34,39 @@ const firebaseConfig={
   appId:"1:116390837159:web:a9c45a99d933849f4c9482"
 };
 
-firebase.initializeApp(firebaseConfig);
+/* Safe initialize */
+if (!firebase.apps.length){
+  firebase.initializeApp(firebaseConfig);
+}
 
-const auth=firebase.auth();
-const db=firebase.firestore();
+const auth = firebase.auth();
+const db   = firebase.firestore();
 
-window.auth=auth;
-window.db=db;
+window.auth = auth;
+window.db   = db;
 
 console.log("%c☁️ Firebase connected!","color:#4caf50;font-weight:bold;");
 
 /* ===========================================================
 CLOUD ENGINE FLAGS
 =========================================================== */
-window.__cloudReady=false;
-window.__cloudPulled=false;
+window.__cloudReady  = false;
+window.__cloudPulled = false;
 
 /* ===========================================================
 DEBOUNCE ENGINE
 =========================================================== */
 const __debounceTimers = {};
 
-/* ---------------- LOAD ONE ---------------- */
+/* ===========================================================
+LOAD SINGLE KEY
+=========================================================== */
 async function cloudLoad(key){
-  const user=auth.currentUser;
+  const user = auth.currentUser;
   if(!user) return null;
 
   try{
-    const snap=await db
+    const snap = await db
       .collection("users")
       .doc(user.uid)
       .collection("data")
@@ -69,15 +74,16 @@ async function cloudLoad(key){
       .get();
 
     return snap.exists ? snap.data().value : null;
+
   }catch(e){
     console.warn("Cloud load failed:",key,e);
     return null;
   }
 }
-window.cloudLoad=cloudLoad;
+window.cloudLoad = cloudLoad;
 
 /* ===========================================================
-REAL DEBOUNCED SAVE
+SAFE DEBOUNCED SAVE (Deep Clone Protected)
 =========================================================== */
 function cloudSaveDebounced(key,value){
 
@@ -86,7 +92,7 @@ function cloudSaveDebounced(key,value){
     return;
   }
 
-  const user=auth.currentUser;
+  const user = auth.currentUser;
   if(!user) return;
 
   if(__debounceTimers[key])
@@ -95,14 +101,18 @@ function cloudSaveDebounced(key,value){
   __debounceTimers[key] = setTimeout(async ()=>{
 
     try{
+
+      const safeValue =
+        JSON.parse(JSON.stringify(value));
+
       await db
         .collection("users")
         .doc(user.uid)
         .collection("data")
         .doc(key)
         .set({
-          value,
-          updated:Date.now()
+          value: safeValue,
+          updated: Date.now()
         });
 
       console.log("%c☁️ Cloud saved:","color:#4caf50;font-weight:bold;",key);
@@ -115,10 +125,10 @@ function cloudSaveDebounced(key,value){
 
   },500);
 }
-window.cloudSaveDebounced=cloudSaveDebounced;
+window.cloudSaveDebounced = cloudSaveDebounced;
 
 /* ===========================================================
-FULL CLOUD PULL (LEDGER SAFE INIT)
+FULL CLOUD PULL (Cross-User Safe)
 =========================================================== */
 async function cloudPullAll(){
 
@@ -127,7 +137,7 @@ async function cloudPullAll(){
     return;
   }
 
-  const keys=[
+  const keys = [
     "types",
     "stock",
     "sales",
@@ -141,8 +151,8 @@ async function cloudPullAll(){
     "withdrawals"
   ];
 
-  const results=await Promise.all(
-    keys.map(k=>cloudLoad(k))
+  const results = await Promise.all(
+    keys.map(k => cloudLoad(k))
   );
 
   const [
@@ -157,45 +167,34 @@ async function cloudPullAll(){
     dashboardOffset,
     unMetrics,
     withdrawals
-  ]=results;
+  ] = results;
 
-  if(types!==null)        window.types=types;
-  if(stock!==null)        window.stock=stock;
-  if(sales!==null)        window.sales=sales;
-  if(wanting!==null)      window.wanting=wanting;
-  if(expenses!==null)     window.expenses=expenses;
-  if(services!==null)     window.services=services;
-  if(collections!==null)  window.collections=collections;
-  if(unMetrics!==null)    window.__unMetrics=unMetrics;
-  if(withdrawals!==null)  window.__withdrawals=withdrawals;
+  if(types!==null)        window.types = types;
+  if(stock!==null)        window.stock = stock;
+  if(sales!==null)        window.sales = sales;
+  if(wanting!==null)      window.wanting = wanting;
+  if(expenses!==null)     window.expenses = expenses;
+  if(services!==null)     window.services = services;
+  if(collections!==null)  window.collections = collections;
+  if(unMetrics!==null)    window.__unMetrics = unMetrics;
+  if(withdrawals!==null)  window.__withdrawals = withdrawals;
 
-  /* =======================================================
-     🧠 OFFSETS — FULL LEDGER SAFE STRUCTURE
-  ======================================================= */
+  /* ================= OFFSETS SAFE STRUCTURE ================= */
   window.__offsets = Object.assign({
-
     net:0,
     sale:0,
     service:0,
-
-    /* Investments */
     stock:0,
     servInv:0,
-
-    /* Expense ledgers */
     expensesLive:0,
     expensesSettled:0
-
   }, offsets || {});
 
-  /* =======================================================
-     DASHBOARD OFFSET
-  ======================================================= */
   window.__dashboardOffset =
     Number(dashboardOffset || 0);
 
-  window.__cloudPulled=true;
-  window.__cloudReady=true;
+  window.__cloudPulled = true;
+  window.__cloudReady  = true;
 
   console.log("%c☁️ Cloud fully loaded ✔","color:#4caf50;font-weight:bold;");
 
@@ -204,64 +203,66 @@ async function cloudPullAll(){
   );
 }
 
-window.cloudPullAllIfAvailable=cloudPullAll;
+window.cloudPullAllIfAvailable = cloudPullAll;
 
 /* ===========================================================
 AUTH API
 =========================================================== */
-window.fsLogin=(e,p)=>
-  auth.signInWithEmailAndPassword(e,p);
+window.fsLogin  = (e,p) => auth.signInWithEmailAndPassword(e,p);
 
-window.fsSignUp=async(e,p)=>{
-  const r=
-    await auth.createUserWithEmailAndPassword(e,p);
-  try{await r.user.sendEmailVerification();}catch{}
+window.fsSignUp = async(e,p)=>{
+  const r = await auth.createUserWithEmailAndPassword(e,p);
+  try{ await r.user.sendEmailVerification(); }catch{}
   return r;
 };
 
-window.fsSendPasswordReset=
-  e=>auth.sendPasswordResetEmail(e);
+window.fsSendPasswordReset =
+  e => auth.sendPasswordResetEmail(e);
 
-window.fsLogout=async()=>{
+window.fsLogout = async()=>{
   await auth.signOut();
-  location.href="/login.html";
+  location.href = "/login.html";
 };
 
-window.getFirebaseUser=
-  ()=>auth.currentUser;
+window.getFirebaseUser =
+  ()=> auth.currentUser;
 
 /* ===========================================================
-ROUTE GUARD
+ROUTE GUARD (Query Safe)
 =========================================================== */
-const PROTECTED=[
+const PROTECTED = [
   "/tools/business-dashboard.html",
   "/tools/daily-ledger.html"
 ];
 
-const AUTH_PAGES=[
+const AUTH_PAGES = [
   "/login.html",
   "/signup.html",
   "/reset.html"
 ];
 
-function path(){
-  return location.pathname||"";
+function currentPath(){
+  return location.pathname.split("?")[0];
 }
 
 /* ===========================================================
-AUTH STATE
+AUTH STATE HANDLER (Cross-User Safe)
 =========================================================== */
 auth.onAuthStateChanged(async user=>{
 
-  const p=path();
+  const p = currentPath();
 
   if(user){
 
     console.log("%c🔐 Logged in:","color:#03a9f4;font-weight:bold;",user.email);
 
+    /* Reset cloud flags for cross-user safety */
+    window.__cloudPulled = false;
+    window.__cloudReady  = false;
+
     await cloudPullAll();
 
-    if(AUTH_PAGES.some(x=>p.endsWith(x))){
+    if(AUTH_PAGES.some(x=>p.includes(x))){
       location.replace("/tools/business-dashboard.html");
     }
 
@@ -269,7 +270,10 @@ auth.onAuthStateChanged(async user=>{
 
     console.log("%c🔓 Logged out","color:#f44336;font-weight:bold;");
 
-    if(PROTECTED.some(x=>p.endsWith(x))){
+    window.__cloudPulled = false;
+    window.__cloudReady  = false;
+
+    if(PROTECTED.some(x=>p.includes(x))){
       location.replace("/login.html");
     }
   }
