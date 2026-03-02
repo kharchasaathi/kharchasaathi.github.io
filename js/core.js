@@ -1,7 +1,7 @@
 /* ===========================================================
-   core.js — FINAL v21 (FULL RESTORED + CLOUD SAFE)
-   PART 1 — HELPERS + BUSINESS BASE
+   core.js — FINAL v22 (HARDENED + CLOUD SAFE)
 =========================================================== */
+
 /* ===============================
    DOM HELPERS — GLOBAL SAFE
 =============================== */
@@ -60,10 +60,10 @@ window.collections=[];
 
 /* LIMIT */
 window.globalLimit=0;
-window.setGlobalLimit=v=>globalLimit=+v||0;
-window.getGlobalLimit=()=>+globalLimit||0;
+window.setGlobalLimit=v=>window.globalLimit=+v||0;
+window.getGlobalLimit=()=>+window.globalLimit||0;
 
-/* ENSURE */
+/* ENSURE ARRAYS */
 function ensureArrays(){
   [
     "types","stock","sales",
@@ -76,21 +76,36 @@ function ensureArrays(){
 }
 ensureArrays();
 
-/* NORMALIZE */
+/* NORMALIZE (WINDOW SAFE) */
 function normalizeAllDates(){
 
-  stock=stock.map(s=>({...s,date:toInternalIfNeeded(s.date)}));
-  sales=sales.map(s=>({...s,date:toInternalIfNeeded(s.date)}));
-  expenses=expenses.map(e=>({...e,date:toInternalIfNeeded(e.date)}));
-  wanting=wanting.map(w=>({...w,date:toInternalIfNeeded(w.date)}));
+  window.stock = window.stock.map(s=>({
+    ...s,
+    date:toInternalIfNeeded(s.date)
+  }));
 
-  services=services.map(j=>({
+  window.sales = window.sales.map(s=>({
+    ...s,
+    date:toInternalIfNeeded(s.date)
+  }));
+
+  window.expenses = window.expenses.map(e=>({
+    ...e,
+    date:toInternalIfNeeded(e.date)
+  }));
+
+  window.wanting = window.wanting.map(w=>({
+    ...w,
+    date:toInternalIfNeeded(w.date)
+  }));
+
+  window.services = window.services.map(j=>({
     ...j,
     date_in:toInternalIfNeeded(j.date_in),
     date_out:toInternalIfNeeded(j.date_out)
   }));
 
-  collections=collections.map(c=>({
+  window.collections = window.collections.map(c=>({
     ...c,
     date:toInternalIfNeeded(c.date)
   }));
@@ -99,30 +114,30 @@ function normalizeAllDates(){
 /* CLOUD SAVE */
 window.cloudSync=(k,d)=>{
   if(!window.__cloudReady) return;
-  cloudSaveDebounced?.(k,d||[]);
+  window.cloudSaveDebounced?.(k,d||[]);
 };
 
 /* SAVE */
-window.saveTypes=()=>cloudSync(KEY_TYPES,types);
-window.saveStock=()=>cloudSync(KEY_STOCK,stock);
-window.saveSales=()=>cloudSync(KEY_SALES,sales);
-window.saveWanting=()=>cloudSync(KEY_WANTING,wanting);
-window.saveExpenses=()=>cloudSync(KEY_EXPENSES,expenses);
-window.saveServices=()=>cloudSync(KEY_SERVICES,services);
-window.saveCollections=()=>cloudSync(KEY_COLLECTIONS,collections);
+window.saveTypes=()=>cloudSync(KEY_TYPES,window.types);
+window.saveStock=()=>cloudSync(KEY_STOCK,window.stock);
+window.saveSales=()=>cloudSync(KEY_SALES,window.sales);
+window.saveWanting=()=>cloudSync(KEY_WANTING,window.wanting);
+window.saveExpenses=()=>cloudSync(KEY_EXPENSES,window.expenses);
+window.saveServices=()=>cloudSync(KEY_SERVICES,window.services);
+window.saveCollections=()=>cloudSync(KEY_COLLECTIONS,window.collections);
 
 /* TYPES */
 window.addType=name=>{
   name=(name||"").trim();
-  if(!name||types.find(t=>t.name.toLowerCase()===name.toLowerCase()))return;
+  if(!name||window.types.find(t=>t.name.toLowerCase()===name.toLowerCase()))return;
 
-  types.push({id:uid("type"),name});
+  window.types=[...window.types,{id:uid("type"),name}];
   saveTypes();
 };
 
 /* PRODUCT HELPERS */
 window.findProduct=(type,name)=>
-  stock.find(p=>
+  window.stock.find(p=>
     p.type===type &&
     String(p.name).toLowerCase()===
     String(name).toLowerCase()
@@ -144,7 +159,7 @@ window.getProductCost=(type,name)=>{
   return 0;
 };
 
-/* STOCK ENTRY */
+/* STOCK ENTRY (IMMUTABLE SAFE) */
 window.addStockEntry=({
   date,type,name,qty,cost
 })=>{
@@ -156,21 +171,28 @@ window.addStockEntry=({
   let p=findProduct(type,name);
 
   if(!p){
-    stock.push({
-      id:uid("stk"),
-      date,type,name,qty,cost,
-      sold:0,
-      limit:getGlobalLimit(),
-      history:[{date,qty,cost}]
-    });
+    window.stock=[
+      ...window.stock,
+      {
+        id:uid("stk"),
+        date,type,name,qty,cost,
+        sold:0,
+        limit:getGlobalLimit(),
+        history:[{date,qty,cost}]
+      }
+    ];
   }else{
     p.qty+=qty;
     p.cost=cost;
-    p.history.push({date,qty,cost});
+    p.history=[
+      ...(p.history||[]),
+      {date,qty,cost}
+    ];
   }
 
   saveStock();
 };
+
 /* ===========================================================
    PART 2 — CLOUD EVENTS + RENDER
 =========================================================== */
@@ -203,31 +225,35 @@ window.addEventListener(
 
 /* INVESTMENT */
 window.getStockInvestmentAfterSale=()=>
-  stock.reduce(
+  window.stock.reduce(
     (t,p)=>t+Number(p.sold||0)*Number(p.cost||0),
     0
   );
 
 window.getSalesProfitCollected=()=>
-  sales
+  window.sales
     .filter(s=>String(s.status).toLowerCase()!=="credit")
     .reduce((t,s)=>t+Number(s.profit||0),0);
 
 window.getServiceProfitCollected=()=>
-  services
+  window.services
     .filter(s=>String(s.status).toLowerCase()==="completed")
     .reduce((t,s)=>t+Number(s.profit||0),0);
 
-/* EMAIL */
-window.updateEmailTag=()=>{
-  const el=document.getElementById("emailTag");
-  if(!el) return;
-  el.textContent=getFirebaseUser?.()?.email||"Not logged in";
-};
+/* EMAIL (OVERRIDE SAFE) */
+if(!window.updateEmailTag){
+  window.updateEmailTag=()=>{
+    const el=document.getElementById("emailTag");
+    if(!el) return;
+    el.textContent=
+      window.getFirebaseUser?.()?.email||
+      "Not logged in";
+  };
+}
 
-/* AUTH BRIDGE (RESTORED) */
-if(typeof auth!=="undefined"){
-  auth.onAuthStateChanged(user=>{
+/* AUTH BRIDGE */
+if(typeof window.auth!=="undefined"){
+  window.auth.onAuthStateChanged(user=>{
     if(user){
       window.dispatchEvent(
         new Event("firebase-auth-ready")
@@ -237,5 +263,5 @@ if(typeof auth!=="undefined"){
 }
 
 console.log(
-  "⚙️ core.js v21 CLOUD ENGINE READY ✔"
+  "⚙️ core.js v22 HARDENED CLOUD ENGINE READY ✔"
 );
