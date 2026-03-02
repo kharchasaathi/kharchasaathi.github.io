@@ -79,30 +79,7 @@ function clearAddForm(){
   if(d) d.value=today();
 }
 
-/* -------------------------------------------------- DATE FILTER */
-function buildDateFilter(){
-
-  const sel=qs("#svcFilterDate");
-  if(!sel) return;
-
-  const set=new Set();
-
-  ensureServices().forEach(j=>{
-    if(j.date_in) set.add(j.date_in);
-    if(j.date_out) set.add(j.date_out);
-  });
-
-  sel.innerHTML =
-    `<option value="">All Dates</option>`+
-    [...set]
-      .sort((a,b)=>b.localeCompare(a))
-      .map(d=>
-        `<option value="${d}">
-          ${toDisplay(d)}
-        </option>`
-      ).join("");
-}
-
+/
 /* -------------------------------------------------- FILTER HELPERS */
 function clearCalendar(){
   qs("#svcFilterCalendar") &&
