@@ -192,11 +192,11 @@ auth.onAuthStateChanged(async user=>{
 
     /* 🔐 EMAIL VERIFICATION COMPULSORY */
     if(!user.emailVerified){
-      await auth.signOut();
-      alert("Please verify your email first.");
-      location.replace("/login.html");
-      return;
-    }
+  if(!p.includes("/verify-email.html")){
+    location.replace("/verify-email.html");
+  }
+  return;
+}
 
     window.__cloudPulled = false;
     window.__cloudReady  = false;
