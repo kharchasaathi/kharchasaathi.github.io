@@ -11,11 +11,8 @@
 :root{
   --blue:#0A66C2;
   --bg:#f4f6f9;
-  --card:#ffffff;
   --text:#111;
-  --text-soft:#555;
-  --shadow:0 4px 14px rgba(0,0,0,0.08);
-  --shadow-hover:0 8px 24px rgba(0,0,0,0.15);
+  --shadow-hover:0 12px 28px rgba(10,102,194,0.45);
 }
 
 body{
@@ -46,7 +43,7 @@ body{
 /* SECTION */
 .section-title{
   font-size:20px;
-  margin:30px 20px 16px;
+  margin:32px 20px 18px;
   font-weight:700;
   color:var(--blue);
 }
@@ -56,38 +53,69 @@ body{
   padding:0 20px;
 }
 
-/* BUTTON STYLE CARD */
+/* STRONG CTA BUTTON */
 .tool-card{
   display:block;
   background:linear-gradient(135deg,#2563eb,#0A66C2);
-  padding:24px;
-  border-radius:18px;
+  padding:28px;
+  border-radius:20px;
   text-decoration:none;
   color:#fff;
-  box-shadow:var(--shadow);
-  transition:.25s;
+  box-shadow:0 8px 22px rgba(10,102,194,0.35);
+  transition:all .18s ease;
   cursor:pointer;
+  position:relative;
+  overflow:hidden;
 }
 
+/* Hover */
 .tool-card:hover{
-  transform:translateY(-6px);
+  transform:translateY(-5px);
   box-shadow:var(--shadow-hover);
+  filter:brightness(1.05);
+}
+
+/* Click press animation */
+.tool-card:active{
+  transform:scale(0.96);
+  box-shadow:0 4px 12px rgba(0,0,0,0.25);
+}
+
+/* Shine animation */
+.tool-card::after{
+  content:"";
+  position:absolute;
+  top:0;
+  left:-100%;
+  width:100%;
+  height:100%;
+  background:linear-gradient(
+    120deg,
+    rgba(255,255,255,0.15) 0%,
+    rgba(255,255,255,0.35) 50%,
+    rgba(255,255,255,0.15) 100%
+  );
+  transition:.5s;
+}
+
+.tool-card:hover::after{
+  left:100%;
 }
 
 .tool-title{
-  font-size:22px;
+  font-size:23px;
   font-weight:700;
 }
 
 .tool-desc{
-  margin-top:6px;
+  margin-top:8px;
   font-size:14px;
-  opacity:.9;
+  opacity:.95;
 }
 
-/* SIMPLE COMING LINE */
+/* Coming line */
 .coming-line{
-  margin:30px 20px;
+  margin:36px 20px;
   text-align:center;
   font-size:14px;
   color:#555;
@@ -96,7 +124,7 @@ body{
 /* FOOTER */
 .footer{
   text-align:center;
-  padding:30px 0;
+  padding:36px 0;
   margin-top:40px;
   font-size:13px;
   color:#777;
@@ -116,7 +144,7 @@ body{
   <a href="/tools/business-dashboard.html"
      class="tool-card"
      id="businessTool">
-    <div class="tool-title">Business Manager</div>
+    <div class="tool-title">Business Manager →</div>
     <div class="tool-desc">Stock • Sales • Service • Ledger</div>
   </a>
 </div>
@@ -135,24 +163,20 @@ body{
 <script src="/js/firebase.js"></script>
 
 <script>
-(function(){
+(function waitAuth(){
+
+  if(!window.auth){
+    return setTimeout(waitAuth,100);
+  }
 
   const tool = document.getElementById("businessTool");
 
-  if(!window.auth){
-    setTimeout(arguments.callee,100);
-    return;
-  }
-
   tool.addEventListener("click", function(e){
-
     const user = auth.currentUser;
-
     if(!user){
       e.preventDefault();
       window.location.href = "/login.html";
     }
-
   });
 
 })();
