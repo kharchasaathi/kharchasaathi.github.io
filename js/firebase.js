@@ -1,12 +1,12 @@
 /* ===========================================================
-firebase.js — HARDENED V28 (LOOP SAFE + VERIFIED ONLY)
+firebase.js — V30 PRODUCTION MERGE (CLOUD + AUTO USER SAFE)
 
-✔ No illegal return
-✔ True double-load protection
+✔ Full cloud engine retained
+✔ Auto Firestore user document creation
+✔ 14 days free trial auto start
 ✔ Email verification compulsory
-✔ No infinite login loop
-✔ HTML guard compatible
-✔ Cloud safe pull/save
+✔ No login loop
+✔ No "Account setup incomplete"
 ✔ Multi-device safe
 =========================================================== */
 
@@ -23,6 +23,7 @@ window.__firebase_loaded = true;
 /* ===========================================================
 CONFIG
 =========================================================== */
+
 const firebaseConfig = {
   apiKey:"AIzaSyC1TSwODhcD88-IizbteOGF-bbebAP6Poc",
   authDomain:"kharchasaathi-main.firebaseapp.com",
@@ -47,18 +48,43 @@ console.log("%c☁️ Firebase connected!","color:#4caf50;font-weight:bold;");
 /* ===========================================================
 GLOBAL FLAGS
 =========================================================== */
+
 window.__cloudReady  = false;
 window.__cloudPulled = false;
 window.__currentUser = null;
 
-/* ===========================================================
-DEBOUNCE ENGINE
-=========================================================== */
 const __debounceTimers = {};
+
+/* ===========================================================
+ENSURE USER DOCUMENT EXISTS
+=========================================================== */
+
+async function ensureUserDoc(user){
+
+  const ref  = db.collection("users").doc(user.uid);
+  const snap = await ref.get();
+
+  if(!snap.exists){
+
+    console.log("🆕 Creating Firestore user document...");
+
+    await ref.set({
+      email: user.email,
+      plan: "free_trial",
+      trialStartedAt: Date.now(),
+      trialEndsAt: Date.now() + (14*24*60*60*1000),
+      subscriptionActive: false,
+      createdAt: Date.now()
+    });
+
+    console.log("✅ User document created");
+  }
+}
 
 /* ===========================================================
 CLOUD LOAD
 =========================================================== */
+
 async function cloudLoad(key){
   const user = auth.currentUser;
   if(!user) return null;
@@ -82,6 +108,7 @@ window.cloudLoad = cloudLoad;
 /* ===========================================================
 CLOUD SAVE
 =========================================================== */
+
 function cloudSaveDebounced(key,value){
 
   if(!window.__cloudReady) return;
@@ -117,6 +144,7 @@ window.cloudSaveDebounced = cloudSaveDebounced;
 /* ===========================================================
 FULL CLOUD PULL
 =========================================================== */
+
 async function cloudPullAll(){
 
   if(window.__cloudPulled) return;
@@ -161,8 +189,9 @@ async function cloudPullAll(){
 }
 
 /* ===========================================================
-ROUTE GUARD (LOGIN ONLY)
+ROUTE GUARD
 =========================================================== */
+
 const PROTECTED = [
   "/tools/business-dashboard.html",
   "/tools/daily-ledger.html"
@@ -181,6 +210,7 @@ function currentPath(){
 /* ===========================================================
 AUTH STATE HANDLER
 =========================================================== */
+
 auth.onAuthStateChanged(async user=>{
 
   const p = currentPath();
@@ -190,13 +220,14 @@ auth.onAuthStateChanged(async user=>{
 
     console.log("%c🔐 Logged in:","color:#03a9f4;font-weight:bold;",user.email);
 
-    /* 🔐 EMAIL VERIFICATION COMPULSORY */
     if(!user.emailVerified){
-  if(!p.includes("/verify-email.html")){
-    location.replace("/verify-email.html");
-  }
-  return;
-}
+      if(!p.includes("/verify-email.html")){
+        location.replace("/verify-email.html");
+      }
+      return;
+    }
+
+    await ensureUserDoc(user);
 
     window.__cloudPulled = false;
     window.__cloudReady  = false;
@@ -219,23 +250,30 @@ auth.onAuthStateChanged(async user=>{
       location.replace("/login.html");
     }
   }
+
 });
 
 /* ===========================================================
-PUBLIC AUTH HELPERS
+AUTH HELPERS
 =========================================================== */
-window.fsLogin  = (e,p) => auth.signInWithEmailAndPassword(e,p);
 
-window.fsSignUp = async(e,p)=>{
-  const r = await auth.createUserWithEmailAndPassword(e,p);
-  try{
-    await r.user.sendEmailVerification();
-  }catch{}
-  return r;
+window.fsLogin = (email,password)=>
+  auth.signInWithEmailAndPassword(email,password);
+
+window.fsSignUp = async(email,password)=>{
+
+  const result = await auth.createUserWithEmailAndPassword(email,password);
+  const user   = result.user;
+
+  await ensureUserDoc(user);
+
+  await user.sendEmailVerification();
+
+  return result;
 };
 
 window.fsSendPasswordReset =
-  e => auth.sendPasswordResetEmail(e);
+  email => auth.sendPasswordResetEmail(email);
 
 window.fsLogout = async()=>{
   await auth.signOut();
