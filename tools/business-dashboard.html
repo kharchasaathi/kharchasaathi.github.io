@@ -170,11 +170,13 @@ body{
 </head>
 <body>
   <script>
+
 /* ======================================================
-   🔐 GLOBAL ACCESS GUARD — SaaS Protection (Clean v2)
-   ✔ No duplicate email verification check
-   ✔ Firebase.js handles verification
-   ✔ Login required
+   🔐 GLOBAL ACCESS GUARD — SaaS Protection (V3 SAFE)
+
+   ✔ Waits for firebase-auth-ready
+   ✔ No race condition
+   ✔ No premature signout
    ✔ Trial + Subscription validation
 ====================================================== */
 
@@ -183,7 +185,6 @@ body{
   const LOGIN_PAGE     = "/login.html";
   const SUBSCRIBE_PAGE = "/subscribe.html";
 
-  /* Prevent duplicate execution */
   if (window.__globalGuardAttached) return;
   window.__globalGuardAttached = true;
 
@@ -200,32 +201,36 @@ body{
     if(tag) tag.textContent = user.email;
   }
 
-  function waitForFirebase(){
+  function waitForAuthReady(){
+
     if(!window.auth || !window.db){
-      return setTimeout(waitForFirebase,100);
+      return setTimeout(waitForAuthReady,100);
     }
 
-    window.auth.onAuthStateChanged(async user => {
+    // 🔥 WAIT FOR firebase.js to finish
+    window.addEventListener("firebase-auth-ready", async ()=>{
 
-      /* 🚫 Not logged in */
+      const user = window.getFirebaseUser();
+
       if(!user){
         blockAccess("Please login first.", LOGIN_PAGE);
         return;
       }
 
-      /* ⚠️ Email verification handled in firebase.js */
-      /* Do NOT check user.emailVerified here */
-
       try{
 
-        const snap = await window.db
-          .collection("users")
-          .doc(user.uid)
-          .get();
+        const ref  = window.db.collection("users").doc(user.uid);
+
+        // 🔥 SAFE RETRY LOOP (avoids race condition)
+        let snap;
+        for(let i=0;i<5;i++){
+          snap = await ref.get();
+          if(snap.exists) break;
+          await new Promise(r=>setTimeout(r,300));
+        }
 
         if(!snap.exists){
-          await window.auth.signOut();
-          blockAccess("Account setup incomplete.", LOGIN_PAGE);
+          blockAccess("Account initialization error.", LOGIN_PAGE);
           return;
         }
 
@@ -236,7 +241,6 @@ body{
         if(data.plan === "free_trial"){
 
           if(now > data.trialEndsAt){
-            await window.auth.signOut();
             blockAccess(
               "Free trial expired. Please subscribe.",
               SUBSCRIBE_PAGE
@@ -248,11 +252,10 @@ body{
           return;
         }
 
-        /* 💳 PAID SUBSCRIPTION */
+        /* 💳 PAID PLAN */
         if(data.subscriptionActive){
 
           if(now > data.subscriptionEndsAt){
-            await window.auth.signOut();
             blockAccess(
               "Subscription expired. Please renew.",
               SUBSCRIBE_PAGE
@@ -264,8 +267,6 @@ body{
           return;
         }
 
-        /* ❌ No active plan */
-        await window.auth.signOut();
         blockAccess("Subscription inactive.", SUBSCRIBE_PAGE);
 
       }catch(err){
@@ -274,14 +275,14 @@ body{
       }
 
     });
+
   }
 
-  waitForFirebase();
+  waitForAuthReady();
 
 })();
-</script>
-
-
+    
+  </script>
 <div class="topbar">
   <h1>
     <div class="topbar-logo"><span>₹</span></div>
