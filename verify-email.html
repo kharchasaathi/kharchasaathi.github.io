@@ -61,9 +61,18 @@ button:disabled{
   cursor:not-allowed;
 }
 
+.green{
+  background:#16a34a !important;
+}
+
 .small{
   margin-top:10px;
   font-size:13px;
+}
+
+a{
+  color:#0A66C2;
+  text-decoration:none;
 }
 </style>
 </head>
@@ -73,11 +82,11 @@ button:disabled{
 <div class="card">
   <h2>Email Verification Required</h2>
 
-  <p id="emailText"></p>
+  <p id="emailText">Loading...</p>
 
   <button id="resendBtn">Resend Verification Email</button>
 
-  <button id="checkBtn" style="background:#16a34a;">I Have Verified</button>
+  <button id="checkBtn" class="green">I Have Verified</button>
 
   <div class="small">
     <a href="#" id="logoutLink">Logout</a>
@@ -86,9 +95,12 @@ button:disabled{
   <div class="small" id="msg"></div>
 </div>
 
-<!-- Firebase -->
+<!-- Firebase Core -->
 <script src="https://www.gstatic.com/firebasejs/9.6.11/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.6.11/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.6.11/firebase-firestore-compat.js"></script>
+
+<!-- Your firebase.js -->
 <script src="/js/firebase.js"></script>
 
 <script>
@@ -100,9 +112,9 @@ document.addEventListener("DOMContentLoaded", ()=>{
   const logout    = document.getElementById("logoutLink");
   const msg       = document.getElementById("msg");
 
-  function waitAuth(){
+  function waitForAuth(){
     if(!window.auth){
-      return setTimeout(waitAuth,100);
+      return setTimeout(waitForAuth,100);
     }
 
     auth.onAuthStateChanged(user=>{
@@ -121,22 +133,23 @@ document.addEventListener("DOMContentLoaded", ()=>{
     });
   }
 
-  waitAuth();
+  waitForAuth();
 
   resendBtn.onclick = async ()=>{
     const user = auth.currentUser;
     if(!user) return;
 
     resendBtn.disabled = true;
-    msg.textContent = "Sending...";
+    msg.style.color = "#555";
+    msg.textContent = "Sending verification email...";
 
     try{
       await user.sendEmailVerification();
       msg.style.color="green";
-      msg.textContent = "Verification email sent again.";
+      msg.textContent = "Verification email sent successfully.";
     }catch(e){
       msg.style.color="red";
-      msg.textContent = "Error sending email.";
+      msg.textContent = "Error sending email. Try again.";
     }
 
     setTimeout(()=> resendBtn.disabled=false,4000);
