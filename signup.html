@@ -35,12 +35,6 @@ h2{
   color:#2563eb;
   font-size:26px;
 }
-.sub-text{
-  text-align:center;
-  font-size:13px;
-  color:#666;
-  margin-bottom:10px;
-}
 input{
   width:100%;
   padding:12px 14px;
@@ -101,13 +95,6 @@ button:hover:not(:disabled){
   font-weight:600;
   text-decoration:none;
 }
-.plan-box{
-  background:#f1f5ff;
-  padding:10px;
-  border-radius:10px;
-  font-size:13px;
-  margin-bottom:10px;
-}
 </style>
 </head>
 
@@ -115,11 +102,6 @@ button:hover:not(:disabled){
 
 <div class="card">
   <h2>Create Account</h2>
-
-  <div class="plan-box">
-    🎁 1 Month Free Trial<br>
-    💎 Then ₹49 / 3 Months
-  </div>
 
   <input id="email" type="email" placeholder="Email">
 
@@ -180,42 +162,20 @@ qs("#signupBtn").addEventListener("click", async () => {
 
   try {
 
-    const userCred = await auth.createUserWithEmailAndPassword(email, pass);
-    const user = userCred.user;
-
-    /* SEND EMAIL VERIFICATION */
-    await user.sendEmailVerification();
-
-    /* 1 MONTH FREE TRIAL */
-    const trialEnd = Date.now() + (30 * 24 * 60 * 60 * 1000);
-
-    await db.collection("users").doc(user.uid).set({
-      email: user.email,
-      role: "owner",
-      plan: "free_trial",
-      trialEndsAt: trialEnd,
-      subscriptionActive: false,
-      subscriptionPlan: null,
-      subscriptionPrice: 49,
-      subscriptionDurationMonths: 3,
-      subscriptionEndsAt: null,
-      razorpayCustomerId: null,
-      totalPayments: 0,
-      createdAt: Date.now()
-    });
-
-    await auth.signOut();
+    // 🔥 Use centralized signup logic from firebase.js
+    await fsSignUp(email, pass);
 
     msg.style.color = "green";
-    msg.textContent = "Verification email sent. Please verify before login.";
+    msg.textContent =
+      "Verification email sent. Please verify before login.";
 
-    btn.disabled = false;
-    btn.textContent = "Create Account";
+    btn.textContent = "Account Created";
 
   } catch (err) {
 
     msg.style.color = "red";
     msg.textContent = err.message;
+
     btn.disabled = false;
     btn.textContent = "Create Account";
   }
