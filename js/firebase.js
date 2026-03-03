@@ -1,32 +1,24 @@
 /* ===========================================================
-firebase.js — HARDENED V26 (STABLE + NO ILLEGAL RETURN)
+firebase.js — HARDENED V28 (LOOP SAFE + VERIFIED ONLY)
 
 ✔ No illegal return
 ✔ True double-load protection
-✔ initializeApp crash-proof
-✔ Cross-user safe cloud reset
-✔ Deep clone save protection
-✔ Query-safe route guard
-✔ Ledger integrity preserved
+✔ Email verification compulsory
+✔ No infinite login loop
+✔ HTML guard compatible
+✔ Cloud safe pull/save
 ✔ Multi-device safe
-✔ Real debounce save
 =========================================================== */
 
 console.log("%c🔥 firebase.js loading...","color:#ff9800;font-weight:bold;");
 
-/* ===========================================================
-DOUBLE LOAD SAFE WRAPPER
-=========================================================== */
 (function(){
 
 if (window.__firebase_loaded){
   console.warn("firebase.js already initialized → skipped");
-  return; // ✅ SAFE because inside IIFE
+  return;
 }
-
 window.__firebase_loaded = true;
-
-console.log("%c🔥 firebase.js initialized","color:#ff9800;font-weight:bold;");
 
 /* ===========================================================
 CONFIG
@@ -40,7 +32,6 @@ const firebaseConfig = {
   appId:"1:116390837159:web:a9c45a99d933849f4c9482"
 };
 
-/* Safe initialize */
 if (!firebase.apps.length){
   firebase.initializeApp(firebaseConfig);
 }
@@ -54,10 +45,11 @@ window.db   = db;
 console.log("%c☁️ Firebase connected!","color:#4caf50;font-weight:bold;");
 
 /* ===========================================================
-CLOUD ENGINE FLAGS
+GLOBAL FLAGS
 =========================================================== */
 window.__cloudReady  = false;
 window.__cloudPulled = false;
+window.__currentUser = null;
 
 /* ===========================================================
 DEBOUNCE ENGINE
@@ -65,7 +57,7 @@ DEBOUNCE ENGINE
 const __debounceTimers = {};
 
 /* ===========================================================
-LOAD SINGLE KEY
+CLOUD LOAD
 =========================================================== */
 async function cloudLoad(key){
   const user = auth.currentUser;
@@ -80,7 +72,6 @@ async function cloudLoad(key){
       .get();
 
     return snap.exists ? snap.data().value : null;
-
   }catch(e){
     console.warn("Cloud load failed:",key,e);
     return null;
@@ -89,12 +80,11 @@ async function cloudLoad(key){
 window.cloudLoad = cloudLoad;
 
 /* ===========================================================
-SAFE DEBOUNCED SAVE
+CLOUD SAVE
 =========================================================== */
 function cloudSaveDebounced(key,value){
 
   if(!window.__cloudReady) return;
-
   const user = auth.currentUser;
   if(!user) return;
 
@@ -104,9 +94,7 @@ function cloudSaveDebounced(key,value){
   __debounceTimers[key] = setTimeout(async ()=>{
 
     try{
-
-      const safeValue =
-        JSON.parse(JSON.stringify(value));
+      const safeValue = JSON.parse(JSON.stringify(value));
 
       await db
         .collection("users")
@@ -118,12 +106,8 @@ function cloudSaveDebounced(key,value){
           updated: Date.now()
         });
 
-      console.log("%c☁️ Cloud saved:","color:#4caf50;font-weight:bold;",key);
-
     }catch(e){
-      console.error("❌ Cloud save failed:",key,e);
-    }finally{
-      delete __debounceTimers[key];
+      console.error("Cloud save failed:",key,e);
     }
 
   },500);
@@ -138,96 +122,46 @@ async function cloudPullAll(){
   if(window.__cloudPulled) return;
 
   const keys = [
-    "types",
-    "stock",
-    "sales",
-    "wanting",
-    "expenses",
-    "services",
-    "collections",
-    "offsets",
-    "dashboardOffset",
-    "unMetrics",
-    "withdrawals"
+    "types","stock","sales","wanting",
+    "expenses","services","collections",
+    "offsets","dashboardOffset",
+    "unMetrics","withdrawals"
   ];
 
-  const results = await Promise.all(
-    keys.map(k => cloudLoad(k))
-  );
+  const results = await Promise.all(keys.map(k => cloudLoad(k)));
 
   const [
-    types,
-    stock,
-    sales,
-    wanting,
-    expenses,
-    services,
-    collections,
-    offsets,
-    dashboardOffset,
-    unMetrics,
-    withdrawals
+    types,stock,sales,wanting,
+    expenses,services,collections,
+    offsets,dashboardOffset,
+    unMetrics,withdrawals
   ] = results;
 
-  if(types!==null)        window.types = types;
-  if(stock!==null)        window.stock = stock;
-  if(sales!==null)        window.sales = sales;
-  if(wanting!==null)      window.wanting = wanting;
-  if(expenses!==null)     window.expenses = expenses;
-  if(services!==null)     window.services = services;
-  if(collections!==null)  window.collections = collections;
-  if(unMetrics!==null)    window.__unMetrics = unMetrics;
-  if(withdrawals!==null)  window.__withdrawals = withdrawals;
+  if(types!==null) window.types = types;
+  if(stock!==null) window.stock = stock;
+  if(sales!==null) window.sales = sales;
+  if(wanting!==null) window.wanting = wanting;
+  if(expenses!==null) window.expenses = expenses;
+  if(services!==null) window.services = services;
+  if(collections!==null) window.collections = collections;
+  if(unMetrics!==null) window.__unMetrics = unMetrics;
+  if(withdrawals!==null) window.__withdrawals = withdrawals;
 
   window.__offsets = Object.assign({
-    net:0,
-    sale:0,
-    service:0,
-    stock:0,
-    servInv:0,
-    expensesLive:0,
-    expensesSettled:0
+    net:0,sale:0,service:0,stock:0,
+    servInv:0,expensesLive:0,expensesSettled:0
   }, offsets || {});
 
-  window.__dashboardOffset =
-    Number(dashboardOffset || 0);
+  window.__dashboardOffset = Number(dashboardOffset || 0);
 
   window.__cloudPulled = true;
   window.__cloudReady  = true;
 
-  console.log("%c☁️ Cloud fully loaded ✔","color:#4caf50;font-weight:bold;");
-
-  window.dispatchEvent(
-    new Event("cloud-data-loaded")
-  );
+  window.dispatchEvent(new Event("cloud-data-loaded"));
 }
 
-window.cloudPullAllIfAvailable = cloudPullAll;
-
 /* ===========================================================
-AUTH API
-=========================================================== */
-window.fsLogin  = (e,p) => auth.signInWithEmailAndPassword(e,p);
-
-window.fsSignUp = async(e,p)=>{
-  const r = await auth.createUserWithEmailAndPassword(e,p);
-  try{ await r.user.sendEmailVerification(); }catch{}
-  return r;
-};
-
-window.fsSendPasswordReset =
-  e => auth.sendPasswordResetEmail(e);
-
-window.fsLogout = async()=>{
-  await auth.signOut();
-  location.href = "/login.html";
-};
-
-window.getFirebaseUser =
-  ()=> auth.currentUser;
-
-/* ===========================================================
-ROUTE GUARD
+ROUTE GUARD (LOGIN ONLY)
 =========================================================== */
 const PROTECTED = [
   "/tools/business-dashboard.html",
@@ -250,15 +184,26 @@ AUTH STATE HANDLER
 auth.onAuthStateChanged(async user=>{
 
   const p = currentPath();
+  window.__currentUser = user || null;
 
   if(user){
 
     console.log("%c🔐 Logged in:","color:#03a9f4;font-weight:bold;",user.email);
 
+    /* 🔐 EMAIL VERIFICATION COMPULSORY */
+    if(!user.emailVerified){
+      await auth.signOut();
+      alert("Please verify your email first.");
+      location.replace("/login.html");
+      return;
+    }
+
     window.__cloudPulled = false;
     window.__cloudReady  = false;
 
     await cloudPullAll();
+
+    window.dispatchEvent(new Event("firebase-auth-ready"));
 
     if(AUTH_PAGES.some(x=>p.includes(x))){
       location.replace("/tools/business-dashboard.html");
@@ -268,8 +213,7 @@ auth.onAuthStateChanged(async user=>{
 
     console.log("%c🔓 Logged out","color:#f44336;font-weight:bold;");
 
-    window.__cloudPulled = false;
-    window.__cloudReady  = false;
+    window.dispatchEvent(new Event("firebase-auth-ready"));
 
     if(PROTECTED.some(x=>p.includes(x))){
       location.replace("/login.html");
@@ -277,6 +221,30 @@ auth.onAuthStateChanged(async user=>{
   }
 });
 
+/* ===========================================================
+PUBLIC AUTH HELPERS
+=========================================================== */
+window.fsLogin  = (e,p) => auth.signInWithEmailAndPassword(e,p);
+
+window.fsSignUp = async(e,p)=>{
+  const r = await auth.createUserWithEmailAndPassword(e,p);
+  try{
+    await r.user.sendEmailVerification();
+  }catch{}
+  return r;
+};
+
+window.fsSendPasswordReset =
+  e => auth.sendPasswordResetEmail(e);
+
+window.fsLogout = async()=>{
+  await auth.signOut();
+  location.href="/login.html";
+};
+
+window.getFirebaseUser =
+  ()=> window.__currentUser;
+
 console.log("%c⚙️ firebase.js READY ✔","color:#03a9f4;font-weight:bold;");
 
-})();   // ✅ END IIFE WRAPPER
+})();
