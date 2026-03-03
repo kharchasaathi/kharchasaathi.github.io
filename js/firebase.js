@@ -1,6 +1,7 @@
 /* ===========================================================
-firebase.js — HARDENED V25 (PRODUCTION SAFE)
+firebase.js — HARDENED V26 (STABLE + NO ILLEGAL RETURN)
 
+✔ No illegal return
 ✔ True double-load protection
 ✔ initializeApp crash-proof
 ✔ Cross-user safe cloud reset
@@ -11,16 +12,21 @@ firebase.js — HARDENED V25 (PRODUCTION SAFE)
 ✔ Real debounce save
 =========================================================== */
 
-console.log("%c🔥 firebase.js loaded","color:#ff9800;font-weight:bold;");
+console.log("%c🔥 firebase.js loading...","color:#ff9800;font-weight:bold;");
 
 /* ===========================================================
-TRUE DOUBLE LOAD PROTECTION
+DOUBLE LOAD SAFE WRAPPER
 =========================================================== */
+(function(){
+
 if (window.__firebase_loaded){
-  console.warn("firebase.js already initialized → aborted");
-  return;
+  console.warn("firebase.js already initialized → skipped");
+  return; // ✅ SAFE because inside IIFE
 }
+
 window.__firebase_loaded = true;
+
+console.log("%c🔥 firebase.js initialized","color:#ff9800;font-weight:bold;");
 
 /* ===========================================================
 CONFIG
@@ -83,14 +89,11 @@ async function cloudLoad(key){
 window.cloudLoad = cloudLoad;
 
 /* ===========================================================
-SAFE DEBOUNCED SAVE (Deep Clone Protected)
+SAFE DEBOUNCED SAVE
 =========================================================== */
 function cloudSaveDebounced(key,value){
 
-  if(!window.__cloudReady){
-    console.warn("⛔ Save blocked before ready:",key);
-    return;
-  }
+  if(!window.__cloudReady) return;
 
   const user = auth.currentUser;
   if(!user) return;
@@ -128,14 +131,11 @@ function cloudSaveDebounced(key,value){
 window.cloudSaveDebounced = cloudSaveDebounced;
 
 /* ===========================================================
-FULL CLOUD PULL (Cross-User Safe)
+FULL CLOUD PULL
 =========================================================== */
 async function cloudPullAll(){
 
-  if(window.__cloudPulled){
-    console.log("☁️ Pull skipped (already pulled)");
-    return;
-  }
+  if(window.__cloudPulled) return;
 
   const keys = [
     "types",
@@ -179,7 +179,6 @@ async function cloudPullAll(){
   if(unMetrics!==null)    window.__unMetrics = unMetrics;
   if(withdrawals!==null)  window.__withdrawals = withdrawals;
 
-  /* ================= OFFSETS SAFE STRUCTURE ================= */
   window.__offsets = Object.assign({
     net:0,
     sale:0,
@@ -228,7 +227,7 @@ window.getFirebaseUser =
   ()=> auth.currentUser;
 
 /* ===========================================================
-ROUTE GUARD (Query Safe)
+ROUTE GUARD
 =========================================================== */
 const PROTECTED = [
   "/tools/business-dashboard.html",
@@ -238,7 +237,7 @@ const PROTECTED = [
 const AUTH_PAGES = [
   "/login.html",
   "/signup.html",
-  "/reset.html"
+  "/reset-password.html"
 ];
 
 function currentPath(){
@@ -246,7 +245,7 @@ function currentPath(){
 }
 
 /* ===========================================================
-AUTH STATE HANDLER (Cross-User Safe)
+AUTH STATE HANDLER
 =========================================================== */
 auth.onAuthStateChanged(async user=>{
 
@@ -256,7 +255,6 @@ auth.onAuthStateChanged(async user=>{
 
     console.log("%c🔐 Logged in:","color:#03a9f4;font-weight:bold;",user.email);
 
-    /* Reset cloud flags for cross-user safety */
     window.__cloudPulled = false;
     window.__cloudReady  = false;
 
@@ -280,3 +278,5 @@ auth.onAuthStateChanged(async user=>{
 });
 
 console.log("%c⚙️ firebase.js READY ✔","color:#03a9f4;font-weight:bold;");
+
+})();   // ✅ END IIFE WRAPPER
