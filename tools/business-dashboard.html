@@ -171,21 +171,33 @@ body{
 <body>
   <script>
 /* ======================================================
-   🔐 GLOBAL ACCESS GUARD — SaaS Protection
+   🔐 GLOBAL ACCESS GUARD — SaaS Protection (Clean v2)
+   ✔ No duplicate email verification check
+   ✔ Firebase.js handles verification
+   ✔ Login required
+   ✔ Trial + Subscription validation
 ====================================================== */
 
 (function(){
 
-  const LOGIN_PAGE = "/login.html";
+  const LOGIN_PAGE     = "/login.html";
   const SUBSCRIBE_PAGE = "/subscribe.html";
-  const DASHBOARD = "/tools/business-dashboard.html";
 
-  function blockAccess(msg, redirectTo){
+  /* Prevent duplicate execution */
+  if (window.__globalGuardAttached) return;
+  window.__globalGuardAttached = true;
+
+  function blockAccess(message, redirectTo){
     document.body.innerHTML = "";
     setTimeout(()=>{
-      alert(msg);
-      window.location.href = redirectTo;
+      alert(message);
+      window.location.replace(redirectTo);
     },100);
+  }
+
+  function allowAccess(user){
+    const tag = document.getElementById("emailTag");
+    if(tag) tag.textContent = user.email;
   }
 
   function waitForFirebase(){
@@ -193,35 +205,42 @@ body{
       return setTimeout(waitForFirebase,100);
     }
 
-    auth.onAuthStateChanged(async user => {
+    window.auth.onAuthStateChanged(async user => {
 
-      
-
-      if(!user.emailVerified){
-        await auth.signOut();
-        blockAccess("Please verify your email first.", LOGIN_PAGE);
+      /* 🚫 Not logged in */
+      if(!user){
+        blockAccess("Please login first.", LOGIN_PAGE);
         return;
       }
 
+      /* ⚠️ Email verification handled in firebase.js */
+      /* Do NOT check user.emailVerified here */
+
       try{
 
-        const snap = await db.collection("users").doc(user.uid).get();
-        const data = snap.data();
+        const snap = await window.db
+          .collection("users")
+          .doc(user.uid)
+          .get();
 
-        if(!data){
-          await auth.signOut();
+        if(!snap.exists){
+          await window.auth.signOut();
           blockAccess("Account setup incomplete.", LOGIN_PAGE);
           return;
         }
 
-        const now = Date.now();
+        const data = snap.data();
+        const now  = Date.now();
 
         /* 🎁 FREE TRIAL */
         if(data.plan === "free_trial"){
 
           if(now > data.trialEndsAt){
-            await auth.signOut();
-            blockAccess("Free trial expired. Please subscribe.", SUBSCRIBE_PAGE);
+            await window.auth.signOut();
+            blockAccess(
+              "Free trial expired. Please subscribe.",
+              SUBSCRIBE_PAGE
+            );
             return;
           }
 
@@ -233,8 +252,11 @@ body{
         if(data.subscriptionActive){
 
           if(now > data.subscriptionEndsAt){
-            await auth.signOut();
-            blockAccess("Subscription expired. Please renew.", SUBSCRIBE_PAGE);
+            await window.auth.signOut();
+            blockAccess(
+              "Subscription expired. Please renew.",
+              SUBSCRIBE_PAGE
+            );
             return;
           }
 
@@ -242,26 +264,23 @@ body{
           return;
         }
 
-        await auth.signOut();
+        /* ❌ No active plan */
+        await window.auth.signOut();
         blockAccess("Subscription inactive.", SUBSCRIBE_PAGE);
 
       }catch(err){
-        console.error("Access check failed:", err);
+        console.error("Access validation failed:", err);
         blockAccess("Access validation error.", LOGIN_PAGE);
       }
 
     });
   }
 
-  function allowAccess(user){
-    const tag = document.getElementById("emailTag");
-    if(tag) tag.textContent = user.email;
-  }
-
   waitForFirebase();
 
 })();
 </script>
+
 
 <div class="topbar">
   <h1>
