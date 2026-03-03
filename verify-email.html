@@ -1,0 +1,169 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Verify Email — KharchaSaathi</title>
+
+<style>
+:root{
+  --blue:#0A66C2;
+  --bg:#f4f6f9;
+  --card:#ffffff;
+  --radius:14px;
+  --shadow:0 6px 20px rgba(0,0,0,0.08);
+}
+
+body{
+  margin:0;
+  background:var(--bg);
+  font-family:Poppins,Arial,sans-serif;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  min-height:100vh;
+}
+
+.card{
+  width:92%;
+  max-width:420px;
+  background:var(--card);
+  padding:28px;
+  border-radius:var(--radius);
+  box-shadow:var(--shadow);
+  text-align:center;
+}
+
+h2{
+  margin:0 0 10px;
+  color:var(--blue);
+}
+
+p{
+  font-size:14px;
+  color:#555;
+}
+
+button{
+  margin-top:12px;
+  padding:12px;
+  width:100%;
+  border:none;
+  border-radius:var(--radius);
+  background:var(--blue);
+  color:#fff;
+  font-size:15px;
+  cursor:pointer;
+}
+
+button:disabled{
+  background:#94a3b8;
+  cursor:not-allowed;
+}
+
+.small{
+  margin-top:10px;
+  font-size:13px;
+}
+</style>
+</head>
+
+<body>
+
+<div class="card">
+  <h2>Email Verification Required</h2>
+
+  <p id="emailText"></p>
+
+  <button id="resendBtn">Resend Verification Email</button>
+
+  <button id="checkBtn" style="background:#16a34a;">I Have Verified</button>
+
+  <div class="small">
+    <a href="#" id="logoutLink">Logout</a>
+  </div>
+
+  <div class="small" id="msg"></div>
+</div>
+
+<!-- Firebase -->
+<script src="https://www.gstatic.com/firebasejs/9.6.11/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.6.11/firebase-auth-compat.js"></script>
+<script src="/js/firebase.js"></script>
+
+<script>
+document.addEventListener("DOMContentLoaded", ()=>{
+
+  const emailText = document.getElementById("emailText");
+  const resendBtn = document.getElementById("resendBtn");
+  const checkBtn  = document.getElementById("checkBtn");
+  const logout    = document.getElementById("logoutLink");
+  const msg       = document.getElementById("msg");
+
+  function waitAuth(){
+    if(!window.auth){
+      return setTimeout(waitAuth,100);
+    }
+
+    auth.onAuthStateChanged(user=>{
+      if(!user){
+        location.replace("/login.html");
+        return;
+      }
+
+      if(user.emailVerified){
+        location.replace("/tools/business-dashboard.html");
+        return;
+      }
+
+      emailText.textContent =
+        "Verification link sent to: " + user.email;
+    });
+  }
+
+  waitAuth();
+
+  resendBtn.onclick = async ()=>{
+    const user = auth.currentUser;
+    if(!user) return;
+
+    resendBtn.disabled = true;
+    msg.textContent = "Sending...";
+
+    try{
+      await user.sendEmailVerification();
+      msg.style.color="green";
+      msg.textContent = "Verification email sent again.";
+    }catch(e){
+      msg.style.color="red";
+      msg.textContent = "Error sending email.";
+    }
+
+    setTimeout(()=> resendBtn.disabled=false,4000);
+  };
+
+  checkBtn.onclick = async ()=>{
+    const user = auth.currentUser;
+    if(!user) return;
+
+    await user.reload();
+
+    if(user.emailVerified){
+      location.replace("/tools/business-dashboard.html");
+    }else{
+      msg.style.color="red";
+      msg.textContent = "Email not verified yet.";
+    }
+  };
+
+  logout.onclick = async (e)=>{
+    e.preventDefault();
+    await auth.signOut();
+    location.replace("/login.html");
+  };
+
+});
+</script>
+
+</body>
+</html>
