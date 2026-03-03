@@ -195,10 +195,7 @@ body{
 
     auth.onAuthStateChanged(async user => {
 
-      if(!user){
-        blockAccess("Please login first.", LOGIN_PAGE);
-        return;
-      }
+      
 
       if(!user.emailVerified){
         await auth.signOut();
