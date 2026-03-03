@@ -143,10 +143,12 @@ document.addEventListener("DOMContentLoaded", () => {
   const msgEl = qs("#msg");
   const toggle = qs("#togglePw");
 
+  /* 👁️ Password Toggle */
   toggle.onclick = () => {
     pwEl.type = pwEl.type === "password" ? "text" : "password";
   };
 
+  /* 🔐 LOGIN */
   form.addEventListener("submit", async e => {
 
     e.preventDefault();
@@ -155,7 +157,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
     try {
 
-      /* 🔐 Firebase Login */
       const cred = await auth.signInWithEmailAndPassword(
         emailEl.value.trim(),
         pwEl.value.trim()
@@ -163,7 +164,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
       const user = cred.user;
 
-      /* 📧 Email Verification Check */
+      /* 📧 Email Verification Required */
       if (!user.emailVerified) {
         await auth.signOut();
         msgEl.style.color = "#d32f2f";
@@ -171,63 +172,8 @@ document.addEventListener("DOMContentLoaded", () => {
         return;
       }
 
-      /* 📦 Load Subscription Data */
-      const snap = await db.collection("users").doc(user.uid).get();
-      const data = snap.data();
-
-      if (!data) {
-        await auth.signOut();
-        msgEl.style.color = "#d32f2f";
-        msgEl.textContent = "Account setup incomplete.";
-        return;
-      }
-
-      const now = Date.now();
-
-      /* 🎁 FREE TRIAL CHECK */
-      if (data.plan === "free_trial") {
-
-        if (now > data.trialEndsAt) {
-
-          await auth.signOut();
-          msgEl.style.color = "#d32f2f";
-          msgEl.textContent = "Free trial expired. Please subscribe.";
-
-          setTimeout(() => {
-            window.location.href = "/subscribe.html";
-          }, 1200);
-
-          return;
-        }
-
-        window.location.href = "/tools/business-dashboard.html";
-        return;
-      }
-
-      /* 💳 PAID PLAN CHECK */
-      if (data.subscriptionActive) {
-
-        if (now > data.subscriptionEndsAt) {
-
-          await auth.signOut();
-          msgEl.style.color = "#d32f2f";
-          msgEl.textContent = "Subscription expired. Please renew.";
-
-          setTimeout(() => {
-            window.location.href = "/subscribe.html";
-          }, 1200);
-
-          return;
-        }
-
-        window.location.href = "/tools/business-dashboard.html";
-        return;
-      }
-
-      /* ❌ No Active Plan */
-      await auth.signOut();
-      msgEl.style.color = "#d32f2f";
-      msgEl.textContent = "Subscription inactive.";
+      /* ✅ SUCCESS → Dashboard handles subscription check */
+      window.location.href = "/tools/business-dashboard.html";
 
     } catch (err) {
 
