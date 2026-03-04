@@ -76,145 +76,156 @@ button{
 
 <div class="ledger-container">
 
-  <h2>📒 Daily Ledger</h2>
+<h2>📒 Daily Ledger</h2>
 
-  <!-- DATE SELECTOR -->
-  <div class="ledger-card">
-    <label>Select Date:</label>
-    <input type="date" id="ledgerDate">
-    <button class="btn-primary" id="loadLedgerBtn">
-      Load Ledger
-    </button>
-  </div>
+<!-- OPENING -->
+<div class="ledger-card ledger-grid">
+<div class="ledger-box">
+<h4>Opening Balance</h4>
+<h2 id="ldOpening">₹0</h2>
+</div>
+</div>
 
-  <!-- OPENING -->
-  <div class="ledger-card ledger-grid">
-    <div class="ledger-box">
-      <h4>Opening Balance</h4>
-      <h2 id="ldOpening">₹0</h2>
-    </div>
-  </div>
+<!-- INCOME -->
+<div class="ledger-card">
+<h3>Income</h3>
 
-  <!-- INCOME -->
-  <div class="ledger-card">
-    <h3>Income</h3>
-    <div class="ledger-grid">
-      <div class="ledger-box">
-        <h4>Sales Profit</h4>
-        <h2 id="ldSalesProfit">₹0</h2>
-      </div>
-      <div class="ledger-box">
-        <h4>Service Profit</h4>
-        <h2 id="ldServiceProfit">₹0</h2>
-      </div>
-      <div class="ledger-box">
-        <h4>Sales Investment Return</h4>
-        <h2 id="ldSalesInv">₹0</h2>
-      </div>
-      <div class="ledger-box">
-        <h4>Service Investment Return</h4>
-        <h2 id="ldServiceInv">₹0</h2>
-      </div>
-    </div>
-  </div>
+<div class="ledger-grid">
 
-  <!-- EXPENSE -->
-  <div class="ledger-card">
-    <h3>Expenses</h3>
-    <div class="ledger-grid">
-      <div class="ledger-box">
-        <h4>Expenses</h4>
-        <h2 id="ldExpenses">₹0</h2>
-      </div>
-      <div class="ledger-box">
-        <h4>Withdrawals</h4>
-        <h2 id="ldWithdrawals">₹0</h2>
-      </div>
-      <div class="ledger-box">
-        <h4>GST Paid</h4>
-        <h2 id="ldGstPaid">₹0</h2>
-      </div>
-    </div>
-  </div>
+<div class="ledger-box">
+<h4>Sales Profit</h4>
+<h2 id="ldSalesProfit">₹0</h2>
+</div>
 
-  <!-- CLOSING -->
-  <div class="ledger-card ledger-grid">
-    <div class="ledger-box">
-      <h4>Closing Balance</h4>
-      <h2 id="ldClosing">₹0</h2>
-    </div>
-  </div>
+<div class="ledger-box">
+<h4>Service Profit</h4>
+<h2 id="ldServiceProfit">₹0</h2>
+</div>
 
-  <!-- STATUS -->
-  <div id="ledgerStatus"></div>
+<div class="ledger-box">
+<h4>Sales Investment Return</h4>
+<h2 id="ldSalesInv">₹0</h2>
+</div>
 
-  <!-- ACTIONS -->
-  <div class="ledger-card ledger-actions">
-    <button class="btn-success" id="closeLedgerBtn">
-      Close Day
-    </button>
-    
-  </div>
+<div class="ledger-box">
+<h4>Service Investment Return</h4>
+<h2 id="ldServiceInv">₹0</h2>
+</div>
+
+</div>
+</div>
+
+<!-- EXPENSE -->
+<div class="ledger-card">
+<h3>Expenses</h3>
+
+<div class="ledger-grid">
+
+<div class="ledger-box">
+<h4>Expenses</h4>
+<h2 id="ldExpenses">₹0</h2>
+</div>
+
+<div class="ledger-box">
+<h4>Withdrawals</h4>
+<h2 id="ldWithdrawals">₹0</h2>
+</div>
+
+<div class="ledger-box">
+<h4>GST Payable</h4>
+<h2 id="ldGst">₹0</h2>
+</div>
+
+</div>
+</div>
+
+<!-- NET FLOW -->
+<div class="ledger-card ledger-grid">
+
+<div class="ledger-box">
+<h4>Net Flow</h4>
+<h2 id="ldNetFlow">₹0</h2>
+</div>
+
+<div class="ledger-box">
+<h4>Closing Balance</h4>
+<h2 id="ldClosing">₹0</h2>
+</div>
 
 </div>
 
-<!-- SCRIPTS -->
+<!-- STATUS -->
+<div id="ledgerStatus"></div>
+
+<!-- ACTIONS -->
+<div class="ledger-card ledger-actions">
+<button class="btn-success" id="closeLedgerBtn">
+Close Day
+</button>
+</div>
+
+</div>
+
+<!-- FIREBASE -->
 <script src="/js/firebase.js"></script>
-<script src="/js/ledger.js"></script>
+
+<!-- LEDGER ENGINE -->
+<script src="/js/ledger-engine.js"></script>
 
 <script>
-const qs = s=>document.querySelector(s);
 
-function renderLedgerUI(){
+const qs = s => document.querySelector(s)
 
-  const L = window.currentLedger;
-  if(!L) return;
-
-  const money = v=>"₹"+Math.round(v||0);
-
-  qs("#ldOpening").textContent       = money(L.openingBalance);
-  qs("#ldSalesProfit").textContent   = money(L.salesProfit);
-  qs("#ldServiceProfit").textContent = money(L.serviceProfit);
-  qs("#ldSalesInv").textContent      = money(L.salesInvestmentReturn);
-  qs("#ldServiceInv").textContent    = money(L.serviceInvestmentReturn);
-  qs("#ldExpenses").textContent      = money(L.expenses);
-  qs("#ldWithdrawals").textContent   = money(L.withdrawals);
-  qs("#ldGstPaid").textContent       = money(L.gstPaid);
-  qs("#ldClosing").textContent       = money(L.closingBalance);
-
-  const statusBox = qs("#ledgerStatus");
-  statusBox.innerHTML="";
-
-  if(L.isClosed){
-    statusBox.innerHTML=
-      `<div class="ledger-closed">
-        This day is CLOSED.
-      </div>`;
-  }
+function money(v){
+return "₹"+Math.round(v||0)
 }
 
-window.addEventListener("ledger-loaded", renderLedgerUI);
-window.addEventListener("ledger-updated", renderLedgerUI);
+function renderLedger(){
 
-qs("#loadLedgerBtn")
-  .addEventListener("click", ()=>{
-    const d = qs("#ledgerDate").value;
-    if(!d) return alert("Select date");
-    loadLedger(d);
-  });
+const L = ledgerEngine.getCurrent()
+if(!L) return
 
-qs("#closeLedgerBtn")
-  .addEventListener("click", closeLedgerDay);
+qs("#ldOpening").textContent       = money(L.openingBalance)
 
+qs("#ldSalesProfit").textContent   = money(L.salesProfit)
+qs("#ldServiceProfit").textContent = money(L.serviceProfit)
 
+qs("#ldSalesInv").textContent      = money(L.salesInvestmentReturn)
+qs("#ldServiceInv").textContent    = money(L.serviceInvestmentReturn)
 
-window.addEventListener("load", ()=>{
-  const today = new Date().toISOString().slice(0,10);
-  qs("#ledgerDate").value = today;
-  loadLedger(today);
-});
+qs("#ldExpenses").textContent      = money(L.expensesTotal)
+qs("#ldWithdrawals").textContent   = money(L.withdrawalsTotal)
+
+qs("#ldGst").textContent           = money(L.gstPayable)
+
+qs("#ldNetFlow").textContent       = money(L.netFlow)
+
+qs("#ldClosing").textContent =
+money(L.openingBalance + L.netFlow)
+
+const status = qs("#ledgerStatus")
+status.innerHTML = ""
+
+if(L.isClosed){
+status.innerHTML =
+`<div class="ledger-closed">
+This day is CLOSED
+</div>`
+}
+
+}
+
+window.addEventListener("ledger-ready", renderLedger)
+
+window.addEventListener("firebase-auth-ready", ()=>{
+
+if(window.ledgerEngine){
+ledgerEngine.refresh()
+}
+
+})
+
 </script>
-  
-<script src="/js/ledger-engine.js"></script>
+
 </body>
 </html>
