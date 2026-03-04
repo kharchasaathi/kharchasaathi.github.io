@@ -1,6 +1,9 @@
 /* ===========================================================
-   WITHDRAW ENGINE v1
-   Owner Cash Withdrawal System
+   WITHDRAW ENGINE v2
+   Safe Owner Cash Withdrawal System
+   ✔ Profit Safety Check
+   ✔ No Over Withdraw
+   ✔ Firestore Ledger Update
 =========================================================== */
 
 (function(){
@@ -8,7 +11,7 @@
 if(window.__withdrawEngineLoaded) return;
 window.__withdrawEngineLoaded = true;
 
-console.log("%c💰 Withdraw Engine Loading...","color:#16a34a;font-weight:bold;");
+console.log("%c💰 Withdraw Engine v2 Loading...","color:#16a34a;font-weight:bold;");
 
 
 /* ===========================================================
@@ -17,6 +20,7 @@ console.log("%c💰 Withdraw Engine Loading...","color:#16a34a;font-weight:bold;
 async function withdrawCash(amount){
 
   const user = auth.currentUser;
+
   if(!user){
     alert("Login required");
     return;
@@ -28,6 +32,7 @@ async function withdrawCash(amount){
   }
 
   const L = ledgerEngine.getCurrent();
+
   if(!L){
     alert("Ledger not loaded");
     return;
@@ -45,8 +50,34 @@ async function withdrawCash(amount){
     return;
   }
 
+
+  /* ===========================================================
+     AVAILABLE CASH CHECK
+  =========================================================== */
+
+  const availableCash =
+      Number(L.openingBalance || 0)
+    + Number(L.netFlow || 0)
+    - Number(L.withdrawalsTotal || 0);
+
+  if(amount > availableCash){
+
+    alert(
+      "Not enough cash available.\n\n" +
+      "Available: ₹" + Math.round(availableCash)
+    );
+
+    return;
+
+  }
+
+
+  /* ===========================================================
+     UPDATE LEDGER
+  =========================================================== */
+
   const newTotal =
-    (L.withdrawalsTotal || 0) + amount;
+    Number(L.withdrawalsTotal || 0) + amount;
 
   const uid = user.uid;
   const dateKey = ledgerEngine.getDateKey();
@@ -64,9 +95,14 @@ async function withdrawCash(amount){
 
   });
 
+
   console.log("💰 Withdrawal recorded:", amount);
 
-  /* refresh ledger */
+
+  /* ===========================================================
+     REFRESH LEDGER
+  =========================================================== */
+
   await ledgerEngine.refresh();
 
   window.dispatchEvent(
@@ -77,7 +113,7 @@ async function withdrawCash(amount){
 
 
 /* ===========================================================
-   SIMPLE PROMPT WITHDRAW
+   PROMPT WITHDRAW INPUT
 =========================================================== */
 async function promptWithdraw(){
 
@@ -91,7 +127,7 @@ async function promptWithdraw(){
 
 
 /* ===========================================================
-   PUBLIC ACCESS
+   PUBLIC API
 =========================================================== */
 
 window.withdrawEngine = {
