@@ -166,11 +166,21 @@ Close Day
 
 </div>
 
+
 <!-- FIREBASE -->
 <script src="/js/firebase.js"></script>
 
-<!-- LEDGER ENGINE -->
+<!-- CORE LEDGER -->
 <script src="/js/ledger-engine.js"></script>
+
+<!-- CASH ENGINES -->
+<script src="/js/withdraw-engine.js"></script>
+<script src="/js/expense-engine.js"></script>
+<script src="/js/gst-engine.js"></script>
+
+<!-- UNIVERSAL CASH BAR -->
+<script src="/js/universal-bar.js"></script>
+
 
 <script>
 
@@ -224,6 +234,10 @@ ledgerEngine.refresh()
 }
 
 })
+
+document
+.getElementById("closeLedgerBtn")
+.onclick = closeLedgerDay
 
 </script>
 
