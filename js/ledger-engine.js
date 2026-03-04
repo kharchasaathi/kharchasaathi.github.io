@@ -1,5 +1,5 @@
 /* ===========================================================
-   LEDGER ENGINE v1 — FOUNDATION
+   LEDGER ENGINE v2 — FOUNDATION + CLOSE DAY ENGINE
    Daily Financial Container System
 =========================================================== */
 
@@ -76,7 +76,7 @@ async function ensureTodayLedger(){
 
     let opening = 0;
 
-    // get yesterday closing
+    /* Get yesterday closing balance */
     const yesterday = new Date();
     yesterday.setDate(yesterday.getDate() - 1);
 
@@ -97,11 +97,15 @@ async function ensureTodayLedger(){
       opening = yData.closingBalance || 0;
     }
 
-    await ref.set(emptyLedger(opening));
-    currentLedger = emptyLedger(opening);
+    const newLedger = emptyLedger(opening);
+
+    await ref.set(newLedger);
+    currentLedger = newLedger;
 
   }else{
+
     currentLedger = snap.data();
+
   }
 
   calculateNetFlow();
@@ -131,6 +135,57 @@ function calculateNetFlow(){
 }
 
 /* ===========================================================
+   CLOSE DAY ENGINE
+=========================================================== */
+async function closeLedgerDay(){
+
+  const user = auth.currentUser;
+
+  if(!user){
+    alert("Login required");
+    return;
+  }
+
+  if(!currentLedger){
+    alert("Ledger not loaded");
+    return;
+  }
+
+  if(currentLedger.isClosed){
+    alert("Ledger already closed");
+    return;
+  }
+
+  calculateNetFlow();
+
+  const closingBalance =
+    currentLedger.openingBalance + currentLedger.netFlow;
+
+  const ledgerRef =
+    db.collection("users")
+      .doc(user.uid)
+      .collection("ledger")
+      .doc(currentDateKey);
+
+  await ledgerRef.update({
+
+    netFlow: currentLedger.netFlow,
+    closingBalance: closingBalance,
+
+    isClosed: true,
+    closedAt: Date.now(),
+    updatedAt: Date.now()
+
+  });
+
+  console.log("✅ Ledger closed");
+
+  alert("Ledger closed successfully");
+
+  await ensureTodayLedger();
+}
+
+/* ===========================================================
    PUBLIC ACCESS
 =========================================================== */
 window.ledgerEngine = {
@@ -141,6 +196,9 @@ window.ledgerEngine = {
   refresh: ensureTodayLedger
 
 };
+
+/* expose close function globally */
+window.closeLedgerDay = closeLedgerDay;
 
 console.log("%c📒 Ledger Engine READY ✔","color:#673ab7;font-weight:bold;");
 
