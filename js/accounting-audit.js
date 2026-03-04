@@ -1,271 +1,348 @@
 /* ===========================================================
-   accounting-audit.js — FINAL AUDIT GUARD v3 (ERP SAFE)
+   LEDGER AUDIT ENGINE v3 (ENTERPRISE SAFE)
 
-   ✔ Profit integrity check (Collected only)
-   ✔ Sales + Service settlement aligned
-   ✔ Credit mismatch detection
-   ✔ Offset corruption guard
-   ✔ Expense settlement aware verification
-   ✔ Withdraw compatible
-   ✔ Universal aligned
+   ✔ Ledger integrity check
+   ✔ Profit validation
+   ✔ Expense validation
+   ✔ Withdrawal validation
+   ✔ GST validation
+   ✔ Negative balance detection
+   ✔ Credit ledger verification
+   ✔ Collection vs Profit verification
+   ✔ Module vs Ledger cross verification
 =========================================================== */
 
 (function(){
 
-/* -------------------------------------------------- HELPERS */
+if(window.__ledgerAuditLoaded) return;
+window.__ledgerAuditLoaded = true;
+
+console.log(
+"%c🧠 Ledger Audit Engine v3 Loading...",
+"color:#3b82f6;font-weight:bold"
+);
+
+
+/* ----------------------------------------------------------
+   HELPERS
+---------------------------------------------------------- */
+
 const num = v => isNaN(v = Number(v)) ? 0 : v;
 
-function logPass(msg){
-  console.log(
-    "%c✅ " + msg,
-    "color:#22c55e;font-weight:bold"
-  );
+function pass(msg){
+console.log("%c✅ " + msg,"color:#22c55e;font-weight:bold");
 }
 
-function logFail(msg,data){
-  console.error(
-    "%c🚨 AUDIT FAILURE → " + msg,
-    "color:#ef4444;font-weight:bold",
-    data || ""
-  );
+function fail(msg,data){
+console.error(
+"%c🚨 AUDIT FAILURE → " + msg,
+"color:#ef4444;font-weight:bold",
+data || ""
+);
 }
 
 
 /* ===========================================================
-   MAIN AUDIT ENGINE
+   MAIN AUDIT
 =========================================================== */
-function runAudit(){
 
-  const sales    = window.sales || [];
-  const services = window.services || [];
-  const expenses = window.expenses || [];
-  const offsets  = window.__offsets || {};
-  const metrics  = window.__unMetrics || {};
+function runLedgerAudit(){
 
+if(!window.ledgerEngine){
+console.warn("Ledger engine not ready");
+return;
+}
 
-  /* =========================================================
-     💰 PROFIT SETTLEMENT CHECK
-     Only collected profit should count
-  ========================================================= */
+const L = ledgerEngine.getCurrent();
 
-  let salesProfit = 0;
+if(!L){
+console.warn("Ledger not loaded");
+return;
+}
 
-  sales.forEach(s=>{
 
-    if(
-      String(s.status).toLowerCase() === "paid" &&
-      s.collectionLogged === true
-    ){
-      salesProfit += num(s.profit);
-    }
+/* ===========================================================
+   PROFIT VALIDATION
+=========================================================== */
 
-  });
+const expectedProfit =
+num(L.salesProfit) +
+num(L.serviceProfit) +
+num(L.salesInvestmentReturn) +
+num(L.serviceInvestmentReturn);
 
+const calculatedNet =
+expectedProfit -
+(
+num(L.expensesTotal) +
+num(L.withdrawalsTotal) +
+num(L.gstPayable)
+);
 
-  let serviceProfit = 0;
+if(num(L.netFlow) !== calculatedNet){
 
-  services.forEach(j=>{
+fail("Net flow mismatch",{
+ledgerNet : L.netFlow,
+expected  : calculatedNet
+});
 
-    const st =
-      String(j.status).toLowerCase();
+}else{
+pass("Net flow correct");
+}
 
-    if(
-      ["paid","completed"].includes(st) &&
-      j.collectionLogged === true
-    ){
-      serviceProfit += num(j.profit);
-    }
 
-  });
+/* ===========================================================
+   CLOSING BALANCE VALIDATION
+=========================================================== */
 
+const expectedClosing =
+num(L.openingBalance) +
+num(L.netFlow);
 
-  const expectedProfit =
-    salesProfit + serviceProfit;
+if(num(L.closingBalance) !== expectedClosing){
 
+fail("Closing balance mismatch",{
+ledger : L.closingBalance,
+expected : expectedClosing
+});
 
-  const universalProfit =
-    num(metrics.saleProfitCollected) +
-    num(metrics.serviceProfitCollected);
+}else{
+pass("Closing balance correct");
+}
 
 
-  if(expectedProfit !== universalProfit){
+/* ===========================================================
+   NEGATIVE VALUE CHECK
+=========================================================== */
 
-    logFail(
-      "Profit mismatch",
-      {
-        expected: expectedProfit,
-        universal: universalProfit
-      }
-    );
+Object.entries(L).forEach(([k,v])=>{
 
-  }else{
-    logPass("Profit settlement correct");
-  }
+if(typeof v === "number" && v < 0){
 
-
-
-  /* =========================================================
-     🧾 CREDIT LEDGER CHECK
-  ========================================================= */
-
-  let creditSales = 0;
-
-  sales.forEach(s=>{
-
-    if(
-      String(s.status).toLowerCase() === "credit"
-    ){
-      creditSales +=
-        num(s.remaining || s.total);
-    }
-
-  });
-
-
-  let creditService = 0;
-
-  services.forEach(j=>{
-
-    if(
-      String(j.status).toLowerCase() === "credit"
-    ){
-      creditService +=
-        num(j.remaining || j.total);
-    }
-
-  });
-
-
-  const expectedCredit =
-    creditSales + creditService;
-
-
-  const dashboardCredit =
-    num(metrics.pendingCreditTotal);
-
-
-  if(expectedCredit !== dashboardCredit){
-
-    logFail(
-      "Credit mismatch",
-      {
-        expected: expectedCredit,
-        dashboard: dashboardCredit
-      }
-    );
-
-  }else{
-    logPass("Credit ledger correct");
-  }
-
-
-
-  /* =========================================================
-     🔁 OFFSET CORRUPTION CHECK
-  ========================================================= */
-
-  Object.entries(offsets)
-    .forEach(([k,v])=>{
-
-      if(num(v) < 0){
-
-        logFail(
-          "Negative offset detected",
-          { key:k, value:v }
-        );
-
-      }
-
-    });
-
-
-
-  /* =========================================================
-     💸 EXPENSE LEDGER CHECK (SETTLEMENT AWARE)
-  ========================================================= */
-
-  let totalExpenses = 0;
-
-  expenses.forEach(e=>{
-    totalExpenses += num(e.amount);
-  });
-
-
-  const settledOffset =
-    num(offsets.expensesSettled);
-
-  const expectedLiveExpenses =
-    Math.max(
-      0,
-      totalExpenses - settledOffset
-    );
-
-
-  if(
-    expectedLiveExpenses !==
-    num(metrics.expensesLive)
-  ){
-
-    logFail(
-      "Expense mismatch",
-      {
-        ledger: totalExpenses,
-        settled: settledOffset,
-        expectedLive: expectedLiveExpenses,
-        metrics: metrics.expensesLive
-      }
-    );
-
-  }else{
-    logPass("Expense ledger correct");
-  }
-
-
-
-  /* =========================================================
-     🧠 FINAL LOG
-  ========================================================= */
-
-  console.log(
-    "%c🧠 Accounting audit completed",
-    "color:#3b82f6;font-weight:bold"
-  );
+fail("Negative ledger value",{ field:k,value:v });
 
 }
 
+});
+
+
+/* ===========================================================
+   WITHDRAWAL SAFETY CHECK
+=========================================================== */
+
+const availableCash =
+num(L.openingBalance) +
+num(L.netFlow);
+
+if(num(L.withdrawalsTotal) > availableCash){
+
+fail("Over withdrawal detected",{
+withdrawn : L.withdrawalsTotal,
+available : availableCash
+});
+
+}else{
+pass("Withdrawal limit safe");
+}
+
+
+/* ===========================================================
+   CREDIT LEDGER AUDIT
+=========================================================== */
+
+const sales = window.sales || [];
+const services = window.services || [];
+const collections = window.collections || [];
+
+let creditSales = 0;
+let creditServices = 0;
+
+sales.forEach(s=>{
+if(String(s.status).toLowerCase()==="credit"){
+creditSales += num(s.remaining || s.total);
+}
+});
+
+services.forEach(j=>{
+if(String(j.status).toLowerCase()==="credit"){
+creditServices += num(j.remaining || j.total);
+}
+});
+
+const expectedCredit = creditSales + creditServices;
+
+
+/* recovered credit */
+
+let recoveredCredit = 0;
+
+collections.forEach(c=>{
+
+if(String(c.source).toLowerCase().includes("credit")){
+recoveredCredit += num(c.amount);
+}
+
+});
+
+if(recoveredCredit > expectedCredit){
+
+fail("Credit recovery exceeds credit ledger",{
+creditLedger : expectedCredit,
+recovered : recoveredCredit
+});
+
+}else{
+pass("Credit ledger safe");
+}
+
+
+/* ===========================================================
+   COLLECTION vs PROFIT VALIDATION
+=========================================================== */
+
+let collectionSales = 0;
+let collectionServices = 0;
+
+collections.forEach(c=>{
+
+const src = String(c.source).toLowerCase();
+
+if(src.includes("sale"))
+collectionSales += num(c.amount);
+
+if(src.includes("service"))
+collectionServices += num(c.amount);
+
+});
+
+if(collectionSales < num(L.salesProfit)){
+
+fail("Sales profit exceeds collections",{
+ledgerSalesProfit : L.salesProfit,
+collections : collectionSales
+});
+
+}else{
+pass("Sales collection verified");
+}
+
+if(collectionServices < num(L.serviceProfit)){
+
+fail("Service profit exceeds collections",{
+ledgerServiceProfit : L.serviceProfit,
+collections : collectionServices
+});
+
+}else{
+pass("Service collection verified");
+}
+
+
+/* ===========================================================
+   MODULE → LEDGER CROSS CHECK (NEW)
+=========================================================== */
+
+let moduleSalesProfit = 0;
+
+sales.forEach(s=>{
+if(String(s.status).toLowerCase()==="paid"){
+moduleSalesProfit += num(s.profit);
+}
+});
+
+if(moduleSalesProfit < num(L.salesProfit)){
+
+fail("Ledger sales profit exceeds module data",{
+ledger : L.salesProfit,
+module : moduleSalesProfit
+});
+
+}else{
+pass("Sales module integrity verified");
+}
+
+
+let moduleServiceProfit = 0;
+
+services.forEach(j=>{
+const st = String(j.status).toLowerCase();
+
+if(["paid","completed"].includes(st)){
+moduleServiceProfit += num(j.profit);
+}
+});
+
+if(moduleServiceProfit < num(L.serviceProfit)){
+
+fail("Ledger service profit exceeds module data",{
+ledger : L.serviceProfit,
+module : moduleServiceProfit
+});
+
+}else{
+pass("Service module integrity verified");
+}
+
+
+/* ===========================================================
+   EXPENSE MODULE CROSS CHECK (NEW)
+=========================================================== */
+
+const expenses = window.expenses || [];
+
+let moduleExpenses = 0;
+
+expenses.forEach(e=>{
+moduleExpenses += num(e.amount);
+});
+
+if(moduleExpenses !== num(L.expensesTotal)){
+
+fail("Expense ledger mismatch",{
+ledger : L.expensesTotal,
+module : moduleExpenses
+});
+
+}else{
+pass("Expense ledger verified");
+}
+
+
+/* ===========================================================
+   GST SANITY CHECK (NEW)
+=========================================================== */
+
+if(num(L.gstPayable) < 0){
+
+fail("GST payable negative",{value:L.gstPayable});
+
+}else{
+pass("GST sanity check passed");
+}
+
+
+/* ===========================================================
+   FINAL LOG
+=========================================================== */
+
+console.log(
+"%c🧠 Ledger audit completed",
+"color:#3b82f6;font-weight:bold"
+);
+
+}
 
 
 /* ===========================================================
    AUTO TRIGGERS
 =========================================================== */
 
-window.runAccountingAudit = runAudit;
+window.runLedgerAudit = runLedgerAudit;
 
+window.addEventListener("ledger-ready",runLedgerAudit);
+window.addEventListener("ledger-updated",runLedgerAudit);
+window.addEventListener("collections-updated",runLedgerAudit);
 
-/* CLOUD LOAD */
-window.addEventListener(
-  "cloud-data-loaded",
-  runAudit
-);
-
-/* MODULE EVENTS */
-window.addEventListener(
-  "services-updated",
-  runAudit
-);
-
-window.addEventListener(
-  "sales-updated",
-  runAudit
-);
-
-window.addEventListener(
-  "expenses-updated",
-  runAudit
-);
-
-
-/* SAFETY DELAY RUN */
-setTimeout(runAudit,1500);
+setTimeout(runLedgerAudit,1500);
 
 })();
