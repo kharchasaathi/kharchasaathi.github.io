@@ -1,12 +1,12 @@
 /* ===========================================================
-   COLLECTION ENGINE v2 (ERP LEVEL)
+   COLLECTION ENGINE v3 (ERP SAFE)
 
-   ✔ Credit recovery auto ledger update
+   ✔ Credit recovery logs
    ✔ Sales auto collection log
    ✔ Service auto collection log
    ✔ Collection analytics
    ✔ Charts
-   ✔ Ledger compatible
+   ✔ Ledger SAFE (No direct ledger updates)
 =========================================================== */
 
 (function(){
@@ -14,7 +14,7 @@
 if(window.__collectionEngineLoaded) return;
 window.__collectionEngineLoaded = true;
 
-console.log("%c📥 Collection Engine v2 Loading...",
+console.log("%c📥 Collection Engine v3 Loading...",
 "color:#0ea5e9;font-weight:bold");
 
 
@@ -95,76 +95,15 @@ async function addCollectionEntry(
 
   saveCollections();
 
-  await processLedgerImpact(source,amount);
-
   renderCollection();
   runCollectionAnalytics();
 
+  /* universal bar refresh */
   window.renderUniversalBar?.();
 
 }
 
 window.addCollectionEntry = addCollectionEntry;
-
-
-/* ===========================================================
-   LEDGER IMPACT ENGINE
-=========================================================== */
-
-async function processLedgerImpact(source,amount){
-
-  if(!window.ledgerEngine) return;
-
-  const L = ledgerEngine.getCurrent();
-
-  if(!L || L.isClosed) return;
-
-  const uid = auth.currentUser.uid;
-
-  const dateKey = ledgerEngine.getDateKey();
-
-  const ref =
-    db.collection("users")
-      .doc(uid)
-      .collection("ledger")
-      .doc(dateKey);
-
-  const s = String(source).toLowerCase();
-
-  let update={};
-
-  if(s.includes("sale")){
-
-    update.salesProfit =
-      num(L.salesProfit) + amount;
-
-  }
-
-  else if(s.includes("service")){
-
-    update.serviceProfit =
-      num(L.serviceProfit) + amount;
-
-  }
-
-  else if(s.includes("credit")){
-
-    update.salesProfit =
-      num(L.salesProfit) + amount;
-
-  }
-
-  if(Object.keys(update).length){
-
-    update.updatedAt = Date.now();
-
-    await ref.update(update);
-
-    await ledgerEngine.refresh();
-
-  }
-
-}
 
 
 /* ===========================================================
