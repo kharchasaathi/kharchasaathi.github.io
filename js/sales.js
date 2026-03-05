@@ -192,7 +192,13 @@ function addSaleEntry({
   }
 
   renderSales?.();
-  renderCollection?.();
+renderCollection?.();
+
+/* 🔥 FORCE LEDGER + UNIVERSAL BAR UPDATE */
+window.dispatchEvent(
+  new Event("ledger-updated")
+);
+
 }
 window.addSaleEntry = addSaleEntry;
 
