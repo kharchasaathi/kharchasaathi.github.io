@@ -1,5 +1,5 @@
 /* ===========================================================
-   core.js — FINAL v22 (HARDENED + CLOUD SAFE)
+   core.js — FINAL v23 (HARDENED + CLOUD SAFE)
 =========================================================== */
 
 /* ===============================
@@ -45,8 +45,11 @@ window.todayDate=()=>{
 window.uid=p=>`${p}_${Math.random().toString(36).slice(2,10)}`;
 
 window.esc=t=>String(t||"").replace(/[&<>"']/g,m=>({
-  "&":"&amp;","<":"&lt;",">":"&gt;",
-  "\"":"&quot;","'":"&#39;"
+  "&":"&amp;",
+  "<":"&lt;",
+  ">":"&gt;",
+  "\"":"&quot;",
+  "'":"&#39;"
 }[m]));
 
 /* GLOBAL DATA */
@@ -63,20 +66,32 @@ window.globalLimit=0;
 window.setGlobalLimit=v=>window.globalLimit=+v||0;
 window.getGlobalLimit=()=>+window.globalLimit||0;
 
-/* ENSURE ARRAYS */
+/* ===========================================================
+   ENSURE ARRAYS
+=========================================================== */
+
 function ensureArrays(){
   [
-    "types","stock","sales",
-    "wanting","expenses",
-    "services","collections"
+    "types",
+    "stock",
+    "sales",
+    "wanting",
+    "expenses",
+    "services",
+    "collections"
   ].forEach(k=>{
-    if(!Array.isArray(window[k]))
+    if(!Array.isArray(window[k])){
       window[k]=[];
+    }
   });
 }
+
 ensureArrays();
 
-/* NORMALIZE (WINDOW SAFE) */
+/* ===========================================================
+   NORMALIZE ALL DATES
+=========================================================== */
+
 function normalizeAllDates(){
 
   window.stock = window.stock.map(s=>({
@@ -111,13 +126,17 @@ function normalizeAllDates(){
   }));
 }
 
-/* CLOUD SAVE */
+/* ===========================================================
+   CLOUD SAVE WRAPPER
+=========================================================== */
+
 window.cloudSync=(k,d)=>{
   if(!window.__cloudReady) return;
   window.cloudSaveDebounced?.(k,d||[]);
 };
 
-/* SAVE */
+/* SAVE FUNCTIONS */
+
 window.saveTypes=()=>cloudSync(KEY_TYPES,window.types);
 window.saveStock=()=>cloudSync(KEY_STOCK,window.stock);
 window.saveSales=()=>cloudSync(KEY_SALES,window.sales);
@@ -126,16 +145,34 @@ window.saveExpenses=()=>cloudSync(KEY_EXPENSES,window.expenses);
 window.saveServices=()=>cloudSync(KEY_SERVICES,window.services);
 window.saveCollections=()=>cloudSync(KEY_COLLECTIONS,window.collections);
 
-/* TYPES */
-window.addType=name=>{
-  name=(name||"").trim();
-  if(!name||window.types.find(t=>t.name.toLowerCase()===name.toLowerCase()))return;
+/* ===========================================================
+   TYPES
+=========================================================== */
 
-  window.types=[...window.types,{id:uid("type"),name}];
+window.addType=name=>{
+
+  name=(name||"").trim();
+
+  if(!name) return;
+
+  const exists = window.types.find(
+    t=>t.name.toLowerCase()===name.toLowerCase()
+  );
+
+  if(exists) return;
+
+  window.types=[
+    ...window.types,
+    {id:uid("type"),name}
+  ];
+
   saveTypes();
 };
 
-/* PRODUCT HELPERS */
+/* ===========================================================
+   PRODUCT HELPERS
+=========================================================== */
+
 window.findProduct=(type,name)=>
   window.stock.find(p=>
     p.type===type &&
@@ -143,58 +180,93 @@ window.findProduct=(type,name)=>
     String(name).toLowerCase()
   );
 
+
 window.getProductCost=(type,name)=>{
+
   const p=findProduct(type,name);
+
   if(!p) return 0;
+
   if(p.cost) return +p.cost;
 
   if(p.history?.length){
-    let t=0,q=0;
+
+    let total=0;
+    let qty=0;
+
     p.history.forEach(h=>{
-      t+=h.cost*h.qty;
-      q+=h.qty;
+      total+=h.cost*h.qty;
+      qty+=h.qty;
     });
-    return q?t/q:0;
+
+    return qty ? total/qty : 0;
   }
+
   return 0;
 };
 
-/* STOCK ENTRY (IMMUTABLE SAFE) */
+/* ===========================================================
+   STOCK ENTRY (IMMUTABLE SAFE)
+=========================================================== */
+
 window.addStockEntry=({
-  date,type,name,qty,cost
+  date,
+  type,
+  name,
+  qty,
+  cost
 })=>{
 
   date=toInternalIfNeeded(date);
-  qty=+qty; cost=+cost;
+  qty=+qty;
+  cost=+cost;
+
   if(!type||!name||qty<=0||cost<=0) return;
 
-  let p=findProduct(type,name);
+  const p=findProduct(type,name);
 
   if(!p){
+
     window.stock=[
       ...window.stock,
       {
         id:uid("stk"),
-        date,type,name,qty,cost,
+        date,
+        type,
+        name,
+        qty,
+        cost,
         sold:0,
         limit:getGlobalLimit(),
         history:[{date,qty,cost}]
       }
     ];
+
   }else{
-    p.qty+=qty;
-    p.cost=cost;
-    p.history=[
-      ...(p.history||[]),
-      {date,qty,cost}
-    ];
+
+    window.stock = window.stock.map(prod=>{
+
+      if(prod.id!==p.id) return prod;
+
+      return{
+        ...prod,
+        qty:prod.qty+qty,
+        cost:cost,
+        history:[
+          ...(prod.history||[]),
+          {date,qty,cost}
+        ]
+      };
+
+    });
+
   }
 
   saveStock();
 };
 
 /* ===========================================================
-   PART 2 — CLOUD EVENTS + RENDER
+   CLOUD EVENTS
 =========================================================== */
 
 window.addEventListener(
@@ -202,6 +274,7 @@ window.addEventListener(
   ()=>{
 
     ensureArrays();
+
     normalizeAllDates();
 
     [
@@ -217,51 +290,81 @@ window.addEventListener(
       "updateUniversalBar",
       "updateTypeDropdowns"
     ].forEach(fn=>{
-      try{window[fn]?.();}catch{}
+      try{
+        window[fn]?.();
+      }catch{}
     });
 
   }
 );
 
-/* INVESTMENT */
+/* ===========================================================
+   METRICS HELPERS
+=========================================================== */
+
 window.getStockInvestmentAfterSale=()=>
   window.stock.reduce(
     (t,p)=>t+Number(p.sold||0)*Number(p.cost||0),
     0
   );
 
+
 window.getSalesProfitCollected=()=>
   window.sales
-    .filter(s=>String(s.status).toLowerCase()!=="credit")
+    .filter(s=>
+      String(s.status).toLowerCase()!=="credit"
+    )
     .reduce((t,s)=>t+Number(s.profit||0),0);
+
 
 window.getServiceProfitCollected=()=>
   window.services
-    .filter(s=>String(s.status).toLowerCase()==="completed")
+    .filter(s=>{
+      const st=String(s.status).toLowerCase();
+      return ["paid","completed"].includes(st);
+    })
     .reduce((t,s)=>t+Number(s.profit||0),0);
 
-/* EMAIL (OVERRIDE SAFE) */
+/* ===========================================================
+   EMAIL TAG
+=========================================================== */
+
 if(!window.updateEmailTag){
+
   window.updateEmailTag=()=>{
+
     const el=document.getElementById("emailTag");
+
     if(!el) return;
+
     el.textContent=
-      window.getFirebaseUser?.()?.email||
+      window.getFirebaseUser?.()?.email ||
       "Not logged in";
+
   };
+
 }
 
-/* AUTH BRIDGE */
+/* ===========================================================
+   AUTH BRIDGE
+=========================================================== */
+
 if(typeof window.auth!=="undefined"){
+
   window.auth.onAuthStateChanged(user=>{
+
     if(user){
+
       window.dispatchEvent(
         new Event("firebase-auth-ready")
       );
+
     }
+
   });
+
 }
 
 console.log(
-  "⚙️ core.js v22 HARDENED CLOUD ENGINE READY ✔"
+"⚙️ core.js v23 PRODUCTION CLOUD ENGINE READY ✔"
 );
