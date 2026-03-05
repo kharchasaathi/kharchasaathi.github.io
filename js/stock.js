@@ -159,7 +159,7 @@ $("#addStockBtn")?.addEventListener("click",()=>{
 
   window.saveStock();
   renderStock?.();
-  window.updateUniversalBar?.();
+  window.renderUniversalBar?.();
 
   $("#pname").value="";
   $("#pqty").value="";
@@ -396,7 +396,7 @@ function stockQuickSale(id, mode) {
   renderStock();
   window.renderSales?.();
   window.renderCollection?.();
-  window.updateUniversalBar?.();
+  window.renderUniversalBar?.();
 }
 
 window.stockQuickSale = stockQuickSale;
@@ -573,6 +573,6 @@ window.addEventListener("load",()=>{
 
   renderStock();
   updateStockInvestment();
-  window.updateUniversalBar?.();
+  window.renderUniversalBar?.();
 
 });
