@@ -79,7 +79,7 @@ function safeRefresh(){
 
   setTimeout(()=>{
 
-    safeCall("updateUniversalBar");
+    safeCall("renderUniversalBar");
     safeCall("runLedgerAudit");
 
   },50);
@@ -225,7 +225,7 @@ listen("types",v=>{
 listen("stock",v=>{
   window.stock = safeArray(v);
   safeCall("renderStock");
-  safeCall("updateUniversalBar");
+  safeCall("renderUniversalBar");
   console.log("🔄 Stock synced");
 });
 
@@ -280,7 +280,7 @@ listen("collections",v=>{
 listen("withdrawals",v=>{
   window.__withdrawals = safeArray(v);
   safeCall("renderWithdraw");
-  safeCall("updateUniversalBar");
+  safeCall("renderUniversalBar");
   safeCall("runLedgerAudit");
   console.log("🔄 Withdrawals synced");
 });
@@ -293,7 +293,7 @@ listen("unMetrics",v=>{
   window.__unMetrics =
   Object.assign(window.__unMetrics || {},v || {});
 
-  safeCall("updateUniversalBar");
+  safeCall("renderUniversalBar");
   safeCall("renderDashboard");
   safeCall("renderAnalytics");
   safeCall("runLedgerAudit");
@@ -310,7 +310,7 @@ listen("offsets",v=>{
   window.__offsets =
   Object.assign(window.__offsets || {},v || {});
 
-  safeCall("updateUniversalBar");
+  safeCall("renderUniversalBar");
   safeCall("runLedgerAudit");
 
   console.log(
