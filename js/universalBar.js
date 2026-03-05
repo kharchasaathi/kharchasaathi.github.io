@@ -1,6 +1,5 @@
 /* ===========================================================
-   UNIVERSAL BAR v11 — ERP SAFE BUILD
-   Ledger Summary + Pending Credit + Quick Actions
+   UNIVERSAL BAR v11 — ERP SAFE BUILD (FIXED)
 =========================================================== */
 
 (function () {
@@ -11,24 +10,15 @@
   console.log("%c💰 Universal Bar v11 Loading...","color:#0ea5e9;font-weight:bold;");
 
 
-  /* ==========================================================
-     UTIL
-  ========================================================== */
-
   const num = v => isNaN(v = Number(v)) ? 0 : v;
-
   const money = v => "₹" + Math.round(num(v));
 
-
-  /* ==========================================================
-     RENDER LEDGER
-  ========================================================== */
 
   function renderUniversalBar(){
 
     const L =
       window.currentLedger ||
-      (window.ledgerEngine && ledgerEngine.getCurrent());
+      window.ledgerEngine?.getCurrent?.();
 
     if(!L) return;
 
@@ -38,7 +28,7 @@
     };
 
 
-    /* ---------------- INCOME ---------------- */
+    /* INCOME */
 
     set("ubOpening",L.openingBalance);
 
@@ -51,16 +41,14 @@
     set("ubGstCollected",L.gstCollected);
 
 
-    /* ---------------- EXPENSE ---------------- */
+    /* EXPENSE */
 
     set("ubExpenses",L.expensesTotal || L.expenses);
-
     set("ubWithdraw",L.withdrawalsTotal || L.withdrawals);
-
     set("ubGstPaid",L.gstPayable || L.gstPaid);
 
 
-    /* ---------------- NET FLOW ---------------- */
+    /* NET FLOW */
 
     const totalIncome =
         num(L.salesProfit)
@@ -94,14 +82,14 @@
     }
 
 
-    /* ---------------- PENDING CREDIT ---------------- */
+    /* PENDING CREDIT */
 
     let pending = 0;
 
     (window.sales || []).forEach(s=>{
       if(String(s.status).toLowerCase()==="credit"){
         pending += num(
-          s.remaining || s.total || s.amount
+          s.remaining ?? s.balance ?? s.due ?? s.total
         );
       }
     });
@@ -109,7 +97,7 @@
     (window.services || []).forEach(j=>{
       if(String(j.status).toLowerCase()==="credit"){
         pending += num(
-          j.remaining || j.balance || j.due
+          j.remaining ?? j.balance ?? j.due ?? j.total
         );
       }
     });
@@ -118,10 +106,6 @@
 
   }
 
-
-  /* ==========================================================
-     QUICK ACTIONS
-  ========================================================== */
 
   function bindActions(){
 
@@ -147,24 +131,11 @@
   }
 
 
-  /* ==========================================================
-     AUTO REFRESH EVENTS
-  ========================================================== */
-
   window.renderUniversalBar = renderUniversalBar;
 
   window.addEventListener("ledger-ready",renderUniversalBar);
   window.addEventListener("ledger-updated",renderUniversalBar);
 
-  window.addEventListener("sales-updated",renderUniversalBar);
-  window.addEventListener("service-updated",renderUniversalBar);
-  window.addEventListener("expense-updated",renderUniversalBar);
-  window.addEventListener("withdraw-updated",renderUniversalBar);
-
-
-  /* ==========================================================
-     INIT
-  ========================================================== */
 
   window.addEventListener("load",()=>{
 
