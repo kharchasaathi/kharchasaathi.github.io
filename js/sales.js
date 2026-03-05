@@ -1,15 +1,13 @@
 /* ===========================================================
-   sales.js — LEDGER INTEGRATED v32 (SAFE PATCHED FINAL)
+   sales.js — LEDGER INTEGRATED v33 (ASYNC FIXED)
 
    ✔ FIFO Compatible
    ✔ Ledger Connected
-   ✔ Cash Filter Restored
+   ✔ Async Ledger Fix
+   ✔ Profit Sync Stable
    ✔ Credit Pending / Paid Safe
-   ✔ Inline Collect Button
-   ✔ Payment Mode Visible
-   ✔ Clear Disabled (Owner Safety)
-   ✔ Crash Safety Fixes
-   ✔ Event Loop Fixed
+   ✔ Collection Integration
+   ✔ Crash Safe
 =========================================================== */
 
 
@@ -100,9 +98,9 @@ function deductStockFIFO(type,product,qty){
 
 
 /* ===========================================================
-   ADD SALE ENTRY
+   ADD SALE ENTRY  (ASYNC FIXED)
 =========================================================== */
-function addSaleEntry({
+async function addSaleEntry({
   date,
   type,
   product,
@@ -169,22 +167,41 @@ function addSaleEntry({
   window.saveSales();
 
 
-  /* LEDGER UPDATE */
+  /* ===============================
+     LEDGER UPDATE (ASYNC FIX)
+  =============================== */
+
   if(isPaid && typeof updateLedgerField==="function"){
 
     const profit=Number(profitValue);
     const investmentReturn=
       Number(deductResult.costUsed);
 
-    if(profit>0)
-      updateLedgerField("salesProfit",profit);
+    try{
 
-    if(investmentReturn>0)
-      updateLedgerField("salesInvestmentReturn",investmentReturn);
+      if(profit>0)
+        await updateLedgerField(
+          "salesProfit",
+          profit
+        );
+
+      if(investmentReturn>0)
+        await updateLedgerField(
+          "salesInvestmentReturn",
+          investmentReturn
+        );
+
+    }catch(err){
+      console.warn("Ledger update failed",err);
+    }
+
   }
 
 
-  /* AUTO COLLECTION */
+  /* ===============================
+     AUTO COLLECTION
+  =============================== */
+
   if(isPaid){
 
     const details=
@@ -202,18 +219,20 @@ function addSaleEntry({
     saleObj.collectionLogged=true;
   }
 
+
   window.dispatchEvent(
     new Event("ledger-updated")
   );
+
 }
 window.addSaleEntry=addSaleEntry;
 
 
 
 /* ===========================================================
-   CREDIT COLLECTION
+   CREDIT COLLECTION  (ASYNC FIXED)
 =========================================================== */
-function collectCreditSale(id){
+async function collectCreditSale(id){
 
   const s=(window.sales||[])
     .find(x=>x.id===id);
@@ -245,14 +264,29 @@ function collectCreditSale(id){
 
   window.saveSales();
 
+
   if(typeof updateLedgerField==="function"){
 
-    if(s.profit>0)
-      updateLedgerField("salesProfit",s.profit);
+    try{
 
-    if(s.cost>0)
-      updateLedgerField("salesInvestmentReturn",s.cost);
+      if(s.profit>0)
+        await updateLedgerField(
+          "salesProfit",
+          s.profit
+        );
+
+      if(s.cost>0)
+        await updateLedgerField(
+          "salesInvestmentReturn",
+          s.cost
+        );
+
+    }catch(err){
+      console.warn("Ledger update failed",err);
+    }
+
   }
+
 
   if(!s.collectionLogged){
 
@@ -270,6 +304,7 @@ function collectCreditSale(id){
     s.collectionLogged=true;
   }
 
+
   window.dispatchEvent(
     new Event("ledger-updated")
   );
@@ -281,7 +316,7 @@ window.collectCreditSale=collectCreditSale;
 
 
 /* ===========================================================
-   PROFESSIONAL RENDER SALES
+   RENDER SALES
 =========================================================== */
 function renderSales(){
 
@@ -313,9 +348,7 @@ function renderSales(){
     );
 
   if(view==="credit-pending")
-    list=list.filter(s=>
-      s.status==="Credit"
-    );
+    list=list.filter(s=>s.status==="Credit");
 
   if(view==="credit-paid")
     list=list.filter(s=>
@@ -369,6 +402,7 @@ function renderSales(){
 
   if(totalEl) totalEl.textContent=totalSum;
   if(profitEl) profitEl.textContent=profitSum;
+
 }
 window.renderSales=renderSales;
 
