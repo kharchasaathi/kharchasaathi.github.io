@@ -79,7 +79,7 @@ function clearAddForm(){
   if(d) d.value=today();
 }
 
-/
+
 /* -------------------------------------------------- FILTER HELPERS */
 function clearCalendar(){
   qs("#svcFilterCalendar") &&
