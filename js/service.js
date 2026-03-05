@@ -442,7 +442,7 @@ function refresh(){
   drawPieStatus();
   renderMoneyList();
 
-  window.updateUniversalBar?.();
+  window.renderUniversalBar?.();
   window.renderAnalytics?.();
 }
 
