@@ -81,7 +81,7 @@ function addWantingItem() {
   qs("#wantName").value = "";
   qs("#wantNote").value = "";
 
-  window.updateUniversalBar?.();
+  window.renderUniversalBar?.();
 }
 
 /* -------------------------------------------------------
@@ -115,7 +115,7 @@ function wantingToStock(i) {
   renderStock?.();
   renderSales?.();
   renderCollection?.();          // ⭐ FIX: removed renderPendingCollections
-  window.updateUniversalBar?.();
+  window.renderUniversalBar?.();
 }
 
 /* -------------------------------------------------------
@@ -127,7 +127,7 @@ function deleteWantingItem(i) {
   window.wanting.splice(i, 1);
   saveWanting();
   renderWanting();
-  window.updateUniversalBar?.();
+  window.renderUniversalBar?.();
 }
 
 /* -------------------------------------------------------
@@ -143,7 +143,7 @@ document.addEventListener("click", e => {
     window.wanting = [];
     saveWanting();
     renderWanting();
-    window.updateUniversalBar?.();
+    window.renderUniversalBar?.();
     return;
   }
 
