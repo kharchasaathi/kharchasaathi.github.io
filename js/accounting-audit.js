@@ -56,7 +56,7 @@ return;
 const L = ledgerEngine.getCurrent();
 
 if(!L){
-console.warn("Ledger not loaded");
+console.warn("Ledger not loaded yet");
 return;
 }
 
