@@ -1,20 +1,6 @@
 /* ===========================================================
-   firestore-listeners.js — HARDENED v20
+   firestore-listeners.js — HARDENED v21
    FULL SAFE + UNSUBSCRIBE + CLOUD WAIT + WRITE LOCK
-
-   ✔ Listener crash guard
-   ✔ Cloud-ready race safe
-   ✔ Collection write lock
-   ✔ Wanting restored
-   ✔ Universal recompute safe
-   ✔ Settlement safe
-   ✔ Withdraw safe
-   ✔ Offset realtime safe
-   ✔ Cross-user safe
-   ✔ Memory leak safe
-   ✔ Multi-device safe
-   ✔ Ledger refresh safe
-   ✔ Ledger audit auto trigger
 =========================================================== */
 
 (function () {
@@ -35,6 +21,16 @@ console.log(
 "%c👂 Firestore listeners system booting...",
 "color:#03a9f4;font-weight:bold;"
 );
+
+
+/* ==================================================
+   FIREBASE GUARD (FIX #1)
+================================================== */
+
+if(!window.db || !window.auth){
+  console.error("🔥 Firebase not ready. Listeners aborted.");
+  return;
+}
 
 const db   = window.db;
 const auth = window.auth;
@@ -84,8 +80,6 @@ function safeRefresh(){
   setTimeout(()=>{
 
     safeCall("updateUniversalBar");
-
-    /* 🔍 Ledger audit auto run */
     safeCall("runLedgerAudit");
 
   },50);
@@ -138,7 +132,7 @@ function attachCollectionWriteGuard(){
 
 
 /* ==================================================
-   CLEAR OLD LISTENERS (Cross-user safe)
+   CLEAR OLD LISTENERS
 ================================================== */
 
 function clearAllListeners(){
@@ -205,7 +199,10 @@ function attachListeners(){
 
         if(!snap.exists) return;
 
-        handler(snap.data().value);
+        /* FIX #2 SAFE SNAPSHOT */
+        const data = snap.data() || {};
+
+        handler(data.value);
 
       });
 
@@ -217,108 +214,75 @@ function attachListeners(){
 /* ================= TYPES ================= */
 
 listen("types",v=>{
-
   window.types = safeArray(v);
-
   safeCall("renderTypes");
-
   console.log("🔄 Types synced");
-
 });
 
 
 /* ================= STOCK ================= */
 
 listen("stock",v=>{
-
   window.stock = safeArray(v);
-
   safeCall("renderStock");
   safeCall("updateUniversalBar");
-
   console.log("🔄 Stock synced");
-
 });
 
 
 /* ================= WANTING ================= */
 
 listen("wanting",v=>{
-
   window.wanting = safeArray(v);
-
   safeCall("renderWanting");
-
   console.log("🔄 Wanting synced");
-
 });
 
 
 /* ================= SALES ================= */
 
 listen("sales",v=>{
-
   window.sales = safeArray(v);
-
   safeRefresh();
-
   console.log("🔄 Sales synced");
-
 });
 
 
 /* ================= SERVICES ================= */
 
 listen("services",v=>{
-
   window.services = safeArray(v);
-
   safeRefresh();
-
   console.log("🔄 Services synced");
-
 });
 
 
 /* ================= EXPENSES ================= */
 
 listen("expenses",v=>{
-
   window.expenses = safeArray(v);
-
   safeRefresh();
-
   console.log("🔄 Expenses synced");
-
 });
 
 
 /* ================= COLLECTIONS ================= */
 
 listen("collections",v=>{
-
   window.collections = safeArray(v);
-
   safeRefresh();
-
   console.log("🔄 Collections synced");
-
 });
 
 
 /* ================= WITHDRAWALS ================= */
 
 listen("withdrawals",v=>{
-
   window.__withdrawals = safeArray(v);
-
   safeCall("renderWithdraw");
   safeCall("updateUniversalBar");
-
   safeCall("runLedgerAudit");
-
   console.log("🔄 Withdrawals synced");
-
 });
 
 
@@ -332,7 +296,6 @@ listen("unMetrics",v=>{
   safeCall("updateUniversalBar");
   safeCall("renderDashboard");
   safeCall("renderAnalytics");
-
   safeCall("runLedgerAudit");
 
   console.log("🔄 Universal metrics synced");
@@ -348,7 +311,6 @@ listen("offsets",v=>{
   Object.assign(window.__offsets || {},v || {});
 
   safeCall("updateUniversalBar");
-
   safeCall("runLedgerAudit");
 
   console.log(
@@ -391,9 +353,7 @@ auth.onAuthStateChanged(user=>{
   if(user){
 
     waitForCloudReady(()=>{
-
       attachListeners();
-
     });
 
   }
