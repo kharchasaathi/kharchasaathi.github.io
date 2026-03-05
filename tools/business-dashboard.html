@@ -1206,9 +1206,11 @@ body{
 
 <script defer src="https://cdn.jsdelivr.net/npm/chart.js/dist/chart.umd.min.js"></script>
 
-<script defer src="https://www.gstatic.com/firebasejs/9.6.11/firebase-app-compat.js"></script>
-<script defer src="https://www.gstatic.com/firebasejs/9.6.11/firebase-auth-compat.js"></script>
-<script defer src="https://www.gstatic.com/firebasejs/9.6.11/firebase-firestore-compat.js"></script>
+<!-- Firebase CDN (NO DEFER) -->
+
+<script src="https://www.gstatic.com/firebasejs/9.6.11/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.6.11/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.6.11/firebase-firestore-compat.js"></script>
 
 
 
@@ -1243,6 +1245,10 @@ body{
 <script defer src="/js/sales.js"></script>
 <script defer src="/js/service.js"></script>
 <script defer src="/js/wanting.js"></script>
+
+
+
+<!-- ================= ENGINES ================= -->
 
 <script defer src="/js/expense-engine.js"></script>
 <script defer src="/js/collection.js"></script>
