@@ -287,7 +287,7 @@ window.addEventListener(
       "renderCollection",
       "renderAnalytics",
       "updateSummaryCards",
-      "updateUniversalBar",
+      "renderUniversalBar",
       "updateTypeDropdowns"
     ].forEach(fn=>{
       try{
