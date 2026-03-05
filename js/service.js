@@ -443,7 +443,7 @@ function refresh(){
   renderMoneyList();
 
   window.renderUniversalBar?.();
-  window.renderAnalytics?.();
+  
 }
 
 window.__svcRefresh=refresh;
