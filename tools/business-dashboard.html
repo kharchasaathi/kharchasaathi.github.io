@@ -1381,8 +1381,8 @@ document.addEventListener("click", async e => {
 });
 
 </script>
-  
-<!-- =============== SMART TAB SWITCHER — FINAL PRO =============== -->
+  <!-- =============== SMART TAB SWITCHER — ERP SAFE =============== -->
+
 <script>
 
 /* ==========================================================
@@ -1392,22 +1392,30 @@ document.addEventListener("click", async e => {
 function switchTab(tabId){
 
   /* SECTION VISIBILITY */
+
   qsa(".section")
-    .forEach(sec=>sec.classList.remove("active"));
+    .forEach(sec => sec.classList.remove("active"));
 
   const target = qs("#"+tabId);
-  if(target) target.classList.add("active");
+
+  if(target)
+    target.classList.add("active");
+
 
   /* TAB ACTIVE STATE */
+
   qsa(".tab")
-    .forEach(t=>t.classList.remove("active"));
+    .forEach(t => t.classList.remove("active"));
 
   const tabBtn =
     qs(`.tab[data-tab="${tabId}"]`);
 
-  if(tabBtn) tabBtn.classList.add("active");
+  if(tabBtn)
+    tabBtn.classList.add("active");
+
 
   /* MODULE SMART REFRESH */
+
   try{
 
     switch(tabId){
@@ -1425,6 +1433,7 @@ function switchTab(tabId){
       case "sales":
         renderSales?.();
         renderAnalytics?.();
+        updateUniversalBar?.();
       break;
 
       case "wanting":
@@ -1433,30 +1442,35 @@ function switchTab(tabId){
 
       case "service":
         window.__svcRefresh?.();
+        updateUniversalBar?.();
       break;
 
       case "expenses":
         renderExpenses?.();
-        renderAnalytics?.();
+        updateUniversalBar?.();
       break;
-
-      
 
       case "collection":
         renderCollection?.();
+        updateUniversalBar?.();
       break;
-        
-      case "profitWithdraw":   
-  renderWithdraw?.();
-break;
+
+      case "profitWithdraw":
+        renderWithdraw?.();
+        updateUniversalBar?.();
+      break;
 
     }
 
-  }catch(err){
+  }
+
+  catch(err){
+
     console.warn(
       "Tab refresh error:",
       err
     );
+
   }
 
 }
@@ -1468,7 +1482,7 @@ break;
 
 document.addEventListener(
   "click",
-  e=>{
+  e => {
 
     const tab =
       e.target.closest(".tab");
@@ -1491,9 +1505,13 @@ console.log(
 
 </script>
 
+
+
 <!-- =============== CLOCK =============== -->
+
 <script>
-function updateClock() {
+
+function updateClock(){
 
   const now = new Date();
 
@@ -1503,36 +1521,74 @@ function updateClock() {
   const dateEl =
     document.getElementById("clockDate");
 
-  if (timeEl)
+  if(timeEl)
     timeEl.textContent =
       now.toLocaleTimeString();
 
-  if (dateEl)
+  if(dateEl)
     dateEl.textContent =
       now.toLocaleDateString();
+
 }
 
-/* run every second */
-setInterval(updateClock, 1000);
+/* update every minute */
 
-/* initial render */
+setInterval(updateClock, 60000);
+
+/* first render */
+
 updateClock();
+
 </script>
+
+
 
 <!-- =============== LOGOUT BUTTON =============== -->
+
 <script>
-document.getElementById("logoutBtn")?.addEventListener("click", async () => {
-  try {
-    if (window.fsLogout) {
-      await window.fsLogout();
-      return;
+
+document
+  .getElementById("logoutBtn")
+  ?.addEventListener(
+    "click",
+    async () => {
+
+      try{
+
+        if(window.fsLogout){
+
+          await window.fsLogout();
+
+          return;
+
+        }
+
+      }
+
+      catch(e){
+
+        console.error(
+          "Logout error:",
+          e
+        );
+
+      }
+
+      try{
+
+        localStorage.removeItem(
+          "ks-user-email"
+        );
+
+      }catch{}
+
+      window.location.href =
+        "/login.html";
+
     }
-  } catch (e) {
-    console.error("Logout error:", e);
-  }
-  try { localStorage.removeItem("ks-user-email"); } catch {}
-  window.location.href = "/login.html";
-});
+);
+
 </script>
+
 </body>
 </html>
