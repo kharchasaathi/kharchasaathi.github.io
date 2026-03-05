@@ -548,8 +548,7 @@ body{
   <div class="tab" data-tab="wanting">🛒 Wanting</div>
   <div class="tab" data-tab="service">🛠 Service</div>
   <div class="tab" data-tab="expenses">💸 Expenses</div>
-  <div class="tab" data-tab="dashboard">📊 Dashboard</div>
-  <div class="tab" data-tab="collection">🪙 Collection</div>
+<div class="tab" data-tab="collection">🪙 Collection</div>
 
   <div class="tab" data-tab="profitWithdraw">💰 Withdraw</div>
   <div class="tab" data-tab="reset">🧨 Reset</div>
@@ -1000,82 +999,7 @@ body{
     </tfoot>
   </table>
 </section>
-<!-- =============== DASHBOARD (TODAY + TOTAL) =============== -->
-<section id="dashboard" class="section">
-  <h3>📊 Dashboard (Today + Total)</h3>
-  <!-- ================= TODAY CARDS ================= -->
-  <div id="summaryCards" class="flex-row"
-    style="margin-top:10px;display:flex;gap:10px;flex-wrap:wrap;">
-    <div class="card" style="flex:1;min-width:140px;padding:10px;border-radius:14px;">
-      <div style="font-size:24px">💰</div>
-      <b id="todaySales" style="font-size:18px;color:var(--ks-accent);">₹0</b><br>
-      <small>Today's Sales</small>
-    </div>
-    <div class="card" style="flex:1;min-width:140px;padding:10px;border-radius:14px;">
-      <div style="font-size:24px">💳</div>
-      <b id="todayCredit" style="font-size:18px;color:var(--ks-accent);">₹0</b><br>
-      <small>Today's Credit</small>
-    </div>
-    <div class="card"
-      style="flex:1;min-width:140px;padding:10px;border-radius:14px;
-             background:#fff7ed;border-color:#fed7aa;">
-      <div style="font-size:24px">🧾</div>
-      <b id="todayExpenses" style="font-size:18px;color:#ea580c;">₹0</b><br>
-      <small>Today's Expenses</small>
-    </div>
-    <div class="card"
-      style="flex:1;min-width:140px;padding:10px;border-radius:14px;
-             background:#ecfdf5;border-color:#bbf7d0;">
-      <div style="font-size:24px">📈</div>
-      <b id="todayGross" style="font-size:18px;color:#16a34a;">₹0</b><br>
-      <small>Today's Gross Profit</small>
-    </div>
-    <div class="card"
-      style="flex:1;min-width:140px;padding:10px;border-radius:14px;
-             background:#ecfdf5;border-color:#bbf7d0;">
-      <div style="font-size:24px">💹</div>
-      <b id="todayNet" style="font-size:18px;color:#16a34a;">₹0</b><br>
-      <small>Today's NET Profit</small>
-    </div>
-  </div>
-  <hr style="margin:18px 0;border:none;border-top:1px dashed var(--ks-border-soft);">
-  <!-- ================= TOTAL DASHBOARD ================= -->
-  <h4>Smart Dashboard (Total)</h4>
-  <div class="flex-row"
-    style="margin-bottom:18px;display:flex;gap:10px;flex-wrap:wrap;">
-    <div class="card"
-      style="flex:1;min-width:160px;padding:10px;border-radius:14px;
-             background:#ecfdf5;border-color:#bbf7d0;">
-      <h4 style="margin:0 0 4px 0;font-size:13px;">Total Profit</h4>
-      <b id="dashProfit" style="font-size:22px;color:#16a34a;">₹0</b>
-      <small>Sale + Service (collected only)</small>
-    </div>
-    <div class="card"
-      style="flex:1;min-width:160px;padding:10px;border-radius:14px;
-             background:#fff7ed;border-color:#fed7aa;">
-      <h4 style="margin:0 0 4px 0;font-size:13px;">Total Expenses</h4>
-      <b id="dashExpenses" style="font-size:22px;color:#ea580c;">₹0</b>
-    </div>
-    <div class="card"
-      style="flex:1;min-width:160px;padding:10px;border-radius:14px;">
-      <h4 style="margin:0 0 4px 0;font-size:13px;">Credit Sales (Pending)</h4>
-      <b id="dashCredit" style="font-size:22px;color:var(--ks-accent);">₹0</b>
-    </div>
-    <div class="card"
-      style="flex:1;min-width:160px;padding:10px;border-radius:14px;
-             background:#fefce8;border-color:#facc15;">
-      <h4 style="margin:0 0 4px 0;font-size:13px;">
-        Total Investment (Sold Items)
-      </h4>
-      <b id="dashInv" style="font-size:22px;color:#ca8a04;">₹0</b>
-      <small>Sold stock + Service invest</small>
-    </div>
-  </div>
-  <!-- ================= PIE ================= -->
-  <div style="max-width:600px;margin:auto;">
-    <canvas id="cleanPie" height="150"></canvas>
-  </div>
-</section>
+
   <!-- =============== PROFIT WITHDRAW =============== -->
 <section id="profitWithdraw" class="section">
   <h3>💰 Profit Withdraw</h3>
@@ -1298,9 +1222,7 @@ body{
 <script src="/js/wanting.js"></script>
 <script src="/js/expenses.js"></script>
 <script src="/js/collection.js"></script>
-<!-- DASHBOARD -->
-<script src="/js/analytics.js"></script>
-<script src="/js/dashboard.js"></script>
+
   <script src="/js/withdraw.js"></script>
   
 <!-- 🔍 AUDIT (AFTER ALL DATA ENGINES) -->
@@ -1330,8 +1252,7 @@ document.addEventListener("click", async e => {
     window.expenses = [];
     window.collections = [];
     window.wanting = [];
-    window.__dashboardOffset = 0;
-    window.__dashboardViewCleared = false;
+    
     /* -------------------------------
        CLOUD RESET
     ------------------------------- */
@@ -1344,7 +1265,7 @@ document.addEventListener("click", async e => {
       await cloudSave("expenses", []);
       await cloudSave("collections", []);
       await cloudSave("wanting", []);
-      await cloudSave("dashboardOffset", 0);
+      
     }
     /* -------------------------------
        UI REFRESH
@@ -1432,11 +1353,7 @@ function switchTab(tabId){
         renderAnalytics?.();
       break;
 
-      case "dashboard":
-        renderDashboard?.();
-        renderAnalytics?.();
-        updateSummaryCards?.();
-      break;
+      
 
       case "collection":
         renderCollection?.();
