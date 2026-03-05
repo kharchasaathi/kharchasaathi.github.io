@@ -1202,35 +1202,82 @@ body{
   </div>
 
 </section>
-<!-- =============== LIBRARIES =============== -->
-<script src="https://cdn.jsdelivr.net/npm/chart.js/dist/chart.umd.min.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.6.11/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.6.11/firebase-auth-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.6.11/firebase-firestore-compat.js"></script>
-<!-- CORE -->
-<script src="/js/firebase.js"></script>
-<script src="/js/core.js"></script>
-<!-- UNIVERSAL -->
-<script src="/js/universalBar.js"></script>
-<!-- LISTENERS -->
-<script src="/js/firestore-listeners.js"></script>
-<!-- BUSINESS -->
-<script src="/js/types.js"></script>
-<script src="/js/stock.js"></script>
-<script src="/js/sales.js"></script>
-<script src="/js/service.js"></script>
-<script src="/js/wanting.js"></script>
-<script src="/js/expenses.js"></script>
-<script src="/js/collection.js"></script>
+<!-- ================= LIBRARIES ================= -->
 
-  <script src="/js/withdraw.js"></script>
-  
-<!-- 🔍 AUDIT (AFTER ALL DATA ENGINES) -->
-<script src="/js/accounting-audit.js"></script>
-<!-- RESET -->
-<script src="/js/reset-engine.js"></script>
-<!-- SECURITY -->
-<script src="/js/security.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/chart.js/dist/chart.umd.min.js"></script>
+
+<script defer src="https://www.gstatic.com/firebasejs/9.6.11/firebase-app-compat.js"></script>
+<script defer src="https://www.gstatic.com/firebasejs/9.6.11/firebase-auth-compat.js"></script>
+<script defer src="https://www.gstatic.com/firebasejs/9.6.11/firebase-firestore-compat.js"></script>
+
+
+
+<!-- ================= FIREBASE INIT ================= -->
+
+<script defer src="/js/firebase.js"></script>
+
+
+
+<!-- ================= CORE ================= -->
+
+<script defer src="/js/core.js"></script>
+
+
+
+<!-- ================= LOGIN UTILS ================= -->
+
+<script defer src="/js/login-utils.js"></script>
+
+
+
+<!-- ================= UNIVERSAL BAR ================= -->
+
+<script defer src="/js/universalBar.js"></script>
+
+
+
+<!-- ================= BUSINESS MODULES ================= -->
+
+<script defer src="/js/types.js"></script>
+<script defer src="/js/stock.js"></script>
+<script defer src="/js/sales.js"></script>
+<script defer src="/js/service.js"></script>
+<script defer src="/js/wanting.js"></script>
+
+<script defer src="/js/expense-engine.js"></script>
+<script defer src="/js/collection.js"></script>
+<script defer src="/js/withdraw-engine.js"></script>
+
+
+
+<!-- ================= LEDGER + GST ================= -->
+
+<script defer src="/js/ledger-engine.js"></script>
+<script defer src="/js/gst-engine.js"></script>
+
+
+
+<!-- ================= FIRESTORE LISTENERS ================= -->
+
+<script defer src="/js/firestore-listeners.js"></script>
+
+
+
+<!-- ================= ACCOUNTING AUDIT ================= -->
+
+<script defer src="/js/accounting-audit.js"></script>
+
+
+
+<!-- ================= RESET SYSTEM ================= -->
+
+<script defer src="/js/reset-engine.js"></script>
+
+
+
+<!-- ================= SECURITY ================= -->
+
+<script defer src="/js/security.js"></script>
   <!-- =============== RESET ENGINE =============== -->
 <script>
 document.addEventListener("click", async e => {
