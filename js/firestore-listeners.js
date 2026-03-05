@@ -72,7 +72,6 @@ function safeRefresh(){
 
   safeCall("renderSales");
   safeCall("renderCollection");
-  safeCall("renderAnalytics");
   safeCall("renderDashboard");
   safeCall("updateSummaryCards");
   safeCall("renderWithdraw");
@@ -295,7 +294,6 @@ listen("unMetrics",v=>{
 
   safeCall("renderUniversalBar");
   safeCall("renderDashboard");
-  safeCall("renderAnalytics");
   safeCall("runLedgerAudit");
 
   console.log("🔄 Universal metrics synced");
@@ -327,7 +325,6 @@ listen("dashboardOffset",v=>{
 
   window.__dashboardOffset = Number(v || 0);
 
-  safeCall("renderAnalytics");
   safeCall("updateSummaryCards");
 
   console.log("🔄 Dashboard offset synced");
