@@ -262,9 +262,14 @@ function collectCreditSale(id) {
   }
 
   renderSales?.();
-  renderCollection?.();
+renderCollection?.();
 
-  alert("Credit Collected Successfully!");
+/* 🔥 FORCE LEDGER + UNIVERSAL BAR UPDATE */
+window.dispatchEvent(
+  new Event("ledger-updated")
+);
+
+alert("Credit Collected Successfully!");
 }
 window.collectCreditSale = collectCreditSale;
 
