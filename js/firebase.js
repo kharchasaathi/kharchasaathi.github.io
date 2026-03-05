@@ -1,5 +1,5 @@
 /* ===========================================================
-firebase.js — V30 PRODUCTION MERGE (CLOUD + AUTO USER SAFE)
+firebase.js — V31 PRODUCTION MERGE (CLOUD + AUTO USER SAFE)
 
 ✔ Full cloud engine retained
 ✔ Auto Firestore user document creation
@@ -8,6 +8,7 @@ firebase.js — V30 PRODUCTION MERGE (CLOUD + AUTO USER SAFE)
 ✔ No login loop
 ✔ No "Account setup incomplete"
 ✔ Multi-device safe
+✔ Ledger audit auto trigger
 =========================================================== */
 
 console.log("%c🔥 firebase.js loading...","color:#ff9800;font-weight:bold;");
@@ -54,6 +55,20 @@ window.__cloudPulled = false;
 window.__currentUser = null;
 
 const __debounceTimers = {};
+
+/* ===========================================================
+SAFE CALL (for audit trigger)
+=========================================================== */
+
+function safeCall(fn){
+  try{
+    if(typeof window[fn] === "function"){
+      window[fn]();
+    }
+  }catch(e){
+    console.warn("⚠️ Safe call failed:",fn,e);
+  }
+}
 
 /* ===========================================================
 ENSURE USER DOCUMENT EXISTS
@@ -186,6 +201,9 @@ async function cloudPullAll(){
   window.__cloudReady  = true;
 
   window.dispatchEvent(new Event("cloud-data-loaded"));
+
+  /* 🔍 Initial accounting audit */
+  safeCall("runLedgerAudit");
 }
 
 /* ===========================================================
