@@ -371,35 +371,58 @@ body{
 
 </script>
 <div class="topbar">
-  <h1>
-    <div class="topbar-logo"><span>₹</span></div>
+
+  <h1 class="logo-title">
+    <span class="topbar-logo">₹</span>
     KHARCHASAATHI
   </h1>
+
   <div class="topbar-right">
+
     <span id="emailTag">Checking login…</span>
+
     <div class="simple-clock">
       <span id="clockTime" class="clock-line">--:--:--</span>
       <span id="clockDate" class="clock-line small">--</span>
     </div>
+
     <a class="small-btn" href="/index.html">🏠 Home</a>
+
     <a class="small-btn" href="/tools/daily-ledger.html">
-  📒 Ledger
-</a>
-    <button id="logoutBtn" class="small-btn">🔓 Logout</button>
+      📒 Ledger
+    </a>
+
+    <button id="logoutBtn" class="small-btn">
+      🔓 Logout
+    </button>
+
   </div>
+
 </div>
-<div id="universalBar" class="universal-bar">
+
+
+
+<!-- ======================================================
+                    UNIVERSAL FINANCE BAR
+====================================================== -->
+
+<div id="universalBar" class="universal-bar" role="region">
 
   <div class="ub-grid">
 
+
     <!-- OPENING BALANCE -->
+
     <div class="ub-card opening">
       <div class="ub-title">Opening Balance</div>
       <div class="ub-amount" id="ubOpening">₹0</div>
       <button class="small-btn ub-btn" onclick="withdrawOpening()">Withdraw</button>
     </div>
-   
+
+
+
     <!-- SALES PROFIT -->
+
     <div class="ub-card income">
       <div class="ub-title">Sales Profit</div>
       <div class="ub-amount" id="ubSaleProfit">₹0</div>
@@ -407,7 +430,9 @@ body{
     </div>
 
 
+
     <!-- SERVICE PROFIT -->
+
     <div class="ub-card income">
       <div class="ub-title">Service Profit</div>
       <div class="ub-amount" id="ubServiceProfit">₹0</div>
@@ -415,7 +440,9 @@ body{
     </div>
 
 
+
     <!-- STOCK INVESTMENT (AFTER SALE) -->
+
     <div class="ub-card income">
       <div class="ub-title">Stock Investment (After Sale)</div>
       <div class="ub-amount" id="ubSaleInv">₹0</div>
@@ -423,7 +450,9 @@ body{
     </div>
 
 
+
     <!-- SERVICE INVESTMENT -->
+
     <div class="ub-card income">
       <div class="ub-title">Service Investment</div>
       <div class="ub-amount" id="ubServiceInv">₹0</div>
@@ -431,56 +460,74 @@ body{
     </div>
 
 
+
     <!-- GST COLLECTED -->
+
     <div class="ub-card income">
       <div class="ub-title">GST Collected</div>
       <div class="ub-amount" id="ubGST">₹0</div>
       <button class="small-btn ub-btn" onclick="payGST()">Pay GST</button>
     </div>
-    <!-- CASH / UPI LIVE BALANCE -->
+
+
+
+    <!-- CASH / UPI BALANCE -->
+
     <div class="ub-card opening">
-  <div class="ub-title">Today's Balance Split</div>
 
-  <div class="ub-sub">Cash</div>
-  <div class="ub-amount" style="font-size:20px" id="ubCash">₹0</div>
+      <div class="ub-title">Today's Balance Split</div>
 
-  <div class="ub-sub">UPI</div>
-  <div class="ub-amount" style="font-size:20px" id="ubUPI">₹0</div>
-</div>
+      <div class="ub-sub">Cash</div>
+      <div class="ub-amount" style="font-size:20px" id="ubCash">₹0</div>
+
+      <div class="ub-sub">UPI</div>
+      <div class="ub-amount" style="font-size:20px" id="ubUPI">₹0</div>
+
+    </div>
+
 
 
     <!-- EXPENSES -->
+
     <div class="ub-card expense">
       <div class="ub-title">Expenses</div>
       <div class="ub-amount" id="ubExpenses">₹0</div>
     </div>
 
 
+
     <!-- PROFIT WITHDRAW -->
+
     <div class="ub-card expense">
       <div class="ub-title">Profit Withdraw</div>
       <div class="ub-amount" id="ubProfitWithdraw">₹0</div>
     </div>
 
 
+
     <!-- STOCK INVESTMENT WITHDRAW -->
+
     <div class="ub-card expense">
       <div class="ub-title">Stock Investment Withdraw</div>
       <div class="ub-amount" id="ubStockWithdraw">₹0</div>
     </div>
 
 
+
     <!-- GST PAID -->
+
     <div class="ub-card expense">
       <div class="ub-title">GST Paid</div>
       <div class="ub-amount" id="ubGSTPaid">₹0</div>
     </div>
-  
+
 
   </div>
 
 
+
   <!-- NET FLOW -->
+
   <div id="ubNetFlowBox" class="ub-netflow-box">
     Net Flow: <span id="ubNetFlow">₹0</span>
   </div>
@@ -488,7 +535,13 @@ body{
 </div>
 
 
+
+<!-- ======================================================
+                        MAIN TABS
+====================================================== -->
+
 <div class="tabs" role="tablist">
+
   <div class="tab active" data-tab="types">📁 Types</div>
   <div class="tab" data-tab="stock">📦 Stock</div>
   <div class="tab" data-tab="sales">📈 Sales</div>
@@ -498,12 +551,10 @@ body{
   <div class="tab" data-tab="dashboard">📊 Dashboard</div>
   <div class="tab" data-tab="collection">🪙 Collection</div>
 
-
-  <!-- ✅ NEW -->
   <div class="tab" data-tab="profitWithdraw">💰 Withdraw</div>
   <div class="tab" data-tab="reset">🧨 Reset</div>
+
 </div>
-  
   
 <!-- =============== TYPES =============== -->
 <section id="types" class="section active">
