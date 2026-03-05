@@ -1349,7 +1349,7 @@ document.addEventListener("click", async e => {
 
     window.__svcRefresh?.();
 
-    updateUniversalBar?.();
+    renderUniversalBar?.();
 
     renderAnalytics?.();
     updateSummaryCards?.();
@@ -1427,13 +1427,13 @@ function switchTab(tabId){
 
       case "stock":
         renderStock?.();
-        updateUniversalBar?.();
+        renderUniversalBar?.();
       break;
 
       case "sales":
         renderSales?.();
         renderAnalytics?.();
-        updateUniversalBar?.();
+        renderUniversalBar?.();
       break;
 
       case "wanting":
@@ -1442,22 +1442,22 @@ function switchTab(tabId){
 
       case "service":
         window.__svcRefresh?.();
-        updateUniversalBar?.();
+        renderUniversalBar?.();
       break;
 
       case "expenses":
         renderExpenses?.();
-        updateUniversalBar?.();
+        renderUniversalBar?.();
       break;
 
       case "collection":
         renderCollection?.();
-        updateUniversalBar?.();
+        renderUniversalBar?.();
       break;
 
       case "profitWithdraw":
         renderWithdraw?.();
-        updateUniversalBar?.();
+        renderUniversalBar?.();
       break;
 
     }
