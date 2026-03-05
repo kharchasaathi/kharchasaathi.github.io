@@ -209,12 +209,13 @@ body{
 <script>
 
 /* ======================================================
-   🔐 GLOBAL ACCESS GUARD — SaaS Protection (V3 SAFE)
+   🔐 GLOBAL ACCESS GUARD — SaaS Protection (V4 HARDENED)
 
    ✔ Waits for firebase-auth-ready
    ✔ No race condition
-   ✔ No premature signout
+   ✔ Listener duplication safe
    ✔ Trial + Subscription validation
+   ✔ Undefined field protection
 ====================================================== */
 
 (function(){
@@ -226,16 +227,24 @@ body{
   window.__globalGuardAttached = true;
 
   function blockAccess(message, redirectTo){
+
     document.body.innerHTML = "";
+
     setTimeout(()=>{
       alert(message);
       window.location.replace(redirectTo);
     },100);
+
   }
 
   function allowAccess(user){
+
     const tag = document.getElementById("emailTag");
-    if(tag) tag.textContent = user.email;
+
+    if(tag && user?.email){
+      tag.textContent = user.email;
+    }
+
   }
 
   function waitForAuthReady(){
@@ -244,10 +253,14 @@ body{
       return setTimeout(waitForAuthReady,100);
     }
 
-    // 🔥 WAIT FOR firebase.js to finish
     window.addEventListener("firebase-auth-ready", async ()=>{
 
-      const user = window.getFirebaseUser();
+      /* USER SAFE FETCH */
+
+      const user =
+        typeof window.getFirebaseUser === "function"
+        ? window.getFirebaseUser()
+        : window.auth?.currentUser;
 
       if(!user){
         blockAccess("Please login first.", LOGIN_PAGE);
@@ -256,32 +269,47 @@ body{
 
       try{
 
-        const ref  = window.db.collection("users").doc(user.uid);
+        const ref =
+          window.db.collection("users").doc(user.uid);
 
-        // 🔥 SAFE RETRY LOOP (avoids race condition)
+        /* SAFE RETRY LOOP */
+
         let snap;
+
         for(let i=0;i<5;i++){
+
           snap = await ref.get();
+
           if(snap.exists) break;
+
           await new Promise(r=>setTimeout(r,300));
+
         }
 
-        if(!snap.exists){
-          blockAccess("Account initialization error.", LOGIN_PAGE);
+        if(!snap?.exists){
+          blockAccess(
+            "Account initialization error.",
+            LOGIN_PAGE
+          );
           return;
         }
 
-        const data = snap.data();
+        const data = snap.data() || {};
         const now  = Date.now();
 
-        /* 🎁 FREE TRIAL */
+        /* ======================
+           FREE TRIAL
+        ====================== */
+
         if(data.plan === "free_trial"){
 
-          if(now > data.trialEndsAt){
+          if(!data.trialEndsAt || now > data.trialEndsAt){
+
             blockAccess(
               "Free trial expired. Please subscribe.",
               SUBSCRIBE_PAGE
             );
+
             return;
           }
 
@@ -289,14 +317,20 @@ body{
           return;
         }
 
-        /* 💳 PAID PLAN */
+        /* ======================
+           PAID SUBSCRIPTION
+        ====================== */
+
         if(data.subscriptionActive){
 
-          if(now > data.subscriptionEndsAt){
+          if(!data.subscriptionEndsAt ||
+             now > data.subscriptionEndsAt){
+
             blockAccess(
               "Subscription expired. Please renew.",
               SUBSCRIBE_PAGE
             );
+
             return;
           }
 
@@ -304,22 +338,38 @@ body{
           return;
         }
 
-        blockAccess("Subscription inactive.", SUBSCRIBE_PAGE);
+        /* ======================
+           NO ACTIVE PLAN
+        ====================== */
+
+        blockAccess(
+          "Subscription inactive.",
+          SUBSCRIBE_PAGE
+        );
 
       }catch(err){
-        console.error("Access validation failed:", err);
-        blockAccess("Access validation error.", LOGIN_PAGE);
+
+        console.error(
+          "Access validation failed:",
+          err
+        );
+
+        blockAccess(
+          "Access validation error.",
+          LOGIN_PAGE
+        );
+
       }
 
-    });
+    }, { once:true });
 
   }
 
   waitForAuthReady();
 
 })();
-    
-  </script>
+
+</script>
 <div class="topbar">
   <h1>
     <div class="topbar-logo"><span>₹</span></div>
