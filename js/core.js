@@ -285,7 +285,6 @@ window.addEventListener(
       "renderExpenses",
       "renderServiceTables",
       "renderCollection",
-      "renderAnalytics",
       "updateSummaryCards",
       "renderUniversalBar",
       "updateTypeDropdowns"
