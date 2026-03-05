@@ -1,20 +1,29 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" translate="no">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>📦 KharchaSaathi — Business Manager</title>
-  <meta name="theme-color" content="#e5edff" />
-  <link rel="icon" href="/favicon.png" />
-  <link rel="apple-touch-icon" href="/favicon.png" />
-  <!-- keep your global css files -->
-  <link rel="stylesheet" href="/css/base.css" />
+
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+
+<title>📦 KharchaSaathi — Business Manager</title>
+
+<meta name="theme-color" content="#e5edff" />
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+
+<link rel="icon" type="image/png" href="/favicon.png" />
+<link rel="apple-touch-icon" href="/favicon.png" />
+
+<!-- keep your global css files -->
+<link rel="stylesheet" href="/css/base.css" />
 <link rel="stylesheet" href="/css/layout.css" />
 <link rel="stylesheet" href="/css/components.css" />
 <link rel="stylesheet" href="/css/table.css" />
 <link rel="stylesheet" href="/css/style.css" />
-  <!-- Inline theme + layout (kept inline for stability) -->
-  <style>
+
+<!-- Inline theme + layout (kept inline for stability) -->
+<style>
+
 :root{
   --ks-bg:           #f3f4fb;
   --ks-bg-soft:      #eef1ff;
@@ -31,8 +40,11 @@
   --ks-radius-card:  16px;
   --ks-radius-pill:  999px;
 }
+
 /* ❌ DARK MODE REMOVED on purpose */
+
 /* GLOBAL BODY */
+
 body{
   margin:0;
   padding:0;
@@ -41,7 +53,9 @@ body{
   color: var(--ks-text-main);
   min-height:100vh;
 }
+
 /* TOP BAR */
+
 .topbar{
   position:sticky;
   top:0;
@@ -55,6 +69,7 @@ body{
   border-bottom:1px solid var(--ks-border-soft);
   box-shadow:0 8px 18px rgba(15,23,42,.08);
 }
+
 .topbar h1{
   margin:0;
   font-size:20px;
@@ -66,6 +81,7 @@ body{
   color:var(--ks-text-main);
   font-weight:700;
 }
+
 .topbar-logo{
   width:32px;
   height:32px;
@@ -76,11 +92,13 @@ body{
   justify-content:center;
   box-shadow:0 0 18px rgba(37,99,235,.45);
 }
+
 .topbar-logo span{
   font-size:18px;
   color:#f9fafb;
   font-weight:700;
 }
+
 .topbar-right{
   display:flex;
   align-items:center;
@@ -88,6 +106,7 @@ body{
   flex-wrap:wrap;
   justify-content:flex-end;
 }
+
 .simple-clock{
   display:flex;
   flex-direction:column;
@@ -96,6 +115,7 @@ body{
   line-height:1.1;
   color:var(--ks-text-soft);
 }
+
 #emailTag{
   padding:4px 10px;
   border-radius:var(--ks-radius-pill);
@@ -104,6 +124,7 @@ body{
   border:1px solid var(--ks-border-soft);
   color:var(--ks-text-soft);
 }
+
 .theme-btn,.small-btn{
   border:none;
   cursor:pointer;
@@ -117,20 +138,25 @@ body{
   box-shadow:0 6px 14px rgba(15,23,42,.07);
   transition:.18s;
 }
+
 .theme-btn:hover,.small-btn:hover{
   background:#eff6ff;
   transform:translateY(-1px);
 }
+
 #logoutBtn{
   background:#ef4444;
   border-color:#dc2626;
   color:#fff;
   box-shadow:0 6px 16px rgba(239,68,68,.45);
 }
-#logoutBtn:hover{background:#dc2626}
 
+#logoutBtn:hover{
+  background:#dc2626;
+}
 
 /* TABS */
+
 .tabs{
   display:flex;
   gap:10px;
@@ -139,6 +165,7 @@ body{
   border-bottom:1px solid var(--ks-border-soft);
   background: linear-gradient(to right,#f9fafb,#eef2ff,#f9fafb);
 }
+
 .tab{
   padding:9px 18px;
   border-radius:var(--ks-radius-pill);
@@ -149,27 +176,37 @@ body{
   transition:.16s;
   font-weight:600;
 }
+
 .tab:hover{
   background:rgba(226,232,240,.7);
   color:var(--ks-text-main);
 }
+
 .tab.active{
   background:linear-gradient(135deg,var(--ks-accent-soft),var(--ks-accent));
   color:#fff;
   box-shadow:0 10px 20px rgba(37,99,235,.35);
 }
+
 /* SECTION */
+
 .section{
   display:none;
   padding:16px 14px 28px;
   max-width:1160px;
   margin:0 auto;
 }
-.section.active{display:block;}
-  </style>
+
+.section.active{
+  display:block;
+}
+
+</style>
+
 </head>
 <body>
-  <script>
+
+<script>
 
 /* ======================================================
    🔐 GLOBAL ACCESS GUARD — SaaS Protection (V3 SAFE)
