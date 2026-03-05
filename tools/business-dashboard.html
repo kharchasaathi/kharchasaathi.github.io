@@ -559,74 +559,128 @@ body{
 <!-- =============== TYPES =============== -->
 <section id="types" class="section active">
   <h3>🗂 Manage Item Types</h3>
+
   <div class="row-inline" style="margin-top:8px;display:flex;gap:8px;flex-wrap:wrap;">
+
     <input id="typeName" type="text" placeholder="Add new type"
       style="flex:1;min-width:160px;padding:8px 10px;border-radius:12px;border:1px solid var(--ks-border-soft);background:var(--ks-bg-card);color:var(--ks-text-main);">
+
     <button id="addTypeBtn" class="small-btn">Add</button>
+
     <button id="clearTypesBtn" class="small-btn">Clear All</button>
-    <button id="syncTypesBtn" class="small-btn" title="Save types to cloud">☁️ Sync</button>
+
   </div>
-  <ul id="typeList" style="margin-top:10px;padding-left:18px;font-size:13px;"></ul>
+
+  <ul id="typeList"
+    style="margin-top:10px;padding-left:18px;font-size:13px;"></ul>
+
 </section>
+
+
+
 <!-- =============== STOCK =============== -->
 <section id="stock" class="section">
+
   <h3>📦 Current Stock</h3>
-  <div class="row-inline" style="margin-top:6px;display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
+
+  <div class="row-inline"
+    style="margin-top:6px;display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
+
     <label>Low Stock:</label>
+
     <input id="globalLimit" type="number" placeholder="2"
       style="width:90px;padding:6px 8px;border-radius:10px;border:1px solid var(--ks-border-soft);background:var(--ks-bg-card);color:var(--ks-text-main);">
+
     <button id="setLimitBtn" class="small-btn">Set</button>
-    <button id="clearStockBtn" class="small-btn" style="background:#fee2e2;border-color:#fecaca;color:#b91c1c;">Clear All</button>
-    <button id="syncStockBtn" class="small-btn" title="Save stock to cloud">☁️ Sync</button>
+
+    <button id="clearStockBtn" class="small-btn"
+      style="background:#fee2e2;border-color:#fecaca;color:#b91c1c;">
+      Clear All
+    </button>
+
   </div>
-  <div class="row-inline" style="margin-top:12px;display:flex;flex-wrap:wrap;gap:8px;">
+
+
+
+  <div class="row-inline"
+    style="margin-top:12px;display:flex;flex-wrap:wrap;gap:8px;">
+
     <input id="pdate" type="date"
       style="padding:6px 8px;border-radius:10px;border:1px solid var(--ks-border-soft);background:var(--ks-bg-card);color:var(--ks-text-main);">
+
     <select id="ptype"
       style="padding:6px 8px;border-radius:10px;border:1px solid var(--ks-border-soft);background:var(--ks-bg-card);color:var(--ks-text-main);"></select>
+
     <input id="pname" type="text" placeholder="Product"
       style="padding:6px 8px;border-radius:10px;border:1px solid var(--ks-border-soft);background:var(--ks-bg-card);color:var(--ks-text-main);min-width:140px;">
+
     <input id="pqty" type="number" placeholder="Qty"
       style="width:80px;padding:6px 8px;border-radius:10px;border:1px solid var(--ks-border-soft);background:var(--ks-bg-card);color:var(--ks-text-main);">
+
     <input id="pcost" type="number" placeholder="Cost ₹"
       style="width:100px;padding:6px 8px;border-radius:10px;border:1px solid var(--ks-border-soft);background:var(--ks-bg-card);color:var(--ks-text-main);">
+
     <button id="addStockBtn" class="small-btn">Add</button>
+
   </div>
-  <div style="margin-top:12px; display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
+
+
+
+  <div style="margin-top:12px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+
     <b>Filter Type:</b>
+
     <select id="filterType"
       style="padding:6px 8px;border-radius:10px;border:1px solid var(--ks-border-soft);background:var(--ks-bg-card);color:var(--ks-text-main);">
+
       <option value="all">All</option>
+
     </select>
+
     <input id="productSearch" placeholder="Search product..."
       style="padding:6px 10px;border-radius:12px;border:1px solid var(--ks-border-soft);background:var(--ks-bg-card);color:var(--ks-text-main);min-width:160px;">
+
   </div>
+
+
+
   <div id="stockInvBox"
     style="margin-top:10px;padding:10px;background:#fefce8;border-radius:12px;border:1px solid #facc15;max-width:280px;margin-left:auto;font-weight:600;font-size:13px;box-shadow:var(--ks-shadow-soft);">
+
     📦 Stock Investment (Before Sale):
+
     <span id="stockInvValue" style="color:#ca8a04;">₹0</span>
+
     <div style="margin-top:8px;">
       <button id="exportStockBtn" class="small-btn">Export CSV</button>
       <button id="importStockBtn" class="small-btn">Import</button>
     </div>
+
   </div>
+
+
+
   <table id="stockTable" style="margin-top:10px;">
-<thead>
-  <tr>
-    <th>Date</th>
-    <th>Type</th>
-    <th>Product</th>
-    <th>Batch</th>   
-    <th>Qty</th>
-    <th>Sold</th>
-    <th>Remain</th>
-    <th>Alert</th>
-    <th>Limit</th>
-    <th>Action</th>
-  </tr>
-</thead>
+
+    <thead>
+      <tr>
+        <th>Date</th>
+        <th>Type</th>
+        <th>Product</th>
+        <th>Batch</th>
+        <th>Qty</th>
+        <th>Sold</th>
+        <th>Remain</th>
+        <th>Alert</th>
+        <th>Limit</th>
+        <th>Action</th>
+      </tr>
+    </thead>
+
     <tbody></tbody>
+
   </table>
+
 </section>
 <!-- =============== SALES =============== -->
 <section id="sales" class="section">
