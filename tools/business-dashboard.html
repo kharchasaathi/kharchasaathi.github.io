@@ -1279,19 +1279,28 @@ body{
 
 <script defer src="/js/security.js"></script>
   <!-- =============== RESET ENGINE =============== -->
+
 <script>
+
 document.addEventListener("click", async e => {
+
   if (e.target.id !== "resetAllDataBtn") return;
+
   if (!confirm(
     "⚠️ This will DELETE entire business system.\n\nContinue?"
   )) return;
+
   if (!confirm(
     "Final warning.\n\nAll data will be lost.\n\nProceed?"
   )) return;
+
+
   try {
+
     /* -------------------------------
        LOCAL MEMORY RESET
     ------------------------------- */
+
     window.types = [];
     window.stock = [];
     window.sales = [];
@@ -1299,12 +1308,19 @@ document.addEventListener("click", async e => {
     window.expenses = [];
     window.collections = [];
     window.wanting = [];
-    
+    window.withdraws = [];
+
+    window.ledger = [];
+    window.gst = [];
+
+
     /* -------------------------------
        CLOUD RESET
     ------------------------------- */
+
     if (window.__cloudReady &&
         typeof cloudSave === "function") {
+
       await cloudSave("types", []);
       await cloudSave("stock", []);
       await cloudSave("sales", []);
@@ -1312,34 +1328,58 @@ document.addEventListener("click", async e => {
       await cloudSave("expenses", []);
       await cloudSave("collections", []);
       await cloudSave("wanting", []);
-      
+      await cloudSave("withdraws", []);
+
+      await cloudSave("ledger", []);
+      await cloudSave("gst", []);
+
     }
+
+
     /* -------------------------------
        UI REFRESH
     ------------------------------- */
+
     renderStock?.();
     renderSales?.();
     renderWanting?.();
     renderExpenses?.();
     renderCollection?.();
+    renderWithdraw?.();
+
     window.__svcRefresh?.();
+
     updateUniversalBar?.();
+
     renderAnalytics?.();
     updateSummaryCards?.();
+
+    renderLedger?.();
+
+
     alert("✅ System fully reset");
+
     console.log(
       "🧨 Full system reset completed"
     );
-  } catch (err) {
+
+  }
+
+  catch (err) {
+
     console.error(
       "❌ Reset failed",
       err
     );
+
     alert(
       "Reset failed — see console"
     );
+
   }
+
 });
+
 </script>
   
 <!-- =============== SMART TAB SWITCHER — FINAL PRO =============== -->
