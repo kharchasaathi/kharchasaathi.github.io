@@ -164,8 +164,32 @@ async function addSaleEntry({
   window.sales=window.sales||[];
   window.sales.push(saleObj);
 
-  window.saveSales();
 
+/* LEDGER UPDATE FIRST */
+
+if(isPaid && typeof updateLedgerField==="function"){
+
+  const profit=Number(profitValue);
+  const investmentReturn=Number(deductResult.costUsed);
+
+  try{
+
+    if(profit>0)
+      await updateLedgerField("salesProfit",profit);
+
+    if(investmentReturn>0)
+      await updateLedgerField("salesInvestmentReturn",investmentReturn);
+
+  }catch(err){
+    console.warn("Ledger update failed",err);
+  }
+
+}
+
+
+/* SAVE AFTER LEDGER */
+
+window.saveSales();
 
   /* ===============================
      LEDGER UPDATE (ASYNC FIX)
