@@ -115,7 +115,10 @@ async function addSaleEntry({
 
   qty=Number(qty);
   price=Number(price);
-  status=(status||"Paid").toLowerCase();
+  status = status || "Paid";
+
+const isPaid =
+  String(status).toLowerCase() === "paid";
 
   if(!type||!product||qty<=0||price<=0)
     return;
