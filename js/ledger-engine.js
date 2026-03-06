@@ -1,15 +1,14 @@
 /* ===========================================================
-   LEDGER ENGINE v6 — ENTERPRISE SAFE BUILD
+   LEDGER ENGINE v7 — ENTERPRISE SAFE BUILD (FIXED)
 
-   ✔ Modular Ledger Engine
-   ✔ Auto Opening Balance (Carry Forward)
-   ✔ Net Flow System
-   ✔ Close Day Lock
-   ✔ Next Day Auto Create
-   ✔ Close Button Auto Disable
-   ✔ Multi-Device Safe
+   ✔ Auto ledger load after login
+   ✔ Carry forward opening balance
+   ✔ Net flow calculation
+   ✔ Close day lock
+   ✔ Next day auto create
+   ✔ Multi-device safe
    ✔ updateLedgerField()
-   ✔ Race Condition Safe
+   ✔ Race condition safe
 =========================================================== */
 
 (function(){
@@ -24,7 +23,11 @@ let currentDateKey = null;
 
 const num = v => isNaN(v = Number(v)) ? 0 : v;
 
-/* allowed ledger fields */
+
+/* ===========================================================
+   ALLOWED LEDGER FIELDS
+=========================================================== */
+
 const ledgerFields = new Set([
 "salesProfit",
 "serviceProfit",
@@ -37,8 +40,9 @@ const ledgerFields = new Set([
 
 
 /* ===========================================================
-   DATE KEY (YYYY-MM-DD)
+   DATE KEY
 =========================================================== */
+
 function getTodayKey(){
 
 const d = new Date();
@@ -51,13 +55,14 @@ String(d.getDate()).padStart(2,"0");
 
 
 /* ===========================================================
-   EMPTY LEDGER STRUCTURE
+   EMPTY LEDGER
 =========================================================== */
+
 function emptyLedger(opening=0){
 
 return {
 
-openingBalance: opening,
+openingBalance:opening,
 
 salesProfit:0,
 serviceProfit:0,
@@ -87,6 +92,7 @@ updatedAt:Date.now()
 /* ===========================================================
    CALCULATE NET FLOW
 =========================================================== */
+
 function calculateNetFlow(){
 
 if(!currentLedger) return;
@@ -114,11 +120,13 @@ currentLedger.netFlow;
 /* ===========================================================
    ENSURE TODAY LEDGER
 =========================================================== */
+
 async function ensureTodayLedger(){
 
 if(!auth.currentUser) return;
 
 const uid = auth.currentUser.uid;
+
 const today = getTodayKey();
 
 currentDateKey = today;
@@ -131,11 +139,16 @@ db.collection("users")
 
 const snap = await ref.get();
 
+
+/* ---------- CREATE LEDGER IF MISSING ---------- */
+
 if(!snap.exists){
 
-console.log("📦 Creating new ledger for",today);
+console.log("📦 Creating ledger:",today);
 
 let opening=0;
+
+/* get yesterday ledger */
 
 const y = new Date();
 y.setDate(y.getDate()-1);
@@ -154,8 +167,7 @@ await db.collection("users")
 
 if(ySnap.exists){
 
-const yData = ySnap.data();
-opening = num(yData.closingBalance);
+opening = num(ySnap.data().closingBalance);
 
 }
 
@@ -172,11 +184,20 @@ currentLedger = snap.data();
 
 }
 
+
+/* ---------- CALCULATE ---------- */
+
 calculateNetFlow();
 
 updateCloseButtonState();
 
-window.dispatchEvent(new Event("ledger-ready"));
+/* ---------- EVENT ---------- */
+
+window.dispatchEvent(
+new Event("ledger-ready")
+);
+
+console.log("📒 Ledger ready:",today);
 
 }
 
@@ -184,6 +205,7 @@ window.dispatchEvent(new Event("ledger-ready"));
 /* ===========================================================
    SAFE LEDGER UPDATE
 =========================================================== */
+
 let updateLock=false;
 
 window.updateLedgerField = async function(field,value){
@@ -194,14 +216,14 @@ return;
 }
 
 if(updateLock){
-console.warn("Ledger update skipped (lock)");
+console.warn("Ledger locked");
 return;
 }
 
 if(!currentLedger) return;
 
 if(currentLedger.isClosed){
-console.warn("Ledger closed — update blocked");
+console.warn("Ledger closed");
 return;
 }
 
@@ -213,6 +235,7 @@ num(currentLedger[field]) + num(value);
 calculateNetFlow();
 
 const user = auth.currentUser;
+
 if(!user){
 updateLock=false;
 return;
@@ -229,8 +252,10 @@ try{
 await ref.update({
 
 [field]:currentLedger[field],
+
 netFlow:currentLedger.netFlow,
 closingBalance:currentLedger.closingBalance,
+
 updatedAt:Date.now()
 
 });
@@ -254,6 +279,7 @@ new Event("ledger-updated")
 /* ===========================================================
    CLOSE DAY
 =========================================================== */
+
 async function closeLedgerDay(){
 
 const user = auth.currentUser;
@@ -269,7 +295,7 @@ return;
 }
 
 if(currentLedger.isClosed){
-alert("Ledger already closed");
+alert("Already closed");
 return;
 }
 
@@ -292,11 +318,15 @@ closingBalance:closingBalance,
 
 isClosed:true,
 closedAt:Date.now(),
+
 updatedAt:Date.now()
 
 });
 
 console.log("✅ Ledger closed");
+
+
+/* ---------- CREATE NEXT DAY ---------- */
 
 const nextDate = new Date(currentDateKey);
 nextDate.setDate(nextDate.getDate()+1);
@@ -316,11 +346,11 @@ const nextSnap = await nextRef.get();
 
 if(!nextSnap.exists){
 
-const nextLedger = emptyLedger(closingBalance);
+await nextRef.set(
+emptyLedger(closingBalance)
+);
 
-await nextRef.set(nextLedger);
-
-console.log("📦 Next day ledger created:",nextKey);
+console.log("📦 Next ledger:",nextKey);
 
 }
 
@@ -328,19 +358,21 @@ alert("Ledger closed successfully");
 
 updateCloseButtonState();
 
-window.dispatchEvent(new Event("ledger-updated"));
-
-await ensureTodayLedger();
+window.dispatchEvent(
+new Event("ledger-updated")
+);
 
 }
 
 
 /* ===========================================================
-   CLOSE BUTTON AUTO CONTROL
+   CLOSE BUTTON CONTROL
 =========================================================== */
+
 function updateCloseButtonState(){
 
-const btn = document.getElementById("closeLedgerBtn");
+const btn =
+document.getElementById("closeLedgerBtn");
 
 if(!btn || !currentLedger) return;
 
@@ -352,6 +384,7 @@ btn.disabled = currentLedger.isClosed;
 /* ===========================================================
    PUBLIC API
 =========================================================== */
+
 window.ledgerEngine = {
 
 getCurrent:()=>currentLedger,
@@ -361,6 +394,26 @@ refresh:ensureTodayLedger
 };
 
 window.closeLedgerDay = closeLedgerDay;
+
+
+/* ===========================================================
+   AUTO LOAD LEDGER AFTER LOGIN
+=========================================================== */
+
+auth.onAuthStateChanged(user=>{
+
+if(user){
+
+setTimeout(()=>{
+
+ensureTodayLedger();
+
+},200);
+
+}
+
+});
+
 
 console.log("%c📒 Ledger Engine READY ✔","color:#673ab7;font-weight:bold;");
 
