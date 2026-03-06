@@ -130,7 +130,7 @@ const isPaid =
     return alert(deductResult.error);
 
   const total=qty*price;
-  const isPaid = String(status).toLowerCase()==="paid";
+  
   const profitValue=
     isPaid
       ? (total-Number(deductResult.costUsed))
