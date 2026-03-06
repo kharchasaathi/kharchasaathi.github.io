@@ -1206,12 +1206,12 @@ body{
 
 <script defer src="https://cdn.jsdelivr.net/npm/chart.js/dist/chart.umd.min.js"></script>
 
-<!-- Firebase CDN (NO DEFER) -->
+
+<!-- ================= FIREBASE CDN (NO DEFER) ================= -->
 
 <script src="https://www.gstatic.com/firebasejs/9.6.11/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.6.11/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.6.11/firebase-firestore-compat.js"></script>
-
 
 
 <!-- ================= FIREBASE INIT ================= -->
@@ -1219,23 +1219,27 @@ body{
 <script defer src="/js/firebase.js"></script>
 
 
-
-<!-- ================= CORE ================= -->
+<!-- ================= CORE SYSTEM ================= -->
 
 <script defer src="/js/core.js"></script>
-
-
-
-<!-- ================= LOGIN UTILS ================= -->
-
 <script defer src="/js/login-utils.js"></script>
 
+
+<!-- ================= LEDGER ENGINE (LOAD FIRST) ================= -->
+
+<script defer src="/js/ledger-engine.js"></script>
+
+
+<!-- ================= FINANCE ENGINES ================= -->
+
+<script defer src="/js/gst-engine.js"></script>
+<script defer src="/js/expense-engine.js"></script>
+<script defer src="/js/withdraw-engine.js"></script>
 
 
 <!-- ================= UNIVERSAL BAR ================= -->
 
 <script defer src="/js/universalBar.js"></script>
-
 
 
 <!-- ================= BUSINESS MODULES ================= -->
@@ -1247,20 +1251,9 @@ body{
 <script defer src="/js/wanting.js"></script>
 
 
+<!-- ================= COLLECTION ================= -->
 
-<!-- ================= ENGINES ================= -->
-
-<script defer src="/js/expense-engine.js"></script>
 <script defer src="/js/collection.js"></script>
-<script defer src="/js/withdraw-engine.js"></script>
-
-
-
-<!-- ================= LEDGER + GST ================= -->
-
-<script defer src="/js/ledger-engine.js"></script>
-<script defer src="/js/gst-engine.js"></script>
-
 
 
 <!-- ================= FIRESTORE LISTENERS ================= -->
@@ -1268,17 +1261,14 @@ body{
 <script defer src="/js/firestore-listeners.js"></script>
 
 
-
 <!-- ================= ACCOUNTING AUDIT ================= -->
 
 <script defer src="/js/accounting-audit.js"></script>
 
 
-
 <!-- ================= RESET SYSTEM ================= -->
 
 <script defer src="/js/reset-engine.js"></script>
-
 
 
 <!-- ================= SECURITY ================= -->
