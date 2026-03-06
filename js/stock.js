@@ -355,6 +355,17 @@ const total=qty*price;
 const profit=isPaid
 ? total-totalCostUsed
 :0;
+   /* =========================
+   LEDGER UPDATE
+========================= */
+
+if (isPaid && window.ledgerEngine) {
+
+  ledgerEngine.addSalesProfit(profit);
+
+  ledgerEngine.addSalesInvestmentReturn(totalCostUsed);
+
+}
 
 const saleObj={
 
