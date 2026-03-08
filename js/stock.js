@@ -397,6 +397,24 @@ window.sales=window.sales||[];
 window.sales.push(saleObj);
 
 window.saveSales?.();
+   if(isPaid && typeof updateLedgerField==="function"){
+
+  const profitVal = Number(profit || 0);
+  const investmentReturn = Number(totalCostUsed || 0);
+
+  try{
+
+    if(profitVal>0)
+      await updateLedgerField("salesProfit", profitVal);
+
+    if(investmentReturn>0)
+      await updateLedgerField("salesInvestmentReturn", investmentReturn);
+
+  }catch(err){
+    console.warn("Ledger update failed", err);
+  }
+
+}
 
 if(isPaid){
 
