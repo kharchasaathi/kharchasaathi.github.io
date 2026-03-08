@@ -284,7 +284,7 @@ window.saveWanting?.();
    QUICK SALE
 ========================================================== */
 
-function stockQuickSale(id,mode){
+async function stockQuickSale(id,mode){
 
 const batchItem=
 (window.stock||[]).find(x=>x.id===id);
