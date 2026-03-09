@@ -88,12 +88,16 @@ async function withdrawCash(amount){
       .collection("ledger")
       .doc(dateKey);
 
-  await ref.update({
+  const newOpening =
+  Number(L.openingBalance || 0) - amount;
 
-    withdrawalsTotal: newTotal,
-    updatedAt: Date.now()
+await ref.update({
 
-  });
+  withdrawalsTotal: newTotal,
+  openingBalance: newOpening,
+  updatedAt: Date.now()
+
+});
 
 
   console.log("💰 Withdrawal recorded:", amount);
