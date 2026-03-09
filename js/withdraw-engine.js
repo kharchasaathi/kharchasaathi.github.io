@@ -88,8 +88,7 @@ async function withdrawCash(amount){
       .collection("ledger")
       .doc(dateKey);
 
-  const newOpening =
-  Number(L.openingBalance || 0) - amount;
+
 
 const newOpening =
   Number(L.openingBalance || 0) - amount;
