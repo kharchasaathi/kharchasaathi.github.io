@@ -40,12 +40,16 @@
 
     set("ubGstCollected",L.gstCollected);
 
+/* EXPENSE */
 
-    /* EXPENSE */
+set("ubExpenses",L.expensesTotal || L.expenses);
 
-    set("ubExpenses",L.expensesTotal || L.expenses);
-    set("ubWithdraw",L.withdrawalsTotal || L.withdrawals);
-    set("ubGstPaid",L.gstPayable || L.gstPaid);
+/* OPENING WITHDRAW */
+set("ubOpeningWithdraw",L.openingWithdraw || 0);
+
+set("ubWithdraw",L.withdrawalsTotal || L.withdrawals);
+set("ubGstPaid",L.gstPayable || L.gstPaid);
+    
 
 
     /* NET FLOW */
