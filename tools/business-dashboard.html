@@ -416,7 +416,7 @@ body{
     <div class="ub-card opening">
       <div class="ub-title">Opening Balance</div>
       <div class="ub-amount" id="ubOpening">₹0</div>
-      <button class="small-btn ub-btn" onclick="withdrawOpening()">Withdraw</button>
+      <button class="small-btn ub-btn" onclick="withdrawEngine.promptWithdraw()">Withdraw</button>
     </div>
 
 
@@ -426,7 +426,7 @@ body{
     <div class="ub-card income">
       <div class="ub-title">Sales Profit</div>
       <div class="ub-amount" id="ubSaleProfit">₹0</div>
-      <button class="small-btn ub-btn" onclick="withdrawSaleProfit()">Withdraw</button>
+      <button class="small-btn ub-btn" onclick="withdrawEngine.promptWithdraw()">Withdraw</button>
     </div>
 
 
@@ -436,7 +436,7 @@ body{
     <div class="ub-card income">
       <div class="ub-title">Service Profit</div>
       <div class="ub-amount" id="ubServiceProfit">₹0</div>
-      <button class="small-btn ub-btn" onclick="withdrawServiceProfit()">Withdraw</button>
+      <button class="small-btn ub-btn" onclick="withdrawEngine.promptWithdraw()">Withdraw</button>
     </div>
 
 
@@ -446,7 +446,7 @@ body{
     <div class="ub-card income">
       <div class="ub-title">Stock Investment (After Sale)</div>
       <div class="ub-amount" id="ubSaleInv">₹0</div>
-      <button class="small-btn ub-btn" onclick="withdrawSaleInv()">Withdraw</button>
+      <button class="small-btn ub-btn" onclick="withdrawEngine.promptWithdraw()">Withdraw</button>
     </div>
 
 
@@ -456,7 +456,7 @@ body{
     <div class="ub-card income">
       <div class="ub-title">Service Investment</div>
       <div class="ub-amount" id="ubServiceInv">₹0</div>
-      <button class="small-btn ub-btn" onclick="withdrawServiceInv()">Withdraw</button>
+      <button class="small-btn ub-btn" onclick="withdrawEngine.promptWithdraw()">Withdraw</button>
     </div>
 
 
@@ -466,7 +466,7 @@ body{
     <div class="ub-card income">
       <div class="ub-title">GST Collected</div>
       <div class="ub-amount" id="ubGST">₹0</div>
-      <button class="small-btn ub-btn" onclick="payGST()">Pay GST</button>
+      <button class="small-btn ub-btn" onclick="gstEngine.promptGST()">Pay GST</button>
     </div>
 
 
