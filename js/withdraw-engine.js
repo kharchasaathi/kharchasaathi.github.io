@@ -91,12 +91,13 @@ async function withdrawCash(amount){
   const newOpening =
   Number(L.openingBalance || 0) - amount;
 
-await ref.update({
+const newOpening =
+  Number(L.openingBalance || 0) - amount;
 
+await ref.update({
   withdrawalsTotal: newTotal,
   openingBalance: newOpening,
   updatedAt: Date.now()
-
 });
 
 
