@@ -62,9 +62,10 @@ set("ubGstPaid",L.gstPayable || L.gstPaid);
       + num(L.gstCollected);
 
     const totalExpense =
-        num(L.expensesTotal || L.expenses)
-      + num(L.withdrawalsTotal || L.withdrawals)
-      + num(L.gstPayable || L.gstPaid);
+    num(L.expensesTotal || L.expenses)
+  + num(L.withdrawalsTotal || L.withdrawals)
+  + num(L.openingWithdraw)
+  + num(L.gstPayable || L.gstPaid);
 
     const netFlow = totalIncome - totalExpense;
 
