@@ -1,9 +1,11 @@
 /* ===========================================================
-   WITHDRAW ENGINE v2
+   WITHDRAW ENGINE v3
    Safe Owner Cash Withdrawal System
    ✔ Profit Safety Check
    ✔ No Over Withdraw
    ✔ Firestore Ledger Update
+   ✔ NaN Protection
+   ✔ Opening Balance Safety
 =========================================================== */
 
 (function(){
@@ -11,7 +13,7 @@
 if(window.__withdrawEngineLoaded) return;
 window.__withdrawEngineLoaded = true;
 
-console.log("%c💰 Withdraw Engine v2 Loading...","color:#16a34a;font-weight:bold;");
+console.log("%c💰 Withdraw Engine Loading...","color:#16a34a;font-weight:bold;");
 
 
 /* ===========================================================
@@ -55,10 +57,14 @@ async function withdrawCash(amount){
      AVAILABLE CASH CHECK
   =========================================================== */
 
+  const opening = Number(L.openingBalance || 0);
+  const netFlow = Number(L.netFlow || 0);
+  const withdrawn = Number(L.withdrawalsTotal || 0);
+
   const availableCash =
-      Number(L.openingBalance || 0)
-    + Number(L.netFlow || 0)
-    - Number(L.withdrawalsTotal || 0);
+      opening
+    + netFlow
+    - withdrawn;
 
   if(amount > availableCash){
 
@@ -73,11 +79,19 @@ async function withdrawCash(amount){
 
 
   /* ===========================================================
-     UPDATE LEDGER
+     CALCULATE NEW VALUES
   =========================================================== */
 
   const newTotal =
-    Number(L.withdrawalsTotal || 0) + amount;
+    withdrawn + amount;
+
+  const newOpening =
+    Math.max(0, opening - amount);
+
+
+  /* ===========================================================
+     UPDATE LEDGER
+  =========================================================== */
 
   const uid = user.uid;
   const dateKey = ledgerEngine.getDateKey();
@@ -88,17 +102,13 @@ async function withdrawCash(amount){
       .collection("ledger")
       .doc(dateKey);
 
+  await ref.update({
 
+    withdrawalsTotal: newTotal,
+    openingBalance: newOpening,
+    updatedAt: Date.now()
 
-const newOpening =
-  Number(L.openingBalance || 0) - amount;
-
-await ref.update({
-  withdrawalsTotal: newTotal,
-  openingBalance: newOpening,
-  updatedAt: Date.now()
-});
-
+  });
 
   console.log("💰 Withdrawal recorded:", amount);
 
@@ -125,7 +135,14 @@ async function promptWithdraw(){
 
   if(!amt) return;
 
-  await withdrawCash(Number(amt));
+  const amount = Number(amt);
+
+  if(isNaN(amount) || amount <= 0){
+    alert("Invalid amount");
+    return;
+  }
+
+  await withdrawCash(amount);
 
 }
 
