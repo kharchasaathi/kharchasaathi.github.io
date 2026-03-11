@@ -398,7 +398,7 @@ window.sales=window.sales||[];
 window.sales.push(saleObj);
 
 window.saveSales?.();
-   if(isPaid && typeof updateLedgerField==="function"){
+if(isPaid && !saleObj.ledgerPosted && typeof updateLedgerField==="function"){
 
   const profitVal = Number(profit || 0);
   const investmentReturn = Number(totalCostUsed || 0);
