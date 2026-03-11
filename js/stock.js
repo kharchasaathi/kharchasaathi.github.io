@@ -438,6 +438,9 @@ renderStock();
 
 window.renderSales?.();
 window.renderCollection?.();
+
+window.dispatchEvent(new Event("ledger-updated"));
+
 window.renderUniversalBar?.();
 
 }
