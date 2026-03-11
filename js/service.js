@@ -414,18 +414,28 @@ window.collectServiceCredit=function(id){
   j.status="paid";
   j.fromCredit=true;
   j.profit=j.paid-j.invest;
-   /* 🔥 LEDGER UPDATE ON CREDIT COLLECTION */
-if(typeof updateLedgerField==="function"){
+/* 🔥 LEDGER UPDATE ON CREDIT COLLECTION (ASYNC SAFE) */
+if(typeof updateLedgerField === "function"){
 
-  if(j.profit>0)
-    updateLedgerField("serviceProfit", j.profit);
+  const profitVal = Number(j.profit || 0);
+  const investVal = Number(j.invest || 0);
 
-  if(j.invest>0)
-    updateLedgerField("serviceInvestmentReturn", j.invest);
+  try{
+
+    if(profitVal > 0)
+      await updateLedgerField("serviceProfit", profitVal);
+
+    if(investVal > 0)
+      await updateLedgerField("serviceInvestmentReturn", investVal);
+
+  }catch(err){
+    console.warn("Service credit ledger update failed:", err);
+  }
+
 }
 
-  saveServices();
-  refresh();
+saveServices();
+refresh();
 };
 
 
