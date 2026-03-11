@@ -61,10 +61,11 @@ async function addExpense(amount, note=""){
 
   await ref.update({
 
-    expensesTotal: newTotal,
-    updatedAt: Date.now()
+  expensesTotal: newTotal,
+  lastExpenseNote: note || "",
+  updatedAt: Date.now()
 
-  });
+});
 
   console.log("💸 Expense added:", amount);
 
