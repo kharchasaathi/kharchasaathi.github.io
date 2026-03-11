@@ -160,7 +160,8 @@ const isPaid =
     customer:customer||"",
     phone:phone||"",
 
-    collectionLogged:false
+    collectionLogged:false,
+     ledgerPosted:false
   };
 
   window.sales=window.sales||[];
