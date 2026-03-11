@@ -303,6 +303,10 @@ function addJob(){
   const job={
     id:uid("svc"),
     jobId:String(list.length+1).padStart(2,"0"),
+     time:new Date().toLocaleTimeString("en-IN",{
+hour:"2-digit",
+minute:"2-digit"
+}),
     date_in:toInternal(
       qs("#svcReceivedDate")?.value||today()
     ),
@@ -404,10 +408,11 @@ window.collectServiceCredit=function(id){
 
   /* COLLECTION LEDGER ENTRY */
   window.addCollectionEntry?.(
-    "Service Credit Cleared",
-    `${j.customer} — ${j.item}`,
-    j.remaining
-  );
+  "Service Credit Cleared",
+  `${j.customer} — ${j.item}`,
+  j.remaining,
+  "Cash"
+);
 
   j.paid+=j.remaining;
   j.remaining=0;
