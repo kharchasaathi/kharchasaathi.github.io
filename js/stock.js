@@ -388,7 +388,8 @@ creditMode:!isPaid?creditMode:null,
 customer,
 phone,
 
-collectionLogged:false
+collectionLogged:false,
+   ledgerPosted:false
 
 };
 
