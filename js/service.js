@@ -399,7 +399,7 @@ window.addCollectionEntry?.(
 
 
 /* -------------------------------------------------- CREDIT COLLECT */
-window.collectServiceCredit=function(id){
+window.collectServiceCredit = async function(id){
 
   const j=ensureServices().find(x=>x.id===id);
   if(!j||j.status!=="credit") return;
