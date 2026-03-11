@@ -53,6 +53,7 @@ function saveCollections(){
   window.dispatchEvent(
     new Event("collections-updated")
   );
+   window.dispatchEvent(new Event("ledger-updated"));
 
 }
 
@@ -80,6 +81,10 @@ async function addCollectionEntry(
     id: uid("coll"),
 
     date: today(),
+     time:new Date().toLocaleTimeString("en-IN",{
+hour:"2-digit",
+minute:"2-digit"
+}),
 
     source: esc(source),
 
@@ -374,7 +379,7 @@ window.renderCollection = function(){
 
     <tr>
 
-      <td>${e.date}</td>
+      <td>${e.date}<br><small>${e.time||""}</small></td>
 
       <td>${esc(e.source)}</td>
 
