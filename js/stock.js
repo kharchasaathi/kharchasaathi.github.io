@@ -410,6 +410,7 @@ if(isPaid && !saleObj.ledgerPosted && typeof updateLedgerField==="function"){
 
     if(investmentReturn>0)
       await updateLedgerField("salesInvestmentReturn", investmentReturn);
+     saleObj.ledgerPosted = true;
 
   }catch(err){
     console.warn("Ledger update failed", err);
