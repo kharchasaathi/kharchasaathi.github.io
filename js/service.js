@@ -352,19 +352,29 @@ function completeJob(id,mode){
     j.paid=total;
     j.remaining=0;
     j.profit=total-invest;
-     /* 🔥 LEDGER UPDATE ADD HERE */
+     /* 🔥 LEDGER UPDATE (ASYNC SAFE) */
 if(typeof updateLedgerField==="function"){
 
-  if(j.profit>0)
-    updateLedgerField("serviceProfit", j.profit);
+  try{
 
-  if(invest>0)
-    updateLedgerField("serviceInvestmentReturn", invest);
+    if(j.profit>0)
+      await updateLedgerField("serviceProfit", j.profit);
+
+    if(invest>0)
+      await updateLedgerField("serviceInvestmentReturn", invest);
+
+  }catch(err){
+    console.warn("Ledger update failed",err);
+  }
+
 }
-     window.addCollectionEntry?.(
+
+/* COLLECTION ENTRY */
+window.addCollectionEntry?.(
   "Service Payment",
   `${j.customer} — ${j.item}`,
-  total
+  total,
+  "Cash"
 );
 
   }else{
