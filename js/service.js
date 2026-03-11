@@ -338,7 +338,7 @@ minute:"2-digit"
 
 
 /* -------------------------------------------------- COMPLETE */
-function completeJob(id,mode){
+async function completeJob(id,mode){
 
   const j=ensureServices().find(x=>x.id===id);
   if(!j) return;
