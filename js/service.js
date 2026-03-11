@@ -352,19 +352,22 @@ function completeJob(id,mode){
     j.paid=total;
     j.remaining=0;
     j.profit=total-invest;
-     /* 🔥 LEDGER UPDATE (ASYNC SAFE) */
-if(typeof updateLedgerField==="function"){
+/* 🔥 LEDGER UPDATE (ASYNC SAFE) */
+if(typeof updateLedgerField === "function"){
+
+  const profitVal = Number(j.profit || 0);
+  const investVal = Number(invest || 0);
 
   try{
 
-    if(j.profit>0)
-      await updateLedgerField("serviceProfit", j.profit);
+    if(profitVal > 0)
+      await updateLedgerField("serviceProfit", profitVal);
 
-    if(invest>0)
-      await updateLedgerField("serviceInvestmentReturn", invest);
+    if(investVal > 0)
+      await updateLedgerField("serviceInvestmentReturn", investVal);
 
   }catch(err){
-    console.warn("Ledger update failed",err);
+    console.warn("Service ledger update failed:", err);
   }
 
 }
