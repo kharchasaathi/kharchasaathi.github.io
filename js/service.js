@@ -379,7 +379,7 @@ if(typeof updateLedgerField === "function"){
 /* COLLECTION ENTRY */
 window.addCollectionEntry?.(
   "Service Payment",
-  `${j.customer} — ${j.item}`,
+  `${j.customer} — ${j.item} Repair`,
   total,
   "Cash"
 );
