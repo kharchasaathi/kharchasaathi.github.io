@@ -88,7 +88,9 @@ async function promptExpense(){
 
   if(!amt) return;
 
-  await addExpense(Number(amt));
+  const note = prompt("Expense note (optional)");
+
+  await addExpense(Number(amt), note || "");
 
 }
 
