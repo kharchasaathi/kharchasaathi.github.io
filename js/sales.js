@@ -170,7 +170,7 @@ const isPaid =
 
 /* LEDGER UPDATE FIRST */
 
-if(isPaid && typeof updateLedgerField==="function"){
+if(isPaid && !saleObj.ledgerPosted && typeof updateLedgerField==="function"){
 
   const profit=Number(profitValue);
   const investmentReturn=Number(deductResult.costUsed);
