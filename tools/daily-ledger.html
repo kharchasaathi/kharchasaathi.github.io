@@ -67,6 +67,16 @@ button{
   border-radius:6px;
   margin-top:10px;
 }
+
+#dailyLedgerBox{
+background:#111827;
+color:#e5e7eb;
+padding:15px;
+border-radius:8px;
+font-family:monospace;
+white-space:pre-wrap;
+font-size:13px;
+}
 </style>
 </head>
 
@@ -156,6 +166,36 @@ Close Day
 </button>
 </div>
 
+
+<!-- REPORT ACTIONS -->
+
+<div class="ledger-card ledger-actions">
+
+<button onclick="downloadLedgerReport(ledgerEngine.getDateKey())">
+📥 Download Report
+</button>
+
+<button onclick="downloadLedgerCSV(ledgerEngine.getDateKey())">
+📊 Download Excel
+</button>
+
+<button onclick="shareLedgerWhatsApp(ledgerEngine.getDateKey())">
+📤 Share WhatsApp
+</button>
+
+</div>
+
+
+<!-- REPORT DISPLAY -->
+
+<div class="ledger-card">
+
+<h3>📄 Daily Ledger Report</h3>
+
+<div id="dailyLedgerBox"></div>
+
+</div>
+
 </div>
 
 
@@ -164,18 +204,14 @@ Close Day
 <script src="https://www.gstatic.com/firebasejs/9.6.11/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.6.11/firebase-firestore-compat.js"></script>
 
-<!-- FIREBASE INIT -->
 <script src="/js/firebase.js"></script>
 
-<!-- LEDGER ENGINE -->
 <script src="/js/ledger-engine.js"></script>
 
-<!-- CASH ENGINES -->
 <script src="/js/withdraw-engine.js"></script>
 <script src="/js/expense-engine.js"></script>
 <script src="/js/gst-engine.js"></script>
 
-<!-- UNIVERSAL BAR -->
 <script src="/js/universalBar.js"></script>
 
 <script>
@@ -222,7 +258,6 @@ This day is CLOSED
 
 }
 
-/* UPDATE UNIVERSAL BAR */
 window.renderUniversalBar?.()
 
 }
@@ -230,10 +265,15 @@ window.renderUniversalBar?.()
 
 /* EVENTS */
 
-window.addEventListener("ledger-ready", renderLedger)
+window.addEventListener("ledger-ready", ()=>{
+renderLedger()
+loadTodayLedger()
+})
 
-window.addEventListener("ledger-updated", renderLedger)
-
+window.addEventListener("ledger-updated", ()=>{
+renderLedger()
+loadTodayLedger()
+})
 
 window.addEventListener("firebase-auth-ready", ()=>{
 
@@ -242,9 +282,6 @@ ledgerEngine.refresh()
 }
 
 })
-
-
-/* CLOSE LEDGER */
 
 document
 .getElementById("closeLedgerBtn")
