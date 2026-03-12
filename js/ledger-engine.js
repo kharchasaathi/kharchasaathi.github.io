@@ -1,14 +1,5 @@
 /* ===========================================================
-   LEDGER ENGINE v7 — ENTERPRISE SAFE BUILD (FIXED)
-
-   ✔ Auto ledger load after login
-   ✔ Carry forward opening balance
-   ✔ Net flow calculation
-   ✔ Close day lock
-   ✔ Next day auto create
-   ✔ Multi-device safe
-   ✔ updateLedgerField()
-   ✔ Race condition safe
+   LEDGER ENGINE v8 — ENTERPRISE + DAILY REPORT SUPPORT
 =========================================================== */
 
 (function(){
@@ -277,6 +268,45 @@ new Event("ledger-updated")
 
 
 /* ===========================================================
+   DAILY LEDGER DATA BUILDER
+=========================================================== */
+
+window.buildDailyLedgerReport = function(dateKey){
+
+const sales =
+(window.sales||[])
+.filter(s=>s.date===dateKey);
+
+const services =
+(window.services||[])
+.filter(s=>s.date_in===dateKey || s.date_out===dateKey);
+
+const expenses =
+(window.expenses||[])
+.filter(e=>e.date===dateKey);
+
+const withdraws =
+(window.withdraws||[])
+.filter(w=>w.date===dateKey);
+
+const collections =
+(window.collections||[])
+.filter(c=>c.date===dateKey);
+
+return {
+
+sales,
+services,
+expenses,
+withdraws,
+collections
+
+};
+
+};
+
+
+/* ===========================================================
    CLOSE DAY
 =========================================================== */
 
@@ -363,58 +393,266 @@ new Event("ledger-updated")
 );
 
 }
+   /* ===========================================================
+   DAILY LEDGER REPORT SYSTEM
+=========================================================== */
 
 
 /* ===========================================================
-   CLOSE BUTTON CONTROL
+   BUILD DAILY LEDGER TEXT
 =========================================================== */
 
-function updateCloseButtonState(){
+window.generateDailyLedgerText = function(dateKey){
 
-const btn =
-document.getElementById("closeLedgerBtn");
+const report =
+window.buildDailyLedgerReport
+? buildDailyLedgerReport(dateKey)
+: null;
 
-if(!btn || !currentLedger) return;
+if(!report) return "No data";
 
-btn.disabled = currentLedger.isClosed;
+let txt = "";
+
+txt += "📒 Shop Ledger Report\n\n";
+txt += "Date: "+dateKey+"\n\n";
+
+
+/* SALES */
+
+if(report.sales?.length){
+
+txt += "🧾 SALES\n";
+
+report.sales.forEach(s=>{
+
+txt +=
+`${s.time||""} | ${s.product}\n`+
+`Qty:${s.qty} × ₹${s.price}\n`+
+`Total: ₹${s.total}\n`+
+`Profit: ₹${s.profit}\n\n`;
+
+});
 
 }
 
 
-/* ===========================================================
-   PUBLIC API
-=========================================================== */
+/* SERVICES */
 
-window.ledgerEngine = {
+if(report.services?.length){
 
-getCurrent:()=>currentLedger,
-getDateKey:()=>currentDateKey,
-refresh:ensureTodayLedger
+txt += "🛠 SERVICE\n";
+
+report.services.forEach(j=>{
+
+txt +=
+`${j.customer} — ${j.item}\n`+
+`Invest: ₹${j.invest}\n`+
+`Paid: ₹${j.paid}\n`+
+`Profit: ₹${j.profit}\n\n`;
+
+});
+
+}
+
+
+/* EXPENSES */
+
+if(report.expenses?.length){
+
+txt += "💸 EXPENSES\n";
+
+report.expenses.forEach(e=>{
+
+txt +=
+`${e.note||"Expense"} — ₹${e.amount}\n`;
+
+});
+
+txt += "\n";
+
+}
+
+
+/* WITHDRAW */
+
+if(report.withdraws?.length){
+
+txt += "💰 WITHDRAW\n";
+
+report.withdraws.forEach(w=>{
+
+txt +=
+`${w.note||"Withdraw"} — ₹${w.amount}\n`;
+
+});
+
+txt += "\n";
+
+}
+
+
+return txt;
 
 };
 
-window.closeLedgerDay = closeLedgerDay;
 
 
 /* ===========================================================
-   AUTO LOAD LEDGER AFTER LOGIN
+   DOWNLOAD CSV
 =========================================================== */
 
-auth.onAuthStateChanged(user=>{
+window.downloadLedgerCSV = function(dateKey){
 
-if(user){
+const report = buildDailyLedgerReport(dateKey);
 
-setTimeout(()=>{
+let rows = [];
 
-ensureTodayLedger();
+rows.push([
+"TYPE","DETAIL","AMOUNT"
+]);
 
-},200);
+report.sales.forEach(s=>{
 
-}
+rows.push([
+"SALE",
+`${s.product} Qty:${s.qty}`,
+s.total
+]);
+
+});
+
+report.services.forEach(j=>{
+
+rows.push([
+"SERVICE",
+j.customer,
+j.paid
+]);
+
+});
+
+report.expenses.forEach(e=>{
+
+rows.push([
+"EXPENSE",
+e.note||"",
+e.amount
+]);
+
+});
+
+report.withdraws.forEach(w=>{
+
+rows.push([
+"WITHDRAW",
+w.note||"",
+w.amount
+]);
 
 });
 
 
-console.log("%c📒 Ledger Engine READY ✔","color:#673ab7;font-weight:bold;");
+let csv =
+rows.map(r=>r.join(",")).join("\n");
 
-})();
+const blob =
+new Blob([csv],{type:"text/csv"});
+
+const url =
+URL.createObjectURL(blob);
+
+const a =
+document.createElement("a");
+
+a.href=url;
+a.download="ledger-"+dateKey+".csv";
+a.click();
+
+URL.revokeObjectURL(url);
+
+};
+
+
+
+/* ===========================================================
+   DOWNLOAD TEXT REPORT
+=========================================================== */
+
+window.downloadLedgerReport = function(dateKey){
+
+const txt =
+generateDailyLedgerText(dateKey);
+
+const blob =
+new Blob([txt],{type:"text/plain"});
+
+const url =
+URL.createObjectURL(blob);
+
+const a =
+document.createElement("a");
+
+a.href=url;
+a.download="ledger-"+dateKey+".txt";
+a.click();
+
+URL.revokeObjectURL(url);
+
+};
+
+
+
+/* ===========================================================
+   WHATSAPP SHARE
+=========================================================== */
+
+window.shareLedgerWhatsApp = function(dateKey){
+
+const txt =
+generateDailyLedgerText(dateKey);
+
+const url =
+"https://wa.me/?text=" +
+encodeURIComponent(txt);
+
+window.open(url,"_blank");
+
+};
+
+
+
+/* ===========================================================
+   LEDGER VIEW BUILDER
+=========================================================== */
+
+window.renderDailyLedger = function(dateKey){
+
+const box =
+document.getElementById("dailyLedgerBox");
+
+if(!box) return;
+
+const txt =
+generateDailyLedgerText(dateKey);
+
+box.innerHTML =
+`<pre style="white-space:pre-wrap;font-size:13px">
+${txt}
+</pre>`;
+
+};
+
+
+
+/* ===========================================================
+   AUTO DATE LOAD
+=========================================================== */
+
+window.loadTodayLedger = function(){
+
+const today =
+new Date().toISOString().slice(0,10);
+
+renderDailyLedger(today);
+
+};
