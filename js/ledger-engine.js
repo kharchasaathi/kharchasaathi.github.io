@@ -656,3 +656,6 @@ new Date().toISOString().slice(0,10);
 renderDailyLedger(today);
 
 };
+   console.log("%c📒 Ledger Engine READY ✔","color:#673ab7;font-weight:bold;");
+
+})();
