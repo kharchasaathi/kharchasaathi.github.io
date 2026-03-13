@@ -283,9 +283,11 @@ ledgerEngine.refresh()
 
 })
 
+window.addEventListener("ledger-ready", ()=>{
 document
 .getElementById("closeLedgerBtn")
 .onclick = window.closeLedgerDay
+})
 
 </script>
 
