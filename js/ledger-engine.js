@@ -106,7 +106,16 @@ num(currentLedger.openingBalance) +
 currentLedger.netFlow;
 
 }
+   
+function updateCloseButtonState(){
 
+const btn = document.getElementById("closeLedgerBtn");
+
+if(!btn || !currentLedger) return;
+
+btn.disabled = currentLedger.isClosed;
+
+}
 
 /* ===========================================================
    ENSURE TODAY LEDGER
