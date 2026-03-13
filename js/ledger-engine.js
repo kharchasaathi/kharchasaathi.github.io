@@ -420,15 +420,14 @@ ensureTodayLedger();
 
 });
 
-
 /* ---------- CREATE NEXT DAY ---------- */
 
 const nextDate = new Date(currentDateKey);
-nextDate.setDate(nextDate.getDate()+1);
+nextDate.setDate(nextDate.getDate() + 1);
 
 const nextKey =
-nextDate.getFullYear()+"-"+ 
-String(nextDate.getMonth()+1).padStart(2,"0")+"-"+ 
+nextDate.getFullYear() + "-" +
+String(nextDate.getMonth() + 1).padStart(2,"0") + "-" +
 String(nextDate.getDate()).padStart(2,"0");
 
 const nextRef =
@@ -436,6 +435,8 @@ db.collection("users")
 .doc(user.uid)
 .collection("ledger")
 .doc(nextKey);
+
+/* fetch next ledger */
 
 const nextSnap = await nextRef.get();
 
@@ -445,17 +446,7 @@ await nextRef.set(
 emptyLedger(closingBalance)
 );
 
-console.log("📦 Next ledger:",nextKey);
-
-}
-
-alert("Ledger closed successfully");
-
-updateCloseButtonState();
-
-window.dispatchEvent(
-new Event("ledger-updated")
-);
+console.log("📦 Next ledger:", nextKey);
 
 }
    /* ===========================================================
