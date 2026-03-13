@@ -393,6 +393,77 @@ new Event("ledger-updated")
 );
 
 }
+
+
+/* ===========================================================
+   PUBLIC API
+=========================================================== */
+
+window.ledgerEngine = {
+
+getCurrent:()=>currentLedger,
+getDateKey:()=>currentDateKey,
+refresh:ensureTodayLedger
+
+};
+
+
+/* ===========================================================
+   AUTO LOAD LEDGER AFTER LOGIN
+=========================================================== */
+
+auth.onAuthStateChanged(user=>{
+
+if(user){
+
+setTimeout(()=>{
+
+ensureTodayLedger();
+
+},200);
+
+}
+
+});
+
+
+/* ---------- CREATE NEXT DAY ---------- */
+
+const nextDate = new Date(currentDateKey);
+nextDate.setDate(nextDate.getDate()+1);
+
+const nextKey =
+nextDate.getFullYear()+"-"+ 
+String(nextDate.getMonth()+1).padStart(2,"0")+"-"+ 
+String(nextDate.getDate()).padStart(2,"0");
+
+const nextRef =
+db.collection("users")
+.doc(user.uid)
+.collection("ledger")
+.doc(nextKey);
+
+const nextSnap = await nextRef.get();
+
+if(!nextSnap.exists){
+
+await nextRef.set(
+emptyLedger(closingBalance)
+);
+
+console.log("📦 Next ledger:",nextKey);
+
+}
+
+alert("Ledger closed successfully");
+
+updateCloseButtonState();
+
+window.dispatchEvent(
+new Event("ledger-updated")
+);
+
+}
    /* ===========================================================
    DAILY LEDGER REPORT SYSTEM
 =========================================================== */
