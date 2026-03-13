@@ -312,88 +312,82 @@ collections
 
 window.closeLedgerDay = async function(){
 
-const user = auth.currentUser;
+  const user = auth.currentUser;
 
-if(!user){
-alert("Login required");
-return;
-}
+  if(!user){
+    alert("Login required");
+    return;
+  }
 
-if(!currentLedger){
-alert("Ledger not loaded");
-return;
-}
+  if(!currentLedger){
+    alert("Ledger not loaded");
+    return;
+  }
 
-if(currentLedger.isClosed){
-alert("Already closed");
-return;
-}
+  if(currentLedger.isClosed){
+    alert("Already closed");
+    return;
+  }
 
-calculateNetFlow();
+  calculateNetFlow();
 
-const closingBalance =
-num(currentLedger.openingBalance) +
-num(currentLedger.netFlow);
+  const closingBalance =
+    num(currentLedger.openingBalance) +
+    num(currentLedger.netFlow);
 
-const ref =
-db.collection("users")
-.doc(user.uid)
-.collection("ledger")
-.doc(currentDateKey);
+  const ref =
+    db.collection("users")
+    .doc(user.uid)
+    .collection("ledger")
+    .doc(currentDateKey);
 
-await ref.update({
+  await ref.update({
+    netFlow: currentLedger.netFlow,
+    closingBalance: closingBalance,
+    isClosed: true,
+    closedAt: Date.now(),
+    updatedAt: Date.now()
+  });
 
-netFlow:currentLedger.netFlow,
-closingBalance:closingBalance,
-
-isClosed:true,
-closedAt:Date.now(),
-
-updatedAt:Date.now()
-
-});
-
-console.log("✅ Ledger closed");
+  console.log("✅ Ledger closed");
 
 
-/* ---------- CREATE NEXT DAY ---------- */
+  /* ---------- CREATE NEXT DAY ---------- */
 
-const nextDate = new Date(currentDateKey);
-nextDate.setDate(nextDate.getDate()+1);
+  const nextDate = new Date(currentDateKey);
+  nextDate.setDate(nextDate.getDate() + 1);
 
-const nextKey =
-nextDate.getFullYear()+"-"+ 
-String(nextDate.getMonth()+1).padStart(2,"0")+"-"+ 
-String(nextDate.getDate()).padStart(2,"0");
+  const nextKey =
+    nextDate.getFullYear() + "-" +
+    String(nextDate.getMonth() + 1).padStart(2,"0") + "-" +
+    String(nextDate.getDate()).padStart(2,"0");
 
-const nextRef =
-db.collection("users")
-.doc(user.uid)
-.collection("ledger")
-.doc(nextKey);
+  const nextRef =
+    db.collection("users")
+    .doc(user.uid)
+    .collection("ledger")
+    .doc(nextKey);
 
-const nextSnap = await nextRef.get();
+  const nextSnap = await nextRef.get();
 
-if(!nextSnap.exists){
+  if(!nextSnap.exists){
 
-await nextRef.set(
-emptyLedger(closingBalance)
-);
+    await nextRef.set(
+      emptyLedger(closingBalance)
+    );
 
-console.log("📦 Next ledger:",nextKey);
+    console.log("📦 Next ledger:", nextKey);
+  }
 
-}
+  alert("Ledger closed successfully");
 
-alert("Ledger closed successfully");
+  updateCloseButtonState();
 
-updateCloseButtonState();
+  window.dispatchEvent(
+    new Event("ledger-updated")
+  );
 
-window.dispatchEvent(
-new Event("ledger-updated")
-);
-
-}
-
+};   // ⚠️ VERY IMPORTANT — function close
 
 /* ===========================================================
    PUBLIC API
