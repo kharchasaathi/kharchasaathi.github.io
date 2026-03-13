@@ -406,7 +406,7 @@ window.generateDailyLedgerText = function(dateKey){
 
 const report =
 window.buildDailyLedgerReport
-? buildDailyLedgerReport(dateKey)
+? window.buildDailyLedgerReport(dateKey)
 : null;
 
 if(!report) return "No data";
@@ -503,8 +503,7 @@ return txt;
 
 window.downloadLedgerCSV = function(dateKey){
 
-const report = buildDailyLedgerReport(dateKey);
-
+const report = window.buildDailyLedgerReport(dateKey);
 let rows = [];
 
 rows.push([
