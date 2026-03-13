@@ -310,7 +310,7 @@ collections
    CLOSE DAY
 =========================================================== */
 
-async function closeLedgerDay(){
+window.closeLedgerDay = async function(){
 
 const user = auth.currentUser;
 
