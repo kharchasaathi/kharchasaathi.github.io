@@ -345,16 +345,13 @@ await ref.update({
 
 netFlow:currentLedger.netFlow,
 closingBalance:closingBalance,
-
 isClosed:true,
 closedAt:Date.now(),
-
 updatedAt:Date.now()
 
 });
 
 console.log("✅ Ledger closed");
-
 
 /* ---------- CREATE NEXT DAY ---------- */
 
@@ -385,8 +382,6 @@ console.log("📦 Next ledger:",nextKey);
 }
 
 alert("Ledger closed successfully");
-
-updateCloseButtonState();
 
 window.dispatchEvent(
 new Event("ledger-updated")
@@ -425,35 +420,7 @@ ensureTodayLedger();
 
 });
 
-/* ---------- CREATE NEXT DAY ---------- */
 
-const nextDate = new Date(currentDateKey);
-nextDate.setDate(nextDate.getDate() + 1);
-
-const nextKey =
-nextDate.getFullYear() + "-" +
-String(nextDate.getMonth() + 1).padStart(2,"0") + "-" +
-String(nextDate.getDate()).padStart(2,"0");
-
-const nextRef =
-db.collection("users")
-.doc(user.uid)
-.collection("ledger")
-.doc(nextKey);
-
-/* fetch next ledger */
-
-const nextSnap = await nextRef.get();
-
-if(!nextSnap.exists){
-
-await nextRef.set(
-emptyLedger(closingBalance)
-);
-
-console.log("📦 Next ledger:", nextKey);
-
-}
    /* ===========================================================
    DAILY LEDGER REPORT SYSTEM
 =========================================================== */
