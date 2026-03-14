@@ -22,11 +22,15 @@ const num = v => isNaN(v = Number(v)) ? 0 : v;
 const ledgerFields = new Set([
 "salesProfit",
 "serviceProfit",
+
 "salesInvestmentReturn",
 "serviceInvestmentReturn",
+
 "expensesTotal",
 "withdrawalsTotal",
-"gstPayable"
+
+"gstCollected",
+"gstPaid"
 ]);
 
 
@@ -64,7 +68,8 @@ serviceInvestmentReturn:0,
 expensesTotal:0,
 withdrawalsTotal:0,
 
-gstPayable:0,
+gstCollected:0,
+gstPaid:0,
 
 netFlow:0,
 closingBalance:opening,
@@ -90,14 +95,10 @@ if(!currentLedger) return;
 
 const income =
 num(currentLedger.salesProfit) +
-num(currentLedger.serviceProfit) +
-num(currentLedger.salesInvestmentReturn) +
-num(currentLedger.serviceInvestmentReturn);
+num(currentLedger.serviceProfit);
 
 const expense =
-num(currentLedger.expensesTotal) +
-num(currentLedger.withdrawalsTotal) +
-num(currentLedger.gstPayable);
+num(currentLedger.expensesTotal);
 
 currentLedger.netFlow = income - expense;
 
