@@ -137,45 +137,104 @@ Continue?`
 
   if(window.__cloudReady){
 
-    const save = window.cloudSaveDebounced;
+  const save = window.cloudSaveDebounced;
 
-    save("types",[]);
-    save("stock",[]);
-    save("sales",[]);
-    save("services",[]);
-    save("expenses",[]);
-    save("collections",[]);
-    save("wanting",[]);
+  /* --------------------------------
+     BASIC DATA RESET
+  -------------------------------- */
 
-    save("offsets",window.__offsets);
+  save("types",[]);
+  save("stock",[]);
+  save("sales",[]);
+  save("services",[]);
+  save("expenses",[]);
+  save("collections",[]);
+  save("wanting",[]);
+  save("withdraws",[]);
 
-    save("dashboardOffset",0);
+  /* --------------------------------
+     SYSTEM STATE RESET
+  -------------------------------- */
 
-    /* Ledger reset snapshot */
+  save("offsets",window.__offsets);
+  save("dashboardOffset",0);
 
-    save("ledgerReset",{
+  /* --------------------------------
+     LEDGER RESET SNAPSHOT
+  -------------------------------- */
 
-      salesProfit:0,
-      serviceProfit:0,
+  save("ledgerReset",{
 
-      salesInvestmentReturn:0,
-      serviceInvestmentReturn:0,
+    salesProfit:0,
+    serviceProfit:0,
 
-      expensesTotal:0,
+    salesInvestmentReturn:0,
+    serviceInvestmentReturn:0,
 
-      withdrawalsTotal:0,
-      stockWithdrawTotal:0,
-      serviceWithdrawTotal:0,
-      openingWithdraw:0,
+    expensesTotal:0,
 
-      gstCollected:0,
-      gstPaid:0,
+    withdrawalsTotal:0,
+    stockWithdrawTotal:0,
+    serviceWithdrawTotal:0,
+    openingWithdraw:0,
 
-      netFlow:0
+    gstCollected:0,
+    gstPaid:0,
 
-    });
+    netFlow:0
+
+  });
+
+  /* --------------------------------
+     FIRESTORE LEDGER DELETE
+     (Fix opening balance bug)
+  -------------------------------- */
+
+  if(window.ledgerEngine){
+
+    const user = auth.currentUser;
+
+    if(user){
+
+      try{
+
+        const uid = user.uid;
+
+        const ledgerRef =
+          db.collection("users")
+            .doc(uid)
+            .collection("ledger");
+
+        const snap = await ledgerRef.get();
+
+        const batch = db.batch();
+
+        snap.forEach(doc=>{
+          batch.delete(doc.ref);
+        });
+
+        await batch.commit();
+
+        console.log(
+          "%c🧹 Firestore Ledger Cleared",
+          "color:#ef4444;font-weight:bold;"
+        );
+
+      }
+      catch(err){
+
+        console.error(
+          "Ledger delete failed",
+          err
+        );
+
+      }
+
+    }
 
   }
+
+}
 
 
   /* -----------------------------------------------------------
