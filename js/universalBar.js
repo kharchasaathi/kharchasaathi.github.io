@@ -1,5 +1,5 @@
 /* ===========================================================
-   UNIVERSAL BAR v11 — ERP SAFE BUILD (FIXED)
+   UNIVERSAL BAR v12 — COUNTER BALANCE + TODAY PROFIT
 =========================================================== */
 
 (function () {
@@ -7,7 +7,7 @@
   if(window.__universalBarLoaded) return;
   window.__universalBarLoaded = true;
 
-  console.log("%c💰 Universal Bar v11 Loading...","color:#0ea5e9;font-weight:bold;");
+  console.log("%c💰 Universal Bar v12 Loading...","color:#0ea5e9;font-weight:bold;");
 
 
   const num = v => isNaN(v = Number(v)) ? 0 : v;
@@ -28,7 +28,9 @@
     };
 
 
-    /* INCOME */
+    /* ===============================
+       DISPLAY VALUES
+    =============================== */
 
     set("ubOpening",L.openingBalance);
 
@@ -40,54 +42,75 @@
 
     set("ubGstCollected",L.gstCollected);
 
-/* EXPENSE */
+    set("ubExpenses",L.expensesTotal || L.expenses);
 
-set("ubExpenses",L.expensesTotal || L.expenses);
+    set("ubOpeningWithdraw",L.openingWithdraw || 0);
 
-/* OPENING WITHDRAW */
-set("ubOpeningWithdraw",L.openingWithdraw || 0);
+    set("ubWithdraw",L.withdrawalsTotal || L.withdrawals);
 
-set("ubWithdraw",L.withdrawalsTotal || L.withdrawals);
-set("ubGstPaid",L.gstPayable || L.gstPaid);
-    
+    set("ubGstPaid",L.gstPaid || 0);
 
 
-    /* NET FLOW */
+    /* ===============================
+       TODAY PROFIT
+    =============================== */
 
-    const totalIncome =
+    const todayProfit =
         num(L.salesProfit)
       + num(L.serviceProfit)
-      + num(L.salesInvestmentReturn)
-      + num(L.serviceInvestmentReturn)
-      + num(L.gstCollected);
+      - num(L.expensesTotal || L.expenses);
 
-    const totalExpense =
-    num(L.expensesTotal || L.expenses)
-  + num(L.withdrawalsTotal || L.withdrawals)
-  + num(L.openingWithdraw)
-  + num(L.gstPayable || L.gstPaid);
+    set("ubTodayProfit",todayProfit);
 
-    const netFlow = totalIncome - totalExpense;
+    const profitEl=document.getElementById("ubTodayProfit");
 
-    set("ubNetFlow",netFlow);
+    if(profitEl){
 
-    const netEl=document.getElementById("ubNetFlow");
-
-    if(netEl){
-
-      netEl.classList.remove(
+      profitEl.classList.remove(
         "ub-netflow-positive",
         "ub-netflow-negative"
       );
 
-      if(netFlow>=0)
-        netEl.classList.add("ub-netflow-positive");
+      if(todayProfit>=0)
+        profitEl.classList.add("ub-netflow-positive");
       else
-        netEl.classList.add("ub-netflow-negative");
+        profitEl.classList.add("ub-netflow-negative");
     }
 
 
-    /* PENDING CREDIT */
+    /* ===============================
+       COUNTER BALANCE
+    =============================== */
+
+    const counterBalance =
+        num(L.openingBalance)
+      + num(L.gstCollected)
+      - num(L.openingWithdraw)
+      - num(L.withdrawalsTotal || L.withdrawals)
+      - num(L.gstPaid);
+
+    set("ubCounterBalance",counterBalance);
+
+
+    const counterEl=document.getElementById("ubCounterBalance");
+
+    if(counterEl){
+
+      counterEl.classList.remove(
+        "ub-netflow-positive",
+        "ub-netflow-negative"
+      );
+
+      if(counterBalance>=0)
+        counterEl.classList.add("ub-netflow-positive");
+      else
+        counterEl.classList.add("ub-netflow-negative");
+    }
+
+
+    /* ===============================
+       PENDING CREDIT
+    =============================== */
 
     let pending = 0;
 
