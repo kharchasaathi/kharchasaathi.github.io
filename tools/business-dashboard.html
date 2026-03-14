@@ -1296,7 +1296,6 @@ document.addEventListener("click", async e => {
     "Final warning.\n\nAll data will be lost.\n\nProceed?"
   )) return;
 
-
   try {
 
     /* -------------------------------
@@ -1314,6 +1313,81 @@ document.addEventListener("click", async e => {
 
     window.ledger = [];
     window.gst = [];
+
+
+    /* -------------------------------
+       RESET OFFSETS
+    ------------------------------- */
+
+    window.__offsets = {
+
+      net:0,
+      sale:0,
+      service:0,
+      stock:0,
+      servInv:0,
+      expenses:0
+
+    };
+
+
+    /* -------------------------------
+       RESET LEDGER ENGINE CACHE
+    ------------------------------- */
+
+    if(window.ledgerEngine){
+
+      const L = window.ledgerEngine.getCurrent?.();
+
+      if(L){
+
+        L.salesProfit = 0;
+        L.serviceProfit = 0;
+
+        L.salesInvestmentReturn = 0;
+        L.serviceInvestmentReturn = 0;
+
+        L.expensesTotal = 0;
+
+        L.withdrawalsTotal = 0;
+        L.stockWithdrawTotal = 0;
+        L.serviceWithdrawTotal = 0;
+        L.openingWithdraw = 0;
+
+        L.gstCollected = 0;
+        L.gstPaid = 0;
+
+        L.netFlow = 0;
+
+        if(window.ledgerEngine?.refresh){
+          await window.ledgerEngine.refresh();
+        }
+
+      }
+
+    }
+
+
+    /* -------------------------------
+       DASHBOARD RESET
+    ------------------------------- */
+
+    window.__dashboardOffset = 0;
+    window.__dashboardViewCleared = false;
+
+
+    /* -------------------------------
+       UNIVERSAL BAR RESET
+    ------------------------------- */
+
+    window.__unMetrics = {};
+
+
+    /* -------------------------------
+       WITHDRAW CACHE RESET
+    ------------------------------- */
+
+    window.__withdrawHistory = [];
 
 
     /* -------------------------------
@@ -1335,6 +1409,9 @@ document.addEventListener("click", async e => {
       await cloudSave("ledger", []);
       await cloudSave("gst", []);
 
+      await cloudSave("offsets", window.__offsets);
+      await cloudSave("dashboardOffset", 0);
+
     }
 
 
@@ -1347,7 +1424,6 @@ document.addEventListener("click", async e => {
     renderWanting?.();
     renderExpenses?.();
     renderCollection?.();
-    
 
     window.__svcRefresh?.();
 
@@ -1359,10 +1435,16 @@ document.addEventListener("click", async e => {
     renderLedger?.();
 
 
+    window.dispatchEvent(new Event("cloud-data-loaded"));
+    window.dispatchEvent(new Event("ledger-updated"));
+    window.dispatchEvent(new Event("ledger-ready"));
+
+
     alert("✅ System fully reset");
 
     console.log(
-      "🧨 Full system reset completed"
+      "%c🧨 Full system reset completed",
+      "color:#ef4444;font-weight:bold;"
     );
 
   }
