@@ -86,7 +86,7 @@
         num(L.openingBalance)
       + num(L.gstCollected)
       - num(L.openingWithdraw)
-      - num(L.withdrawalsTotal || L.withdrawals)
+      - num(L.withdrawalsTotal || 0)
       - num(L.gstPaid);
 
     set("ubCounterBalance",counterBalance);
