@@ -93,15 +93,14 @@ function calculateNetFlow(){
 
 if(!currentLedger) return;
 
-const income =
+const profit =
 num(currentLedger.salesProfit) +
 num(currentLedger.serviceProfit);
 
-const expense =
+const expenses =
 num(currentLedger.expensesTotal);
 
-currentLedger.netFlow = income - expense;
-
+currentLedger.netFlow = profit - expenses;
 currentLedger.closingBalance =
 num(currentLedger.openingBalance) +
 currentLedger.netFlow;
