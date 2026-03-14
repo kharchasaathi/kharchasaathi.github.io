@@ -75,6 +75,10 @@ withdrawalsTotal:0,
 gstCollected:0,
 gstPaid:0,
 
+stockWithdrawTotal:0,
+serviceWithdrawTotal:0,
+openingWithdraw:0,
+
 netFlow:0,
 closingBalance:opening,
 
