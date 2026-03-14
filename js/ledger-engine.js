@@ -30,7 +30,11 @@ const ledgerFields = new Set([
 "withdrawalsTotal",
 
 "gstCollected",
-"gstPaid"
+"gstPaid",
+
+"stockWithdrawTotal",
+"serviceWithdrawTotal",
+"openingWithdraw"
 ]);
 
 
