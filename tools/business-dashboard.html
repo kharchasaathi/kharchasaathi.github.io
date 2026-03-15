@@ -1005,6 +1005,23 @@ body{
     </tfoot>
   </table>
 </section>
+  document.getElementById("addExpenseBtn")
+?.addEventListener("click", async ()=>{
+
+  const amount =
+    document.getElementById("expAmount")?.value;
+
+  const note =
+    document.getElementById("expNote")?.value || "";
+
+  if(!amount){
+    alert("Enter amount");
+    return;
+  }
+
+  await expenseEngine.addExpense(Number(amount),note);
+
+});
 
   <!-- =============== PROFIT WITHDRAW =============== -->
 <section id="profitWithdraw" class="section">
