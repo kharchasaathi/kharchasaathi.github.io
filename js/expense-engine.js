@@ -49,17 +49,33 @@ async function addExpense(amount, note=""){
 
 
   /* ===========================================================
-     LEDGER UPDATE (MAIN FIX)
+     SAVE EXPENSE HISTORY (MAIN FIX)
+  =========================================================== */
+
+  window.expenses = window.expenses || [];
+
+  const expenseRecord = {
+
+    date : new Date().toISOString().slice(0,10),
+    category : "General",
+    amount : amount,
+    note : note || ""
+
+  };
+
+  window.expenses.push(expenseRecord);
+
+
+  /* ===========================================================
+     LEDGER UPDATE
   =========================================================== */
 
   if(typeof updateLedgerField === "function"){
 
     try{
 
-      /* add expense to ledger */
       await updateLedgerField("expensesTotal", amount);
 
-      /* save expense note if exists */
       if(note){
         await updateLedgerField("lastExpenseNote", note);
       }
@@ -68,7 +84,6 @@ async function addExpense(amount, note=""){
 
       console.error("Expense ledger update failed:", err);
       alert("Failed to record expense");
-
       return;
 
     }
@@ -87,6 +102,14 @@ async function addExpense(amount, note=""){
      UI REFRESH
   =========================================================== */
 
+  if(typeof renderExpenses === "function"){
+    renderExpenses();
+  }
+
+  if(typeof renderUniversalBar === "function"){
+    renderUniversalBar();
+  }
+
   window.dispatchEvent(
     new Event("ledger-updated")
   );
@@ -97,6 +120,7 @@ async function addExpense(amount, note=""){
 /* ===========================================================
    PROMPT EXPENSE INPUT
 =========================================================== */
+
 async function promptExpense(){
 
   const amt = prompt("Enter expense amount");
