@@ -49,15 +49,22 @@ async function addExpense(amount, note=""){
 
 
   /* ===========================================================
-     SAVE EXPENSE HISTORY (MAIN FIX)
+     SAVE EXPENSE HISTORY
   =========================================================== */
 
   window.expenses = window.expenses || [];
 
+  const dateInput =
+    document.getElementById("expDate")?.value ||
+    new Date().toISOString().slice(0,10);
+
+  const categoryInput =
+    document.getElementById("expCat")?.value || "General";
+
   const expenseRecord = {
 
-    date : new Date().toISOString().slice(0,10),
-    category : "General",
+    date : dateInput,
+    category : categoryInput,
     amount : amount,
     note : note || ""
 
@@ -102,19 +109,79 @@ async function addExpense(amount, note=""){
      UI REFRESH
   =========================================================== */
 
-  if(typeof renderExpenses === "function"){
-    renderExpenses();
-  }
-
-  if(typeof renderUniversalBar === "function"){
-    renderUniversalBar();
-  }
+  renderExpenses?.();
+  renderUniversalBar?.();
 
   window.dispatchEvent(
     new Event("ledger-updated")
   );
 
 }
+
+
+/* ===========================================================
+   RENDER EXPENSE TABLE
+=========================================================== */
+
+function renderExpenses(){
+
+  const tbody =
+    document.querySelector("#expensesTable tbody");
+
+  const totalEl =
+    document.getElementById("expTotal");
+
+  if(!tbody) return;
+
+  tbody.innerHTML = "";
+
+  let total = 0;
+
+  (window.expenses || []).forEach((e,i)=>{
+
+    total += Number(e.amount);
+
+    const tr = document.createElement("tr");
+
+    tr.innerHTML = `
+      <td>${e.date}</td>
+      <td>${e.category}</td>
+      <td>${e.amount}</td>
+      <td>${e.note || ""}</td>
+      <td>
+        <button onclick="deleteExpense(${i})"
+        style="background:#ef4444;color:white;border:none;padding:4px 8px;border-radius:6px;cursor:pointer">
+        Delete
+        </button>
+      </td>
+    `;
+
+    tbody.appendChild(tr);
+
+  });
+
+  if(totalEl){
+    totalEl.textContent = total;
+  }
+
+}
+
+
+/* ===========================================================
+   DELETE EXPENSE
+=========================================================== */
+
+window.deleteExpense = function(index){
+
+  if(!confirm("Delete expense?")) return;
+
+  window.expenses.splice(index,1);
+
+  renderExpenses();
+
+  renderUniversalBar?.();
+
+};
 
 
 /* ===========================================================
