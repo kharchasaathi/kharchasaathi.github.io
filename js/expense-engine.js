@@ -177,43 +177,34 @@ window.deleteExpense = async function(index){
 
   if(!exp) return;
 
-  /* FIRST CONFIRM */
-
   const confirmDelete =
     confirm("Delete this expense?");
 
   if(!confirmDelete) return;
 
-
-  /* SECOND CONFIRM */
-
-  const addToProfit =
+  const restoreLedger =
     confirm(
-      "Add this amount back to profit?\n\nOK = Increase profit\nCancel = Go back"
+      "Restore this expense amount to ledger balance?\n\nOK = Restore balance\nCancel = Go back"
     );
 
-
-  /* CANCEL → GO BACK (NO DELETE) */
-
-  if(!addToProfit){
+  if(!restoreLedger){
     return;
   }
 
-
-  /* REMOVE EXPENSE */
+  /* REMOVE HISTORY */
 
   window.expenses.splice(index,1);
 
 
-  /* RESTORE PROFIT */
+  /* FIX LEDGER (REMOVE EXPENSE) */
 
   try{
 
     if(typeof updateLedgerField === "function"){
 
       await updateLedgerField(
-        "salesProfit",
-        Number(exp.amount)
+        "expensesTotal",
+        -Number(exp.amount)
       );
 
     }
@@ -221,14 +212,12 @@ window.deleteExpense = async function(index){
   }catch(err){
 
     console.error(
-      "Profit restore failed",
+      "Ledger restore failed",
       err
     );
 
   }
 
-
-  /* UI REFRESH */
 
   renderExpenses?.();
   renderUniversalBar?.();
