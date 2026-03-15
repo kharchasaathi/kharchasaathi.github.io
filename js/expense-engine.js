@@ -47,32 +47,40 @@ async function addExpense(amount, note=""){
     return;
   }
 
-  const newTotal =
-    (L.expensesTotal || 0) + amount;
+  /* ===========================================================
+     LEDGER SAFE UPDATE
+  =========================================================== */
 
-  const uid = user.uid;
-  const dateKey = ledgerEngine.getDateKey();
+  if(typeof updateLedgerField === "function"){
 
-  const ref =
-    db.collection("users")
-      .doc(uid)
-      .collection("ledger")
-      .doc(dateKey);
+    try{
 
-  /* 🔧 SAFE WRITE (works even if doc not exists) */
-  await ref.set({
+      /* expense amount add */
+      await updateLedgerField("expensesTotal", amount);
 
-    expensesTotal: newTotal,
-    lastExpenseNote: note || "",
-    updatedAt: Date.now()
+      /* expense note save */
+      if(note){
+        await updateLedgerField("lastExpenseNote", note);
+      }
 
-  },{merge:true});
+    }catch(err){
+
+      console.error("Expense ledger update failed:",err);
+      alert("Failed to record expense");
+
+      return;
+
+    }
+
+  }else{
+
+    console.warn("updateLedgerField not available");
+
+  }
 
   console.log("💸 Expense added:", amount);
 
-  /* refresh ledger */
-  await ledgerEngine.refresh();
-
+  /* UI refresh */
   window.dispatchEvent(
     new Event("ledger-updated")
   );
