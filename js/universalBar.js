@@ -1,5 +1,5 @@
 /* ===========================================================
-   UNIVERSAL BAR v13 — COUNTER BALANCE + TODAY PROFIT + NET FLOW
+   UNIVERSAL BAR v14 — NET FLOW + TODAY PROFIT + COUNTER BALANCE + INVESTMENT
 =========================================================== */
 
 (function () {
@@ -7,7 +7,7 @@
   if(window.__universalBarLoaded) return;
   window.__universalBarLoaded = true;
 
-  console.log("%c💰 Universal Bar v13 Loading...","color:#0ea5e9;font-weight:bold;");
+  console.log("%c💰 Universal Bar v14 Loading...","color:#0ea5e9;font-weight:bold;");
 
   const num = v => isNaN(v = Number(v)) ? 0 : v;
   const money = v => "₹" + Math.round(num(v));
@@ -22,9 +22,8 @@
 
     const set = (id,val)=>{
       const el=document.getElementById(id);
-      if(el) el.textContent=money(val);
+      if(el) el.textContent = money(val);
     };
-
 
     /* ===============================
        DISPLAY VALUES
@@ -34,6 +33,11 @@
 
     set("ubSaleProfit",L.salesProfit);
     set("ubServiceProfit",L.serviceProfit);
+
+    /* STOCK / SERVICE INVESTMENT RETURN */
+
+    set("ubSaleInv",L.salesInvestmentReturn || 0);
+    set("ubServiceInv",L.serviceInvestmentReturn || 0);
 
     set("ubGstCollected",L.gstCollected);
 
@@ -89,7 +93,7 @@
         "ub-netflow-negative"
       );
 
-      if(todayProfit>=0)
+      if(todayProfit >= 0)
         profitEl.classList.add("ub-netflow-positive");
       else
         profitEl.classList.add("ub-netflow-negative");
@@ -119,7 +123,7 @@
         "ub-netflow-negative"
       );
 
-      if(counterBalance>=0)
+      if(counterBalance >= 0)
         counterEl.classList.add("ub-netflow-positive");
       else
         counterEl.classList.add("ub-netflow-negative");
@@ -154,6 +158,10 @@
   }
 
 
+  /* ===============================
+     BUTTON ACTIONS
+  =============================== */
+
   function bindActions(){
 
     const w=document.getElementById("cashWithdraw");
@@ -177,6 +185,10 @@
 
   }
 
+
+  /* ===============================
+     EVENTS
+  =============================== */
 
   window.renderUniversalBar = renderUniversalBar;
 
