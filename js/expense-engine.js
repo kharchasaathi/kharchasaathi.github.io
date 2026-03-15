@@ -59,13 +59,14 @@ async function addExpense(amount, note=""){
       .collection("ledger")
       .doc(dateKey);
 
-  await ref.update({
+  /* 🔧 SAFE WRITE (works even if doc not exists) */
+  await ref.set({
 
-  expensesTotal: newTotal,
-  lastExpenseNote: note || "",
-  updatedAt: Date.now()
+    expensesTotal: newTotal,
+    lastExpenseNote: note || "",
+    updatedAt: Date.now()
 
-});
+  },{merge:true});
 
   console.log("💸 Expense added:", amount);
 
