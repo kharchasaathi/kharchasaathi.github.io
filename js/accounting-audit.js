@@ -1,5 +1,5 @@
 /* ===========================================================
-   LEDGER AUDIT ENGINE v3 (ENTERPRISE SAFE)
+   LEDGER AUDIT ENGINE v4 (ENTERPRISE SAFE)
 
    ✔ Ledger integrity check
    ✔ Profit validation
@@ -10,6 +10,7 @@
    ✔ Credit ledger verification
    ✔ Collection vs Profit verification
    ✔ Module vs Ledger cross verification
+   ✔ Counter balance sanity
 =========================================================== */
 
 (function(){
@@ -18,7 +19,7 @@ if(window.__ledgerAuditLoaded) return;
 window.__ledgerAuditLoaded = true;
 
 console.log(
-"%c🧠 Ledger Audit Engine v3 Loading...",
+"%c🧠 Ledger Audit Engine v4 Loading...",
 "color:#3b82f6;font-weight:bold"
 );
 
@@ -62,22 +63,13 @@ return;
 
 
 /* ===========================================================
-   PROFIT VALIDATION
+   NET FLOW VALIDATION
 =========================================================== */
 
-const expectedProfit =
-num(L.salesProfit) +
-num(L.serviceProfit) +
-num(L.salesInvestmentReturn) +
-num(L.serviceInvestmentReturn);
-
 const calculatedNet =
-expectedProfit -
-(
-num(L.expensesTotal) +
-num(L.withdrawalsTotal) +
-num(L.gstPayable)
-);
+num(L.salesProfit) +
+num(L.serviceProfit) -
+num(L.expensesTotal);
 
 if(num(L.netFlow) !== calculatedNet){
 
@@ -131,8 +123,8 @@ fail("Negative ledger value",{ field:k,value:v });
 =========================================================== */
 
 const availableCash =
-num(L.openingBalance) +
-num(L.netFlow);
+num(L.salesProfit) +
+num(L.serviceProfit);
 
 if(num(L.withdrawalsTotal) > availableCash){
 
@@ -239,7 +231,7 @@ pass("Service collection verified");
 
 
 /* ===========================================================
-   MODULE → LEDGER CROSS CHECK (NEW)
+   MODULE → LEDGER CROSS CHECK
 =========================================================== */
 
 let moduleSalesProfit = 0;
@@ -285,7 +277,7 @@ pass("Service module integrity verified");
 
 
 /* ===========================================================
-   EXPENSE MODULE CROSS CHECK (NEW)
+   EXPENSE MODULE CROSS CHECK
 =========================================================== */
 
 const expenses = window.expenses || [];
@@ -309,15 +301,38 @@ pass("Expense ledger verified");
 
 
 /* ===========================================================
-   GST SANITY CHECK (NEW)
+   GST SANITY CHECK
 =========================================================== */
 
-if(num(L.gstPayable) < 0){
+if(num(L.gstCollected) < 0 || num(L.gstPaid) < 0){
 
-fail("GST payable negative",{value:L.gstPayable});
+fail("GST negative value detected",{
+gstCollected : L.gstCollected,
+gstPaid : L.gstPaid
+});
 
 }else{
 pass("GST sanity check passed");
+}
+
+
+/* ===========================================================
+   COUNTER BALANCE SANITY
+=========================================================== */
+
+const counterBalance =
+num(L.openingBalance) +
+num(L.gstCollected) -
+num(L.withdrawalsTotal) -
+num(L.openingWithdraw) -
+num(L.gstPaid);
+
+if(counterBalance < -1){
+
+fail("Counter balance negative",{counterBalance});
+
+}else{
+pass("Counter balance safe");
 }
 
 
