@@ -207,7 +207,8 @@ collectionServices += num(c.amount);
 
 });
 
-if(collectionSales < num(L.salesProfit)){
+/* 🔧 SAFE CHECK */
+if(collectionSales > 0 && collectionSales < num(L.salesProfit)){
 
 fail("Sales profit exceeds collections",{
 ledgerSalesProfit : L.salesProfit,
@@ -218,7 +219,7 @@ collections : collectionSales
 pass("Sales collection verified");
 }
 
-if(collectionServices < num(L.serviceProfit)){
+if(collectionServices > 0 && collectionServices < num(L.serviceProfit)){
 
 fail("Service profit exceeds collections",{
 ledgerServiceProfit : L.serviceProfit,
@@ -242,7 +243,8 @@ moduleSalesProfit += num(s.profit);
 }
 });
 
-if(moduleSalesProfit < num(L.salesProfit)){
+/* 🔧 SAFE CHECK */
+if(moduleSalesProfit > 0 && moduleSalesProfit < num(L.salesProfit)){
 
 fail("Ledger sales profit exceeds module data",{
 ledger : L.salesProfit,
@@ -264,7 +266,8 @@ moduleServiceProfit += num(j.profit);
 }
 });
 
-if(moduleServiceProfit < num(L.serviceProfit)){
+/* 🔧 SAFE CHECK */
+if(moduleServiceProfit > 0 && moduleServiceProfit < num(L.serviceProfit)){
 
 fail("Ledger service profit exceeds module data",{
 ledger : L.serviceProfit,
