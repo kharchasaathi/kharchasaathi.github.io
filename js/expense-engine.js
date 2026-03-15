@@ -171,14 +171,66 @@ function renderExpenses(){
    DELETE EXPENSE
 =========================================================== */
 
-window.deleteExpense = function(index){
+window.deleteExpense = async function(index){
 
-  if(!confirm("Delete expense?")) return;
+  const exp = window.expenses[index];
+
+  if(!exp) return;
+
+  /* FIRST CONFIRM */
+
+  const confirmDelete =
+    confirm("Delete this expense?");
+
+  if(!confirmDelete) return;
+
+
+  /* SECOND CONFIRM */
+
+  const addToProfit =
+    confirm(
+      "Add this amount back to profit?\n\nOK = Increase profit\nCancel = Go back"
+    );
+
+
+  /* CANCEL → GO BACK (NO DELETE) */
+
+  if(!addToProfit){
+    return;
+  }
+
+
+  /* REMOVE EXPENSE */
 
   window.expenses.splice(index,1);
 
-  renderExpenses();
 
+  /* RESTORE PROFIT */
+
+  try{
+
+    if(typeof updateLedgerField === "function"){
+
+      await updateLedgerField(
+        "salesProfit",
+        Number(exp.amount)
+      );
+
+    }
+
+  }catch(err){
+
+    console.error(
+      "Profit restore failed",
+      err
+    );
+
+  }
+
+
+  /* UI REFRESH */
+
+  renderExpenses?.();
   renderUniversalBar?.();
 
 };
