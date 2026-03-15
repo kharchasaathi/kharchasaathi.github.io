@@ -1,6 +1,6 @@
 /* ===========================================================
-   EXPENSE ENGINE v1
-   Business Expense Recording System
+   EXPENSE ENGINE v4
+   Business Expense Recording System (Stable)
 =========================================================== */
 
 (function(){
@@ -12,11 +12,65 @@ console.log("%c💸 Expense Engine Loading...","color:#dc2626;font-weight:bold;"
 
 
 /* ===========================================================
+   GLOBAL STORE
+=========================================================== */
+
+window.expenses = window.expenses || [];
+
+
+/* ===========================================================
+   SAFE NUMBER
+=========================================================== */
+
+const num = v => isNaN(v = Number(v)) ? 0 : v;
+
+
+/* ===========================================================
+   RESET EXPENSES WHEN NEW DAY STARTS
+=========================================================== */
+
+function resetExpensesIfNewDay(){
+
+  if(!window.ledgerEngine) return;
+
+  const today = ledgerEngine.getDateKey();
+
+  const saved =
+  localStorage.getItem("ks-expense-date");
+
+  if(saved !== today){
+
+    window.expenses = [];
+
+    localStorage.setItem(
+      "ks-expense-date",
+      today
+    );
+
+    console.log(
+    "%c💸 New Day Detected → Expense history reset",
+    "color:#f59e0b;font-weight:bold"
+    );
+
+    renderExpenses();
+
+  }
+
+}
+
+window.addEventListener(
+"ledger-ready",
+resetExpensesIfNewDay
+);
+
+
+/* ===========================================================
    ADD EXPENSE
 =========================================================== */
-async function addExpense(amount, note=""){
 
-  const user = auth.currentUser;
+async function addExpense(amount,note=""){
+
+  const user = auth?.currentUser;
 
   if(!user){
     alert("Login required");
@@ -40,26 +94,22 @@ async function addExpense(amount, note=""){
     return;
   }
 
-  amount = Number(amount);
+  amount = num(amount);
 
-  if(!amount || amount <= 0){
+  if(amount <= 0){
     alert("Invalid amount");
     return;
   }
 
 
-  /* ===========================================================
-     SAVE EXPENSE HISTORY
-  =========================================================== */
-
-  window.expenses = window.expenses || [];
-
   const dateInput =
-    document.getElementById("expDate")?.value ||
-    new Date().toISOString().slice(0,10);
+  document.getElementById("expDate")?.value
+  || ledgerEngine.getDateKey();
 
   const categoryInput =
-    document.getElementById("expCat")?.value || "General";
+  document.getElementById("expCat")?.value
+  || "General";
+
 
   const expenseRecord = {
 
@@ -73,47 +123,34 @@ async function addExpense(amount, note=""){
   window.expenses.push(expenseRecord);
 
 
-  /* ===========================================================
-     LEDGER UPDATE
-  =========================================================== */
+  /* UPDATE LEDGER */
 
   if(typeof updateLedgerField === "function"){
 
     try{
 
-      await updateLedgerField("expensesTotal", amount);
-
-      if(note){
-        await updateLedgerField("lastExpenseNote", note);
-      }
+      await updateLedgerField(
+        "expensesTotal",
+        amount
+      );
 
     }catch(err){
 
-      console.error("Expense ledger update failed:", err);
-      alert("Failed to record expense");
-      return;
+      console.error(
+      "Ledger update failed",
+      err
+      );
 
     }
-
-  }else{
-
-    console.warn("updateLedgerField not available");
 
   }
 
 
-  console.log("💸 Expense added:", amount);
-
-
-  /* ===========================================================
-     UI REFRESH
-  =========================================================== */
-
-  renderExpenses?.();
-  renderUniversalBar?.();
+  renderExpenses();
+  window.renderUniversalBar?.();
 
   window.dispatchEvent(
-    new Event("ledger-updated")
+  new Event("ledger-updated")
   );
 
 }
@@ -126,10 +163,10 @@ async function addExpense(amount, note=""){
 function renderExpenses(){
 
   const tbody =
-    document.querySelector("#expensesTable tbody");
+  document.querySelector("#expensesTable tbody");
 
   const totalEl =
-    document.getElementById("expTotal");
+  document.getElementById("expTotal");
 
   if(!tbody) return;
 
@@ -137,9 +174,10 @@ function renderExpenses(){
 
   let total = 0;
 
-  (window.expenses || []).forEach((e,i)=>{
+  (window.expenses || [])
+  .forEach((e,i)=>{
 
-    total += Number(e.amount);
+    total += num(e.amount);
 
     const tr = document.createElement("tr");
 
@@ -150,7 +188,7 @@ function renderExpenses(){
       <td>${e.note || ""}</td>
       <td>
         <button onclick="deleteExpense(${i})"
-        style="background:#ef4444;color:white;border:none;padding:4px 8px;border-radius:6px;cursor:pointer">
+        style="background:#ef4444;color:white;border:none;padding:4px 8px;border-radius:6px">
         Delete
         </button>
       </td>
@@ -177,50 +215,235 @@ window.deleteExpense = async function(index){
 
   if(!exp) return;
 
-  const confirmDelete =
-    confirm("Delete this expense?");
+  if(!confirm("Delete this expense?")) return;
 
-  if(!confirmDelete) return;
-
-  const restoreLedger =
-    confirm(
-      "Restore this expense amount to ledger balance?\n\nOK = Restore balance\nCancel = Go back"
-    );
-
-  if(!restoreLedger){
-    return;
-  }
-
-  /* REMOVE HISTORY */
+  if(!confirm(
+  "Restore this expense amount to ledger balance?\n\nOK = Restore balance\nCancel = Go back"
+  )) return;
 
   window.expenses.splice(index,1);
 
+  if(typeof updateLedgerField === "function"){
 
-  /* FIX LEDGER (REMOVE EXPENSE) */
-
-  try{
-
-    if(typeof updateLedgerField === "function"){
+    try{
 
       await updateLedgerField(
         "expensesTotal",
-        -Number(exp.amount)
+        -num(exp.amount)
+      );
+
+    }catch(err){
+
+      console.error(
+      "Expense restore failed",
+      err
       );
 
     }
 
-  }catch(err){
-
-    console.error(
-      "Ledger restore failed",
-      err
-    );
-
   }
 
+  renderExpenses();
+  window.renderUniversalBar?.();
 
-  renderExpenses?.();
-  renderUniversalBar?.();
+};
+
+
+/* ===========================================================
+   DAILY LEDGER REPORT GENERATOR
+=========================================================== */
+
+function generateDailyLedgerReport(){
+
+  if(!window.ledgerEngine) return "";
+
+  const L = ledgerEngine.getCurrent();
+
+  if(!L) return "";
+
+  const date =
+  ledgerEngine.getDateKey();
+
+  const sales =
+  window.sales || [];
+
+  const services =
+  window.services || [];
+
+  const withdraws =
+  window.withdraws || [];
+
+  const stock =
+  window.stock || [];
+
+  const serviceParts =
+  window.serviceParts || [];
+
+
+  let report = "";
+
+  report += "KHARCHASAATHI DAILY LEDGER\n";
+  report += `Date: ${date}\n\n`;
+
+
+  report += "OPENING BALANCE\n";
+  report += `${num(L.openingBalance)}\n\n`;
+
+
+  /* SALES */
+
+  report += "SALES\n";
+
+  sales
+  .filter(s=>s.date===date)
+  .forEach(s=>{
+
+    report +=
+    `${(s.product||"Item").padEnd(15)} ${num(s.qty)||1}   ${num(s.total)}\n`;
+
+  });
+
+  report += "--------------------------------\n";
+  report += `Sales Total: ${num(L.salesTotal)}\n`;
+  report += `Sales Profit: ${num(L.salesProfit)}\n`;
+  report += `Stock Investment Return: ${num(L.salesInvestmentReturn)}\n\n`;
+
+
+  /* SERVICE */
+
+  report += "SERVICE\n";
+
+  services
+  .filter(s=>s.date===date)
+  .forEach(s=>{
+
+    report +=
+    `${(s.model||"Service").padEnd(20)} ${num(s.paid)}\n`;
+
+  });
+
+  report += "--------------------------------\n";
+  report += `Service Collection: ${num(L.serviceCollection)}\n`;
+  report += `Service Profit: ${num(L.serviceProfit)}\n`;
+  report += `Service Investment Return: ${num(L.serviceInvestmentReturn)}\n\n`;
+
+
+  /* EXPENSES */
+
+  report += "EXPENSES\n";
+
+  window.expenses
+  .filter(e=>e.date===date)
+  .forEach(e=>{
+
+    report +=
+    `${e.category.padEnd(15)} ${num(e.amount)}\n`;
+
+  });
+
+  report += "--------------------------------\n";
+  report += `Total Expenses: ${num(L.expensesTotal)}\n\n`;
+
+
+  /* GST */
+
+  report += "GST\n";
+  report += `Collected: ${num(L.gstCollected)}\n`;
+  report += `Paid: ${num(L.gstPaid)}\n\n`;
+
+
+  /* WITHDRAW */
+
+  report += "WITHDRAW\n";
+
+  withdraws.forEach(w=>{
+    report += `${w.note||"Withdraw"} ${num(w.amount)}\n`;
+  });
+
+  report += "\n--------------------------------\n";
+
+
+  /* COUNTER BALANCE */
+
+  report += "COUNTER BALANCE BREAKDOWN\n\n";
+
+  report += `Opening Balance: ${num(L.openingBalance)}\n`;
+  report += `Sales Collection: ${num(L.salesTotal)}\n`;
+  report += `Service Collection: ${num(L.serviceCollection)}\n`;
+  report += `GST Collected: ${num(L.gstCollected)}\n`;
+  report += `Stock Investment Return: ${num(L.salesInvestmentReturn)}\n`;
+  report += `Service Investment Return: ${num(L.serviceInvestmentReturn)}\n\n`;
+
+  report += `Stock Investment: -${num(L.stockInvestment)}\n`;
+  report += `Service Investment: -${num(L.serviceInvestment)}\n`;
+  report += `Expenses: -${num(L.expensesTotal)}\n`;
+  report += `Withdraw: -${num(L.withdrawalsTotal)}\n`;
+  report += `GST Paid: -${num(L.gstPaid)}\n\n`;
+
+  report += "--------------------------------\n";
+  report += `COUNTER BALANCE: ${num(L.closingBalance)}\n\n`;
+
+
+  report += "--------------------------------\n";
+  report += "CLOSE DAY SUMMARY\n\n";
+
+  report += `Closing Balance: ${num(L.closingBalance)}\n`;
+  report += `Next Day Opening: ${num(L.closingBalance)}\n`;
+  report += "Day Status: CLOSED\n";
+
+  report += "--------------------------------\n";
+
+  return report;
+
+}
+
+
+/* ===========================================================
+   DOWNLOAD LEDGER
+=========================================================== */
+
+window.downloadLedger = function(){
+
+  const text = generateDailyLedgerReport();
+
+  if(!text) return;
+
+  const blob =
+  new Blob([text],{type:"text/plain"});
+
+  const url =
+  URL.createObjectURL(blob);
+
+  const a =
+  document.createElement("a");
+
+  a.href = url;
+  a.download =
+  `ledger-${ledgerEngine.getDateKey()}.txt`;
+
+  a.click();
+
+  URL.revokeObjectURL(url);
+
+};
+
+
+/* ===========================================================
+   WHATSAPP SHARE
+=========================================================== */
+
+window.shareLedgerWhatsApp = function(){
+
+  const txt =
+  generateDailyLedgerReport();
+
+  if(!txt) return;
+
+  const url =
+  "https://wa.me/?text="
+  + encodeURIComponent(txt);
+
+  window.open(url,"_blank");
 
 };
 
@@ -231,28 +454,34 @@ window.deleteExpense = async function(index){
 
 async function promptExpense(){
 
-  const amt = prompt("Enter expense amount");
+  const amt =
+  prompt("Enter expense amount");
 
   if(!amt) return;
 
-  const note = prompt("Expense note (optional)");
+  const note =
+  prompt("Expense note (optional)");
 
-  await addExpense(Number(amt), note || "");
+  await addExpense(num(amt),note||"");
 
 }
 
 
 /* ===========================================================
-   PUBLIC ACCESS
+   PUBLIC API
 =========================================================== */
 
 window.expenseEngine = {
 
   addExpense,
-  promptExpense
+  promptExpense,
+  renderExpenses
 
 };
 
-console.log("%c💸 Expense Engine READY ✔","color:#dc2626;font-weight:bold;");
+console.log(
+"%c💸 Expense Engine READY ✔",
+"color:#dc2626;font-weight:bold"
+);
 
 })();
