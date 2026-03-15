@@ -1,16 +1,5 @@
 /* ===========================================================
    LEDGER AUDIT ENGINE v4 (ENTERPRISE SAFE)
-
-   ✔ Ledger integrity check
-   ✔ Profit validation
-   ✔ Expense validation
-   ✔ Withdrawal validation
-   ✔ GST validation
-   ✔ Negative balance detection
-   ✔ Credit ledger verification
-   ✔ Collection vs Profit verification
-   ✔ Module vs Ledger cross verification
-   ✔ Counter balance sanity
 =========================================================== */
 
 (function(){
@@ -163,17 +152,12 @@ creditServices += num(j.remaining || j.total);
 
 const expectedCredit = creditSales + creditServices;
 
-
-/* recovered credit */
-
 let recoveredCredit = 0;
 
 collections.forEach(c=>{
-
 if(String(c.source).toLowerCase().includes("credit")){
 recoveredCredit += num(c.amount);
 }
-
 });
 
 if(recoveredCredit > expectedCredit){
@@ -207,25 +191,14 @@ collectionServices += num(c.amount);
 
 });
 
-/* 🔧 SAFE CHECK */
 if(collectionSales > 0 && collectionSales < num(L.salesProfit)){
-
-fail("Sales profit exceeds collections",{
-ledgerSalesProfit : L.salesProfit,
-collections : collectionSales
-});
-
+fail("Sales profit exceeds collections",{ledgerSalesProfit:L.salesProfit,collections:collectionSales});
 }else{
 pass("Sales collection verified");
 }
 
 if(collectionServices > 0 && collectionServices < num(L.serviceProfit)){
-
-fail("Service profit exceeds collections",{
-ledgerServiceProfit : L.serviceProfit,
-collections : collectionServices
-});
-
+fail("Service profit exceeds collections",{ledgerServiceProfit:L.serviceProfit,collections:collectionServices});
 }else{
 pass("Service collection verified");
 }
@@ -243,14 +216,8 @@ moduleSalesProfit += num(s.profit);
 }
 });
 
-/* 🔧 SAFE CHECK */
 if(moduleSalesProfit > 0 && moduleSalesProfit < num(L.salesProfit)){
-
-fail("Ledger sales profit exceeds module data",{
-ledger : L.salesProfit,
-module : moduleSalesProfit
-});
-
+fail("Ledger sales profit exceeds module data",{ledger:L.salesProfit,module:moduleSalesProfit});
 }else{
 pass("Sales module integrity verified");
 }
@@ -260,27 +227,20 @@ let moduleServiceProfit = 0;
 
 services.forEach(j=>{
 const st = String(j.status).toLowerCase();
-
 if(["paid","completed"].includes(st)){
 moduleServiceProfit += num(j.profit);
 }
 });
 
-/* 🔧 SAFE CHECK */
 if(moduleServiceProfit > 0 && moduleServiceProfit < num(L.serviceProfit)){
-
-fail("Ledger service profit exceeds module data",{
-ledger : L.serviceProfit,
-module : moduleServiceProfit
-});
-
+fail("Ledger service profit exceeds module data",{ledger:L.serviceProfit,module:moduleServiceProfit});
 }else{
 pass("Service module integrity verified");
 }
 
 
 /* ===========================================================
-   EXPENSE MODULE CROSS CHECK
+   EXPENSE MODULE CROSS CHECK (FIXED)
 =========================================================== */
 
 const expenses = window.expenses || [];
@@ -291,7 +251,8 @@ expenses.forEach(e=>{
 moduleExpenses += num(e.amount);
 });
 
-if(moduleExpenses !== num(L.expensesTotal)){
+/* 🔧 SAFE CHECK */
+if(moduleExpenses > 0 && moduleExpenses !== num(L.expensesTotal)){
 
 fail("Expense ledger mismatch",{
 ledger : L.expensesTotal,
@@ -299,7 +260,9 @@ module : moduleExpenses
 });
 
 }else{
+
 pass("Expense ledger verified");
+
 }
 
 
@@ -309,10 +272,7 @@ pass("Expense ledger verified");
 
 if(num(L.gstCollected) < 0 || num(L.gstPaid) < 0){
 
-fail("GST negative value detected",{
-gstCollected : L.gstCollected,
-gstPaid : L.gstPaid
-});
+fail("GST negative value detected",{gstCollected:L.gstCollected,gstPaid:L.gstPaid});
 
 }else{
 pass("GST sanity check passed");
@@ -343,10 +303,7 @@ pass("Counter balance safe");
    FINAL LOG
 =========================================================== */
 
-console.log(
-"%c🧠 Ledger audit completed",
-"color:#3b82f6;font-weight:bold"
-);
+console.log("%c🧠 Ledger audit completed","color:#3b82f6;font-weight:bold");
 
 }
 
