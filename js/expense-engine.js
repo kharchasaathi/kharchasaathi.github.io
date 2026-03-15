@@ -47,25 +47,26 @@ async function addExpense(amount, note=""){
     return;
   }
 
+
   /* ===========================================================
-     LEDGER SAFE UPDATE
+     LEDGER UPDATE (MAIN FIX)
   =========================================================== */
 
   if(typeof updateLedgerField === "function"){
 
     try{
 
-      /* expense amount add */
+      /* add expense to ledger */
       await updateLedgerField("expensesTotal", amount);
 
-      /* expense note save */
+      /* save expense note if exists */
       if(note){
         await updateLedgerField("lastExpenseNote", note);
       }
 
     }catch(err){
 
-      console.error("Expense ledger update failed:",err);
+      console.error("Expense ledger update failed:", err);
       alert("Failed to record expense");
 
       return;
@@ -78,9 +79,14 @@ async function addExpense(amount, note=""){
 
   }
 
+
   console.log("💸 Expense added:", amount);
 
-  /* UI refresh */
+
+  /* ===========================================================
+     UI REFRESH
+  =========================================================== */
+
   window.dispatchEvent(
     new Event("ledger-updated")
   );
