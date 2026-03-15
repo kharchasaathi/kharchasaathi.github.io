@@ -1,5 +1,5 @@
 /* ===========================================================
-   UNIVERSAL BAR v12 — COUNTER BALANCE + TODAY PROFIT
+   UNIVERSAL BAR v13 — COUNTER BALANCE + TODAY PROFIT + NET FLOW
 =========================================================== */
 
 (function () {
@@ -7,12 +7,10 @@
   if(window.__universalBarLoaded) return;
   window.__universalBarLoaded = true;
 
-  console.log("%c💰 Universal Bar v12 Loading...","color:#0ea5e9;font-weight:bold;");
-
+  console.log("%c💰 Universal Bar v13 Loading...","color:#0ea5e9;font-weight:bold;");
 
   const num = v => isNaN(v = Number(v)) ? 0 : v;
   const money = v => "₹" + Math.round(num(v));
-
 
   function renderUniversalBar(){
 
@@ -37,9 +35,6 @@
     set("ubSaleProfit",L.salesProfit);
     set("ubServiceProfit",L.serviceProfit);
 
-    set("ubSaleInv",L.salesInvestmentReturn);
-    set("ubServiceInv",L.serviceInvestmentReturn);
-
     set("ubGstCollected",L.gstCollected);
 
     set("ubExpenses",L.expensesTotal || L.expenses);
@@ -49,6 +44,29 @@
     set("ubWithdraw",L.withdrawalsTotal || L.withdrawals);
 
     set("ubGstPaid",L.gstPaid || 0);
+
+
+    /* ===============================
+       NET FLOW
+    =============================== */
+
+    set("ubNetFlow",L.netFlow);
+
+    const netEl=document.getElementById("ubNetFlow");
+
+    if(netEl){
+
+      netEl.classList.remove(
+        "ub-netflow-positive",
+        "ub-netflow-negative"
+      );
+
+      if(num(L.netFlow) >= 0)
+        netEl.classList.add("ub-netflow-positive");
+      else
+        netEl.classList.add("ub-netflow-negative");
+
+    }
 
 
     /* ===============================
@@ -75,6 +93,7 @@
         profitEl.classList.add("ub-netflow-positive");
       else
         profitEl.classList.add("ub-netflow-negative");
+
     }
 
 
@@ -91,7 +110,6 @@
 
     set("ubCounterBalance",counterBalance);
 
-
     const counterEl=document.getElementById("ubCounterBalance");
 
     if(counterEl){
@@ -105,6 +123,7 @@
         counterEl.classList.add("ub-netflow-positive");
       else
         counterEl.classList.add("ub-netflow-negative");
+
     }
 
 
@@ -163,7 +182,6 @@
 
   window.addEventListener("ledger-ready",renderUniversalBar);
   window.addEventListener("ledger-updated",renderUniversalBar);
-
 
   window.addEventListener("load",()=>{
 
