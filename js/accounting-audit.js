@@ -1,5 +1,5 @@
 /* ===========================================================
-   LEDGER AUDIT ENGINE v4 (ENTERPRISE SAFE)
+   LEDGER AUDIT ENGINE v5 (FULL ERP SAFE)
 =========================================================== */
 
 (function(){
@@ -8,7 +8,7 @@ if(window.__ledgerAuditLoaded) return;
 window.__ledgerAuditLoaded = true;
 
 console.log(
-"%c🧠 Ledger Audit Engine v4 Loading...",
+"%c🧠 Ledger Audit Engine v5 Loading...",
 "color:#3b82f6;font-weight:bold"
 );
 
@@ -77,8 +77,24 @@ pass("Net flow correct");
 =========================================================== */
 
 const expectedClosing =
+
 num(L.openingBalance) +
-num(L.netFlow);
+
+num(L.salesProfit) +
+num(L.serviceProfit) +
+
+num(L.salesInvestmentReturn) +
+num(L.serviceInvestmentReturn) +
+
+num(L.gstCollected) -
+
+num(L.expensesTotal) -
+
+num(L.withdrawalsTotal) -
+num(L.openingWithdraw) -
+
+num(L.gstPaid);
+
 
 if(num(L.closingBalance) !== expectedClosing){
 
@@ -112,8 +128,15 @@ fail("Negative ledger value",{ field:k,value:v });
 =========================================================== */
 
 const availableCash =
+
+num(L.openingBalance) +
+
 num(L.salesProfit) +
-num(L.serviceProfit);
+num(L.serviceProfit) +
+
+num(L.salesInvestmentReturn) +
+num(L.serviceInvestmentReturn);
+
 
 if(num(L.withdrawalsTotal) > availableCash){
 
@@ -240,7 +263,7 @@ pass("Service module integrity verified");
 
 
 /* ===========================================================
-   EXPENSE MODULE CROSS CHECK (FIXED)
+   EXPENSE MODULE CROSS CHECK
 =========================================================== */
 
 const expenses = window.expenses || [];
@@ -251,7 +274,6 @@ expenses.forEach(e=>{
 moduleExpenses += num(e.amount);
 });
 
-/* 🔧 SAFE CHECK */
 if(moduleExpenses > 0 && moduleExpenses !== num(L.expensesTotal)){
 
 fail("Expense ledger mismatch",{
@@ -272,7 +294,10 @@ pass("Expense ledger verified");
 
 if(num(L.gstCollected) < 0 || num(L.gstPaid) < 0){
 
-fail("GST negative value detected",{gstCollected:L.gstCollected,gstPaid:L.gstPaid});
+fail("GST negative value detected",{
+gstCollected:L.gstCollected,
+gstPaid:L.gstPaid
+});
 
 }else{
 pass("GST sanity check passed");
@@ -284,11 +309,24 @@ pass("GST sanity check passed");
 =========================================================== */
 
 const counterBalance =
+
 num(L.openingBalance) +
+
+num(L.salesProfit) +
+num(L.serviceProfit) +
+
+num(L.salesInvestmentReturn) +
+num(L.serviceInvestmentReturn) +
+
 num(L.gstCollected) -
+
+num(L.expensesTotal) -
+
 num(L.withdrawalsTotal) -
 num(L.openingWithdraw) -
+
 num(L.gstPaid);
+
 
 if(counterBalance < -1){
 
