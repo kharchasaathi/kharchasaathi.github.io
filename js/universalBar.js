@@ -1,6 +1,6 @@
 /* ===========================================================
-   UNIVERSAL BAR v19 — ERP SAFE
-   WITHDRAW FIX + UPI FIX + COUNTER BALANCE SAFE
+   UNIVERSAL BAR v20 — ERP SAFE
+   FULL WITHDRAW FIX + UPI FIX + COUNTER BALANCE SAFE
 =========================================================== */
 
 (function(){
@@ -8,7 +8,7 @@
 if(window.__universalBarLoaded) return;
 window.__universalBarLoaded = true;
 
-console.log("%c💰 Universal Bar v19 Loading...","color:#0ea5e9;font-weight:bold;");
+console.log("%c💰 Universal Bar v20 Loading...","color:#0ea5e9;font-weight:bold;");
 
 
 /* ===============================
@@ -82,7 +82,6 @@ set("ubGSTPaid",minus(L.gstPaid));
 =============================== */
 
 const todayProfit =
-
 num(L.salesProfit)
 + num(L.serviceProfit)
 - num(L.expensesTotal);
@@ -154,13 +153,11 @@ counterEl.textContent =
 
 
 /* ===============================
-   TODAY BALANCE SPLIT
+   CASH / UPI SPLIT
 =============================== */
 
 let cash = num(L.cashBalance);
 let upi  = num(L.upiBalance);
-
-/* fallback */
 
 if(!cash && !upi){
 
@@ -215,7 +212,7 @@ set("ubPendingCredit",money(pending));
 
 
 /* ===============================
-   WITHDRAW ACTIONS (FIXED)
+   WITHDRAW BUTTON ACTIONS
 =============================== */
 
 function bindActions(){
@@ -226,42 +223,43 @@ btn.addEventListener("click",()=>{
 
 const type = btn.dataset.withdraw;
 
-const amount =
-Number(prompt("Enter withdraw amount"));
-
-if(!amount) return;
-
 if(!window.withdrawEngine) return;
 
 
-/* STOCK */
+/* OPENING BALANCE */
 
-if(type==="stock")
-withdrawEngine.withdrawStock(amount);
+if(type==="opening-balance")
+withdrawEngine.promptOpeningWithdraw();
+
+
+/* SALES PROFIT */
+
+if(type==="sales-profit")
+withdrawEngine.promptSalesProfitWithdraw();
+
+
+/* SERVICE PROFIT */
+
+if(type==="service-profit")
+withdrawEngine.promptServiceProfitWithdraw();
+
+
+/* STOCK INVESTMENT */
+
+if(type==="stock-investment")
+withdrawEngine.promptStockWithdraw();
 
 
 /* SERVICE INVESTMENT */
 
-if(type==="service")
-withdrawEngine.withdrawService(amount);
-
-
-/* PROFIT */
-
-if(type==="profit")
-withdrawEngine.withdrawProfit(amount);
+if(type==="service-investment")
+withdrawEngine.promptServiceInvWithdraw();
 
 
 /* GST */
 
-if(type==="gst")
-withdrawEngine.withdrawGST(amount);
-
-
-/* OPENING */
-
-if(type==="opening")
-withdrawEngine.withdrawOpening(amount);
+if(type==="gst-collected" && window.gstEngine)
+gstEngine.promptGST();
 
 });
 
