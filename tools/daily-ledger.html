@@ -98,7 +98,6 @@ font-size:13px;
 </div>
 </div>
 
-
 <div class="ledger-card">
 <h3>Income</h3>
 
@@ -127,7 +126,6 @@ font-size:13px;
 </div>
 </div>
 
-
 <div class="ledger-card">
 <h3>Expenses</h3>
 
@@ -151,7 +149,6 @@ font-size:13px;
 </div>
 </div>
 
-
 <div class="ledger-card ledger-grid">
 
 <div class="ledger-box">
@@ -166,9 +163,7 @@ font-size:13px;
 
 </div>
 
-
 <div id="ledgerStatus"></div>
-
 
 <div class="ledger-card ledger-actions">
 
@@ -178,25 +173,23 @@ Close Day
 
 </div>
 
-
 <!-- REPORT ACTIONS -->
 
 <div class="ledger-card ledger-actions">
 
-<button onclick="downloadLedger()">
+<button onclick="downloadLedgerReport(ledgerEngine.getDateKey())">
 📥 Download Report
 </button>
 
-<button onclick="downloadLedger()">
+<button onclick="downloadLedgerCSV(ledgerEngine.getDateKey())">
 📊 Download Excel
 </button>
 
-<button onclick="shareLedgerWhatsApp()">
+<button onclick="shareLedgerWhatsApp(ledgerEngine.getDateKey())">
 📤 Share WhatsApp
 </button>
 
 </div>
-
 
 <!-- REPORT DISPLAY -->
 
@@ -210,7 +203,6 @@ Close Day
 
 </div>
 
-
 <!-- FIREBASE -->
 
 <script src="https://www.gstatic.com/firebasejs/9.6.11/firebase-app-compat.js"></script>
@@ -220,13 +212,11 @@ Close Day
 <script src="../js/firebase.js"></script>
 
 <script src="../js/ledger-engine.js"></script>
-
 <script src="../js/withdraw-engine.js"></script>
 <script src="../js/expense-engine.js"></script>
 <script src="../js/gst-engine.js"></script>
 
 <script src="../js/universalBar.js"></script>
-
 
 <script>
 
@@ -236,43 +226,33 @@ function money(v){
 return "₹"+Math.round(v||0)
 }
 
-
 function renderLedger(){
 
 const L = ledgerEngine.getCurrent()
 
 if(!L) return
 
-qs("#ldOpening").textContent =
-money(L.openingBalance)
+qs("#ldOpening").textContent = money(L.openingBalance)
+qs("#ldSalesProfit").textContent = money(L.salesProfit)
+qs("#ldServiceProfit").textContent = money(L.serviceProfit)
+qs("#ldSalesInv").textContent = money(L.salesInvestmentReturn)
+qs("#ldServiceInv").textContent = money(L.serviceInvestmentReturn)
+qs("#ldExpenses").textContent = money(L.expensesTotal)
 
-qs("#ldSalesProfit").textContent =
-money(L.salesProfit)
+const withdrawals =
+(L.stockWithdrawTotal||0) +
+(L.serviceWithdrawTotal||0) +
+(L.salesProfitWithdraw||0) +
+(L.serviceProfitWithdraw||0) +
+(L.openingWithdraw||0)
 
-qs("#ldServiceProfit").textContent =
-money(L.serviceProfit)
-
-qs("#ldSalesInv").textContent =
-money(L.salesInvestmentReturn)
-
-qs("#ldServiceInv").textContent =
-money(L.serviceInvestmentReturn)
-
-qs("#ldExpenses").textContent =
-money(L.expensesTotal)
-
-qs("#ldWithdrawals").textContent =
-money(L.withdrawalsTotal)
+qs("#ldWithdrawals").textContent = money(withdrawals)
 
 qs("#ldGst").textContent =
 money((L.gstCollected||0)-(L.gstPaid||0))
 
-qs("#ldNetFlow").textContent =
-money(L.netFlow)
-
-qs("#ldClosing").textContent =
-money(L.closingBalance)
-
+qs("#ldNetFlow").textContent = money(L.netFlow)
+qs("#ldClosing").textContent = money(L.closingBalance)
 
 const status = qs("#ledgerStatus")
 
@@ -301,10 +281,12 @@ document.getElementById("dailyLedgerBox")
 
 if(!box) return
 
-if(typeof generateDailyLedgerReport==="function"){
+if(typeof generateDailyLedgerText==="function"){
 
 box.textContent =
-generateDailyLedgerReport()
+generateDailyLedgerText(
+ledgerEngine.getDateKey()
+)
 
 }
 
@@ -316,20 +298,16 @@ generateDailyLedgerReport()
 window.addEventListener("ledger-ready",()=>{
 
 renderLedger()
-
 loadTodayLedger()
 
 })
-
 
 window.addEventListener("ledger-updated",()=>{
 
 renderLedger()
-
 loadTodayLedger()
 
 })
-
 
 window.addEventListener("firebase-auth-ready",()=>{
 
@@ -338,7 +316,6 @@ ledgerEngine.refresh()
 }
 
 })
-
 
 window.addEventListener("ledger-ready",()=>{
 
