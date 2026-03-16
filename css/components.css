@@ -22,14 +22,13 @@
   font-size: 12px;
 }
 
-/* Hover */
 .btn:hover,
 .small-btn:hover {
   background: var(--ks-bg-soft);
   transform: translateY(-1px);
 }
 
-/* BLUE ACTION BUTTONS (Withdraw / Pay GST) */
+/* ACTION BUTTON */
 
 .ub-btn {
   margin-top: auto;
@@ -108,7 +107,7 @@ textarea {
 
 
 /* ======================================================
-   UNIVERSAL BAR — COMPACT 2 ROW GRID
+   UNIVERSAL BAR — COMPACT GRID
 ====================================================== */
 
 .universal-bar{
@@ -189,45 +188,91 @@ textarea {
 
 
 /* ======================================================
-   TODAY PROFIT + COUNTER BALANCE BAR
+   TODAY PROFIT + COUNTER BALANCE
+   (SEPARATED ERP STYLE)
 ====================================================== */
 
 .ub-bottom-bar{
-  margin-top:18px;
+
+  margin-top:22px;
+
   display:grid;
+
   grid-template-columns:1fr 1fr;
-  border-radius:var(--ks-radius-card);
-  overflow:hidden;
-  box-shadow:var(--ks-shadow-soft);
+
+  gap:14px;   /* IMPORTANT GAP */
+
 }
 
-/* PROFIT */
+/* TODAY PROFIT BOX */
 
 .ub-profit{
+
   background:linear-gradient(145deg,#ecfdf5,#ffffff);
-  border-right:1px solid #bbf7d0;
-  padding:16px;
+
+  border:1px solid #86efac;
+
+  border-radius:var(--ks-radius-card);
+
+  padding:18px;
+
   font-size:15px;
+
   font-weight:600;
+
   color:#16a34a;
+
+  box-shadow:var(--ks-shadow-soft);
+
+}
+
+/* NEGATIVE PROFIT */
+
+.ub-profit.ub-netflow-negative{
+
+  background:linear-gradient(145deg,#fff1f2,#ffffff);
+
+  border:1px solid #fca5a5;
+
+  color:#dc2626;
+
 }
 
 /* COUNTER BALANCE */
 
 .ub-counter{
+
   background:linear-gradient(145deg,#eff6ff,#ffffff);
-  padding:16px;
-  text-align:right;
+
+  border:1px solid #93c5fd;
+
+  border-radius:var(--ks-radius-card);
+
+  padding:18px;
+
   font-size:15px;
+
   font-weight:600;
+
+  text-align:right;
+
   color:#1d4ed8;
+
+  box-shadow:var(--ks-shadow-soft);
+
 }
+
+/* AMOUNT TEXT */
 
 .ub-profit span,
 .ub-counter span{
+
   font-size:20px;
+
   font-weight:700;
+
   margin-left:8px;
+
 }
 
 
@@ -250,6 +295,10 @@ textarea {
 
 @media(max-width:480px){
   .ub-grid{
+    grid-template-columns:1fr;
+  }
+
+  .ub-bottom-bar{
     grid-template-columns:1fr;
   }
 }
