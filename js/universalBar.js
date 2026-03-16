@@ -1,6 +1,6 @@
 /* ===========================================================
-   UNIVERSAL BAR v17 — ERP SAFE
-   TODAY PROFIT COLOR + COUNTER BALANCE + BALANCE SPLIT
+   UNIVERSAL BAR v18 — ERP SAFE
+   TODAY PROFIT COLOR FIX + COUNTER BALANCE + BALANCE SPLIT
 =========================================================== */
 
 (function(){
@@ -8,7 +8,7 @@
 if(window.__universalBarLoaded) return;
 window.__universalBarLoaded = true;
 
-console.log("%c💰 Universal Bar v17 Loading...","color:#0ea5e9;font-weight:bold;");
+console.log("%c💰 Universal Bar v18 Loading...","color:#0ea5e9;font-weight:bold;");
 
 
 /* ===============================
@@ -17,7 +17,7 @@ console.log("%c💰 Universal Bar v17 Loading...","color:#0ea5e9;font-weight:bol
 
 const num = v => isNaN(v = Number(v)) ? 0 : v;
 
-const plus = v => v>0 ? "+₹"+Math.round(v) : "₹0";
+const plus  = v => v>0 ? "+₹"+Math.round(v) : "₹0";
 const minus = v => v>0 ? "-₹"+Math.round(v) : "₹0";
 const money = v => "₹"+Math.round(num(v));
 
@@ -95,17 +95,23 @@ if(profitEl){
 profitEl.textContent =
 (todayProfit>=0?"+₹":"-₹")+Math.abs(todayProfit);
 
-/* COLOR LOGIC */
+/* COLOR LOGIC FIX */
 
-profitEl.classList.remove(
+const profitBox = profitEl.closest(".ub-profit");
+
+if(profitBox){
+
+profitBox.classList.remove(
 "ub-netflow-positive",
 "ub-netflow-negative"
 );
 
-if(todayProfit>=0)
-profitEl.classList.add("ub-netflow-positive");
+if(todayProfit >= 0)
+profitBox.classList.add("ub-netflow-positive");
 else
-profitEl.classList.add("ub-netflow-negative");
+profitBox.classList.add("ub-netflow-negative");
+
+}
 
 }
 
