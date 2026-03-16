@@ -392,84 +392,144 @@ return{sales,services,expenses,withdraws,collections};
 
 };
 
-
 /* ===========================================================
-   BUILD DAILY LEDGER TEXT
+   BUILD DAILY LEDGER TEXT (ADVANCED REPORT)
 =========================================================== */
 
 window.generateDailyLedgerText=function(dateKey){
 
-const report=buildDailyLedgerReport(dateKey);
+const report=buildDailyLedgerReport(dateKey)
 
-let txt="";
+let txt=""
 
-txt+="📒 Shop Ledger Report\n\n";
-txt+="Date: "+dateKey+"\n\n";
+let salesProfitTotal=0
+let salesInvestmentTotal=0
+let serviceProfitTotal=0
+let serviceInvestmentTotal=0
+let expensesTotal=0
 
+txt+="📒 Shop Ledger Report\n\n"
+txt+="Date: "+dateKey+"\n\n"
+
+
+/* ================= SALES PROFIT ================= */
 
 if(report.sales?.length){
 
-txt+="🧾 SALES\n";
+txt+="🧾 SALES PROFIT\n"
 
 report.sales.forEach(s=>{
 
-txt+=`${s.product} Qty:${s.qty} Total:${s.total}\n`;
+const profit=num(s.profit)
 
-});
+salesProfitTotal+=profit
 
-txt+="\n";
+txt+=`${s.product||"Item"} Qty:${s.qty||1} Profit:₹${profit}\n`
+
+})
+
+txt+=`\nTotal Sales Profit: ₹${salesProfitTotal}\n\n`
 
 }
 
+
+/* ================= SALES INVESTMENT ================= */
+
+if(report.sales?.length){
+
+txt+="📦 SALES INVESTMENT\n"
+
+report.sales.forEach(s=>{
+
+const invest=num(s.investment||s.cost)
+
+salesInvestmentTotal+=invest
+
+txt+=`${s.product||"Item"} Invest:₹${invest}\n`
+
+})
+
+txt+=`\nTotal Sales Investment: ₹${salesInvestmentTotal}\n\n`
+
+}
+
+
+/* ================= SERVICE PROFIT ================= */
 
 if(report.services?.length){
 
-txt+="🛠 SERVICE\n";
+txt+="🛠 SERVICE PROFIT\n"
 
 report.services.forEach(j=>{
 
-txt+=`${j.customer} Paid:${j.paid}\n`;
+const profit=num(j.profit)
 
-});
+serviceProfitTotal+=profit
 
-txt+="\n";
+txt+=`${j.customer||j.job||"Service"} Profit:₹${profit}\n`
+
+})
+
+txt+=`\nTotal Service Profit: ₹${serviceProfitTotal}\n\n`
 
 }
 
+
+/* ================= SERVICE INVESTMENT ================= */
+
+if(report.services?.length){
+
+txt+="🔧 SERVICE INVESTMENT\n"
+
+report.services.forEach(j=>{
+
+const invest=num(j.investment||j.cost)
+
+serviceInvestmentTotal+=invest
+
+txt+=`${j.customer||j.job||"Service"} Invest:₹${invest}\n`
+
+})
+
+txt+=`\nTotal Service Investment: ₹${serviceInvestmentTotal}\n\n`
+
+}
+
+
+/* ================= EXPENSES ================= */
 
 if(report.expenses?.length){
 
-txt+="💸 EXPENSES\n";
+txt+="💸 EXPENSES\n"
 
 report.expenses.forEach(e=>{
 
-txt+=`${e.note} ₹${e.amount}\n`;
+const amt=num(e.amount)
 
-});
+expensesTotal+=amt
 
-txt+="\n";
+txt+=`${e.note||"Expense"} ₹${amt}\n`
 
-}
+})
 
-
-if(report.withdraws?.length){
-
-txt+="💰 WITHDRAW\n";
-
-report.withdraws.forEach(w=>{
-
-txt+=`${w.note} ₹${w.amount}\n`;
-
-});
-
-txt+="\n";
+txt+=`\nTotal Expenses: ₹${expensesTotal}\n\n`
 
 }
 
-return txt;
 
-};
+/* ================= FINAL SUMMARY ================= */
 
+txt+="--------------------------------\n\n"
+
+txt+=`Total Sales Profit: ₹${salesProfitTotal}\n`
+txt+=`Total Service Profit: ₹${serviceProfitTotal}\n`
+txt+=`Total Expenses: ₹${expensesTotal}\n\n`
+
+txt+=`Net Profit: ₹${(salesProfitTotal+serviceProfitTotal)-expensesTotal}\n`
+
+return txt
+
+}
 
 /* ===========================================================
    DOWNLOAD CSV
