@@ -521,24 +521,41 @@ txt+=`\nTotal Expenses: ₹${expensesTotal}\n\n`
 
 /* ================= WITHDRAW ================= */
 
-if(report.withdraws?.length){
+const salesW = num(L.salesProfitWithdraw)
+const serviceW = num(L.serviceProfitWithdraw)
+const stockW = num(L.stockWithdrawTotal)
+const serviceInvW = num(L.serviceWithdrawTotal)
+const openingW = num(L.openingWithdraw)
+
+withdrawTotal =
+salesW +
+serviceW +
+stockW +
+serviceInvW +
+openingW
+
+if(withdrawTotal){
 
 txt+="💰 WITHDRAW\n"
 
-report.withdraws.forEach(w=>{
+if(salesW)
+txt+=`Sales Profit Withdraw: ₹${salesW}\n`
 
-const amt=num(w.amount)
+if(serviceW)
+txt+=`Service Profit Withdraw: ₹${serviceW}\n`
 
-withdrawTotal+=amt
+if(stockW)
+txt+=`Stock Investment Withdraw: ₹${stockW}\n`
 
-txt+=`${w.note||"Withdraw"} ₹${amt}\n`
+if(serviceInvW)
+txt+=`Service Investment Withdraw: ₹${serviceInvW}\n`
 
-})
+if(openingW)
+txt+=`Opening Withdraw: ₹${openingW}\n`
 
 txt+=`\nTotal Withdraw: ₹${withdrawTotal}\n\n`
 
 }
-
 
 /* ================= GST ================= */
 
