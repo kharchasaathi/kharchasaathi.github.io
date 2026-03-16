@@ -393,12 +393,13 @@ return{sales,services,expenses,withdraws,collections};
 };
 
 /* ===========================================================
-   BUILD DAILY LEDGER TEXT (ADVANCED REPORT)
+   BUILD DAILY LEDGER TEXT (FULL FINANCIAL REPORT)
 =========================================================== */
 
 window.generateDailyLedgerText=function(dateKey){
 
 const report=buildDailyLedgerReport(dateKey)
+const L=window.ledgerEngine?.getCurrent?.()||{}
 
 let txt=""
 
@@ -407,6 +408,7 @@ let salesInvestmentTotal=0
 let serviceProfitTotal=0
 let serviceInvestmentTotal=0
 let expensesTotal=0
+let withdrawTotal=0
 
 txt+="📒 Shop Ledger Report\n\n"
 txt+="Date: "+dateKey+"\n\n"
@@ -517,20 +519,74 @@ txt+=`\nTotal Expenses: ₹${expensesTotal}\n\n`
 }
 
 
+/* ================= WITHDRAW ================= */
+
+if(report.withdraws?.length){
+
+txt+="💰 WITHDRAW\n"
+
+report.withdraws.forEach(w=>{
+
+const amt=num(w.amount)
+
+withdrawTotal+=amt
+
+txt+=`${w.note||"Withdraw"} ₹${amt}\n`
+
+})
+
+txt+=`\nTotal Withdraw: ₹${withdrawTotal}\n\n`
+
+}
+
+
+/* ================= GST ================= */
+
+const gstCollected=num(L.gstCollected)
+const gstPaid=num(L.gstPaid)
+
+if(gstCollected || gstPaid){
+
+txt+="🧾 GST\n"
+
+txt+=`GST Collected: ₹${gstCollected}\n`
+txt+=`GST Paid: ₹${gstPaid}\n\n`
+
+}
+
+
 /* ================= FINAL SUMMARY ================= */
 
 txt+="--------------------------------\n\n"
 
 txt+=`Total Sales Profit: ₹${salesProfitTotal}\n`
 txt+=`Total Service Profit: ₹${serviceProfitTotal}\n`
-txt+=`Total Expenses: ₹${expensesTotal}\n\n`
+txt+=`Total Expenses: ₹${expensesTotal}\n`
+txt+=`Total Withdraw: ₹${withdrawTotal}\n\n`
 
-txt+=`Net Profit: ₹${(salesProfitTotal+serviceProfitTotal)-expensesTotal}\n`
+const netProfit=(salesProfitTotal+serviceProfitTotal)
+-expensesTotal
+-withdrawTotal
+
+txt+=`Net Profit: ₹${netProfit}\n\n`
+
+
+/* ================= COUNTER BALANCE ================= */
+
+const opening=num(L.openingBalance)
+const closing=num(L.closingBalance)
+
+txt+="--------------------------------\n\n"
+
+txt+=`Opening Balance: ₹${opening}\n`
+txt+=`Closing Balance: ₹${closing}\n\n`
+
+txt+=`Counter Balance: ₹${closing}\n`
+
 
 return txt
 
 }
-
 /* ===========================================================
    DOWNLOAD CSV
 =========================================================== */
