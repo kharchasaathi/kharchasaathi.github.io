@@ -400,6 +400,7 @@ body{
 
 </div>
 
+
 <!-- ======================================================
                     UNIVERSAL FINANCE BAR
 ====================================================== -->
@@ -408,165 +409,142 @@ body{
 
   <div class="ub-grid">
 
-
     <!-- OPENING BALANCE -->
-
     <div class="ub-card opening">
       <div class="ub-title">Opening Balance</div>
       <div class="ub-amount" id="ubOpening">₹0</div>
-      <button class="small-btn ub-btn" onclick="withdrawEngine.promptOpeningWithdraw()">Withdraw</button>
+      <button class="small-btn ub-btn"
+        onclick="withdrawEngine.promptOpeningWithdraw()">Withdraw</button>
     </div>
-
 
 
     <!-- SALES PROFIT -->
-
     <div class="ub-card income">
       <div class="ub-title">Sales Profit</div>
       <div class="ub-amount" id="ubSaleProfit">+₹0</div>
-      <button class="small-btn ub-btn" onclick="withdrawEngine.promptSalesProfitWithdraw()">Withdraw</button>
+      <button class="small-btn ub-btn"
+        onclick="withdrawEngine.promptSalesProfitWithdraw()">Withdraw</button>
     </div>
-
 
 
     <!-- SERVICE PROFIT -->
-
     <div class="ub-card income">
       <div class="ub-title">Service Profit</div>
       <div class="ub-amount" id="ubServiceProfit">+₹0</div>
-      <button class="small-btn ub-btn" onclick="withdrawEngine.promptServiceProfitWithdraw()">Withdraw</button>
+      <button class="small-btn ub-btn"
+        onclick="withdrawEngine.promptServiceProfitWithdraw()">Withdraw</button>
     </div>
 
 
-
-    <!-- STOCK INVESTMENT (AFTER SALE) -->
-
+    <!-- STOCK INVESTMENT -->
     <div class="ub-card income">
       <div class="ub-title">Stock Investment (After Sale)</div>
       <div class="ub-amount" id="ubSaleInv">+₹0</div>
-      <button class="small-btn ub-btn" onclick="withdrawEngine.promptStockWithdraw()">Withdraw</button>
+      <button class="small-btn ub-btn"
+        onclick="withdrawEngine.promptStockWithdraw()">Withdraw</button>
     </div>
-
 
 
     <!-- SERVICE INVESTMENT -->
-
     <div class="ub-card income">
       <div class="ub-title">Service Investment</div>
       <div class="ub-amount" id="ubServiceInv">+₹0</div>
-      <button class="small-btn ub-btn" onclick="withdrawEngine.promptServiceInvWithdraw()">Withdraw</button>
+      <button class="small-btn ub-btn"
+        onclick="withdrawEngine.promptServiceInvWithdraw()">Withdraw</button>
     </div>
-
 
 
     <!-- GST COLLECTED -->
-
     <div class="ub-card income">
       <div class="ub-title">GST Collected</div>
       <div class="ub-amount" id="ubGST">+₹0</div>
-      <button class="small-btn ub-btn" onclick="gstEngine.promptGST()">Pay GST</button>
+      <button class="small-btn ub-btn"
+        onclick="gstEngine.promptGST()">Pay GST</button>
     </div>
 
 
-
     <!-- CASH / UPI BALANCE -->
-
     <div class="ub-card opening">
 
       <div class="ub-title">Today's Balance Split</div>
 
       <div class="ub-sub">Cash</div>
-      <div class="ub-amount" style="font-size:20px" id="ubCash">₹0</div>
+      <div class="ub-amount" id="ubCash">₹0</div>
 
       <div class="ub-sub">UPI</div>
-      <div class="ub-amount" style="font-size:20px" id="ubUPI">₹0</div>
+      <div class="ub-amount" id="ubUPI">₹0</div>
 
     </div>
 
 
-
     <!-- EXPENSES -->
-
     <div class="ub-card expense">
       <div class="ub-title">Expenses</div>
       <div class="ub-amount" id="ubExpenses">-₹0</div>
     </div>
 
 
-
     <!-- SALES PROFIT WITHDRAW -->
-
     <div class="ub-card expense">
       <div class="ub-title">Sales Profit Withdraw</div>
       <div class="ub-amount" id="ubSalesProfitWithdraw">-₹0</div>
     </div>
 
 
-
     <!-- SERVICE PROFIT WITHDRAW -->
-
     <div class="ub-card expense">
       <div class="ub-title">Service Profit Withdraw</div>
       <div class="ub-amount" id="ubServiceProfitWithdraw">-₹0</div>
     </div>
 
 
-
     <!-- STOCK INVESTMENT WITHDRAW -->
-
     <div class="ub-card expense">
       <div class="ub-title">Stock Investment Withdraw</div>
       <div class="ub-amount" id="ubStockWithdraw">-₹0</div>
     </div>
 
 
-
     <!-- SERVICE INVESTMENT WITHDRAW -->
-
     <div class="ub-card expense">
       <div class="ub-title">Service Investment Withdraw</div>
       <div class="ub-amount" id="ubServiceInvWithdraw">-₹0</div>
     </div>
 
 
-
     <!-- GST PAID -->
-
     <div class="ub-card expense">
       <div class="ub-title">GST Paid</div>
       <div class="ub-amount" id="ubGSTPaid">-₹0</div>
     </div>
 
 
-
-    <!-- OPENING BALANCE WITHDRAW -->
-
+    <!-- OPENING WITHDRAW -->
     <div class="ub-card expense">
       <div class="ub-title">Opening Withdraw</div>
       <div class="ub-amount" id="ubOpeningWithdraw">-₹0</div>
     </div>
 
-
   </div>
 
 
+  <!-- TODAY PROFIT + COUNTER BALANCE -->
 
-  <!-- PROFIT + COUNTER BALANCE -->
+  <div class="ub-bottom-bar">
 
-  <div class="ub-bottom">
-
-    <div class="ub-bottom-box profit">
-      Today Profit: <span id="ubTodayProfit">₹0</span>
+    <div class="ub-profit">
+      Today Profit
+      <span id="ubTodayProfit">₹0</span>
     </div>
 
-    <div class="ub-bottom-box counter">
-      Counter Balance: <span id="ubCounterBalance">₹0</span>
+    <div class="ub-counter">
+      Counter Balance
+      <span id="ubCounterBalance">₹0</span>
     </div>
 
   </div>
 
 </div>
-
 
 
 
