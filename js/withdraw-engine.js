@@ -1,6 +1,9 @@
 /* ===========================================================
-   WITHDRAW ENGINE v7
-   Full Universal Bar Compatible System
+   WITHDRAW ENGINE v8
+   Ledger Engine Sync Version
+   ✔ Universal Bar Compatible
+   ✔ Ledger Engine Safe Update
+   ✔ No Direct Firestore Writes
 =========================================================== */
 
 (function(){
@@ -8,7 +11,7 @@
 if(window.__withdrawEngineLoaded) return;
 window.__withdrawEngineLoaded = true;
 
-console.log("%c💰 Withdraw Engine v7 Loading...","color:#16a34a;font-weight:bold;");
+console.log("%c💰 Withdraw Engine v8 Loading...","color:#16a34a;font-weight:bold;");
 
 
 /* ===========================================================
@@ -91,11 +94,7 @@ alert(
 return;
 }
 
-const newTotal = withdrawn + amount;
-
-await updateLedger({
-openingWithdraw:newTotal
-});
+await updateLedgerField("openingWithdraw",amount);
 
 }
 
@@ -127,11 +126,7 @@ alert(
 return;
 }
 
-const newTotal = withdrawn + amount;
-
-await updateLedger({
-salesProfitWithdraw:newTotal
-});
+await updateLedgerField("salesProfitWithdraw",amount);
 
 }
 
@@ -163,11 +158,7 @@ alert(
 return;
 }
 
-const newTotal = withdrawn + amount;
-
-await updateLedger({
-serviceProfitWithdraw:newTotal
-});
+await updateLedgerField("serviceProfitWithdraw",amount);
 
 }
 
@@ -199,11 +190,7 @@ alert(
 return;
 }
 
-const newTotal = withdrawn + amount;
-
-await updateLedger({
-stockWithdrawTotal:newTotal
-});
+await updateLedgerField("stockWithdrawTotal",amount);
 
 }
 
@@ -235,11 +222,7 @@ alert(
 return;
 }
 
-const newTotal = withdrawn + amount;
-
-await updateLedger({
-serviceWithdrawTotal:newTotal
-});
+await updateLedgerField("serviceWithdrawTotal",amount);
 
 }
 
@@ -271,41 +254,7 @@ alert(
 return;
 }
 
-const newTotal = paid + amount;
-
-await updateLedger({
-gstPaid:newTotal
-});
-
-}
-
-
-/* ===========================================================
-   FIRESTORE UPDATE
-=========================================================== */
-
-async function updateLedger(updateData){
-
-const user = auth.currentUser;
-
-const uid = user.uid;
-const dateKey = ledgerEngine.getDateKey();
-
-const ref =
-db.collection("users")
-.doc(uid)
-.collection("ledger")
-.doc(dateKey);
-
-updateData.updatedAt = Date.now();
-
-await ref.update(updateData);
-
-await ledgerEngine.refresh();
-
-window.dispatchEvent(
-new Event("ledger-updated")
-);
+await updateLedgerField("gstPaid",amount);
 
 }
 
