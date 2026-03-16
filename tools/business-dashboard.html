@@ -400,7 +400,6 @@ body{
 
 </div>
 
-
 <!-- ======================================================
                     UNIVERSAL FINANCE BAR
 ====================================================== -->
@@ -414,7 +413,9 @@ body{
       <div class="ub-title">Opening Balance</div>
       <div class="ub-amount" id="ubOpening">₹0</div>
       <button class="small-btn ub-btn"
-        onclick="withdrawEngine.promptOpeningWithdraw()">Withdraw</button>
+      data-withdraw="opening-balance">
+      Withdraw
+      </button>
     </div>
 
 
@@ -423,7 +424,9 @@ body{
       <div class="ub-title">Sales Profit</div>
       <div class="ub-amount" id="ubSaleProfit">+₹0</div>
       <button class="small-btn ub-btn"
-        onclick="withdrawEngine.promptSalesProfitWithdraw()">Withdraw</button>
+      data-withdraw="sales-profit">
+      Withdraw
+      </button>
     </div>
 
 
@@ -432,7 +435,9 @@ body{
       <div class="ub-title">Service Profit</div>
       <div class="ub-amount" id="ubServiceProfit">+₹0</div>
       <button class="small-btn ub-btn"
-        onclick="withdrawEngine.promptServiceProfitWithdraw()">Withdraw</button>
+      data-withdraw="service-profit">
+      Withdraw
+      </button>
     </div>
 
 
@@ -441,7 +446,9 @@ body{
       <div class="ub-title">Stock Investment (After Sale)</div>
       <div class="ub-amount" id="ubSaleInv">+₹0</div>
       <button class="small-btn ub-btn"
-        onclick="withdrawEngine.promptStockWithdraw()">Withdraw</button>
+      data-withdraw="stock-investment">
+      Withdraw
+      </button>
     </div>
 
 
@@ -450,7 +457,9 @@ body{
       <div class="ub-title">Service Investment</div>
       <div class="ub-amount" id="ubServiceInv">+₹0</div>
       <button class="small-btn ub-btn"
-        onclick="withdrawEngine.promptServiceInvWithdraw()">Withdraw</button>
+      data-withdraw="service-investment">
+      Withdraw
+      </button>
     </div>
 
 
@@ -459,7 +468,9 @@ body{
       <div class="ub-title">GST Collected</div>
       <div class="ub-amount" id="ubGST">+₹0</div>
       <button class="small-btn ub-btn"
-        onclick="gstEngine.promptGST()">Pay GST</button>
+      data-withdraw="gst-collected">
+      Pay GST
+      </button>
     </div>
 
 
