@@ -1,5 +1,5 @@
 /* ===========================================================
-   LEDGER ENGINE v8 — ENTERPRISE + DAILY REPORT SUPPORT
+   LEDGER ENGINE v13 — FULL COUNTER BALANCE + REPORT SYSTEM
 =========================================================== */
 
 (function(){
@@ -26,15 +26,18 @@ const ledgerFields = new Set([
 "salesInvestmentReturn",
 "serviceInvestmentReturn",
 
-"expensesTotal",
-"withdrawalsTotal",
-
-"gstCollected",
-"gstPaid",
-
 "stockWithdrawTotal",
 "serviceWithdrawTotal",
-"openingWithdraw"
+
+"expensesTotal",
+
+"salesProfitWithdraw",
+"serviceProfitWithdraw",
+
+"openingWithdraw",
+
+"gstCollected",
+"gstPaid"
 ]);
 
 
@@ -69,15 +72,18 @@ serviceProfit:0,
 salesInvestmentReturn:0,
 serviceInvestmentReturn:0,
 
+stockWithdrawTotal:0,
+serviceWithdrawTotal:0,
+
 expensesTotal:0,
-withdrawalsTotal:0,
+
+salesProfitWithdraw:0,
+serviceProfitWithdraw:0,
+
+openingWithdraw:0,
 
 gstCollected:0,
 gstPaid:0,
-
-stockWithdrawTotal:0,
-serviceWithdrawTotal:0,
-openingWithdraw:0,
 
 netFlow:0,
 closingBalance:opening,
@@ -94,27 +100,45 @@ updatedAt:Date.now()
 
 
 /* ===========================================================
-   CALCULATE NET FLOW
+   COUNTER BALANCE LOGIC
 =========================================================== */
 
 function calculateNetFlow(){
 
 if(!currentLedger) return;
 
-const profit =
+const cashIn =
+
 num(currentLedger.salesProfit) +
-num(currentLedger.serviceProfit);
+num(currentLedger.serviceProfit) +
+num(currentLedger.salesInvestmentReturn) +
+num(currentLedger.serviceInvestmentReturn) +
+num(currentLedger.gstCollected);
 
-const expenses =
-num(currentLedger.expensesTotal);
 
-currentLedger.netFlow = profit - expenses;
+const cashOut =
+
+num(currentLedger.stockWithdrawTotal) +
+num(currentLedger.serviceWithdrawTotal) +
+num(currentLedger.expensesTotal) +
+num(currentLedger.salesProfitWithdraw) +
+num(currentLedger.serviceProfitWithdraw) +
+num(currentLedger.openingWithdraw) +
+num(currentLedger.gstPaid);
+
+currentLedger.netFlow = cashIn - cashOut;
+
 currentLedger.closingBalance =
 num(currentLedger.openingBalance) +
 currentLedger.netFlow;
 
 }
-   
+
+
+/* ===========================================================
+   BUTTON STATE
+=========================================================== */
+
 function updateCloseButtonState(){
 
 const btn = document.getElementById("closeLedgerBtn");
@@ -124,6 +148,7 @@ if(!btn || !currentLedger) return;
 btn.disabled = currentLedger.isClosed;
 
 }
+
 
 /* ===========================================================
    ENSURE TODAY LEDGER
@@ -148,15 +173,9 @@ db.collection("users")
 const snap = await ref.get();
 
 
-/* ---------- CREATE LEDGER IF MISSING ---------- */
-
 if(!snap.exists){
 
-console.log("📦 Creating ledger:",today);
-
 let opening=0;
-
-/* get yesterday ledger */
 
 const y = new Date();
 y.setDate(y.getDate()-1);
@@ -192,18 +211,11 @@ currentLedger = snap.data();
 
 }
 
-
-/* ---------- CALCULATE ---------- */
-
 calculateNetFlow();
 
 updateCloseButtonState();
 
-/* ---------- EVENT ---------- */
-
-window.dispatchEvent(
-new Event("ledger-ready")
-);
+window.dispatchEvent(new Event("ledger-ready"));
 
 console.log("📒 Ledger ready:",today);
 
@@ -277,48 +289,7 @@ console.error("Ledger update failed",err);
 
 updateLock=false;
 
-window.dispatchEvent(
-new Event("ledger-updated")
-);
-
-};
-
-
-/* ===========================================================
-   DAILY LEDGER DATA BUILDER
-=========================================================== */
-
-window.buildDailyLedgerReport = function(dateKey){
-
-const sales =
-(window.sales||[])
-.filter(s=>s.date===dateKey);
-
-const services =
-(window.services||[])
-.filter(s=>s.date_in===dateKey || s.date_out===dateKey);
-
-const expenses =
-(window.expenses||[])
-.filter(e=>e.date===dateKey);
-
-const withdraws =
-(window.withdraws||[])
-.filter(w=>w.date===dateKey);
-
-const collections =
-(window.collections||[])
-.filter(c=>c.date===dateKey);
-
-return {
-
-sales,
-services,
-expenses,
-withdraws,
-collections
-
-};
+window.dispatchEvent(new Event("ledger-updated"));
 
 };
 
@@ -368,9 +339,8 @@ updatedAt:Date.now()
 
 });
 
-console.log("✅ Ledger closed");
 
-/* ---------- CREATE NEXT DAY ---------- */
+/* NEXT DAY */
 
 const nextDate = new Date(currentDateKey);
 nextDate.setDate(nextDate.getDate()+1);
@@ -390,37 +360,251 @@ const nextSnap = await nextRef.get();
 
 if(!nextSnap.exists){
 
-await nextRef.set(
-emptyLedger(closingBalance)
-);
-
-console.log("📦 Next ledger:",nextKey);
+await nextRef.set(emptyLedger(closingBalance));
 
 }
 
 alert("Ledger closed successfully");
 
-window.dispatchEvent(
-new Event("ledger-updated")
-);
+window.dispatchEvent(new Event("ledger-updated"));
 
 };
+
+
+/* ===========================================================
+   DAILY LEDGER DATA BUILDER
+=========================================================== */
+
+window.buildDailyLedgerReport = function(dateKey){
+
+const sales =
+(window.sales||[]).filter(s=>s.date===dateKey);
+
+const services =
+(window.services||[])
+.filter(s=>s.date_in===dateKey || s.date_out===dateKey);
+
+const expenses =
+(window.expenses||[])
+.filter(e=>e.date===dateKey);
+
+const withdraws =
+(window.withdraws||[])
+.filter(w=>w.date===dateKey);
+
+const collections =
+(window.collections||[])
+.filter(c=>c.date===dateKey);
+
+return {sales,services,expenses,withdraws,collections};
+
+};
+
+
+/* ===========================================================
+   BUILD DAILY LEDGER TEXT
+=========================================================== */
+
+window.generateDailyLedgerText = function(dateKey){
+
+const report = buildDailyLedgerReport(dateKey);
+
+let txt="";
+
+txt+="📒 Shop Ledger Report\n\n";
+txt+="Date: "+dateKey+"\n\n";
+
+
+if(report.sales?.length){
+
+txt+="🧾 SALES\n";
+
+report.sales.forEach(s=>{
+
+txt+=
+`${s.product} Qty:${s.qty} Total:${s.total}\n`;
+
+});
+
+txt+="\n";
+
+}
+
+
+if(report.services?.length){
+
+txt+="🛠 SERVICE\n";
+
+report.services.forEach(j=>{
+
+txt+=
+`${j.customer} Paid:${j.paid}\n`;
+
+});
+
+txt+="\n";
+
+}
+
+
+if(report.expenses?.length){
+
+txt+="💸 EXPENSES\n";
+
+report.expenses.forEach(e=>{
+
+txt+=`${e.note} ₹${e.amount}\n`;
+
+});
+
+txt+="\n";
+
+}
+
+
+if(report.withdraws?.length){
+
+txt+="💰 WITHDRAW\n";
+
+report.withdraws.forEach(w=>{
+
+txt+=`${w.note} ₹${w.amount}\n`;
+
+});
+
+txt+="\n";
+
+}
+
+return txt;
+
+};
+
+
+/* ===========================================================
+   DOWNLOAD CSV
+=========================================================== */
+
+window.downloadLedgerCSV=function(dateKey){
+
+const report=buildDailyLedgerReport(dateKey);
+
+let rows=[["TYPE","DETAIL","AMOUNT"]];
+
+report.sales.forEach(s=>{
+rows.push(["SALE",s.product,s.total]);
+});
+
+report.services.forEach(j=>{
+rows.push(["SERVICE",j.customer,j.paid]);
+});
+
+report.expenses.forEach(e=>{
+rows.push(["EXPENSE",e.note,e.amount]);
+});
+
+report.withdraws.forEach(w=>{
+rows.push(["WITHDRAW",w.note,w.amount]);
+});
+
+let csv=rows.map(r=>r.join(",")).join("\n");
+
+const blob=new Blob([csv],{type:"text/csv"});
+const url=URL.createObjectURL(blob);
+
+const a=document.createElement("a");
+a.href=url;
+a.download="ledger-"+dateKey+".csv";
+a.click();
+
+URL.revokeObjectURL(url);
+
+};
+
+
+/* ===========================================================
+   DOWNLOAD TEXT REPORT
+=========================================================== */
+
+window.downloadLedgerReport=function(dateKey){
+
+const txt=generateDailyLedgerText(dateKey);
+
+const blob=new Blob([txt],{type:"text/plain"});
+const url=URL.createObjectURL(blob);
+
+const a=document.createElement("a");
+a.href=url;
+a.download="ledger-"+dateKey+".txt";
+a.click();
+
+URL.revokeObjectURL(url);
+
+};
+
+
+/* ===========================================================
+   WHATSAPP SHARE
+=========================================================== */
+
+window.shareLedgerWhatsApp=function(dateKey){
+
+const txt=generateDailyLedgerText(dateKey);
+
+const url=
+"https://wa.me/?text="+encodeURIComponent(txt);
+
+window.open(url,"_blank");
+
+};
+
+
+/* ===========================================================
+   LEDGER VIEW BUILDER
+=========================================================== */
+
+window.renderDailyLedger=function(dateKey){
+
+const box=document.getElementById("dailyLedgerBox");
+
+if(!box) return;
+
+const txt=generateDailyLedgerText(dateKey);
+
+box.innerHTML=
+`<pre style="white-space:pre-wrap;font-size:13px">
+${txt}
+</pre>`;
+
+};
+
+
+/* ===========================================================
+   AUTO DATE LOAD
+=========================================================== */
+
+window.loadTodayLedger=function(){
+
+const today=new Date().toISOString().slice(0,10);
+
+renderDailyLedger(today);
+
+};
+
 
 /* ===========================================================
    PUBLIC API
 =========================================================== */
 
-window.ledgerEngine = {
-
+window.ledgerEngine={
 getCurrent:()=>currentLedger,
 getDateKey:()=>currentDateKey,
 refresh:ensureTodayLedger
-
 };
 
 
 /* ===========================================================
-   AUTO LOAD LEDGER AFTER LOGIN
+   AUTO LOAD LEDGER
 =========================================================== */
 
 auth.onAuthStateChanged(user=>{
@@ -437,269 +621,6 @@ ensureTodayLedger();
 
 });
 
-
-   /* ===========================================================
-   DAILY LEDGER REPORT SYSTEM
-=========================================================== */
-
-
-/* ===========================================================
-   BUILD DAILY LEDGER TEXT
-=========================================================== */
-
-window.generateDailyLedgerText = function(dateKey){
-
-const report =
-window.buildDailyLedgerReport
-? window.buildDailyLedgerReport(dateKey)
-: null;
-
-if(!report) return "No data";
-
-let txt = "";
-
-txt += "📒 Shop Ledger Report\n\n";
-txt += "Date: "+dateKey+"\n\n";
-
-
-/* SALES */
-
-if(report.sales?.length){
-
-txt += "🧾 SALES\n";
-
-report.sales.forEach(s=>{
-
-txt +=
-`${s.time||""} | ${s.product}\n`+
-`Qty:${s.qty} × ₹${s.price}\n`+
-`Total: ₹${s.total}\n`+
-`Profit: ₹${s.profit}\n\n`;
-
-});
-
-}
-
-
-/* SERVICES */
-
-if(report.services?.length){
-
-txt += "🛠 SERVICE\n";
-
-report.services.forEach(j=>{
-
-txt +=
-`${j.customer} — ${j.item}\n`+
-`Invest: ₹${j.invest}\n`+
-`Paid: ₹${j.paid}\n`+
-`Profit: ₹${j.profit}\n\n`;
-
-});
-
-}
-
-
-/* EXPENSES */
-
-if(report.expenses?.length){
-
-txt += "💸 EXPENSES\n";
-
-report.expenses.forEach(e=>{
-
-txt +=
-`${e.note||"Expense"} — ₹${e.amount}\n`;
-
-});
-
-txt += "\n";
-
-}
-
-
-/* WITHDRAW */
-
-if(report.withdraws?.length){
-
-txt += "💰 WITHDRAW\n";
-
-report.withdraws.forEach(w=>{
-
-txt +=
-`${w.note||"Withdraw"} — ₹${w.amount}\n`;
-
-});
-
-txt += "\n";
-
-}
-
-
-return txt;
-
-};
-
-
-
-/* ===========================================================
-   DOWNLOAD CSV
-=========================================================== */
-
-window.downloadLedgerCSV = function(dateKey){
-
-const report = window.buildDailyLedgerReport(dateKey);
-let rows = [];
-
-rows.push([
-"TYPE","DETAIL","AMOUNT"
-]);
-
-report.sales.forEach(s=>{
-
-rows.push([
-"SALE",
-`${s.product} Qty:${s.qty}`,
-s.total
-]);
-
-});
-
-report.services.forEach(j=>{
-
-rows.push([
-"SERVICE",
-j.customer,
-j.paid
-]);
-
-});
-
-report.expenses.forEach(e=>{
-
-rows.push([
-"EXPENSE",
-e.note||"",
-e.amount
-]);
-
-});
-
-report.withdraws.forEach(w=>{
-
-rows.push([
-"WITHDRAW",
-w.note||"",
-w.amount
-]);
-
-});
-
-
-let csv =
-rows.map(r=>r.join(",")).join("\n");
-
-const blob =
-new Blob([csv],{type:"text/csv"});
-
-const url =
-URL.createObjectURL(blob);
-
-const a =
-document.createElement("a");
-
-a.href=url;
-a.download="ledger-"+dateKey+".csv";
-a.click();
-
-URL.revokeObjectURL(url);
-
-};
-
-
-
-/* ===========================================================
-   DOWNLOAD TEXT REPORT
-=========================================================== */
-
-window.downloadLedgerReport = function(dateKey){
-
-const txt =
-generateDailyLedgerText(dateKey);
-
-const blob =
-new Blob([txt],{type:"text/plain"});
-
-const url =
-URL.createObjectURL(blob);
-
-const a =
-document.createElement("a");
-
-a.href=url;
-a.download="ledger-"+dateKey+".txt";
-a.click();
-
-URL.revokeObjectURL(url);
-
-};
-
-
-
-/* ===========================================================
-   WHATSAPP SHARE
-=========================================================== */
-
-window.shareLedgerWhatsApp = function(dateKey){
-
-const txt =
-generateDailyLedgerText(dateKey);
-
-const url =
-"https://wa.me/?text=" +
-encodeURIComponent(txt);
-
-window.open(url,"_blank");
-
-};
-
-
-
-/* ===========================================================
-   LEDGER VIEW BUILDER
-=========================================================== */
-
-window.renderDailyLedger = function(dateKey){
-
-const box =
-document.getElementById("dailyLedgerBox");
-
-if(!box) return;
-
-const txt =
-generateDailyLedgerText(dateKey);
-
-box.innerHTML =
-`<pre style="white-space:pre-wrap;font-size:13px">
-${txt}
-</pre>`;
-
-};
-
-
-
-/* ===========================================================
-   AUTO DATE LOAD
-=========================================================== */
-
-window.loadTodayLedger = function(){
-
-const today =
-new Date().toISOString().slice(0,10);
-
-window.renderDailyLedger(today);
-
-};
-   console.log("%c📒 Ledger Engine READY ✔","color:#673ab7;font-weight:bold;");
+console.log("%c📒 Ledger Engine READY ✔","color:#673ab7;font-weight:bold;");
 
 })();
