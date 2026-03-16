@@ -1,207 +1,266 @@
 /* ===========================================================
-   UNIVERSAL BAR v14 — NET FLOW + TODAY PROFIT + COUNTER BALANCE + INVESTMENT
+   UNIVERSAL BAR v17 — ERP SAFE
+   TODAY PROFIT COLOR + COUNTER BALANCE + BALANCE SPLIT
 =========================================================== */
 
-(function () {
+(function(){
 
-  if(window.__universalBarLoaded) return;
-  window.__universalBarLoaded = true;
+if(window.__universalBarLoaded) return;
+window.__universalBarLoaded = true;
 
-  console.log("%c💰 Universal Bar v14 Loading...","color:#0ea5e9;font-weight:bold;");
+console.log("%c💰 Universal Bar v17 Loading...","color:#0ea5e9;font-weight:bold;");
 
-  const num = v => isNaN(v = Number(v)) ? 0 : v;
-  const money = v => "₹" + Math.round(num(v));
 
-  function renderUniversalBar(){
+/* ===============================
+   HELPERS
+=============================== */
 
-    const L =
-      window.currentLedger ||
-      window.ledgerEngine?.getCurrent?.();
+const num = v => isNaN(v = Number(v)) ? 0 : v;
 
-    if(!L) return;
+const plus = v => v>0 ? "+₹"+Math.round(v) : "₹0";
+const minus = v => v>0 ? "-₹"+Math.round(v) : "₹0";
+const money = v => "₹"+Math.round(num(v));
 
-    const set = (id,val)=>{
-      const el=document.getElementById(id);
-      if(el) el.textContent = money(val);
-    };
+function set(id,val){
+const el=document.getElementById(id);
+if(el) el.textContent = val;
+}
 
-    /* ===============================
-       DISPLAY VALUES
-    =============================== */
 
-    set("ubOpening",L.openingBalance);
+/* ===============================
+   RENDER UNIVERSAL BAR
+=============================== */
 
-    set("ubSaleProfit",L.salesProfit);
-    set("ubServiceProfit",L.serviceProfit);
+function renderUniversalBar(){
 
-    /* STOCK / SERVICE INVESTMENT RETURN */
+const L =
+window.currentLedger ||
+window.ledgerEngine?.getCurrent?.();
 
-    set("ubSaleInv",L.salesInvestmentReturn || 0);
-    set("ubServiceInv",L.serviceInvestmentReturn || 0);
+if(!L) return;
 
-    set("ubGstCollected",L.gstCollected);
 
-    set("ubExpenses",L.expensesTotal || L.expenses);
+/* ===============================
+   OPENING
+=============================== */
 
-    set("ubOpeningWithdraw",L.openingWithdraw || 0);
+set("ubOpening",money(L.openingBalance));
 
-    set("ubWithdraw",L.withdrawalsTotal || L.withdrawals);
 
-    set("ubGstPaid",L.gstPaid || 0);
+/* ===============================
+   INCOME
+=============================== */
 
+set("ubSaleProfit",plus(L.salesProfit));
+set("ubServiceProfit",plus(L.serviceProfit));
 
-    /* ===============================
-       NET FLOW
-    =============================== */
+set("ubSaleInv",plus(L.salesInvestmentReturn));
+set("ubServiceInv",plus(L.serviceInvestmentReturn));
 
-    set("ubNetFlow",L.netFlow);
+set("ubGST",plus(L.gstCollected));
 
-    const netEl=document.getElementById("ubNetFlow");
 
-    if(netEl){
+/* ===============================
+   EXPENSE
+=============================== */
 
-      netEl.classList.remove(
-        "ub-netflow-positive",
-        "ub-netflow-negative"
-      );
+set("ubExpenses",minus(L.expensesTotal));
 
-      if(num(L.netFlow) >= 0)
-        netEl.classList.add("ub-netflow-positive");
-      else
-        netEl.classList.add("ub-netflow-negative");
+set("ubSalesProfitWithdraw",minus(L.salesProfitWithdraw));
+set("ubServiceProfitWithdraw",minus(L.serviceProfitWithdraw));
 
-    }
+set("ubStockWithdraw",minus(L.stockWithdrawTotal));
+set("ubServiceInvWithdraw",minus(L.serviceWithdrawTotal));
 
+set("ubOpeningWithdraw",minus(L.openingWithdraw));
 
-    /* ===============================
-       TODAY PROFIT
-    =============================== */
+set("ubGSTPaid",minus(L.gstPaid));
 
-    const todayProfit =
-        num(L.salesProfit)
-      + num(L.serviceProfit)
-      - num(L.expensesTotal || L.expenses);
 
-    set("ubTodayProfit",todayProfit);
+/* ===============================
+   TODAY PROFIT
+=============================== */
 
-    const profitEl=document.getElementById("ubTodayProfit");
+const todayProfit =
 
-    if(profitEl){
+num(L.salesProfit)
++ num(L.serviceProfit)
+- num(L.expensesTotal);
 
-      profitEl.classList.remove(
-        "ub-netflow-positive",
-        "ub-netflow-negative"
-      );
+const profitEl =
+document.getElementById("ubTodayProfit");
 
-      if(todayProfit >= 0)
-        profitEl.classList.add("ub-netflow-positive");
-      else
-        profitEl.classList.add("ub-netflow-negative");
+if(profitEl){
 
-    }
+profitEl.textContent =
+(todayProfit>=0?"+₹":"-₹")+Math.abs(todayProfit);
 
+/* COLOR LOGIC */
 
-    /* ===============================
-       COUNTER BALANCE
-    =============================== */
+profitEl.classList.remove(
+"ub-netflow-positive",
+"ub-netflow-negative"
+);
 
-    const counterBalance =
-        num(L.openingBalance)
-      + num(L.gstCollected)
-      - num(L.openingWithdraw)
-      - num(L.withdrawalsTotal || 0)
-      - num(L.gstPaid);
+if(todayProfit>=0)
+profitEl.classList.add("ub-netflow-positive");
+else
+profitEl.classList.add("ub-netflow-negative");
 
-    set("ubCounterBalance",counterBalance);
+}
 
-    const counterEl=document.getElementById("ubCounterBalance");
 
-    if(counterEl){
+/* ===============================
+   COUNTER BALANCE
+=============================== */
 
-      counterEl.classList.remove(
-        "ub-netflow-positive",
-        "ub-netflow-negative"
-      );
+const counterBalance =
 
-      if(counterBalance >= 0)
-        counterEl.classList.add("ub-netflow-positive");
-      else
-        counterEl.classList.add("ub-netflow-negative");
+num(L.openingBalance)
 
-    }
++ num(L.salesProfit)
++ num(L.serviceProfit)
 
++ num(L.salesInvestmentReturn)
++ num(L.serviceInvestmentReturn)
 
-    /* ===============================
-       PENDING CREDIT
-    =============================== */
++ num(L.gstCollected)
 
-    let pending = 0;
+- num(L.expensesTotal)
 
-    (window.sales || []).forEach(s=>{
-      if(String(s.status).toLowerCase()==="credit"){
-        pending += num(
-          s.remaining ?? s.balance ?? s.due ?? s.total
-        );
-      }
-    });
+- num(L.salesProfitWithdraw)
+- num(L.serviceProfitWithdraw)
 
-    (window.services || []).forEach(j=>{
-      if(String(j.status).toLowerCase()==="credit"){
-        pending += num(
-          j.remaining ?? j.balance ?? j.due ?? j.total
-        );
-      }
-    });
+- num(L.stockWithdrawTotal)
+- num(L.serviceWithdrawTotal)
 
-    set("ubPendingCredit",pending);
+- num(L.openingWithdraw)
 
-  }
+- num(L.gstPaid);
 
+const counterEl =
+document.getElementById("ubCounterBalance");
 
-  /* ===============================
-     BUTTON ACTIONS
-  =============================== */
+if(counterEl){
 
-  function bindActions(){
+counterEl.textContent =
+"₹"+Math.max(0,Math.round(counterBalance));
 
-    const w=document.getElementById("cashWithdraw");
-    const e=document.getElementById("cashExpense");
-    const g=document.getElementById("cashGST");
+}
 
-    if(w) w.onclick=()=>{
-      if(window.withdrawEngine)
-        withdrawEngine.promptWithdraw();
-    };
 
-    if(e) e.onclick=()=>{
-      if(window.expenseEngine)
-        expenseEngine.promptExpense();
-    };
+/* ===============================
+   TODAY BALANCE SPLIT
+=============================== */
 
-    if(g) g.onclick=()=>{
-      if(window.gstEngine)
-        gstEngine.promptGST();
-    };
+let cash = num(L.cashBalance);
+let upi  = num(L.upiBalance);
 
-  }
+/* fallback */
 
+if(!cash && !upi){
 
-  /* ===============================
-     EVENTS
-  =============================== */
+cash = counterBalance;
+upi = 0;
 
-  window.renderUniversalBar = renderUniversalBar;
+}
 
-  window.addEventListener("ledger-ready",renderUniversalBar);
-  window.addEventListener("ledger-updated",renderUniversalBar);
+set("ubCash",money(cash));
+set("ubUPI",money(upi));
 
-  window.addEventListener("load",()=>{
 
-    bindActions();
-    renderUniversalBar();
+/* ===============================
+   PENDING CREDIT
+=============================== */
 
-  });
+let pending = 0;
 
-  console.log("%c💰 Universal Bar READY ✔","color:#0ea5e9;font-weight:bold;");
+(window.sales || []).forEach(s=>{
+
+if(String(s.status).toLowerCase()==="credit"){
+
+pending += num(
+s.remaining ??
+s.balance ??
+s.due ??
+s.total
+);
+
+}
+
+});
+
+(window.services || []).forEach(j=>{
+
+if(String(j.status).toLowerCase()==="credit"){
+
+pending += num(
+j.remaining ??
+j.balance ??
+j.due ??
+j.total
+);
+
+}
+
+});
+
+set("ubPendingCredit",money(pending));
+
+}
+
+
+/* ===============================
+   BUTTON ACTIONS
+=============================== */
+
+function bindActions(){
+
+const withdrawBtns =
+document.querySelectorAll(".ub-btn");
+
+withdrawBtns.forEach(btn=>{
+
+btn.addEventListener("click",()=>{
+
+if(window.withdrawEngine)
+withdrawEngine.promptWithdraw();
+
+});
+
+});
+
+}
+
+
+/* ===============================
+   EVENTS
+=============================== */
+
+window.renderUniversalBar =
+renderUniversalBar;
+
+window.addEventListener(
+"ledger-ready",
+renderUniversalBar
+);
+
+window.addEventListener(
+"ledger-updated",
+renderUniversalBar
+);
+
+window.addEventListener("load",()=>{
+
+bindActions();
+renderUniversalBar();
+
+});
+
+
+console.log(
+"%c💰 Universal Bar READY ✔",
+"color:#0ea5e9;font-weight:bold;"
+);
 
 })();
