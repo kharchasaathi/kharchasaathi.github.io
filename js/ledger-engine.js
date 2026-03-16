@@ -1,5 +1,5 @@
 /* ===========================================================
-   LEDGER ENGINE v13 — FULL COUNTER BALANCE + REPORT SYSTEM
+   LEDGER ENGINE v14.1 — SYSTEM SYNC + REPORT SYSTEM
 =========================================================== */
 
 (function(){
@@ -7,37 +7,26 @@
 if(window.__ledgerEngineLoaded) return;
 window.__ledgerEngineLoaded = true;
 
-console.log("%c📒 Ledger Engine Loading...","color:#673ab7;font-weight:bold;");
+console.log("%c📒 Ledger Engine v14.1 Loading...","color:#673ab7;font-weight:bold;");
 
-let currentLedger = null;
-let currentDateKey = null;
+let currentLedger=null;
+let currentDateKey=null;
 
-const num = v => isNaN(v = Number(v)) ? 0 : v;
+const num=v=>isNaN(v=Number(v))?0:v;
 
 
 /* ===========================================================
    ALLOWED LEDGER FIELDS
 =========================================================== */
 
-const ledgerFields = new Set([
-"salesProfit",
-"serviceProfit",
-
-"salesInvestmentReturn",
-"serviceInvestmentReturn",
-
-"stockWithdrawTotal",
-"serviceWithdrawTotal",
-
+const ledgerFields=new Set([
+"salesProfit","serviceProfit",
+"salesInvestmentReturn","serviceInvestmentReturn",
+"stockWithdrawTotal","serviceWithdrawTotal",
 "expensesTotal",
-
-"salesProfitWithdraw",
-"serviceProfitWithdraw",
-
+"salesProfitWithdraw","serviceProfitWithdraw",
 "openingWithdraw",
-
-"gstCollected",
-"gstPaid"
+"gstCollected","gstPaid"
 ]);
 
 
@@ -47,7 +36,7 @@ const ledgerFields = new Set([
 
 function getTodayKey(){
 
-const d = new Date();
+const d=new Date();
 
 return d.getFullYear()+"-"+ 
 String(d.getMonth()+1).padStart(2,"0")+"-"+ 
@@ -62,7 +51,7 @@ String(d.getDate()).padStart(2,"0");
 
 function emptyLedger(opening=0){
 
-return {
+return{
 
 openingBalance:opening,
 
@@ -100,37 +89,47 @@ updatedAt:Date.now()
 
 
 /* ===========================================================
-   COUNTER BALANCE LOGIC
+   CALCULATE LEDGER
 =========================================================== */
 
-function calculateNetFlow(){
+function calculateLedger(){
 
 if(!currentLedger) return;
 
-const cashIn =
+/* NET FLOW = TODAY PROFIT */
 
-num(currentLedger.salesProfit) +
-num(currentLedger.serviceProfit) +
-num(currentLedger.salesInvestmentReturn) +
-num(currentLedger.serviceInvestmentReturn) +
-num(currentLedger.gstCollected);
+currentLedger.netFlow=
+
+num(currentLedger.salesProfit)
++num(currentLedger.serviceProfit)
+-num(currentLedger.expensesTotal);
 
 
-const cashOut =
+/* CLOSING BALANCE */
 
-num(currentLedger.stockWithdrawTotal) +
-num(currentLedger.serviceWithdrawTotal) +
-num(currentLedger.expensesTotal) +
-num(currentLedger.salesProfitWithdraw) +
-num(currentLedger.serviceProfitWithdraw) +
-num(currentLedger.openingWithdraw) +
-num(currentLedger.gstPaid);
+currentLedger.closingBalance=
 
-currentLedger.netFlow = cashIn - cashOut;
+num(currentLedger.openingBalance)
 
-currentLedger.closingBalance =
-num(currentLedger.openingBalance) +
-currentLedger.netFlow;
++num(currentLedger.salesProfit)
++num(currentLedger.serviceProfit)
+
++num(currentLedger.salesInvestmentReturn)
++num(currentLedger.serviceInvestmentReturn)
+
++num(currentLedger.gstCollected)
+
+-num(currentLedger.expensesTotal)
+
+-num(currentLedger.stockWithdrawTotal)
+-num(currentLedger.serviceWithdrawTotal)
+
+-num(currentLedger.salesProfitWithdraw)
+-num(currentLedger.serviceProfitWithdraw)
+
+-num(currentLedger.openingWithdraw)
+
+-num(currentLedger.gstPaid);
 
 }
 
@@ -141,11 +140,11 @@ currentLedger.netFlow;
 
 function updateCloseButtonState(){
 
-const btn = document.getElementById("closeLedgerBtn");
+const btn=document.getElementById("closeLedgerBtn");
 
-if(!btn || !currentLedger) return;
+if(!btn||!currentLedger) return;
 
-btn.disabled = currentLedger.isClosed;
+btn.disabled=currentLedger.isClosed;
 
 }
 
@@ -158,34 +157,34 @@ async function ensureTodayLedger(){
 
 if(!auth.currentUser) return;
 
-const uid = auth.currentUser.uid;
+const uid=auth.currentUser.uid;
 
-const today = getTodayKey();
+const today=getTodayKey();
 
-currentDateKey = today;
+currentDateKey=today;
 
-const ref =
+const ref=
 db.collection("users")
 .doc(uid)
 .collection("ledger")
 .doc(today);
 
-const snap = await ref.get();
+const snap=await ref.get();
 
 
 if(!snap.exists){
 
 let opening=0;
 
-const y = new Date();
+const y=new Date();
 y.setDate(y.getDate()-1);
 
-const yKey =
+const yKey=
 y.getFullYear()+"-"+ 
 String(y.getMonth()+1).padStart(2,"0")+"-"+ 
 String(y.getDate()).padStart(2,"0");
 
-const ySnap =
+const ySnap=
 await db.collection("users")
 .doc(uid)
 .collection("ledger")
@@ -194,24 +193,24 @@ await db.collection("users")
 
 if(ySnap.exists){
 
-opening = num(ySnap.data().closingBalance);
+opening=num(ySnap.data().closingBalance);
 
 }
 
-const newLedger = emptyLedger(opening);
+const newLedger=emptyLedger(opening);
 
 await ref.set(newLedger);
 
-currentLedger = newLedger;
+currentLedger=newLedger;
 
 }
 else{
 
-currentLedger = snap.data();
+currentLedger=snap.data();
 
 }
 
-calculateNetFlow();
+calculateLedger();
 
 updateCloseButtonState();
 
@@ -228,7 +227,7 @@ console.log("📒 Ledger ready:",today);
 
 let updateLock=false;
 
-window.updateLedgerField = async function(field,value){
+window.updateLedgerField=async function(field,value){
 
 if(!ledgerFields.has(field)){
 console.warn("Invalid ledger field:",field);
@@ -249,19 +248,19 @@ return;
 
 updateLock=true;
 
-currentLedger[field] =
-num(currentLedger[field]) + num(value);
+currentLedger[field]=
+num(currentLedger[field])+num(value);
 
-calculateNetFlow();
+calculateLedger();
 
-const user = auth.currentUser;
+const user=auth.currentUser;
 
 if(!user){
 updateLock=false;
 return;
 }
 
-const ref =
+const ref=
 db.collection("users")
 .doc(user.uid)
 .collection("ledger")
@@ -298,9 +297,9 @@ window.dispatchEvent(new Event("ledger-updated"));
    CLOSE DAY
 =========================================================== */
 
-window.closeLedgerDay = async function(){
+window.closeLedgerDay=async function(){
 
-const user = auth.currentUser;
+const user=auth.currentUser;
 
 if(!user){
 alert("Login required");
@@ -317,13 +316,11 @@ alert("Already closed");
 return;
 }
 
-calculateNetFlow();
+calculateLedger();
 
-const closingBalance =
-num(currentLedger.openingBalance) +
-num(currentLedger.netFlow);
+const closingBalance=currentLedger.closingBalance;
 
-const ref =
+const ref=
 db.collection("users")
 .doc(user.uid)
 .collection("ledger")
@@ -342,21 +339,21 @@ updatedAt:Date.now()
 
 /* NEXT DAY */
 
-const nextDate = new Date(currentDateKey);
+const nextDate=new Date(currentDateKey);
 nextDate.setDate(nextDate.getDate()+1);
 
-const nextKey =
+const nextKey=
 nextDate.getFullYear()+"-"+ 
 String(nextDate.getMonth()+1).padStart(2,"0")+"-"+ 
 String(nextDate.getDate()).padStart(2,"0");
 
-const nextRef =
+const nextRef=
 db.collection("users")
 .doc(user.uid)
 .collection("ledger")
 .doc(nextKey);
 
-const nextSnap = await nextRef.get();
+const nextSnap=await nextRef.get();
 
 if(!nextSnap.exists){
 
@@ -375,28 +372,23 @@ window.dispatchEvent(new Event("ledger-updated"));
    DAILY LEDGER DATA BUILDER
 =========================================================== */
 
-window.buildDailyLedgerReport = function(dateKey){
+window.buildDailyLedgerReport=function(dateKey){
 
-const sales =
-(window.sales||[]).filter(s=>s.date===dateKey);
+const sales=(window.sales||[]).filter(s=>s.date===dateKey);
 
-const services =
-(window.services||[])
-.filter(s=>s.date_in===dateKey || s.date_out===dateKey);
+const services=(window.services||[])
+.filter(s=>s.date_in===dateKey||s.date_out===dateKey);
 
-const expenses =
-(window.expenses||[])
+const expenses=(window.expenses||[])
 .filter(e=>e.date===dateKey);
 
-const withdraws =
-(window.withdraws||[])
+const withdraws=(window.withdraws||[])
 .filter(w=>w.date===dateKey);
 
-const collections =
-(window.collections||[])
+const collections=(window.collections||[])
 .filter(c=>c.date===dateKey);
 
-return {sales,services,expenses,withdraws,collections};
+return{sales,services,expenses,withdraws,collections};
 
 };
 
@@ -405,9 +397,9 @@ return {sales,services,expenses,withdraws,collections};
    BUILD DAILY LEDGER TEXT
 =========================================================== */
 
-window.generateDailyLedgerText = function(dateKey){
+window.generateDailyLedgerText=function(dateKey){
 
-const report = buildDailyLedgerReport(dateKey);
+const report=buildDailyLedgerReport(dateKey);
 
 let txt="";
 
@@ -421,8 +413,7 @@ txt+="🧾 SALES\n";
 
 report.sales.forEach(s=>{
 
-txt+=
-`${s.product} Qty:${s.qty} Total:${s.total}\n`;
+txt+=`${s.product} Qty:${s.qty} Total:${s.total}\n`;
 
 });
 
@@ -437,8 +428,7 @@ txt+="🛠 SERVICE\n";
 
 report.services.forEach(j=>{
 
-txt+=
-`${j.customer} Paid:${j.paid}\n`;
+txt+=`${j.customer} Paid:${j.paid}\n`;
 
 });
 
@@ -551,8 +541,7 @@ window.shareLedgerWhatsApp=function(dateKey){
 
 const txt=generateDailyLedgerText(dateKey);
 
-const url=
-"https://wa.me/?text="+encodeURIComponent(txt);
+const url="https://wa.me/?text="+encodeURIComponent(txt);
 
 window.open(url,"_blank");
 
