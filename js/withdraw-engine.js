@@ -1,12 +1,6 @@
 /* ===========================================================
-   WITHDRAW ENGINE v6
-   Multi Withdraw Safe System
-   ✔ Profit Withdraw Limit
-   ✔ Stock Withdraw Limit
-   ✔ Service Withdraw Limit
-   ✔ GST Paid Limit
-   ✔ Firestore Safe Update
-   ✔ Amount Validation Fix
+   WITHDRAW ENGINE v7
+   Full Universal Bar Compatible System
 =========================================================== */
 
 (function(){
@@ -14,7 +8,7 @@
 if(window.__withdrawEngineLoaded) return;
 window.__withdrawEngineLoaded = true;
 
-console.log("%c💰 Withdraw Engine Loading...","color:#16a34a;font-weight:bold;");
+console.log("%c💰 Withdraw Engine v7 Loading...","color:#16a34a;font-weight:bold;");
 
 
 /* ===========================================================
@@ -23,31 +17,31 @@ console.log("%c💰 Withdraw Engine Loading...","color:#16a34a;font-weight:bold;
 
 function validateLedger(){
 
-  const user = auth.currentUser;
+const user = auth.currentUser;
 
-  if(!user){
-    alert("Login required");
-    return null;
-  }
+if(!user){
+alert("Login required");
+return null;
+}
 
-  if(!window.ledgerEngine){
-    alert("Ledger engine not ready");
-    return null;
-  }
+if(!window.ledgerEngine){
+alert("Ledger engine not ready");
+return null;
+}
 
-  const L = ledgerEngine.getCurrent();
+const L = ledgerEngine.getCurrent();
 
-  if(!L){
-    alert("Ledger not loaded");
-    return null;
-  }
+if(!L){
+alert("Ledger not loaded");
+return null;
+}
 
-  if(L.isClosed){
-    alert("Ledger already closed for today");
-    return null;
-  }
+if(L.isClosed){
+alert("Ledger already closed for today");
+return null;
+}
 
-  return L;
+return L;
 
 }
 
@@ -58,56 +52,122 @@ function validateLedger(){
 
 function validateAmount(amount){
 
-  amount = Number(amount);
+amount = Number(amount);
 
-  if(isNaN(amount) || amount <= 0){
-    alert("Invalid amount");
-    return null;
-  }
+if(isNaN(amount) || amount <= 0){
+alert("Invalid amount");
+return null;
+}
 
-  return amount;
+return amount;
 
 }
 
 
 /* ===========================================================
-   PROFIT WITHDRAW
+   OPENING WITHDRAW
 =========================================================== */
 
-async function withdrawProfit(amount){
+async function withdrawOpening(amount){
 
-  const L = validateLedger();
-  if(!L) return;
+const L = validateLedger();
+if(!L) return;
 
-  amount = validateAmount(amount);
-  if(!amount) return;
+amount = validateAmount(amount);
+if(!amount) return;
 
-  const profit =
-      Number(L.salesProfit || 0)
-    + Number(L.serviceProfit || 0);
+const opening = Number(L.openingBalance || 0);
+const withdrawn = Number(L.openingWithdraw || 0);
 
-  const withdrawn =
-      Number(L.withdrawalsTotal || 0);
+const available = opening - withdrawn;
 
-  const availableProfit =
-      profit - withdrawn;
+if(amount > available){
 
-  if(amount > availableProfit){
+alert(
+"Opening withdraw limit exceeded.\n\n" +
+"Available: ₹" + Math.round(available)
+);
 
-    alert(
-      "Profit withdraw limit exceeded.\n\n" +
-      "Available Profit: ₹" + Math.round(availableProfit)
-    );
+return;
+}
 
-    return;
+const newTotal = withdrawn + amount;
 
-  }
+await updateLedger({
+openingWithdraw:newTotal
+});
 
-  const newTotal = withdrawn + amount;
+}
 
-  await updateLedger({
-    withdrawalsTotal: newTotal
-  });
+
+/* ===========================================================
+   SALES PROFIT WITHDRAW
+=========================================================== */
+
+async function withdrawSalesProfit(amount){
+
+const L = validateLedger();
+if(!L) return;
+
+amount = validateAmount(amount);
+if(!amount) return;
+
+const profit = Number(L.salesProfit || 0);
+const withdrawn = Number(L.salesProfitWithdraw || 0);
+
+const available = profit - withdrawn;
+
+if(amount > available){
+
+alert(
+"Sales profit withdraw limit exceeded.\n\n" +
+"Available: ₹" + Math.round(available)
+);
+
+return;
+}
+
+const newTotal = withdrawn + amount;
+
+await updateLedger({
+salesProfitWithdraw:newTotal
+});
+
+}
+
+
+/* ===========================================================
+   SERVICE PROFIT WITHDRAW
+=========================================================== */
+
+async function withdrawServiceProfit(amount){
+
+const L = validateLedger();
+if(!L) return;
+
+amount = validateAmount(amount);
+if(!amount) return;
+
+const profit = Number(L.serviceProfit || 0);
+const withdrawn = Number(L.serviceProfitWithdraw || 0);
+
+const available = profit - withdrawn;
+
+if(amount > available){
+
+alert(
+"Service profit withdraw limit exceeded.\n\n" +
+"Available: ₹" + Math.round(available)
+);
+
+return;
+}
+
+const newTotal = withdrawn + amount;
+
+await updateLedger({
+serviceProfitWithdraw:newTotal
+});
 
 }
 
@@ -118,38 +178,32 @@ async function withdrawProfit(amount){
 
 async function withdrawStock(amount){
 
-  const L = validateLedger();
-  if(!L) return;
+const L = validateLedger();
+if(!L) return;
 
-  amount = validateAmount(amount);
-  if(!amount) return;
+amount = validateAmount(amount);
+if(!amount) return;
 
-  const invest =
-      Number(L.salesInvestmentReturn || 0);
+const invest = Number(L.salesInvestmentReturn || 0);
+const withdrawn = Number(L.stockWithdrawTotal || 0);
 
-  const withdrawn =
-      Number(L.stockWithdrawTotal || 0);
+const available = invest - withdrawn;
 
-  const available =
-      invest - withdrawn;
+if(amount > available){
 
-  if(amount > available){
+alert(
+"Stock withdraw limit exceeded.\n\n" +
+"Available: ₹" + Math.round(available)
+);
 
-    alert(
-      "Stock withdraw limit exceeded.\n\n" +
-      "Available Stock: ₹" + Math.round(available)
-    );
+return;
+}
 
-    return;
+const newTotal = withdrawn + amount;
 
-  }
-
-  const newTotal =
-      withdrawn + amount;
-
-  await updateLedger({
-    stockWithdrawTotal: newTotal
-  });
+await updateLedger({
+stockWithdrawTotal:newTotal
+});
 
 }
 
@@ -160,38 +214,32 @@ async function withdrawStock(amount){
 
 async function withdrawService(amount){
 
-  const L = validateLedger();
-  if(!L) return;
+const L = validateLedger();
+if(!L) return;
 
-  amount = validateAmount(amount);
-  if(!amount) return;
+amount = validateAmount(amount);
+if(!amount) return;
 
-  const invest =
-      Number(L.serviceInvestmentReturn || 0);
+const invest = Number(L.serviceInvestmentReturn || 0);
+const withdrawn = Number(L.serviceWithdrawTotal || 0);
 
-  const withdrawn =
-      Number(L.serviceWithdrawTotal || 0);
+const available = invest - withdrawn;
 
-  const available =
-      invest - withdrawn;
+if(amount > available){
 
-  if(amount > available){
+alert(
+"Service withdraw limit exceeded.\n\n" +
+"Available: ₹" + Math.round(available)
+);
 
-    alert(
-      "Service withdraw limit exceeded.\n\n" +
-      "Available Service: ₹" + Math.round(available)
-    );
+return;
+}
 
-    return;
+const newTotal = withdrawn + amount;
 
-  }
-
-  const newTotal =
-      withdrawn + amount;
-
-  await updateLedger({
-    serviceWithdrawTotal: newTotal
-  });
+await updateLedger({
+serviceWithdrawTotal:newTotal
+});
 
 }
 
@@ -202,38 +250,32 @@ async function withdrawService(amount){
 
 async function withdrawGST(amount){
 
-  const L = validateLedger();
-  if(!L) return;
+const L = validateLedger();
+if(!L) return;
 
-  amount = validateAmount(amount);
-  if(!amount) return;
+amount = validateAmount(amount);
+if(!amount) return;
 
-  const collected =
-      Number(L.gstCollected || 0);
+const collected = Number(L.gstCollected || 0);
+const paid = Number(L.gstPaid || 0);
 
-  const paid =
-      Number(L.gstPaid || 0);
+const available = collected - paid;
 
-  const available =
-      collected - paid;
+if(amount > available){
 
-  if(amount > available){
+alert(
+"GST payment limit exceeded.\n\n" +
+"Available GST: ₹" + Math.round(available)
+);
 
-    alert(
-      "GST payment limit exceeded.\n\n" +
-      "Available GST: ₹" + Math.round(available)
-    );
+return;
+}
 
-    return;
+const newTotal = paid + amount;
 
-  }
-
-  const newTotal =
-      paid + amount;
-
-  await updateLedger({
-    gstPaid: newTotal
-  });
+await updateLedger({
+gstPaid:newTotal
+});
 
 }
 
@@ -244,26 +286,26 @@ async function withdrawGST(amount){
 
 async function updateLedger(updateData){
 
-  const user = auth.currentUser;
+const user = auth.currentUser;
 
-  const uid = user.uid;
-  const dateKey = ledgerEngine.getDateKey();
+const uid = user.uid;
+const dateKey = ledgerEngine.getDateKey();
 
-  const ref =
-    db.collection("users")
-      .doc(uid)
-      .collection("ledger")
-      .doc(dateKey);
+const ref =
+db.collection("users")
+.doc(uid)
+.collection("ledger")
+.doc(dateKey);
 
-  updateData.updatedAt = Date.now();
+updateData.updatedAt = Date.now();
 
-  await ref.update(updateData);
+await ref.update(updateData);
 
-  await ledgerEngine.refresh();
+await ledgerEngine.refresh();
 
-  window.dispatchEvent(
-    new Event("ledger-updated")
-  );
+window.dispatchEvent(
+new Event("ledger-updated")
+);
 
 }
 
@@ -272,39 +314,48 @@ async function updateLedger(updateData){
    PROMPT FUNCTIONS
 =========================================================== */
 
-async function promptProfitWithdraw(){
+async function promptOpeningWithdraw(){
 
-  const amt = prompt("Enter profit withdraw amount");
-  if(!amt) return;
+const amt = prompt("Enter opening withdraw amount");
+if(!amt) return;
 
-  await withdrawProfit(amt);
+await withdrawOpening(amt);
+
+}
+
+async function promptSalesProfitWithdraw(){
+
+const amt = prompt("Enter sales profit withdraw amount");
+if(!amt) return;
+
+await withdrawSalesProfit(amt);
+
+}
+
+async function promptServiceProfitWithdraw(){
+
+const amt = prompt("Enter service profit withdraw amount");
+if(!amt) return;
+
+await withdrawServiceProfit(amt);
 
 }
 
 async function promptStockWithdraw(){
 
-  const amt = prompt("Enter stock withdraw amount");
-  if(!amt) return;
+const amt = prompt("Enter stock withdraw amount");
+if(!amt) return;
 
-  await withdrawStock(amt);
-
-}
-
-async function promptServiceWithdraw(){
-
-  const amt = prompt("Enter service withdraw amount");
-  if(!amt) return;
-
-  await withdrawService(amt);
+await withdrawStock(amt);
 
 }
 
-async function promptGSTPaid(){
+async function promptServiceInvWithdraw(){
 
-  const amt = prompt("Enter GST payment amount");
-  if(!amt) return;
+const amt = prompt("Enter service investment withdraw amount");
+if(!amt) return;
 
-  await withdrawGST(amt);
+await withdrawService(amt);
 
 }
 
@@ -315,15 +366,18 @@ async function promptGSTPaid(){
 
 window.withdrawEngine = {
 
-  withdrawProfit,
-  withdrawStock,
-  withdrawService,
-  withdrawGST,
+withdrawOpening,
+withdrawSalesProfit,
+withdrawServiceProfit,
+withdrawStock,
+withdrawService,
+withdrawGST,
 
-  promptProfitWithdraw,
-  promptStockWithdraw,
-  promptServiceWithdraw,
-  promptGSTPaid
+promptOpeningWithdraw,
+promptSalesProfitWithdraw,
+promptServiceProfitWithdraw,
+promptStockWithdraw,
+promptServiceInvWithdraw
 
 };
 
