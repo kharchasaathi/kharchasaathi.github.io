@@ -18,7 +18,7 @@
 }
 
 .small-btn {
-  padding: 6px 14px;
+  padding: 5px 12px;
   font-size: 12px;
 }
 
@@ -30,6 +30,7 @@
 }
 
 /* BLUE ACTION BUTTONS (Withdraw / Pay GST) */
+
 .ub-btn {
   margin-top: auto;
   align-self: flex-end;
@@ -107,7 +108,7 @@ textarea {
 
 
 /* ======================================================
-   UNIVERSAL BAR — FIXED 2 ROW GRID
+   UNIVERSAL BAR — COMPACT 2 ROW GRID
 ====================================================== */
 
 .universal-bar{
@@ -115,117 +116,140 @@ textarea {
   max-width: 1200px;
 }
 
-/* FIXED 6 COLUMN DESKTOP */
+/* GRID */
+
 .ub-grid{
-  display: grid;
-  grid-template-columns: repeat(6,1fr);
-  gap: 18px;
+  display:grid;
+  grid-template-columns:repeat(6,1fr);
+  gap:12px;
 }
 
-/* CARD BASE */
+/* CARD */
+
 .ub-card{
-  border-radius: var(--ks-radius-card);
-  padding: 18px;
-  box-shadow: var(--ks-shadow-soft);
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  height: 155px;
-  transition: .2s ease;
+  border-radius:var(--ks-radius-card);
+  padding:12px;
+  box-shadow:var(--ks-shadow-soft);
+  display:flex;
+  flex-direction:column;
+  justify-content:space-between;
+  height:105px;
+  transition:.2s ease;
 }
 
 .ub-card:hover{
-  transform: translateY(-2px);
+  transform:translateY(-2px);
 }
 
-/* OPENING (Blue Tint) */
+/* OPENING */
+
 .ub-card.opening{
-  background: linear-gradient(145deg,#f0f6ff,#ffffff);
-  border: 1px solid #dbeafe;
+  background:linear-gradient(145deg,#f0f6ff,#ffffff);
+  border:1px solid #dbeafe;
 }
 
-/* INCOME (Green Tint) */
+/* INCOME */
+
 .ub-card.income{
-  background: linear-gradient(145deg,#f0fdf4,#ffffff);
-  border: 1px solid #bbf7d0;
+  background:linear-gradient(145deg,#f0fdf4,#ffffff);
+  border:1px solid #bbf7d0;
 }
 
-/* EXPENSE (Red Tint) */
+/* EXPENSE */
+
 .ub-card.expense{
-  background: linear-gradient(145deg,#fff7f7,#ffffff);
-  border: 1px solid #fecaca;
+  background:linear-gradient(145deg,#fff7f7,#ffffff);
+  border:1px solid #fecaca;
 }
 
 /* TITLE */
+
 .ub-title{
-  font-size: 12px;
-  letter-spacing: .1em;
-  color: var(--ks-text-soft);
-  text-transform: uppercase;
-  margin-bottom: 8px;
-  font-weight: 600;
+  font-size:11px;
+  letter-spacing:.08em;
+  color:var(--ks-text-soft);
+  text-transform:uppercase;
+  font-weight:600;
 }
 
 /* AMOUNT */
+
 .ub-amount{
-  font-size: 24px;
-  font-weight: 700;
-  margin-bottom: 10px;
+  font-size:20px;
+  font-weight:700;
 }
 
 /* SUB TEXT */
+
 .ub-sub{
-  font-size: 12px;
-  color: var(--ks-text-soft);
+  font-size:11px;
+  color:var(--ks-text-soft);
 }
 
 
 
-/* ================= NET FLOW ================= */
+/* ======================================================
+   TODAY PROFIT + COUNTER BALANCE BAR
+====================================================== */
 
-.ub-netflow-box{
-  margin-top: 26px;
-  padding: 24px;
-  border-radius: var(--ks-radius-card);
-  text-align: center;
-  font-size: 26px;
-  font-weight: 700;
-  box-shadow: var(--ks-shadow-soft);
-  transition: .2s ease;
+.ub-bottom-bar{
+  margin-top:18px;
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  border-radius:var(--ks-radius-card);
+  overflow:hidden;
+  box-shadow:var(--ks-shadow-soft);
 }
 
-/* Positive */
-.ub-netflow-positive{
-  background: linear-gradient(145deg,#ecfdf5,#ffffff);
-  border: 1px solid #86efac;
-  color: #16a34a;
+/* PROFIT */
+
+.ub-profit{
+  background:linear-gradient(145deg,#ecfdf5,#ffffff);
+  border-right:1px solid #bbf7d0;
+  padding:16px;
+  font-size:15px;
+  font-weight:600;
+  color:#16a34a;
 }
 
-/* Negative */
-.ub-netflow-negative{
-  background: linear-gradient(145deg,#fff1f2,#ffffff);
-  border: 1px solid #fca5a5;
-  color: #dc2626;
+/* COUNTER BALANCE */
+
+.ub-counter{
+  background:linear-gradient(145deg,#eff6ff,#ffffff);
+  padding:16px;
+  text-align:right;
+  font-size:15px;
+  font-weight:600;
+  color:#1d4ed8;
+}
+
+.ub-profit span,
+.ub-counter span{
+  font-size:20px;
+  font-weight:700;
+  margin-left:8px;
 }
 
 
 
-/* ================= RESPONSIVE ================= */
+/* ======================================================
+   RESPONSIVE
+====================================================== */
 
 @media(max-width:1100px){
   .ub-grid{
-    grid-template-columns: repeat(3,1fr);
+    grid-template-columns:repeat(3,1fr);
   }
 }
 
 @media(max-width:700px){
   .ub-grid{
-    grid-template-columns: repeat(2,1fr);
+    grid-template-columns:repeat(2,1fr);
   }
 }
 
 @media(max-width:480px){
   .ub-grid{
-    grid-template-columns: 1fr;
+    grid-template-columns:1fr;
   }
 }
