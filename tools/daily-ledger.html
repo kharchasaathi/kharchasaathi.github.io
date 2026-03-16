@@ -91,12 +91,26 @@ font-size:13px;
 
 <h2>📒 Daily Ledger</h2>
 
+<!-- DATE SELECTOR -->
+
+<div class="ledger-card ledger-actions">
+
+<input type="date" id="ledgerDate">
+
+<button onclick="loadLedgerByDate()">
+Load Ledger
+</button>
+
+</div>
+
+
 <div class="ledger-card ledger-grid">
 <div class="ledger-box">
 <h4>Opening Balance</h4>
 <h2 id="ldOpening">₹0</h2>
 </div>
 </div>
+
 
 <div class="ledger-card">
 <h3>Income</h3>
@@ -126,6 +140,7 @@ font-size:13px;
 </div>
 </div>
 
+
 <div class="ledger-card">
 <h3>Expenses</h3>
 
@@ -149,6 +164,7 @@ font-size:13px;
 </div>
 </div>
 
+
 <div class="ledger-card ledger-grid">
 
 <div class="ledger-box">
@@ -163,7 +179,9 @@ font-size:13px;
 
 </div>
 
+
 <div id="ledgerStatus"></div>
+
 
 <div class="ledger-card ledger-actions">
 
@@ -173,7 +191,6 @@ Close Day
 
 </div>
 
-<!-- REPORT ACTIONS -->
 
 <div class="ledger-card ledger-actions">
 
@@ -191,7 +208,6 @@ Close Day
 
 </div>
 
-<!-- REPORT DISPLAY -->
 
 <div class="ledger-card">
 
@@ -202,6 +218,7 @@ Close Day
 </div>
 
 </div>
+
 
 <!-- FIREBASE -->
 
@@ -218,6 +235,7 @@ Close Day
 
 <script src="../js/universalBar.js"></script>
 
+
 <script>
 
 const qs = s => document.querySelector(s)
@@ -225,6 +243,9 @@ const qs = s => document.querySelector(s)
 function money(v){
 return "₹"+Math.round(v||0)
 }
+
+
+/* ================= RENDER LEDGER ================= */
 
 function renderLedger(){
 
@@ -272,12 +293,11 @@ window.renderUniversalBar?.()
 }
 
 
-/* REPORT RENDER */
+/* ================= LOAD TODAY REPORT ================= */
 
 function loadTodayLedger(){
 
-const box =
-document.getElementById("dailyLedgerBox")
+const box=document.getElementById("dailyLedgerBox")
 
 if(!box) return
 
@@ -293,7 +313,56 @@ ledgerEngine.getDateKey()
 }
 
 
-/* EVENTS */
+/* ================= LOAD LEDGER BY DATE ================= */
+
+async function loadLedgerByDate(){
+
+const date=document.getElementById("ledgerDate").value
+if(!date) return
+
+const uid=auth.currentUser.uid
+
+const snap=await db
+.collection("users")
+.doc(uid)
+.collection("ledger")
+.doc(date)
+.get()
+
+if(!snap.exists){
+
+alert("No ledger for this date")
+return
+
+}
+
+const L=snap.data()
+
+document.getElementById("ldOpening").textContent=money(L.openingBalance)
+document.getElementById("ldSalesProfit").textContent=money(L.salesProfit)
+document.getElementById("ldServiceProfit").textContent=money(L.serviceProfit)
+document.getElementById("ldSalesInv").textContent=money(L.salesInvestmentReturn)
+document.getElementById("ldServiceInv").textContent=money(L.serviceInvestmentReturn)
+document.getElementById("ldExpenses").textContent=money(L.expensesTotal)
+
+const withdrawTotal=
+(L.stockWithdrawTotal||0)+
+(L.serviceWithdrawTotal||0)+
+(L.salesProfitWithdraw||0)+
+(L.serviceProfitWithdraw||0)+
+(L.openingWithdraw||0)
+
+document.getElementById("ldWithdrawals").textContent=money(withdrawTotal)
+
+document.getElementById("ldNetFlow").textContent=money(L.netFlow)
+document.getElementById("ldClosing").textContent=money(L.closingBalance)
+
+renderDailyLedger(date)
+
+}
+
+
+/* ================= EVENTS ================= */
 
 window.addEventListener("ledger-ready",()=>{
 
