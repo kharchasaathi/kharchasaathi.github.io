@@ -1,6 +1,6 @@
 /* ===========================================================
-   UNIVERSAL BAR v18 — ERP SAFE
-   TODAY PROFIT COLOR FIX + COUNTER BALANCE + BALANCE SPLIT
+   UNIVERSAL BAR v19 — ERP SAFE
+   WITHDRAW FIX + UPI FIX + COUNTER BALANCE SAFE
 =========================================================== */
 
 (function(){
@@ -8,7 +8,7 @@
 if(window.__universalBarLoaded) return;
 window.__universalBarLoaded = true;
 
-console.log("%c💰 Universal Bar v18 Loading...","color:#0ea5e9;font-weight:bold;");
+console.log("%c💰 Universal Bar v19 Loading...","color:#0ea5e9;font-weight:bold;");
 
 
 /* ===============================
@@ -94,8 +94,6 @@ if(profitEl){
 
 profitEl.textContent =
 (todayProfit>=0?"+₹":"-₹")+Math.abs(todayProfit);
-
-/* COLOR LOGIC FIX */
 
 const profitBox = profitEl.closest(".ub-profit");
 
@@ -217,20 +215,53 @@ set("ubPendingCredit",money(pending));
 
 
 /* ===============================
-   BUTTON ACTIONS
+   WITHDRAW ACTIONS (FIXED)
 =============================== */
 
 function bindActions(){
 
-const withdrawBtns =
-document.querySelectorAll(".ub-btn");
-
-withdrawBtns.forEach(btn=>{
+document.querySelectorAll("[data-withdraw]").forEach(btn=>{
 
 btn.addEventListener("click",()=>{
 
-if(window.withdrawEngine)
-withdrawEngine.promptWithdraw();
+const type = btn.dataset.withdraw;
+
+const amount =
+Number(prompt("Enter withdraw amount"));
+
+if(!amount) return;
+
+if(!window.withdrawEngine) return;
+
+
+/* STOCK */
+
+if(type==="stock")
+withdrawEngine.withdrawStock(amount);
+
+
+/* SERVICE INVESTMENT */
+
+if(type==="service")
+withdrawEngine.withdrawService(amount);
+
+
+/* PROFIT */
+
+if(type==="profit")
+withdrawEngine.withdrawProfit(amount);
+
+
+/* GST */
+
+if(type==="gst")
+withdrawEngine.withdrawGST(amount);
+
+
+/* OPENING */
+
+if(type==="opening")
+withdrawEngine.withdrawOpening(amount);
 
 });
 
