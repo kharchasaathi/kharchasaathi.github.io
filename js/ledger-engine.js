@@ -402,6 +402,11 @@ return{sales,services,expenses,withdraws,collections};
 window.generateDailyLedgerText=function(dateKey){
 
 const report=buildDailyLedgerReport(dateKey)
+   /* 🔥 ADD THIS */
+const L =
+(window.allLedgers && window.allLedgers[dateKey]) ||
+window.ledgerEngine?.getCurrent?.() ||
+{}
 
 
 let txt=""
