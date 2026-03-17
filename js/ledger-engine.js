@@ -570,8 +570,18 @@ txt+=`\nTotal Withdraw: ₹${withdrawTotal}\n\n`
 
 /* ================= GST ================= */
 
-const gstCollected=num(L.gstCollected)
-const gstPaid=num(L.gstPaid)
+let gstCollected = 0
+let gstPaid = 0
+
+(report.collections || []).forEach(c=>{
+  gstCollected += num(c.gst || 0)
+})
+
+(report.withdraws || []).forEach(w=>{
+  if((w.type||"")==="gst"){
+    gstPaid += num(w.amount)
+  }
+})
 
 if(gstCollected || gstPaid){
 
