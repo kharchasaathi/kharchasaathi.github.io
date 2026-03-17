@@ -317,12 +317,12 @@ ledgerEngine.getDateKey()
 
 async function loadLedgerByDate(){
 
-const date=document.getElementById("ledgerDate").value
+const date = document.getElementById("ledgerDate").value
 if(!date) return
 
-const uid=auth.currentUser.uid
+const uid = auth.currentUser.uid
 
-const snap=await db
+const snap = await db
 .collection("users")
 .doc(uid)
 .collection("ledger")
@@ -336,26 +336,100 @@ return
 
 }
 
-const L=snap.data()
+const L = snap.data()
 
-document.getElementById("ldOpening").textContent=money(L.openingBalance)
-document.getElementById("ldSalesProfit").textContent=money(L.salesProfit)
-document.getElementById("ldServiceProfit").textContent=money(L.serviceProfit)
-document.getElementById("ldSalesInv").textContent=money(L.salesInvestmentReturn)
-document.getElementById("ldServiceInv").textContent=money(L.serviceInvestmentReturn)
-document.getElementById("ldExpenses").textContent=money(L.expensesTotal)
+/* ================= UI UPDATE ================= */
 
-const withdrawTotal=
+document.getElementById("ldOpening").textContent = money(L.openingBalance)
+document.getElementById("ldSalesProfit").textContent = money(L.salesProfit)
+document.getElementById("ldServiceProfit").textContent = money(L.serviceProfit)
+document.getElementById("ldSalesInv").textContent = money(L.salesInvestmentReturn)
+document.getElementById("ldServiceInv").textContent = money(L.serviceInvestmentReturn)
+document.getElementById("ldExpenses").textContent = money(L.expensesTotal)
+
+/* ================= WITHDRAW TOTAL ================= */
+
+const withdrawTotal =
 (L.stockWithdrawTotal||0)+
 (L.serviceWithdrawTotal||0)+
 (L.salesProfitWithdraw||0)+
 (L.serviceProfitWithdraw||0)+
 (L.openingWithdraw||0)
 
-document.getElementById("ldWithdrawals").textContent=money(withdrawTotal)
+document.getElementById("ldWithdrawals").textContent = money(withdrawTotal)
 
-document.getElementById("ldNetFlow").textContent=money(L.netFlow)
-document.getElementById("ldClosing").textContent=money(L.closingBalance)
+document.getElementById("ldNetFlow").textContent = money(L.netFlow)
+document.getElementById("ldClosing").textContent = money(L.closingBalance)
+
+/* ======================================================
+   🔥 IMPORTANT FIX: LOAD DATA FOR REPORT
+====================================================== */
+
+// 👉 If data saved inside ledger doc
+window.sales       = L.sales || []
+window.services    = L.services || []
+window.expenses    = L.expenses || []
+window.withdraws   = L.withdraws || []
+window.collections = L.collections || []
+
+
+/* ======================================================
+   🔥 FALLBACK (IF ABOVE EMPTY → FETCH FROM COLLECTIONS)
+====================================================== */
+
+if(!window.sales.length){
+
+const salesSnap = await db
+.collection("users")
+.doc(uid)
+.collection("sales")
+.where("date","==",date)
+.get()
+
+window.sales = salesSnap.docs.map(d=>d.data())
+
+}
+
+if(!window.services.length){
+
+const serviceSnap = await db
+.collection("users")
+.doc(uid)
+.collection("services")
+.where("date_in","==",date)
+.get()
+
+window.services = serviceSnap.docs.map(d=>d.data())
+
+}
+
+if(!window.expenses.length){
+
+const expenseSnap = await db
+.collection("users")
+.doc(uid)
+.collection("expenses")
+.where("date","==",date)
+.get()
+
+window.expenses = expenseSnap.docs.map(d=>d.data())
+
+}
+
+if(!window.withdraws.length){
+
+const withdrawSnap = await db
+.collection("users")
+.doc(uid)
+.collection("withdraws")
+.where("date","==",date)
+.get()
+
+window.withdraws = withdrawSnap.docs.map(d=>d.data())
+
+}
+
+/* ================= RENDER REPORT ================= */
 
 renderDailyLedger(date)
 
