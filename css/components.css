@@ -45,7 +45,6 @@
 }
 
 
-
 /* ================= INPUTS ================= */
 
 input,
@@ -60,7 +59,6 @@ textarea {
 }
 
 
-
 /* ================= GENERIC CARDS ================= */
 
 .card {
@@ -70,7 +68,6 @@ textarea {
   padding: 12px;
   box-shadow: var(--ks-shadow-soft);
 }
-
 
 
 /* ================= TABS ================= */
@@ -103,7 +100,6 @@ textarea {
   color: white;
   box-shadow: 0 8px 18px rgba(37,99,235,.35);
 }
-
 
 
 /* ======================================================
@@ -186,95 +182,97 @@ textarea {
 }
 
 
-
 /* ======================================================
    TODAY PROFIT + COUNTER BALANCE
-   (SEPARATED ERP STYLE)
 ====================================================== */
 
 .ub-bottom-bar{
-
   margin-top:22px;
-
   display:grid;
-
   grid-template-columns:1fr 1fr;
-
-  gap:14px;   /* IMPORTANT GAP */
-
+  gap:14px;
 }
 
-/* TODAY PROFIT BOX */
+/* COMMON BAR STYLE */
+
+.ub-profit,
+.ub-counter{
+  border-radius:var(--ks-radius-card);
+  padding:18px;
+  font-size:15px;
+  font-weight:600;
+  box-shadow:var(--ks-shadow-soft);
+}
+
+/* TODAY PROFIT */
 
 .ub-profit{
-
   background:linear-gradient(145deg,#ecfdf5,#ffffff);
-
   border:1px solid #86efac;
-
-  border-radius:var(--ks-radius-card);
-
-  padding:18px;
-
-  font-size:15px;
-
-  font-weight:600;
-
   color:#16a34a;
-
-  box-shadow:var(--ks-shadow-soft);
-
 }
 
 /* NEGATIVE PROFIT */
 
 .ub-profit.ub-netflow-negative{
-
   background:linear-gradient(145deg,#fff1f2,#ffffff);
-
   border:1px solid #fca5a5;
-
   color:#dc2626;
-
 }
 
-/* COUNTER BALANCE */
+/* COUNTER */
 
 .ub-counter{
-
   background:linear-gradient(145deg,#eff6ff,#ffffff);
-
   border:1px solid #93c5fd;
-
-  border-radius:var(--ks-radius-card);
-
-  padding:18px;
-
-  font-size:15px;
-
-  font-weight:600;
-
   text-align:right;
-
   color:#1d4ed8;
+}
 
-  box-shadow:var(--ks-shadow-soft);
+/* ======================================================
+   NEW: TOTAL WITHDRAW BAR
+====================================================== */
 
+.ub-withdraw-bar{
+  background:linear-gradient(145deg,#fff1f2,#ffffff);
+  border:1px solid #fca5a5;
+  color:#dc2626;
+}
+
+/* ======================================================
+   NEW: NET FLOW BAR
+====================================================== */
+
+.ub-netflow-bar{
+  background:linear-gradient(145deg,#fff7ed,#ffffff);
+  border:1px solid #fdba74;
+  color:#c2410c;
+}
+
+/* POSITIVE NET FLOW */
+
+.ub-netflow-positive{
+  background:linear-gradient(145deg,#ecfdf5,#ffffff);
+  border:1px solid #86efac;
+  color:#16a34a;
+}
+
+/* NEGATIVE NET FLOW */
+
+.ub-netflow-negative{
+  background:linear-gradient(145deg,#fff1f2,#ffffff);
+  border:1px solid #fca5a5;
+  color:#dc2626;
 }
 
 /* AMOUNT TEXT */
 
 .ub-profit span,
 .ub-counter span{
-
   font-size:20px;
-
   font-weight:700;
-
   margin-left:8px;
-
 }
-
 
 
 /* ======================================================
