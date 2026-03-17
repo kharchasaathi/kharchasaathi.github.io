@@ -150,6 +150,29 @@ counterEl.textContent =
 "₹"+Math.max(0,Math.round(counterBalance));
 
 }
+   /* ===============================
+   TOTAL WITHDRAW + NET FLOW
+=============================== */
+
+const totalWithdraw =
+num(L.salesProfitWithdraw) +
+num(L.serviceProfitWithdraw) +
+num(L.stockWithdrawTotal) +
+num(L.serviceWithdrawTotal) +
+num(L.openingWithdraw);
+
+set("ubTotalWithdraw","-₹"+Math.round(totalWithdraw));
+
+const netFlow =
+num(L.salesProfit) +
+num(L.serviceProfit) -
+num(L.expensesTotal) -
+totalWithdraw;
+
+set(
+"ubNetFlow",
+(netFlow>=0?"+₹":"-₹")+Math.abs(netFlow)
+);
 
 
 /* ===============================
