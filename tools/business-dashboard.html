@@ -298,24 +298,34 @@ body{
         const now  = Date.now();
 
         /* ======================
-           FREE TRIAL
-        ====================== */
+   FREE TRIAL (DEV MODE SAFE)
+====================== */
 
-        if(data.plan === "free_trial"){
+const DEV_MODE = true;
 
-          if(!data.trialEndsAt || now > data.trialEndsAt){
+if(data.plan === "free_trial"){
 
-            blockAccess(
-              "Free trial expired. Please subscribe.",
-              SUBSCRIBE_PAGE
-            );
+  const expired = (!data.trialEndsAt || now > data.trialEndsAt);
 
-            return;
-          }
+  if(expired){
 
-          allowAccess(user);
-          return;
-        }
+    console.warn("⚠ Trial expired - DEV MODE (access allowed)");
+
+    if(!DEV_MODE){
+
+      blockAccess(
+        "Free trial expired. Please subscribe.",
+        SUBSCRIBE_PAGE
+      );
+
+      return;
+    }
+
+  }
+
+  allowAccess(user);
+  return;
+}
 
         /* ======================
            PAID SUBSCRIPTION
