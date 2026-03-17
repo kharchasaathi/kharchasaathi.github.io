@@ -399,7 +399,7 @@ return{sales,services,expenses,withdraws,collections};
 window.generateDailyLedgerText=function(dateKey){
 
 const report=buildDailyLedgerReport(dateKey)
-const L=window.ledgerEngine?.getCurrent?.()||{}
+
 
 let txt=""
 
