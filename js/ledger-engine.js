@@ -520,23 +520,36 @@ txt+=`\nTotal Expenses: ₹${expensesTotal}\n\n`
 
 
 /* ================= WITHDRAW ================= */
-let salesW = 0
-let serviceW = 0
-let stockW = 0
-let serviceInvW = 0
-let openingW = 0
 
-(report.withdraws || []).forEach(w=>{
+let salesW = num(L.salesProfitWithdraw)
+let serviceW = num(L.serviceProfitWithdraw)
+let stockW = num(L.stockWithdrawTotal)
+let serviceInvW = num(L.serviceWithdrawTotal)
+let openingW = num(L.openingWithdraw)
 
-  const type = (w.type || "").toLowerCase()
+/* 🔁 FALLBACK (if all 0 → use report data) */
 
-  if(type==="sales-profit") salesW += num(w.amount)
-  else if(type==="service-profit") serviceW += num(w.amount)
-  else if(type==="stock") stockW += num(w.amount)
-  else if(type==="service") serviceInvW += num(w.amount)
-  else if(type==="opening") openingW += num(w.amount)
+if(
+  !salesW &&
+  !serviceW &&
+  !stockW &&
+  !serviceInvW &&
+  !openingW
+){
 
-})
+  (report.withdraws || []).forEach(w=>{
+
+    const type = (w.type || "").toLowerCase()
+
+    if(type==="sales-profit") salesW += num(w.amount)
+    else if(type==="service-profit") serviceW += num(w.amount)
+    else if(type==="stock") stockW += num(w.amount)
+    else if(type==="service") serviceInvW += num(w.amount)
+    else if(type==="opening") openingW += num(w.amount)
+
+  })
+
+}
 
 withdrawTotal =
 salesW +
@@ -544,6 +557,7 @@ serviceW +
 stockW +
 serviceInvW +
 openingW
+
 
 if(withdrawTotal){
 
@@ -570,18 +584,24 @@ txt+=`\nTotal Withdraw: ₹${withdrawTotal}\n\n`
 
 /* ================= GST ================= */
 
-let gstCollected = 0
-let gstPaid = 0
+let gstCollected = num(L.gstCollected)
+let gstPaid = num(L.gstPaid)
 
-(report.collections || []).forEach(c=>{
-  gstCollected += num(c.gst || 0)
-})
+/* fallback */
 
-(report.withdraws || []).forEach(w=>{
-  if((w.type||"")==="gst"){
-    gstPaid += num(w.amount)
-  }
-})
+if(!gstCollected){
+  (report.collections || []).forEach(c=>{
+    gstCollected += num(c.gst || 0)
+  })
+}
+
+if(!gstPaid){
+  (report.withdraws || []).forEach(w=>{
+    if((w.type||"")==="gst"){
+      gstPaid += num(w.amount)
+    }
+  })
+}
 
 if(gstCollected || gstPaid){
 
@@ -591,7 +611,6 @@ txt+=`GST Collected: ₹${gstCollected}\n`
 txt+=`GST Paid: ₹${gstPaid}\n\n`
 
 }
-
 
 /* ================= FINAL SUMMARY ================= */
 
