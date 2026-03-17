@@ -520,12 +520,23 @@ txt+=`\nTotal Expenses: ₹${expensesTotal}\n\n`
 
 
 /* ================= WITHDRAW ================= */
+let salesW = 0
+let serviceW = 0
+let stockW = 0
+let serviceInvW = 0
+let openingW = 0
 
-const salesW = num(L.salesProfitWithdraw)
-const serviceW = num(L.serviceProfitWithdraw)
-const stockW = num(L.stockWithdrawTotal)
-const serviceInvW = num(L.serviceWithdrawTotal)
-const openingW = num(L.openingWithdraw)
+(report.withdraws || []).forEach(w=>{
+
+  const type = (w.type || "").toLowerCase()
+
+  if(type==="sales-profit") salesW += num(w.amount)
+  else if(type==="service-profit") serviceW += num(w.amount)
+  else if(type==="stock") stockW += num(w.amount)
+  else if(type==="service") serviceInvW += num(w.amount)
+  else if(type==="opening") openingW += num(w.amount)
+
+})
 
 withdrawTotal =
 salesW +
