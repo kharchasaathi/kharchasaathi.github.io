@@ -375,10 +375,7 @@ window.dispatchEvent(new Event("ledger-updated"));
 window.buildDailyLedgerReport=function(dateKey){
 
 const sales=(window.sales||[]).filter(s=>s.date===dateKey);
-const L =
-(window.allLedgers && window.allLedgers[dateKey]) ||
-window.ledgerEngine?.getCurrent?.() ||
-{}
+
 const services=(window.services||[])
 .filter(s=>s.date_in===dateKey||s.date_out===dateKey);
 
@@ -638,8 +635,7 @@ txt+=`Net Profit: ₹${netProfit}\n\n`
 
 /* ================= COUNTER BALANCE ================= */
 
-const ledgerDoc =
-(window.allLedgers && window.allLedgers[dateKey]) || {}
+const ledgerDoc = L
 
 const opening = num(ledgerDoc.openingBalance)
 const closing = num(ledgerDoc.closingBalance)
