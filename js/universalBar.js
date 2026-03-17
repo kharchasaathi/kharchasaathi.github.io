@@ -173,6 +173,32 @@ set(
 "ubNetFlow",
 (netFlow>=0?"+₹":"-₹")+Math.abs(netFlow)
 );
+   /* ===============================
+   NET FLOW COLOR LOGIC
+=============================== */
+
+const netFlowEl = document.getElementById("ubNetFlow");
+
+if(netFlowEl){
+
+const box = netFlowEl.closest(".ub-counter");
+
+if(box){
+
+box.classList.remove(
+"ub-netflow-positive",
+"ub-netflow-negative"
+);
+
+if(netFlow >= 0){
+  box.classList.add("ub-netflow-positive");
+}else{
+  box.classList.add("ub-netflow-negative");
+}
+
+}
+
+}
 
 
 /* ===============================
