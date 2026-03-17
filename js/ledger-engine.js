@@ -629,7 +629,7 @@ txt+=`Total Withdraw: ₹${withdrawTotal}\n\n`
 
 const netProfit=(salesProfitTotal+serviceProfitTotal)
 -expensesTotal
--withdrawTotal
+
 
 txt+=`Net Profit: ₹${netProfit}\n\n`
 
