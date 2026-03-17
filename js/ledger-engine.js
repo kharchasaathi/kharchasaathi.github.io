@@ -627,11 +627,13 @@ txt+=`Total Service Profit: ₹${serviceProfitTotal}\n`
 txt+=`Total Expenses: ₹${expensesTotal}\n`
 txt+=`Total Withdraw: ₹${withdrawTotal}\n\n`
 
-const netProfit=(salesProfitTotal+serviceProfitTotal)
--expensesTotal
+const netProfit = (salesProfitTotal + serviceProfitTotal)
+- expensesTotal
 
+const netCashFlow = netProfit - withdrawTotal
 
-txt+=`Net Profit: ₹${netProfit}\n\n`
+txt+=`Net Profit: ₹${netProfit}\n`
+txt+=`Net Cash Flow: ₹${netCashFlow}\n\n`
 
 
 /* ================= COUNTER BALANCE ================= */
