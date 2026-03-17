@@ -611,8 +611,11 @@ txt+=`Net Profit: ₹${netProfit}\n\n`
 
 /* ================= COUNTER BALANCE ================= */
 
-const opening=num(L.openingBalance)
-const closing=num(L.closingBalance)
+const ledgerDoc =
+(window.allLedgers && window.allLedgers[dateKey]) || {}
+
+const opening = num(ledgerDoc.openingBalance)
+const closing = num(ledgerDoc.closingBalance)
 
 txt+="--------------------------------\n\n"
 
