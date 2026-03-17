@@ -338,6 +338,42 @@ return
 
 const L = snap.data()
 
+/* 🔥 VERY IMPORTANT — ADD THIS */
+window.loadedLedgerByDate = L
+
+
+/* ================= UI UPDATE ================= */
+
+document.getElementById("ldOpening").textContent = money(L.openingBalance)
+document.getElementById("ldSalesProfit").textContent = money(L.salesProfit)
+document.getElementById("ldServiceProfit").textContent = money(L.serviceProfit)
+document.getElementById("ldSalesInv").textContent = money(L.salesInvestmentReturn)
+document.getElementById("ldServiceInv").textContent = money(L.serviceInvestmentReturn)
+document.getElementById("ldExpenses").textContent = money(L.expensesTotal)
+
+
+/* ================= WITHDRAW TOTAL ================= */
+
+const withdrawTotal =
+(L.stockWithdrawTotal||0)+
+(L.serviceWithdrawTotal||0)+
+(L.salesProfitWithdraw||0)+
+(L.serviceProfitWithdraw||0)+
+(L.openingWithdraw||0)
+
+document.getElementById("ldWithdrawals").textContent = money(withdrawTotal)
+
+
+/* ================= FINAL ================= */
+
+document.getElementById("ldNetFlow").textContent = money(L.netFlow)
+document.getElementById("ldClosing").textContent = money(L.closingBalance)
+
+
+/* 🔥 IMPORTANT — REPORT UPDATE */
+renderDailyLedger(date)
+
+}
 /* ================= UI UPDATE ================= */
 
 document.getElementById("ldOpening").textContent = money(L.openingBalance)
