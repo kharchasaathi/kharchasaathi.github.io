@@ -375,7 +375,10 @@ window.dispatchEvent(new Event("ledger-updated"));
 window.buildDailyLedgerReport=function(dateKey){
 
 const sales=(window.sales||[]).filter(s=>s.date===dateKey);
-
+const L =
+(window.allLedgers && window.allLedgers[dateKey]) ||
+window.ledgerEngine?.getCurrent?.() ||
+{}
 const services=(window.services||[])
 .filter(s=>s.date_in===dateKey||s.date_out===dateKey);
 
