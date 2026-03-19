@@ -465,30 +465,6 @@ renderDailyLedger(date)
 
 }
 
-/* ================= FINAL ================= */
-
-const netProfit =
-(L.salesProfit||0)+
-(L.serviceProfit||0)-
-(L.expensesTotal||0)
-
-txt += "-----------------------------\n"
-
-txt += `Total Sales Profit: ₹${L.salesProfit}\n`
-txt += `Total Service Profit: ₹${L.serviceProfit}\n`
-txt += `Total Expenses: ₹${L.expensesTotal}\n`
-txt += `Total Withdraw: ₹${withdrawTotal}\n\n`
-
-txt += `Net Profit: ₹${netProfit}\n\n`
-
-txt += "-----------------------------\n"
-
-txt += `Opening Balance: ₹${L.openingBalance}\n`
-txt += `Closing Balance: ₹${L.closingBalance}\n`
-
-document.getElementById("dailyLedgerBox").textContent = txt
-
-}
 
 /* ================= LOAD LEDGER ================= */
 
