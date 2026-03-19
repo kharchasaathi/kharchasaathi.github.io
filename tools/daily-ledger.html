@@ -466,56 +466,7 @@ renderDailyLedger(date)
 }
 
 
-/* ================= LOAD LEDGER ================= */
 
-const snap = await db
-.collection("users")
-.doc(uid)
-.collection("ledger")
-.doc(date)
-.get()
-
-if(!snap.exists){
-alert("No ledger for this date")
-return
-}
-
-const L = snap.data()
-
-/* 🔥 SAVE FOR REPORT */
-window.loadedLedgerByDate = L
-
-
-
-
-
-/* ================= UI UPDATE (ONLY ONCE ✅) ================= */
-
-document.getElementById("ldOpening").textContent = money(L.openingBalance)
-document.getElementById("ldSalesProfit").textContent = money(L.salesProfit)
-document.getElementById("ldServiceProfit").textContent = money(L.serviceProfit)
-document.getElementById("ldSalesInv").textContent = money(L.salesInvestmentReturn)
-document.getElementById("ldServiceInv").textContent = money(L.serviceInvestmentReturn)
-document.getElementById("ldExpenses").textContent = money(L.expensesTotal)
-
-const withdrawTotal =
-(L.stockWithdrawTotal||0)+
-(L.serviceWithdrawTotal||0)+
-(L.salesProfitWithdraw||0)+
-(L.serviceProfitWithdraw||0)+
-(L.openingWithdraw||0)
-
-document.getElementById("ldWithdrawals").textContent = money(withdrawTotal)
-
-document.getElementById("ldNetFlow").textContent = money(L.netFlow)
-document.getElementById("ldClosing").textContent = money(L.closingBalance)
-
-
-/* ================= RENDER REPORT ================= */
-
-renderDailyLedger(date)
-
-}
 
 
 
