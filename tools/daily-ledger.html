@@ -303,19 +303,9 @@ ledgerEngine.getDateKey()
 }
 
 
+/* ================= REPORT FUNCTION ================= */
 
-
-/* ================= LOAD LEDGER BY DATE ================= */
-
-async function loadLedgerByDate(){
-
-const date = document.getElementById("ledgerDate").value
-if(!date) return
-
-const uid = auth.currentUser.uid
-   
-  /* ================= REPORT FUNCTION (OUTSIDE) ================= */
-   function renderDailyLedger(date){
+function renderDailyLedger(date){
 
 const L =
 window.loadedLedgerByDate ||
@@ -391,6 +381,89 @@ const withdrawTotal =
 (L.openingWithdraw||0)
 
 txt += `\nTotal Withdraw: ₹${withdrawTotal}\n\n`
+
+/* ================= FINAL ================= */
+
+const netProfit =
+(L.salesProfit||0)+
+(L.serviceProfit||0)-
+(L.expensesTotal||0)
+
+txt += "-----------------------------\n"
+
+txt += `Total Sales Profit: ₹${L.salesProfit}\n`
+txt += `Total Service Profit: ₹${L.serviceProfit}\n`
+txt += `Total Expenses: ₹${L.expensesTotal}\n`
+txt += `Total Withdraw: ₹${withdrawTotal}\n\n`
+
+txt += `Net Profit: ₹${netProfit}\n\n`
+
+txt += "-----------------------------\n"
+
+txt += `Opening Balance: ₹${L.openingBalance}\n`
+txt += `Closing Balance: ₹${L.closingBalance}\n`
+
+document.getElementById("dailyLedgerBox").textContent = txt
+
+}
+
+
+/* ================= LOAD LEDGER BY DATE ================= */
+
+async function loadLedgerByDate(){
+
+const date = document.getElementById("ledgerDate").value
+if(!date) return
+
+const uid = auth.currentUser.uid
+
+/* ================= LOAD LEDGER ================= */
+
+const snap = await db
+.collection("users")
+.doc(uid)
+.collection("ledger")
+.doc(date)
+.get()
+
+if(!snap.exists){
+alert("No ledger for this date")
+return
+}
+
+const L = snap.data()
+
+/* 🔥 SAVE FOR REPORT */
+window.loadedLedgerByDate = L
+
+
+/* ================= UI UPDATE ================= */
+
+document.getElementById("ldOpening").textContent = money(L.openingBalance)
+document.getElementById("ldSalesProfit").textContent = money(L.salesProfit)
+document.getElementById("ldServiceProfit").textContent = money(L.serviceProfit)
+document.getElementById("ldSalesInv").textContent = money(L.salesInvestmentReturn)
+document.getElementById("ldServiceInv").textContent = money(L.serviceInvestmentReturn)
+document.getElementById("ldExpenses").textContent = money(L.expensesTotal)
+
+const withdrawTotal =
+(L.stockWithdrawTotal||0)+
+(L.serviceWithdrawTotal||0)+
+(L.salesProfitWithdraw||0)+
+(L.serviceProfitWithdraw||0)+
+(L.openingWithdraw||0)
+
+document.getElementById("ldWithdrawals").textContent = money(withdrawTotal)
+
+document.getElementById("ldNetFlow").textContent = money(L.netFlow)
+document.getElementById("ldClosing").textContent = money(L.closingBalance)
+
+
+/* ================= RENDER REPORT ================= */
+
+renderDailyLedger(date)
+
+}
 
 /* ================= FINAL ================= */
 
