@@ -295,7 +295,8 @@ window.renderUniversalBar?.()
 /* ================= LOAD TODAY REPORT ================= */
 
 function loadTodayLedger(){
-
+  
+window.loadedLedgerByDate = null 
 renderDailyLedger(
 ledgerEngine.getDateKey()
 )
