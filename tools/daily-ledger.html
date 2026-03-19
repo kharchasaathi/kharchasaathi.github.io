@@ -302,17 +302,7 @@ ledgerEngine.getDateKey()
 
 }
 
-const box = document.getElementById("dailyLedgerBox")
-if(!box) return
 
-if(typeof generateDailyLedgerText === "function"){
-box.textContent =
-generateDailyLedgerText(
-ledgerEngine.getDateKey()
-)
-}
-
-}
 
 
 /* ================= LOAD LEDGER BY DATE ================= */
