@@ -296,6 +296,12 @@ window.renderUniversalBar?.()
 
 function loadTodayLedger(){
 
+renderDailyLedger(
+ledgerEngine.getDateKey()
+)
+
+}
+
 const box = document.getElementById("dailyLedgerBox")
 if(!box) return
 
