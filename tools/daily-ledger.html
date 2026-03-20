@@ -179,22 +179,18 @@ window.renderUniversalBar?.()
   
 }  
   
-  
 /* ================= LOAD TODAY REPORT ================= */  
   
 function loadTodayLedger(){  
   
-const box=document.getElementById("dailyLedgerBox")  
-  
+const box = document.getElementById("dailyLedgerBox")  
 if(!box) return  
   
-if(typeof generateDailyLedgerText==="function"){  
-  
+if(typeof generateDailyLedgerText === "function"){  
 box.textContent =  
 generateDailyLedgerText(  
 ledgerEngine.getDateKey()  
 )  
-  
 }  
   
 }  
@@ -209,6 +205,8 @@ if(!date) return
   
 const uid = auth.currentUser.uid  
   
+/* ================= LOAD LEDGER ================= */  
+  
 const snap = await db  
 .collection("users")  
 .doc(uid)  
@@ -217,78 +215,20 @@ const snap = await db
 .get()  
   
 if(!snap.exists){  
-  
 alert("No ledger for this date")  
 return  
-  
 }  
   
 const L = snap.data()  
   
-/* 🔥 VERY IMPORTANT — ADD THIS */  
+/* 🔥 SAVE FOR REPORT */  
 window.loadedLedgerByDate = L  
   
   
-/* ================= UI UPDATE ================= */  
-  
-document.getElementById("ldOpening").textContent = money(L.openingBalance)  
-document.getElementById("ldSalesProfit").textContent = money(L.salesProfit)  
-document.getElementById("ldServiceProfit").textContent = money(L.serviceProfit)  
-document.getElementById("ldSalesInv").textContent = money(L.salesInvestmentReturn)  
-document.getElementById("ldServiceInv").textContent = money(L.serviceInvestmentReturn)  
-document.getElementById("ldExpenses").textContent = money(L.expensesTotal)  
-  
-  
-/* ================= WITHDRAW TOTAL ================= */  
-  
-const withdrawTotal =  
-(L.stockWithdrawTotal||0)+  
-(L.serviceWithdrawTotal||0)+  
-(L.salesProfitWithdraw||0)+  
-(L.serviceProfitWithdraw||0)+  
-(L.openingWithdraw||0)  
-  
-document.getElementById("ldWithdrawals").textContent = money(withdrawTotal)  
-  
-  
-/* ================= FINAL ================= */  
-  
-document.getElementById("ldNetFlow").textContent = money(L.netFlow)  
-document.getElementById("ldClosing").textContent = money(L.closingBalance)  
-  
-  
-/* 🔥 IMPORTANT — REPORT UPDATE */  
-renderDailyLedger(date)  
-  
-}  
-/* ================= UI UPDATE ================= */  
-  
-document.getElementById("ldOpening").textContent = money(L.openingBalance)  
-document.getElementById("ldSalesProfit").textContent = money(L.salesProfit)  
-document.getElementById("ldServiceProfit").textContent = money(L.serviceProfit)  
-document.getElementById("ldSalesInv").textContent = money(L.salesInvestmentReturn)  
-document.getElementById("ldServiceInv").textContent = money(L.serviceInvestmentReturn)  
-document.getElementById("ldExpenses").textContent = money(L.expensesTotal)  
-  
-/* ================= WITHDRAW TOTAL ================= */  
-  
-const withdrawTotal =  
-(L.stockWithdrawTotal||0)+  
-(L.serviceWithdrawTotal||0)+  
-(L.salesProfitWithdraw||0)+  
-(L.serviceProfitWithdraw||0)+  
-(L.openingWithdraw||0)  
-  
-document.getElementById("ldWithdrawals").textContent = money(withdrawTotal)  
-  
-document.getElementById("ldNetFlow").textContent = money(L.netFlow)  
-document.getElementById("ldClosing").textContent = money(L.closingBalance)  
-  
 /* ======================================================  
-   🔥 IMPORTANT FIX: LOAD DATA FOR REPORT  
+   🔥 LOAD DATA FOR REPORT  
 ====================================================== */  
   
-// 👉 If data saved inside ledger doc  
 window.sales       = L.sales || []  
 window.services    = L.services || []  
 window.expenses    = L.expenses || []  
@@ -297,7 +237,7 @@ window.collections = L.collections || []
   
   
 /* ======================================================  
-   🔥 FALLBACK (IF ABOVE EMPTY → FETCH FROM COLLECTIONS)  
+   🔥 FALLBACK (IF EMPTY → FETCH)  
 ====================================================== */  
   
 if(!window.sales.length){  
@@ -352,11 +292,36 @@ window.withdraws = withdrawSnap.docs.map(d=>d.data())
   
 }  
   
+  
+/* ================= UI UPDATE (ONLY ONCE ✅) ================= */  
+  
+document.getElementById("ldOpening").textContent = money(L.openingBalance)  
+document.getElementById("ldSalesProfit").textContent = money(L.salesProfit)  
+document.getElementById("ldServiceProfit").textContent = money(L.serviceProfit)  
+document.getElementById("ldSalesInv").textContent = money(L.salesInvestmentReturn)  
+document.getElementById("ldServiceInv").textContent = money(L.serviceInvestmentReturn)  
+document.getElementById("ldExpenses").textContent = money(L.expensesTotal)  
+  
+const withdrawTotal =  
+(L.stockWithdrawTotal||0)+  
+(L.serviceWithdrawTotal||0)+  
+(L.salesProfitWithdraw||0)+  
+(L.serviceProfitWithdraw||0)+  
+(L.openingWithdraw||0)  
+  
+document.getElementById("ldWithdrawals").textContent = money(withdrawTotal)  
+  
+document.getElementById("ldNetFlow").textContent = money(L.netFlow)  
+document.getElementById("ldClosing").textContent = money(L.closingBalance)  
+  
+  
 /* ================= RENDER REPORT ================= */  
   
 renderDailyLedger(date)  
   
 }  
+  
+  
   
   
 /* ================= EVENTS ================= */  
@@ -393,4 +358,4 @@ window.closeLedgerDay
 })  
   
 </script>  </body>  
-</html>  మొత్తం line by line చెక్ చేసి చెప్పు
+</html>
