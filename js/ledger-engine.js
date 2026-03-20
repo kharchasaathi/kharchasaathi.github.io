@@ -125,7 +125,10 @@ await ref.set(newLedger);
 currentLedger = newLedger;
 }
 else{
-  currentLedger = snap.data() || emptyLedger(0);
+  currentLedger = {
+...emptyLedger(0),
+...(snap.data() || {})
+};
 }
 calculateLedger();
 updateCloseButtonState();
