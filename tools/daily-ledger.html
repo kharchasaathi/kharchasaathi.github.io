@@ -1,511 +1,396 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8">
-<title>Daily Ledger</title>
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-<link rel="stylesheet" href="/css/style.css">
-
-<style>
-
-.ledger-container{
-max-width:900px;
-margin:auto;
-padding:20px;
-}
-
-.ledger-card{
-background:#fff;
-padding:15px;
-border-radius:10px;
-box-shadow:0 2px 8px rgba(0,0,0,0.08);
-margin-bottom:20px;
-}
-
-.ledger-grid{
-display:grid;
-grid-template-columns:repeat(auto-fit,minmax(200px,1fr));
-gap:15px;
-}
-
-.ledger-box{
-background:#f9fafb;
-padding:12px;
-border-radius:8px;
-}
-
-.ledger-box h4{
-margin:0 0 5px;
-font-size:14px;
-opacity:0.7;
-}
-
-.ledger-box h2{
-margin:0;
-font-size:20px;
-}
-
-.ledger-actions{
-display:flex;
-gap:10px;
-flex-wrap:wrap;
-}
-
-button{
-padding:8px 14px;
-border:none;
-border-radius:6px;
-cursor:pointer;
-}
-
-.btn-success{
-background:#16a34a;
-color:#fff;
-}
-
-.ledger-closed{
-background:#fee2e2;
-color:#b91c1c;
-padding:8px;
-border-radius:6px;
-margin-top:10px;
-}
-
-#dailyLedgerBox{
-background:#111827;
-color:#e5e7eb;
-padding:15px;
-border-radius:8px;
-font-family:monospace;
-white-space:pre-wrap;
-font-size:13px;
-}
-
-</style>
-</head>
-
-<body>
-
-<div class="ledger-container">
-
-<h2>📒 Daily Ledger</h2>
-
-<!-- DATE SELECTOR -->
-
-<div class="ledger-card ledger-actions">
-
-<input type="date" id="ledgerDate">
-
-<button onclick="loadLedgerByDate()">
-Load Ledger
-</button>
-
-</div>
-
-
-<div class="ledger-card ledger-grid">
-<div class="ledger-box">
-<h4>Opening Balance</h4>
-<h2 id="ldOpening">₹0</h2>
-</div>
-</div>
-
-
-<div class="ledger-card">
-<h3>Income</h3>
-
-<div class="ledger-grid">
-
-<div class="ledger-box">
-<h4>Sales Profit</h4>
-<h2 id="ldSalesProfit">₹0</h2>
-</div>
-
-<div class="ledger-box">
-<h4>Service Profit</h4>
-<h2 id="ldServiceProfit">₹0</h2>
-</div>
-
-<div class="ledger-box">
-<h4>Sales Investment Return</h4>
-<h2 id="ldSalesInv">₹0</h2>
-</div>
-
-<div class="ledger-box">
-<h4>Service Investment Return</h4>
-<h2 id="ldServiceInv">₹0</h2>
-</div>
-
-</div>
-</div>
-
-
-<div class="ledger-card">
-<h3>Expenses</h3>
-
-<div class="ledger-grid">
-
-<div class="ledger-box">
-<h4>Expenses</h4>
-<h2 id="ldExpenses">₹0</h2>
-</div>
-
-<div class="ledger-box">
-<h4>Withdrawals</h4>
-<h2 id="ldWithdrawals">₹0</h2>
-</div>
-
-<div class="ledger-box">
-<h4>GST Payable</h4>
-<h2 id="ldGst">₹0</h2>
-</div>
-
-</div>
-</div>
-
-
-<div class="ledger-card ledger-grid">
-
-<div class="ledger-box">
-<h4>Net Flow</h4>
-<h2 id="ldNetFlow">₹0</h2>
-</div>
-
-<div class="ledger-box">
-<h4>Closing Balance</h4>
-<h2 id="ldClosing">₹0</h2>
-</div>
-
-</div>
-
-
-<div id="ledgerStatus"></div>
-
-
-<div class="ledger-card ledger-actions">
-
-<button class="btn-success" id="closeLedgerBtn">
-Close Day
-</button>
-
-</div>
-
-
-<div class="ledger-card ledger-actions">
-
-<button onclick="downloadLedgerReport(ledgerEngine.getDateKey())">
-📥 Download Report
-</button>
-
-<button onclick="downloadLedgerCSV(ledgerEngine.getDateKey())">
-📊 Download Excel
-</button>
-
-<button onclick="shareLedgerWhatsApp(ledgerEngine.getDateKey())">
-📤 Share WhatsApp
-</button>
-
-</div>
-
-
-<div class="ledger-card">
-
-<h3>📄 Daily Ledger Report</h3>
-
-<div id="dailyLedgerBox"></div>
-
-</div>
-
-</div>
-
-
-<!-- FIREBASE -->
-
-<script src="https://www.gstatic.com/firebasejs/9.6.11/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.6.11/firebase-auth-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.6.11/firebase-firestore-compat.js"></script>
-
-<script src="../js/firebase.js"></script>
-
-<script src="../js/ledger-engine.js"></script>
-<script src="../js/withdraw-engine.js"></script>
-<script src="../js/expense-engine.js"></script>
-<script src="../js/gst-engine.js"></script>
-
-<script src="../js/universalBar.js"></script>
-
-
-<script>
-
-const qs = s => document.querySelector(s)
-
-function money(v){
-return "₹"+Math.round(v||0)
-}
-
-
-/* ================= RENDER LEDGER ================= */
-
-function renderLedger(){
-
-const L = ledgerEngine.getCurrent()
-
-if(!L) return
-
-qs("#ldOpening").textContent = money(L.openingBalance)
-qs("#ldSalesProfit").textContent = money(L.salesProfit)
-qs("#ldServiceProfit").textContent = money(L.serviceProfit)
-qs("#ldSalesInv").textContent = money(L.salesInvestmentReturn)
-qs("#ldServiceInv").textContent = money(L.serviceInvestmentReturn)
-qs("#ldExpenses").textContent = money(L.expensesTotal)
-
-const withdrawals =
-(L.stockWithdrawTotal||0) +
-(L.serviceWithdrawTotal||0) +
-(L.salesProfitWithdraw||0) +
-(L.serviceProfitWithdraw||0) +
-(L.openingWithdraw||0)
-
-qs("#ldWithdrawals").textContent = money(withdrawals)
-
-qs("#ldGst").textContent =
-money((L.gstCollected||0)-(L.gstPaid||0))
-
-qs("#ldNetFlow").textContent = money(L.netFlow)
-qs("#ldClosing").textContent = money(L.closingBalance)
-
-const status = qs("#ledgerStatus")
-
-status.innerHTML = ""
-
-if(L.isClosed){
-
-status.innerHTML =
-`<div class="ledger-closed">
-This day is CLOSED
-</div>`
-
-}
-
-window.renderUniversalBar?.()
-
-}
-
-/* ================= LOAD TODAY REPORT ================= */
-
-function loadTodayLedger(){
+<!DOCTYPE html>  <html lang="en">  
+<head>  
+<meta charset="UTF-8">  
+<title>Daily Ledger</title>  
+<meta name="viewport" content="width=device-width, initial-scale=1.0">  <link rel="stylesheet" href="/css/style.css">  <style>  
   
-window.loadedLedgerByDate = null 
-renderDailyLedger(
-ledgerEngine.getDateKey()
-)
-
-}
-
-
-/* ================= REPORT FUNCTION ================= */
-
-function renderDailyLedger(date){
-
-const L =
-window.loadedLedgerByDate ||
-ledgerEngine.getCurrent()
-
-if(!L) return
-
-let txt = ""
-
-txt += "📒 Shop Ledger Report\n\n"
-txt += `Date: ${date}\n\n`
-
-/* ================= SALES ================= */
-
-if(L.salesList?.length){
-
-txt += "🧾 SALES PROFIT\n"
-
-L.salesList.forEach(s=>{
-txt += `${s.product} Qty:${s.qty} Profit:₹${s.profit}\n`
-})
-
-txt += `\nTotal Sales Profit: ₹${L.salesProfit}\n\n`
-
-}
-
-/* ================= SERVICES ================= */
-
-if(L.servicesList?.length){
-
-txt += "🛠 SERVICE PROFIT\n"
-
-L.servicesList.forEach(s=>{
-txt += `${s.model} Profit:₹${s.profit}\n`
-})
-
-txt += `\nTotal Service Profit: ₹${L.serviceProfit}\n\n`
-
-}
-
-/* ================= EXPENSES ================= */
-
-if(L.expensesList?.length){
-
-txt += "💸 EXPENSES\n"
-
-L.expensesList.forEach(e=>{
-txt += `${e.note||"Expense"} ₹${e.amount}\n`
-})
-
-txt += `\nTotal Expenses: ₹${L.expensesTotal}\n\n`
-
-}
-
-/* ================= WITHDRAW ================= */
-
-txt += "💰 WITHDRAW\n"
-
-if(L.salesProfitWithdraw)
-txt += `Sales Profit Withdraw: ₹${L.salesProfitWithdraw}\n`
-
-if(L.stockWithdrawTotal)
-txt += `Stock Withdraw: ₹${L.stockWithdrawTotal}\n`
-
-if(L.openingWithdraw)
-txt += `Opening Withdraw: ₹${L.openingWithdraw}\n`
-
-const withdrawTotal =
-(L.stockWithdrawTotal||0)+
-(L.serviceWithdrawTotal||0)+
-(L.salesProfitWithdraw||0)+
-(L.serviceProfitWithdraw||0)+
-(L.openingWithdraw||0)
-
-txt += `\nTotal Withdraw: ₹${withdrawTotal}\n\n`
-
-/* ================= FINAL ================= */
-
-const netProfit =
-(L.salesProfit||0)+
-(L.serviceProfit||0)-
-(L.expensesTotal||0)
-
-txt += "-----------------------------\n"
-
-txt += `Total Sales Profit: ₹${L.salesProfit}\n`
-txt += `Total Service Profit: ₹${L.serviceProfit}\n`
-txt += `Total Expenses: ₹${L.expensesTotal}\n`
-txt += `Total Withdraw: ₹${withdrawTotal}\n\n`
-
-txt += `Net Profit: ₹${netProfit}\n\n`
-
-txt += "-----------------------------\n"
-
-txt += `Opening Balance: ₹${L.openingBalance}\n`
-txt += `Closing Balance: ₹${L.closingBalance}\n`
-
-document.getElementById("dailyLedgerBox").textContent = txt
-
-}
-
-
-/* ================= LOAD LEDGER BY DATE ================= */
-
-async function loadLedgerByDate(){
-
-const date = document.getElementById("ledgerDate").value
-if(!date) return
-
-const uid = auth.currentUser.uid
-
-/* ================= LOAD LEDGER ================= */
-
-const snap = await db
-.collection("users")
-.doc(uid)
-.collection("ledger")
-.doc(date)
-.get()
-
-if(!snap.exists){
-alert("No ledger for this date")
-return
-}
-
-const L = snap.data()
-
-/* 🔥 SAVE FOR REPORT */
-window.loadedLedgerByDate = L
-
-
-/* ================= UI UPDATE ================= */
-
-document.getElementById("ldOpening").textContent = money(L.openingBalance)
-document.getElementById("ldSalesProfit").textContent = money(L.salesProfit)
-document.getElementById("ldServiceProfit").textContent = money(L.serviceProfit)
-document.getElementById("ldSalesInv").textContent = money(L.salesInvestmentReturn)
-document.getElementById("ldServiceInv").textContent = money(L.serviceInvestmentReturn)
-document.getElementById("ldExpenses").textContent = money(L.expensesTotal)
-
-const withdrawTotal =
-(L.stockWithdrawTotal||0)+
-(L.serviceWithdrawTotal||0)+
-(L.salesProfitWithdraw||0)+
-(L.serviceProfitWithdraw||0)+
-(L.openingWithdraw||0)
-
-document.getElementById("ldWithdrawals").textContent = money(withdrawTotal)
-
-document.getElementById("ldNetFlow").textContent = money(L.netFlow)
-document.getElementById("ldClosing").textContent = money(L.closingBalance)
-
-
-/* ================= RENDER REPORT ================= */
-
-renderDailyLedger(date)
-
-}
-
-
-
-
-
-
-
-/* ================= EVENTS ================= */
-
-window.addEventListener("ledger-ready",()=>{
-
-renderLedger()
-loadTodayLedger()
-
-})
-
-window.addEventListener("ledger-updated",()=>{
-
-renderLedger()
-loadTodayLedger()
-
-})
-
-window.addEventListener("firebase-auth-ready",()=>{
-
-if(window.ledgerEngine){
-ledgerEngine.refresh()
-}
-
-})
-
-window.addEventListener("ledger-ready",()=>{
-
-document
-.getElementById("closeLedgerBtn")
-.onclick =
-window.closeLedgerDay
-
-})
-
-</script>
-
-</body>
-</html>
+.ledger-container{  
+max-width:900px;  
+margin:auto;  
+padding:20px;  
+}  
+  
+.ledger-card{  
+background:#fff;  
+padding:15px;  
+border-radius:10px;  
+box-shadow:0 2px 8px rgba(0,0,0,0.08);  
+margin-bottom:20px;  
+}  
+  
+.ledger-grid{  
+display:grid;  
+grid-template-columns:repeat(auto-fit,minmax(200px,1fr));  
+gap:15px;  
+}  
+  
+.ledger-box{  
+background:#f9fafb;  
+padding:12px;  
+border-radius:8px;  
+}  
+  
+.ledger-box h4{  
+margin:0 0 5px;  
+font-size:14px;  
+opacity:0.7;  
+}  
+  
+.ledger-box h2{  
+margin:0;  
+font-size:20px;  
+}  
+  
+.ledger-actions{  
+display:flex;  
+gap:10px;  
+flex-wrap:wrap;  
+}  
+  
+button{  
+padding:8px 14px;  
+border:none;  
+border-radius:6px;  
+cursor:pointer;  
+}  
+  
+.btn-success{  
+background:#16a34a;  
+color:#fff;  
+}  
+  
+.ledger-closed{  
+background:#fee2e2;  
+color:#b91c1c;  
+padding:8px;  
+border-radius:6px;  
+margin-top:10px;  
+}  
+  
+#dailyLedgerBox{  
+background:#111827;  
+color:#e5e7eb;  
+padding:15px;  
+border-radius:8px;  
+font-family:monospace;  
+white-space:pre-wrap;  
+font-size:13px;  
+}  
+  
+</style>  </head>  <body>  <div class="ledger-container">  <h2>📒 Daily Ledger</h2>  <!-- DATE SELECTOR -->  <div class="ledger-card ledger-actions">  <input type="date" id="ledgerDate">  <button onclick="loadLedgerByDate()">  
+Load Ledger  
+</button>  </div>  <div class="ledger-card ledger-grid">  
+<div class="ledger-box">  
+<h4>Opening Balance</h4>  
+<h2 id="ldOpening">₹0</h2>  
+</div>  
+</div>  <div class="ledger-card">  
+<h3>Income</h3>  <div class="ledger-grid">  <div class="ledger-box">  
+<h4>Sales Profit</h4>  
+<h2 id="ldSalesProfit">₹0</h2>  
+</div>  <div class="ledger-box">  
+<h4>Service Profit</h4>  
+<h2 id="ldServiceProfit">₹0</h2>  
+</div>  <div class="ledger-box">  
+<h4>Sales Investment Return</h4>  
+<h2 id="ldSalesInv">₹0</h2>  
+</div>  <div class="ledger-box">  
+<h4>Service Investment Return</h4>  
+<h2 id="ldServiceInv">₹0</h2>  
+</div>  </div>  
+</div>  <div class="ledger-card">  
+<h3>Expenses</h3>  <div class="ledger-grid">  <div class="ledger-box">  
+<h4>Expenses</h4>  
+<h2 id="ldExpenses">₹0</h2>  
+</div>  <div class="ledger-box">  
+<h4>Withdrawals</h4>  
+<h2 id="ldWithdrawals">₹0</h2>  
+</div>  <div class="ledger-box">  
+<h4>GST Payable</h4>  
+<h2 id="ldGst">₹0</h2>  
+</div>  </div>  
+</div>  <div class="ledger-card ledger-grid">  <div class="ledger-box">  
+<h4>Net Flow</h4>  
+<h2 id="ldNetFlow">₹0</h2>  
+</div>  <div class="ledger-box">  
+<h4>Closing Balance</h4>  
+<h2 id="ldClosing">₹0</h2>  
+</div>  </div>  <div id="ledgerStatus"></div>  <div class="ledger-card ledger-actions">  <button class="btn-success" id="closeLedgerBtn">  
+Close Day  
+</button>  </div>  <div class="ledger-card ledger-actions">  <button onclick="downloadLedgerReport(ledgerEngine.getDateKey())">  
+📥 Download Report  
+</button>  <button onclick="downloadLedgerCSV(ledgerEngine.getDateKey())">  
+📊 Download Excel  
+</button>  <button onclick="shareLedgerWhatsApp(ledgerEngine.getDateKey())">  
+📤 Share WhatsApp  
+</button>  </div>  <div class="ledger-card">  <h3>📄 Daily Ledger Report</h3>  <div id="dailyLedgerBox"></div>  </div>  </div>  <!-- FIREBASE -->  <script src="https://www.gstatic.com/firebasejs/9.6.11/firebase-app-compat.js"></script>  <script src="https://www.gstatic.com/firebasejs/9.6.11/firebase-auth-compat.js"></script>  <script src="https://www.gstatic.com/firebasejs/9.6.11/firebase-firestore-compat.js"></script>  <script src="../js/firebase.js"></script>  <script src="../js/ledger-engine.js"></script>  <script src="../js/withdraw-engine.js"></script>  <script src="../js/expense-engine.js"></script>  <script src="../js/gst-engine.js"></script>  <script src="../js/universalBar.js"></script>  <script>  
+  
+const qs = s => document.querySelector(s)  
+  
+function money(v){  
+return "₹"+Math.round(v||0)  
+}  
+  
+  
+/* ================= RENDER LEDGER ================= */  
+  
+function renderLedger(){  
+  
+const L = ledgerEngine.getCurrent()  
+  
+if(!L) return  
+  
+qs("#ldOpening").textContent = money(L.openingBalance)  
+qs("#ldSalesProfit").textContent = money(L.salesProfit)  
+qs("#ldServiceProfit").textContent = money(L.serviceProfit)  
+qs("#ldSalesInv").textContent = money(L.salesInvestmentReturn)  
+qs("#ldServiceInv").textContent = money(L.serviceInvestmentReturn)  
+qs("#ldExpenses").textContent = money(L.expensesTotal)  
+  
+const withdrawals =  
+(L.stockWithdrawTotal||0) +  
+(L.serviceWithdrawTotal||0) +  
+(L.salesProfitWithdraw||0) +  
+(L.serviceProfitWithdraw||0) +  
+(L.openingWithdraw||0)  
+  
+qs("#ldWithdrawals").textContent = money(withdrawals)  
+  
+qs("#ldGst").textContent =  
+money((L.gstCollected||0)-(L.gstPaid||0))  
+  
+qs("#ldNetFlow").textContent = money(L.netFlow)  
+qs("#ldClosing").textContent = money(L.closingBalance)  
+  
+const status = qs("#ledgerStatus")  
+  
+status.innerHTML = ""  
+  
+if(L.isClosed){  
+  
+status.innerHTML =  
+`<div class="ledger-closed">  
+This day is CLOSED  
+</div>`  
+  
+}  
+  
+window.renderUniversalBar?.()  
+  
+}  
+  
+  
+/* ================= LOAD TODAY REPORT ================= */  
+  
+function loadTodayLedger(){  
+  
+const box=document.getElementById("dailyLedgerBox")  
+  
+if(!box) return  
+  
+if(typeof generateDailyLedgerText==="function"){  
+  
+box.textContent =  
+generateDailyLedgerText(  
+ledgerEngine.getDateKey()  
+)  
+  
+}  
+  
+}  
+  
+  
+/* ================= LOAD LEDGER BY DATE ================= */  
+  
+async function loadLedgerByDate(){  
+  
+const date = document.getElementById("ledgerDate").value  
+if(!date) return  
+  
+const uid = auth.currentUser.uid  
+  
+const snap = await db  
+.collection("users")  
+.doc(uid)  
+.collection("ledger")  
+.doc(date)  
+.get()  
+  
+if(!snap.exists){  
+  
+alert("No ledger for this date")  
+return  
+  
+}  
+  
+const L = snap.data()  
+  
+/* 🔥 VERY IMPORTANT — ADD THIS */  
+window.loadedLedgerByDate = L  
+  
+  
+/* ================= UI UPDATE ================= */  
+  
+document.getElementById("ldOpening").textContent = money(L.openingBalance)  
+document.getElementById("ldSalesProfit").textContent = money(L.salesProfit)  
+document.getElementById("ldServiceProfit").textContent = money(L.serviceProfit)  
+document.getElementById("ldSalesInv").textContent = money(L.salesInvestmentReturn)  
+document.getElementById("ldServiceInv").textContent = money(L.serviceInvestmentReturn)  
+document.getElementById("ldExpenses").textContent = money(L.expensesTotal)  
+  
+  
+/* ================= WITHDRAW TOTAL ================= */  
+  
+const withdrawTotal =  
+(L.stockWithdrawTotal||0)+  
+(L.serviceWithdrawTotal||0)+  
+(L.salesProfitWithdraw||0)+  
+(L.serviceProfitWithdraw||0)+  
+(L.openingWithdraw||0)  
+  
+document.getElementById("ldWithdrawals").textContent = money(withdrawTotal)  
+  
+  
+/* ================= FINAL ================= */  
+  
+document.getElementById("ldNetFlow").textContent = money(L.netFlow)  
+document.getElementById("ldClosing").textContent = money(L.closingBalance)  
+  
+  
+/* 🔥 IMPORTANT — REPORT UPDATE */  
+renderDailyLedger(date)  
+  
+}  
+/* ================= UI UPDATE ================= */  
+  
+document.getElementById("ldOpening").textContent = money(L.openingBalance)  
+document.getElementById("ldSalesProfit").textContent = money(L.salesProfit)  
+document.getElementById("ldServiceProfit").textContent = money(L.serviceProfit)  
+document.getElementById("ldSalesInv").textContent = money(L.salesInvestmentReturn)  
+document.getElementById("ldServiceInv").textContent = money(L.serviceInvestmentReturn)  
+document.getElementById("ldExpenses").textContent = money(L.expensesTotal)  
+  
+/* ================= WITHDRAW TOTAL ================= */  
+  
+const withdrawTotal =  
+(L.stockWithdrawTotal||0)+  
+(L.serviceWithdrawTotal||0)+  
+(L.salesProfitWithdraw||0)+  
+(L.serviceProfitWithdraw||0)+  
+(L.openingWithdraw||0)  
+  
+document.getElementById("ldWithdrawals").textContent = money(withdrawTotal)  
+  
+document.getElementById("ldNetFlow").textContent = money(L.netFlow)  
+document.getElementById("ldClosing").textContent = money(L.closingBalance)  
+  
+/* ======================================================  
+   🔥 IMPORTANT FIX: LOAD DATA FOR REPORT  
+====================================================== */  
+  
+// 👉 If data saved inside ledger doc  
+window.sales       = L.sales || []  
+window.services    = L.services || []  
+window.expenses    = L.expenses || []  
+window.withdraws   = L.withdraws || []  
+window.collections = L.collections || []  
+  
+  
+/* ======================================================  
+   🔥 FALLBACK (IF ABOVE EMPTY → FETCH FROM COLLECTIONS)  
+====================================================== */  
+  
+if(!window.sales.length){  
+  
+const salesSnap = await db  
+.collection("users")  
+.doc(uid)  
+.collection("sales")  
+.where("date","==",date)  
+.get()  
+  
+window.sales = salesSnap.docs.map(d=>d.data())  
+  
+}  
+  
+if(!window.services.length){  
+  
+const serviceSnap = await db  
+.collection("users")  
+.doc(uid)  
+.collection("services")  
+.where("date_in","==",date)  
+.get()  
+  
+window.services = serviceSnap.docs.map(d=>d.data())  
+  
+}  
+  
+if(!window.expenses.length){  
+  
+const expenseSnap = await db  
+.collection("users")  
+.doc(uid)  
+.collection("expenses")  
+.where("date","==",date)  
+.get()  
+  
+window.expenses = expenseSnap.docs.map(d=>d.data())  
+  
+}  
+  
+if(!window.withdraws.length){  
+  
+const withdrawSnap = await db  
+.collection("users")  
+.doc(uid)  
+.collection("withdraws")  
+.where("date","==",date)  
+.get()  
+  
+window.withdraws = withdrawSnap.docs.map(d=>d.data())  
+  
+}  
+  
+/* ================= RENDER REPORT ================= */  
+  
+renderDailyLedger(date)  
+  
+}  
+  
+  
+/* ================= EVENTS ================= */  
+  
+window.addEventListener("ledger-ready",()=>{  
+  
+renderLedger()  
+loadTodayLedger()  
+  
+})  
+  
+window.addEventListener("ledger-updated",()=>{  
+  
+renderLedger()  
+loadTodayLedger()  
+  
+})  
+  
+window.addEventListener("firebase-auth-ready",()=>{  
+  
+if(window.ledgerEngine){  
+ledgerEngine.refresh()  
+}  
+  
+})  
+  
+window.addEventListener("ledger-ready",()=>{  
+  
+document  
+.getElementById("closeLedgerBtn")  
+.onclick =  
+window.closeLedgerDay  
+  
+})  
+  
+</script>  </body>  
+</html>  మొత్తం line by line చెక్ చేసి చెప్పు
