@@ -249,14 +249,14 @@ const collections = (window.collections || [])
 /* ✅ OPTIONAL FALLBACK (SAFE ADD — REMOVE కాదు) */
 if(!sales.length && window.loadedLedgerByDate?.salesList){
 return {
-sales: window.loadedLedgerByDate.salesList,
+sales: window.loadedLedgerByDate.salesList || [],
 services: window.loadedLedgerByDate.servicesList || [],
 expenses: window.loadedLedgerByDate.expensesList || [],
-withdraws: [],
-collections: []
+withdraws: window.loadedLedgerByDate.withdrawList || [],
+collections: window.loadedLedgerByDate.collectionList || []
 };
 }
-return { sales, services, expenses, withdraws, collections };
+  { sales, services, expenses, withdraws, collections };
 };
 
 
