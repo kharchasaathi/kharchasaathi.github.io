@@ -170,10 +170,13 @@ db.collection("users")
 .doc(currentDateKey);
 try{
 /* ✅ IMPORTANT — field also save చేయాలి */
-await ref.set({
-...currentLedger,
-updatedAt: Date.now()
-}, { merge: true });
+const payload = { ...currentLedger, updatedAt: Date.now() };
+
+delete payload.salesList;
+delete payload.servicesList;
+delete payload.expensesList;
+
+await ref.set(payload, { merge: true });
 }
 catch(err){
 console.error("Ledger update failed",err);
