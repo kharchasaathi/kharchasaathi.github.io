@@ -52,6 +52,17 @@ return;
 
 
 /* ===========================================================
+   TOTAL WITHDRAW CALCULATION (🔥 FIX)
+=========================================================== */
+
+const totalWithdraw =
+num(L.salesProfitWithdraw) +
+num(L.serviceProfitWithdraw) +
+num(L.stockWithdrawTotal) +
+num(L.serviceWithdrawTotal);
+
+
+/* ===========================================================
    NET FLOW VALIDATION
 =========================================================== */
 
@@ -90,7 +101,7 @@ num(L.gstCollected) -
 
 num(L.expensesTotal) -
 
-num(L.withdrawalsTotal) -
+totalWithdraw -   // ✅ FIXED
 num(L.openingWithdraw) -
 
 num(L.gstPaid);
@@ -115,9 +126,7 @@ pass("Closing balance correct");
 Object.entries(L).forEach(([k,v])=>{
 
 if(typeof v === "number" && v < 0){
-
 fail("Negative ledger value",{ field:k,value:v });
-
 }
 
 });
@@ -138,10 +147,10 @@ num(L.salesInvestmentReturn) +
 num(L.serviceInvestmentReturn);
 
 
-if(num(L.withdrawalsTotal) > availableCash){
+if(totalWithdraw > availableCash){   // ✅ FIXED
 
 fail("Over withdrawal detected",{
-withdrawn : L.withdrawalsTotal,
+withdrawn : totalWithdraw,
 available : availableCash
 });
 
@@ -322,7 +331,7 @@ num(L.gstCollected) -
 
 num(L.expensesTotal) -
 
-num(L.withdrawalsTotal) -
+totalWithdraw -   // ✅ FIXED
 num(L.openingWithdraw) -
 
 num(L.gstPaid);
