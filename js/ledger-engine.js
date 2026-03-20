@@ -125,7 +125,7 @@ await ref.set(newLedger);
 currentLedger = newLedger;
 }
 else{
-currentLedger = snap.data() || {}; // ✅ safety
+  currentLedger = snap.data() || emptyLedger(0);
 }
 calculateLedger();
 updateCloseButtonState();
@@ -167,12 +167,10 @@ db.collection("users")
 .doc(currentDateKey);
 try{
 /* ✅ IMPORTANT — field also save చేయాలి */
-await ref.update({
-[field]: currentLedger[field], // ✅ ADDED
-netFlow: currentLedger.netFlow,
-closingBalance: currentLedger.closingBalance,
+await ref.set({
+...currentLedger,
 updatedAt: Date.now()
-});
+}, { merge: true });
 }
 catch(err){
 console.error("Ledger update failed",err);
@@ -212,7 +210,8 @@ closedAt: Date.now(),
 updatedAt: Date.now()
 });
 /* ================= NEXT DAY ================= */
-const nextDate = new Date(currentDateKey);
+const parts = currentDateKey.split("-");
+const nextDate = new Date(parts[0], parts[1]-1, parts[2]);
 nextDate.setDate(nextDate.getDate() + 1);
 const nextKey =
 nextDate.getFullYear()+"-"+
