@@ -119,16 +119,21 @@ if(!snap.exists){
 let opening = 0;
 let found = false;
 
-/* 🔥 FIND LAST AVAILABLE LEDGER (365 DAYS) */
-let checkDate = new Date();
+/* 🔥 FIX: USE todayKey (NO TIMEZONE BUG) */
+const [y, m, d] = today.split("-").map(Number);
+
+let checkDate = new Date(y, m - 1, d);
 checkDate.setDate(checkDate.getDate() - 1);
 
-for(let i=0; i<365; i++){   // ✅ UPDATED
+/* 🔥 FIND LAST AVAILABLE LEDGER (365 DAYS) */
+for(let i=0; i<365; i++){
 
   const key =
   checkDate.getFullYear()+"-"+
   String(checkDate.getMonth()+1).padStart(2,"0")+"-"+
   String(checkDate.getDate()).padStart(2,"0");
+
+  console.log("🔍 Checking ledger:", key); // DEBUG
 
   const prevSnap =
   await db.collection("users")
