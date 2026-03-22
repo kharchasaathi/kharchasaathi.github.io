@@ -305,32 +305,44 @@ alert("Ledger closed successfully");
 window.dispatchEvent(new Event("ledger-updated"));
 };
 /* ===========================================================
-DAILY LEDGER DATA BUILDER
+DAILY LEDGER DATA BUILDER (FIXED)
 =========================================================== */
 window.buildDailyLedgerReport = function(dateKey){
+
 /* ✅ SAFETY ARRAYS */
 const sales = (window.sales || []).filter(s => s.date === dateKey);
+
 const services = (window.services || [])
 .filter(s => s.date_in === dateKey || s.date_out === dateKey);
+
 const expenses = (window.expenses || [])
 .filter(e => e.date === dateKey);
+
 const withdraws = (window.withdraws || [])
 .filter(w => w.date === dateKey);
+
 const collections = (window.collections || [])
 .filter(c => c.date === dateKey);
-/* ✅ OPTIONAL FALLBACK (SAFE ADD — REMOVE కాదు) */
-if(!sales.length && window.loadedLedgerByDate?.salesList){
-return {
-sales: window.loadedLedgerByDate.salesList || [],
-services: window.loadedLedgerByDate.servicesList || [],
-expenses: window.loadedLedgerByDate.expensesList || [],
-withdraws: window.loadedLedgerByDate.withdrawList || [],
-collections: window.loadedLedgerByDate.collectionList || []
-};
-}
-  { sales, services, expenses, withdraws, collections };
-};
 
+
+/* ✅ OPTIONAL FALLBACK */
+if(!sales.length && window.loadedLedgerByDate?.salesList){
+
+  return {
+    sales: window.loadedLedgerByDate.salesList || [],
+    services: window.loadedLedgerByDate.servicesList || [],
+    expenses: window.loadedLedgerByDate.expensesList || [],
+    withdraws: window.loadedLedgerByDate.withdrawList || [],
+    collections: window.loadedLedgerByDate.collectionList || []
+  };
+
+}
+
+
+/* 🔥 FINAL RETURN (VERY IMPORTANT FIX) */
+return { sales, services, expenses, withdraws, collections };
+
+};
 
 /* ===========================================================
 BUILD DAILY LEDGER TEXT (FULL FINANCIAL REPORT)
