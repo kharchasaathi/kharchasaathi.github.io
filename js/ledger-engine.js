@@ -125,7 +125,7 @@ const [y, m, d] = today.split("-").map(Number);
 let checkDate = new Date(y, m - 1, d);
 checkDate.setDate(checkDate.getDate() - 1);
 
-/* 🔥 FIND LAST AVAILABLE LEDGER (365 DAYS) */
+/* 🔥 FIND LAST VALID LEDGER (365 DAYS) */
 for(let i=0; i<365; i++){
 
   const key =
@@ -133,7 +133,7 @@ for(let i=0; i<365; i++){
   String(checkDate.getMonth()+1).padStart(2,"0")+"-"+
   String(checkDate.getDate()).padStart(2,"0");
 
-  console.log("🔍 Checking ledger:", key); // DEBUG
+  console.log("🔍 Checking ledger:", key);
 
   const prevSnap =
   await db.collection("users")
@@ -144,22 +144,38 @@ for(let i=0; i<365; i++){
 
   if(prevSnap.exists){
 
-    opening = num(prevSnap.data().closingBalance);
-    found = true;
+    const data = prevSnap.data() || {};
 
-    console.log("📦 Opening taken from:", key, "→", opening);
+    console.log("📄 Found doc:", key, data);
 
-    break; // ✅ stop once found
+    /* ✅ IMPORTANT FIX */
+    if(typeof data.closingBalance === "number"){
+
+      opening = data.closingBalance;
+      found = true;
+
+      console.log("📦 Opening taken from:", key, "→", opening);
+
+      break; // ✅ stop once valid found
+
+    } else {
+
+      console.warn("⚠ closingBalance missing/invalid in:", key);
+
+    }
+
   }
 
   checkDate.setDate(checkDate.getDate() - 1);
 }
 
+/* 🔥 FINAL SAFETY LOG */
+console.log("✅ FINAL OPENING VALUE:", opening);
+
 /* 🔥 OPTIONAL WARNING */
 if(!found){
-  console.warn("⚠ No previous ledger found (365 days), opening = 0");
+  console.warn("⚠ No valid previous ledger found (365 days), opening = 0");
 }
-
 
 /* ===============================
    CREATE NEW LEDGER
