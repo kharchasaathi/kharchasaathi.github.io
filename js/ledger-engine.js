@@ -193,13 +193,64 @@ currentLedger = newLedger;
 /* ===============================
    IF ALREADY EXISTS
 =============================== */
-
 else{
 
-currentLedger = {
-  ...emptyLedger(0),
-  ...(snap.data() || {})
-};
+const data = snap.data() || {};
+
+/* 🔥 CRITICAL FIX */
+if(typeof data.openingBalance !== "number"){
+
+  console.warn("⚠ openingBalance missing → recalculating...");
+
+  /* 🔁 fallback: previous ledger నుండి తీసుకురా */
+  let opening = 0;
+
+  const [y, m, d] = today.split("-").map(Number);
+  let checkDate = new Date(y, m - 1, d);
+  checkDate.setDate(checkDate.getDate() - 1);
+
+  for(let i=0; i<365; i++){
+
+    const key =
+    checkDate.getFullYear()+"-"+
+    String(checkDate.getMonth()+1).padStart(2,"0")+"-"+
+    String(checkDate.getDate()).padStart(2,"0");
+
+    const prevSnap =
+    await db.collection("users")
+    .doc(uid)
+    .collection("ledger")
+    .doc(key)
+    .get();
+
+    if(prevSnap.exists){
+
+      const prevData = prevSnap.data() || {};
+
+      if(typeof prevData.closingBalance === "number"){
+        opening = prevData.closingBalance;
+        break;
+      }
+
+    }
+
+    checkDate.setDate(checkDate.getDate() - 1);
+  }
+
+  currentLedger = {
+    ...emptyLedger(opening),
+    ...data
+  };
+
+} else {
+
+  /* ✅ NORMAL CASE */
+  currentLedger = {
+    ...emptyLedger(data.openingBalance),
+    ...data
+  };
+
+}
 
 }
 
