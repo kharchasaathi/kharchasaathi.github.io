@@ -303,8 +303,14 @@ db.collection("users")
 .doc(currentDateKey);
 try{
 /* ✅ IMPORTANT — field also save చేయాలి */
-const payload = { ...currentLedger, updatedAt: Date.now() };
+calculateLedger(); // 🔥 ensure latest values
 
+const payload = {
+  ...currentLedger,
+  closingBalance: num(currentLedger.closingBalance),
+  netFlow: num(currentLedger.netFlow),
+  updatedAt: Date.now()
+};
 delete payload.salesList;
 delete payload.servicesList;
 delete payload.expensesList;
