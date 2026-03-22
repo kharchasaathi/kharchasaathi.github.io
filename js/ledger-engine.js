@@ -198,7 +198,7 @@ else{
 const data = snap.data() || {};
 
 /* 🔥 CRITICAL FIX */
-if(typeof data.openingBalance !== "number"){
+if(!data.openingBalance || data.openingBalance === 0){
 
   console.warn("⚠ openingBalance missing → recalculating...");
 
