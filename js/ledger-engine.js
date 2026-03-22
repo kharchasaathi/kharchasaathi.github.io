@@ -90,50 +90,111 @@ if(!btn || !currentLedger) return;
 btn.disabled = currentLedger.isClosed;
 }
 /* ===========================================================
-ENSURE TODAY LEDGER
+ENSURE TODAY LEDGER (FIXED — LAST AVAILABLE OPENING)
 =========================================================== */
 async function ensureTodayLedger(){
+
 if(!auth.currentUser) return;
+
 const uid = auth.currentUser.uid;
 const today = getTodayKey();
+
 currentDateKey = today;
+
 const ref =
 db.collection("users")
 .doc(uid)
 .collection("ledger")
 .doc(today);
+
 const snap = await ref.get();
+
+
+/* ===============================
+   IF TODAY LEDGER NOT EXISTS
+=============================== */
+
 if(!snap.exists){
+
 let opening = 0;
-const y = new Date();
-y.setDate(y.getDate() - 1);
-const yKey =
-y.getFullYear()+"-"+
-String(y.getMonth()+1).padStart(2,"0")+"-"+
-String(y.getDate()).padStart(2,"0");
-const ySnap =
-await db.collection("users")
-.doc(uid)
-.collection("ledger")
-.doc(yKey)
-.get();
-if(ySnap.exists){
-opening = num(ySnap.data().closingBalance);
+let found = false;
+
+/* 🔥 FIND LAST AVAILABLE LEDGER (365 DAYS) */
+let checkDate = new Date();
+checkDate.setDate(checkDate.getDate() - 1);
+
+for(let i=0; i<365; i++){   // ✅ UPDATED
+
+  const key =
+  checkDate.getFullYear()+"-"+
+  String(checkDate.getMonth()+1).padStart(2,"0")+"-"+
+  String(checkDate.getDate()).padStart(2,"0");
+
+  const prevSnap =
+  await db.collection("users")
+  .doc(uid)
+  .collection("ledger")
+  .doc(key)
+  .get();
+
+  if(prevSnap.exists){
+
+    opening = num(prevSnap.data().closingBalance);
+    found = true;
+
+    console.log("📦 Opening taken from:", key, "→", opening);
+
+    break; // ✅ stop once found
+  }
+
+  checkDate.setDate(checkDate.getDate() - 1);
 }
+
+/* 🔥 OPTIONAL WARNING */
+if(!found){
+  console.warn("⚠ No previous ledger found (365 days), opening = 0");
+}
+
+
+/* ===============================
+   CREATE NEW LEDGER
+=============================== */
+
 const newLedger = emptyLedger(opening);
+
 await ref.set(newLedger);
+
 currentLedger = newLedger;
+
 }
+
+
+/* ===============================
+   IF ALREADY EXISTS
+=============================== */
+
 else{
-  currentLedger = {
-...emptyLedger(0),
-...(snap.data() || {})
+
+currentLedger = {
+  ...emptyLedger(0),
+  ...(snap.data() || {})
 };
+
 }
+
+
+/* ===============================
+   FINAL CALCULATIONS
+=============================== */
+
 calculateLedger();
+
 updateCloseButtonState();
+
 window.dispatchEvent(new Event("ledger-ready"));
+
 console.log("📒 Ledger ready:",today);
+
 }
 /* ===========================================================
 SAFE LEDGER UPDATE
