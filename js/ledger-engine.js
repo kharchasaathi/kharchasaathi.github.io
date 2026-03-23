@@ -177,6 +177,7 @@ for(let i=0; i<365; i++){
 
   opening = num(currentLedger?.closingBalance || 0);
 }
+   console.log("🧠 FINAL OPENING USED:", opening);
 
 /* 🔥 FINAL SAFETY LOG */
 console.log("✅ FINAL OPENING VALUE:", opening);
