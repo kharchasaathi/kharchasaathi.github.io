@@ -150,17 +150,14 @@ for(let i=0; i<365; i++){
 
     /* ✅ IMPORTANT FIX */
     if(data.closingBalance != null){
+
   opening = num(data.closingBalance);
   found = true;
+
+  console.log("📦 Opening taken from:", key, "→", opening);
+
   break;
 }
-
-      opening = data.closingBalance;
-      found = true;
-
-      console.log("📦 Opening taken from:", key, "→", opening);
-
-      break; // ✅ stop once valid found
 
     } else {
 
