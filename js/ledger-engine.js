@@ -172,6 +172,11 @@ for(let i=0; i<365; i++){
 
   checkDate.setDate(checkDate.getDate() - 1);
 }
+   if(!found){
+  console.warn("⚠ fallback → using last known closing");
+
+  opening = num(currentLedger?.closingBalance || 0);
+}
 
 /* 🔥 FINAL SAFETY LOG */
 console.log("✅ FINAL OPENING VALUE:", opening);
