@@ -149,7 +149,11 @@ for(let i=0; i<365; i++){
     console.log("📄 Found doc:", key, data);
 
     /* ✅ IMPORTANT FIX */
-    if(typeof data.closingBalance === "number"){
+    if(data.closingBalance != null){
+  opening = num(data.closingBalance);
+  found = true;
+  break;
+}
 
       opening = data.closingBalance;
       found = true;
