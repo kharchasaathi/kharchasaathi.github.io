@@ -116,84 +116,63 @@ const snap = await ref.get();
 
 if(!snap.exists){
 
-let opening = 0;
-let found = false;
+  let opening = 0;
+  let found = false;
 
-/* 🔥 FIX: USE todayKey (NO TIMEZONE BUG) */
-const [y, m, d] = today.split("-").map(Number);
+  const [y, m, d] = today.split("-").map(Number);
 
-let checkDate = new Date(y, m - 1, d);
-checkDate.setDate(checkDate.getDate() - 1);
+  let checkDate = new Date(y, m - 1, d);
+  checkDate.setDate(checkDate.getDate() - 1);
 
-/* 🔥 FIND LAST VALID LEDGER (365 DAYS) */
-for(let i=0; i<365; i++){
+  /* 🔥 FIND LAST VALID LEDGER */
+  for(let i=0; i<365; i++){
 
-  const key =
-  checkDate.getFullYear()+"-"+
-  String(checkDate.getMonth()+1).padStart(2,"0")+"-"+
-  String(checkDate.getDate()).padStart(2,"0");
+    const key =
+      checkDate.getFullYear()+"-"+
+      String(checkDate.getMonth()+1).padStart(2,"0")+"-"+
+      String(checkDate.getDate()).padStart(2,"0");
 
-  console.log("🔍 Checking ledger:", key);
+    console.log("🔍 Checking ledger:", key);
 
-  const prevSnap =
-  await db.collection("users")
-  .doc(uid)
-  .collection("ledger")
-  .doc(key)
-  .get();
+    const prevSnap = await db.collection("users")
+      .doc(uid)
+      .collection("ledger")
+      .doc(key)
+      .get();
 
-  if(prevSnap.exists){
+    if(prevSnap.exists){
 
-    const data = prevSnap.data() || {};
+      const data = prevSnap.data() || {};
+      console.log("📄 Found doc:", key, data);
 
-    console.log("📄 Found doc:", key, data);
+      if(data.closingBalance != null){
 
-    /* ✅ IMPORTANT FIX */
-    if(data.closingBalance != null){
+        opening = num(data.closingBalance);
+        found = true;
 
-  opening = num(data.closingBalance);
-  found = true;
+        console.log("📦 Opening taken from:", key, "→", opening);
 
-  console.log("📦 Opening taken from:", key, "→", opening);
-
-  break;
-}
-
-    } else {
-
-      console.warn("⚠ closingBalance missing/invalid in:", key);
+        break;
+      }
 
     }
 
+    checkDate.setDate(checkDate.getDate() - 1);
   }
 
-  checkDate.setDate(checkDate.getDate() - 1);
-}
-   if(!found){
-  console.warn("⚠ fallback → using last known closing");
+  /* 🔥 FINAL FALLBACK */
+  if(!found){
+    console.warn("⚠ fallback → using last known closing");
+    opening = num(currentLedger?.closingBalance || 0);
+  }
 
-  opening = num(currentLedger?.closingBalance || 0);
-}
-   console.log("🧠 FINAL OPENING USED:", opening);
+  console.log("🧠 FINAL OPENING USED:", opening);
 
-/* 🔥 FINAL SAFETY LOG */
-console.log("✅ FINAL OPENING VALUE:", opening);
+  const newLedger = emptyLedger(opening);
 
-/* 🔥 OPTIONAL WARNING */
-if(!found){
-  console.warn("⚠ No valid previous ledger found (365 days), opening = 0");
-}
+  await ref.set(newLedger);
 
-/* ===============================
-   CREATE NEW LEDGER
-=============================== */
-
-const newLedger = emptyLedger(opening);
-
-await ref.set(newLedger);
-
-currentLedger = newLedger;
-
+  currentLedger = newLedger;
 }
 
 
@@ -204,12 +183,11 @@ else{
 
   const data = snap.data() || {};
 
-  /* 🔥 CRITICAL FIX */
+  /* 🔥 FIX: proper condition with braces */
   if(typeof data.openingBalance !== "number"){
 
     console.warn("⚠ openingBalance missing → recalculating...");
 
-    /* 🔁 fallback: previous ledger నుండి తీసుకురా */
     let opening = 0;
     let found = false;
 
@@ -221,40 +199,37 @@ else{
     for(let i=0; i<365; i++){
 
       const key =
-      checkDate.getFullYear()+"-"+
-      String(checkDate.getMonth()+1).padStart(2,"0")+"-"+
-      String(checkDate.getDate()).padStart(2,"0");
+        checkDate.getFullYear()+"-"+
+        String(checkDate.getMonth()+1).padStart(2,"0")+"-"+
+        String(checkDate.getDate()).padStart(2,"0");
 
-      const prevSnap =
-      await db.collection("users")
-      .doc(uid)
-      .collection("ledger")
-      .doc(key)
-      .get();
+      const prevSnap = await db.collection("users")
+        .doc(uid)
+        .collection("ledger")
+        .doc(key)
+        .get();
 
       if(prevSnap.exists){
 
         const prevData = prevSnap.data() || {};
 
-        if(typeof prevData.closingBalance === "number"){
+        if(prevData.closingBalance != null){
 
-          opening = prevData.closingBalance;
+          opening = num(prevData.closingBalance);
           found = true;
 
           console.log("📦 (ELSE) Opening taken from:", key, "→", opening);
 
           break;
         }
-
       }
 
       checkDate.setDate(checkDate.getDate() - 1);
     }
 
-    /* 🔥 FINAL FALLBACK (VERY IMPORTANT) */
+    /* 🔥 FINAL FALLBACK */
     if(!found){
       console.warn("⚠ fallback → using last known closing");
-
       opening = num(currentLedger?.closingBalance || 0);
     }
 
