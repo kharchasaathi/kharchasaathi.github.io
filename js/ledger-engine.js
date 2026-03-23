@@ -205,62 +205,78 @@ currentLedger = newLedger;
 =============================== */
 else{
 
-const data = snap.data() || {};
+  const data = snap.data() || {};
 
-/* 🔥 CRITICAL FIX */
-if(typeof data.openingBalance !== "number")
+  /* 🔥 CRITICAL FIX */
+  if(typeof data.openingBalance !== "number"){
 
-  console.warn("⚠ openingBalance missing → recalculating...");
+    console.warn("⚠ openingBalance missing → recalculating...");
 
-  /* 🔁 fallback: previous ledger నుండి తీసుకురా */
-  let opening = 0;
+    /* 🔁 fallback: previous ledger నుండి తీసుకురా */
+    let opening = 0;
+    let found = false;
 
-  const [y, m, d] = today.split("-").map(Number);
-  let checkDate = new Date(y, m - 1, d);
-  checkDate.setDate(checkDate.getDate() - 1);
+    const [y, m, d] = today.split("-").map(Number);
 
-  for(let i=0; i<365; i++){
+    let checkDate = new Date(y, m - 1, d);
+    checkDate.setDate(checkDate.getDate() - 1);
 
-    const key =
-    checkDate.getFullYear()+"-"+
-    String(checkDate.getMonth()+1).padStart(2,"0")+"-"+
-    String(checkDate.getDate()).padStart(2,"0");
+    for(let i=0; i<365; i++){
 
-    const prevSnap =
-    await db.collection("users")
-    .doc(uid)
-    .collection("ledger")
-    .doc(key)
-    .get();
+      const key =
+      checkDate.getFullYear()+"-"+
+      String(checkDate.getMonth()+1).padStart(2,"0")+"-"+
+      String(checkDate.getDate()).padStart(2,"0");
 
-    if(prevSnap.exists){
+      const prevSnap =
+      await db.collection("users")
+      .doc(uid)
+      .collection("ledger")
+      .doc(key)
+      .get();
 
-      const prevData = prevSnap.data() || {};
+      if(prevSnap.exists){
 
-      if(typeof prevData.closingBalance === "number"){
-        opening = prevData.closingBalance;
-        break;
+        const prevData = prevSnap.data() || {};
+
+        if(typeof prevData.closingBalance === "number"){
+
+          opening = prevData.closingBalance;
+          found = true;
+
+          console.log("📦 (ELSE) Opening taken from:", key, "→", opening);
+
+          break;
+        }
+
       }
 
+      checkDate.setDate(checkDate.getDate() - 1);
     }
 
-    checkDate.setDate(checkDate.getDate() - 1);
+    /* 🔥 FINAL FALLBACK (VERY IMPORTANT) */
+    if(!found){
+      console.warn("⚠ fallback → using last known closing");
+
+      opening = num(currentLedger?.closingBalance || 0);
+    }
+
+    console.log("🧠 FINAL OPENING USED (ELSE):", opening);
+
+    currentLedger = {
+      ...emptyLedger(opening),
+      ...data
+    };
+
+  } else {
+
+    /* ✅ NORMAL CASE */
+    currentLedger = {
+      ...emptyLedger(data.openingBalance),
+      ...data
+    };
+
   }
-
-  currentLedger = {
-    ...emptyLedger(opening),
-    ...data
-  };
-
-} else {
-
-  /* ✅ NORMAL CASE */
-  currentLedger = {
-    ...emptyLedger(data.openingBalance),
-    ...data
-  };
-
-}
 
 }
 
