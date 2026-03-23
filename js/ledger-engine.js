@@ -243,11 +243,26 @@ else{
     }
 
     /* 🔥 FINAL FALLBACK */
-    if(!found){
-      console.warn("⚠ fallback → using last known closing");
-      opening = num(currentLedger?.closingBalance || 0);
-    }
+    
+if(!found){
 
+  console.warn("⚠ fallback → searching ANY last closing...");
+
+  const lastSnap = await db.collection("users")
+    .doc(uid)
+    .collection("ledger")
+    .orderBy("updatedAt", "desc")
+    .limit(1)
+    .get();
+
+  if(!lastSnap.empty){
+    const lastData = lastSnap.docs[0].data();
+
+    opening = num(lastData.closingBalance || 0);
+
+    console.log("🧠 fallback from LAST DOC (ELSE) →", opening);
+  }
+}
     console.log("🧠 FINAL OPENING USED (ELSE):", opening);
 
     currentLedger = {
